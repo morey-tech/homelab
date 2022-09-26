@@ -6,4 +6,6 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get install -y libssl-dev libffi-dev python3-dev python3-pip \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install ansible
+# Relative to `.devcontainer/`.
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install -r /tmp/requirements.txt
