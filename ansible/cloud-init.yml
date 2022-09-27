@@ -31,10 +31,10 @@
       when: "check_disable_root.stdout.find('disable_root: true') != -1"
 
     - name: Check if root is allowed to SSH with key.
-      shell: 'virt-cat --format=qcow2 -a {{ image_path}} /etc/ssh/sshd_config | grep "#PermitRootLogin prohibit-password"'
+      shell: 'virt-cat --format=qcow2 -a {{ image_path}} /etc/ssh/sshd_config | grep "PermitRootLogin"'
       register: check_permit_root_login
       changed_when: false
 
     - name: Allow root to use SSH key.
       shell: virt-edit -a {{ image_path}} /etc/ssh/sshd_config -e 's/#PermitRootLogin\ prohibit-password/PermitRootLogin\ prohibit-password/'
-      when: check_disable_root.stdout
+      when: check_disable_root.stdout.find("#PermitRootLogin prohibit-password") != -1
