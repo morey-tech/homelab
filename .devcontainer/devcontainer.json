@@ -12,6 +12,7 @@
 			"ms-vscode-remote.remote-containers",
 			"ms-vscode-remote.remote-ssh",
 			"ms-vscode-remote.remote-ssh-edit",
+			"redhat.ansible",
 			"yzhang.markdown-all-in-one"
 		]
 	  }
