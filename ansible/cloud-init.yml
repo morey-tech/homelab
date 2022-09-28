@@ -5,6 +5,7 @@
   become: true
 
   vars:
+    authorized_keys_path: '/root/.ssh/authorized_keys'
     image_path: '/tmp/debian-10-generic-amd64.qcow2'
     vm_id: '3106'
   
@@ -38,3 +39,7 @@
     - name: Allow root to use SSH key.
       shell: virt-edit -a {{ image_path}} /etc/ssh/sshd_config -e 's/#PermitRootLogin\ prohibit-password/PermitRootLogin\ prohibit-password/'
       when: check_disable_root.stdout.find("#PermitRootLogin prohibit-password") != -1
+
+    # Todo: make idempotent
+    - name: Add SSH authorized_keys
+      command: virt-sysprep -a {{ image_path}} --ssh-inject root:file:{{ authorized_keys_path}}
