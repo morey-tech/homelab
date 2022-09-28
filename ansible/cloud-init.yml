@@ -18,7 +18,7 @@
         update_cache: yes
 
     - name: Download cloud-init image.
-      shell: 'wget -O {{ image_path}} https://cdimage.debian.org/cdimage/cloud/buster/20220328-962/debian-10-generic-amd64-20220328-962.qcow2'
+      command: 'wget -O {{ image_path}} https://cdimage.debian.org/cdimage/cloud/buster/20220328-962/debian-10-generic-amd64-20220328-962.qcow2'
       args:
         creates: '{{ image_path }}'
 
@@ -28,7 +28,7 @@
       changed_when: false
 
     - name: Allow root to SSH.
-      shell: virt-edit -a {{ image_path}} /etc/cloud/cloud.cfg -e 's/disable_root:\ true/disable_root:\ false/'
+      command: virt-edit -a {{ image_path}} /etc/cloud/cloud.cfg -e 's/disable_root:\ true/disable_root:\ false/'
       when: "check_disable_root.stdout.find('disable_root: true') != -1"
 
     - name: Check if root is allowed to SSH with key.
@@ -37,7 +37,7 @@
       changed_when: false
 
     - name: Allow root to use SSH key.
-      shell: virt-edit -a {{ image_path}} /etc/ssh/sshd_config -e 's/#PermitRootLogin\ prohibit-password/PermitRootLogin\ prohibit-password/'
+      command: virt-edit -a {{ image_path}} /etc/ssh/sshd_config -e 's/#PermitRootLogin\ prohibit-password/PermitRootLogin\ prohibit-password/'
       when: check_disable_root.stdout.find("#PermitRootLogin prohibit-password") != -1
 
     # Todo: make idempotent
