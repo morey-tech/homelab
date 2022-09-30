@@ -13,3 +13,9 @@ RUN pip3 install -r /tmp/requirements.txt
 
 # Add kubectl to main image
 COPY --from=kubectl /opt/bitnami/kubectl/bin/kubectl /usr/local/bin/
+
+RUN VERSION=0.18.5 \
+    && wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v${VERSION}/kubeseal-${VERSION}-linux-amd64.tar.gz \
+    && tar -xvzf kubeseal-${VERSION}-linux-amd64.tar.gz kubeseal \
+    && mv kubeseal /usr/local/bin/ \
+    && chmod 755 /usr/local/bin/kubeseal
