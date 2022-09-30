@@ -1,0 +1,13 @@
+{
+  "appName": "kubeseal",
+  "userGivenName": "kubeseal",
+  "destNamespace": "default",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "releases/download/v0.18.5/controller.yaml",
+  "srcRepoURL": "https://github.com/bitnami-labs/sealed-secrets.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null,
+  "exclude": "",
+  "include": ""
+}
