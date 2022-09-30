@@ -1,6 +1,7 @@
+FROM bitnami/kubectl:1.25 as kubectl
+
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/ubuntu/.devcontainer/base.Dockerfile
-ARG VARIANT="ubuntu-22.04"
-FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
+FROM mcr.microsoft.com/vscode/devcontainers/base:0-ubuntu-22.04
 
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get install -y libssl-dev libffi-dev python3-dev python3-pip \
@@ -9,3 +10,6 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 # Relative to `.devcontainer/`.
 COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install -r /tmp/requirements.txt
+
+# Add kubectl to main image
+COPY --from=kubectl /opt/bitnami/kubectl/bin/kubectl /usr/local/bin/
