@@ -6,3 +6,7 @@ nodes:
 - role: worker
 - role: worker
 - role: worker
+networking:
+  # Exposing the api server to the internal network for early development.
+  apiServerAddress: "{{ inventory_hostname }}"
+  apiServerPort: 6443
