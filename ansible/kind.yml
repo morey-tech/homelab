@@ -33,10 +33,14 @@
         group: root
         mode: '0755'
     
-    - name: Copy cluster config to host.
-      ansible.builtin.copy:
-        src: '../environments/{{ ansible_hostname }}/kind-cluster.yml'
+    - name: Template cluster config to host.
+      ansible.builtin.template:
+        src: './kind-cluster.yml'
         dest: /tmp/kind-cluster.yml
+      tags:
+      - never
+      - create
+      - template
 
     - name: Create kind cluster
       ansible.builtin.command: kind create cluster --config /tmp/kind-cluster.yml
