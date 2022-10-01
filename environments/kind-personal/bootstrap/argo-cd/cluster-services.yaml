@@ -11,7 +11,7 @@ spec:
       - path: environments/kind-personal/cluster-services/*
   template:
     metadata:
-      name: '{{path[0]}}'
+      name: '{{path[3]}}'
     spec:
       project: default
       source:
