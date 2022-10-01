@@ -8,7 +8,7 @@ spec:
       repoURL: https://github.com/morey-tech/homelab.git
       revision: 5-new-gitops-structure
       directories:
-      - path: environments/kind-peronsal/cluster-services/*
+      - path: environments/kind-personal/cluster-services/*
   template:
     metadata:
       name: '{{path[0]}}'
