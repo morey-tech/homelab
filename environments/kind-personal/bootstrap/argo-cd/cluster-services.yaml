@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-services
+spec:
+  generators:
+  - git:
+      repoURL: https://github.com/morey-tech/homelab.git
+      revision: 5-new-gitops-structure
+      directories:
+      - path: environments/kind-peronsal/cluster-services/*
+  template:
+    metadata:
+      name: '{{path[0]}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/morey-tech/homelab.git
+        targetRevision: 5-new-gitops-structure
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'argocd'
