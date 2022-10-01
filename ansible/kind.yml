@@ -39,14 +39,22 @@
         dest: /tmp/kind-cluster.yml
       tags:
       - never
-      - create
       - template
+      - create
+      - recreate
+
+    - name: Delete the kind cluster
+      ansible.builtin.command: kind delete cluster --name {{ ansible_hostname }}
+      tags:
+        - never
+        - recreate
 
     - name: Create kind cluster
       ansible.builtin.command: kind create cluster --config /tmp/kind-cluster.yml
       tags:
         - never
         - create
+        - recreate
 
     - name: Fetch generated kubeconfig. 
       ansible.builtin.fetch:
