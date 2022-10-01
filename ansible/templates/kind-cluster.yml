@@ -8,5 +8,5 @@ nodes:
 - role: worker
 networking:
   # Exposing the api server to the internal network for early development.
-  apiServerAddress: "{{ inventory_hostname }}"
+  apiServerAddress: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
   apiServerPort: 6443
