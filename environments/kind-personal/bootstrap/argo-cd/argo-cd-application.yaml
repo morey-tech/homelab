@@ -1,13 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  creationTimestamp: null
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-  labels:
-    app.kubernetes.io/managed-by: argocd-autopilot
-    app.kubernetes.io/name: root
-  name: root
+  name: argo-cd
   namespace: argocd
 spec:
   destination:
@@ -20,8 +14,9 @@ spec:
     kind: Application
   project: default
   source:
-    path: environments/kind-personal/projects
+    path: environments/kind-personal/bootstrap/argo-cd
     repoURL: https://github.com/morey-tech/homelab.git
+    targetRevision: 5-new-gitops-structure
   syncPolicy:
     automated:
       allowEmpty: true
@@ -29,12 +24,3 @@ spec:
       selfHeal: true
     syncOptions:
     - allowEmpty=true
-status:
-  health: {}
-  summary: {}
-  sync:
-    comparedTo:
-      destination: {}
-      source:
-        repoURL: ""
-    status: ""
