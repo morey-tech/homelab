@@ -17,4 +17,5 @@ resources:
   - ./argocd-ns.yaml
   - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
   - ./argo-cd-application.yaml
+  - ./argocd-server-ingress.yaml
   - ./cluster-services.yaml
