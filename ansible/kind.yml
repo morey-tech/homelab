@@ -5,7 +5,7 @@
   become: true
   vars_prompt:
     - name: git_token
-      prompt: 'Enter the Git Token for ArgoCD Bootstrap to use:'
+      prompt: 'Enter the Git Token for ArgoCD Bootstrap to use'
       private: yes
 
   tasks:
