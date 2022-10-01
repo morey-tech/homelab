@@ -19,3 +19,8 @@ RUN VERSION=0.18.5 \
     && tar -xvzf kubeseal-${VERSION}-linux-amd64.tar.gz kubeseal \
     && mv kubeseal /usr/local/bin/ \
     && chmod 755 /usr/local/bin/kubeseal
+
+# Select desired TAG from https://github.com/argoproj/argo-cd/releases
+RUN VERSION=v2.4.12 \
+    && curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64 \
+    && chmod +x /usr/local/bin/argocd
