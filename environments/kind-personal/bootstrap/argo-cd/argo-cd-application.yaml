@@ -16,7 +16,7 @@ spec:
   source:
     path: environments/kind-personal/bootstrap/argo-cd
     repoURL: https://github.com/morey-tech/homelab.git
-    targetRevision: 5-new-gitops-structure
+    targetRevision: HEAD
   syncPolicy:
     automated:
       allowEmpty: true

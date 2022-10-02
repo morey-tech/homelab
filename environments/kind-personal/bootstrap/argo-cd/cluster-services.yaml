@@ -6,7 +6,7 @@ spec:
   generators:
   - git:
       repoURL: https://github.com/morey-tech/homelab.git
-      revision: 5-new-gitops-structure
+      revision: HEAD
       directories:
       - path: environments/kind-personal/cluster-services/*
   template:
@@ -16,7 +16,7 @@ spec:
       project: default
       source:
         repoURL: https://github.com/morey-tech/homelab.git
-        targetRevision: 5-new-gitops-structure
+        targetRevision: HEAD
         path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc
