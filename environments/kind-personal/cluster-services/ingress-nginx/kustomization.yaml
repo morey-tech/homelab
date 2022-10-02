@@ -3,3 +3,10 @@ kind: Kustomization
 namespace: ingress-nginx
 resources:
   - https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+patches:
+  - path: enable-ssl-passthrough-patch.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: ingress-nginx-controller
