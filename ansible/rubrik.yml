@@ -5,10 +5,20 @@
   become: true
 
   tasks:
+    - name: Install apt packages
+      ansible.builtin.apt:
+        name:
+          - nfs-common
+        state: present
+        update_cache: true
+
     # sudo snap install microk8s --classic
-    - name: Install microk8s
+    - name: Install snap packages microk8s and related tools
       community.general.snap:
-        name: microk8s
+        name:
+          - microk8s
+          - jq
+          - kubectl
         classic: true
 
     # sudo usermod -a -G microk8s {{ ansible_user }}
