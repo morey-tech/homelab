@@ -1,0 +1,29 @@
+---
+- name: Prepare rubrik nodes for K8s
+  hosts:
+    - rubrik
+  become: true
+
+  tasks:
+    # sudo snap install microk8s --classic
+    - name: Install microk8s
+      community.general.snap:
+        name: microk8s
+        classic: true
+
+    # sudo usermod -a -G microk8s {{ ansible_user }}
+    - name: Apending microk8s group to user {{ ansible_user }}
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: microk8s  # Add the user to a group
+        append: true        # Add the user to the group without removing from other groups
+
+    # sudo chown -f -R {{ ansible_user }} ~/.kube
+    - name: Set ownership of ~/.kube for {{ ansible_user }}
+      ansible.builtin.file:
+        path: ~/.kube
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        recurse: true  # Equivalent to -R
+        force: true    # Equivalent to -f
+        state: directory  # Ensure it's treated as a directory
