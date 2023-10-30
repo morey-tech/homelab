@@ -21,6 +21,6 @@ RUN VERSION=0.18.5 \
     && chmod 755 /usr/local/bin/kubeseal
 
 # Select desired TAG from https://github.com/argoproj/argo-cd/releases
-RUN VERSION=v2.4.12 \
+RUN VERSION=v2.8.4 \
     && curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64 \
     && chmod +x /usr/local/bin/argocd
