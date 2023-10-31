@@ -24,3 +24,9 @@ RUN VERSION=0.18.5 \
 RUN VERSION=v2.8.4 \
     && curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64 \
     && chmod +x /usr/local/bin/argocd
+
+ENV HELM_VERSION=3.13.1
+RUN curl -LO "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
+    && tar -zxvf "helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
+    && mv linux-amd64/helm /usr/local/bin/ \
+    && rm -rf "helm-v${HELM_VERSION}-linux-amd64.tar.gz" linux-amd64
