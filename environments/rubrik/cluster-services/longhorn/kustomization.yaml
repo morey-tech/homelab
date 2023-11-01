@@ -5,6 +5,10 @@ helmCharts:
 - name: longhorn
   includeCRDs: true
   namespace: longhorn-system
+  releaseName: longhorn
   # valuesInline:
   version: 1.5.1
   repo: https://charts.longhorn.io
+
+patchesStrategicMerge:
+  - ./service-account.yaml
