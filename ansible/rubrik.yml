@@ -9,6 +9,7 @@
       ansible.builtin.apt:
         name:
           - nfs-common
+          - open-iscsi
         state: present
         update_cache: true
 
