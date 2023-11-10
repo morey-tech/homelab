@@ -55,3 +55,11 @@
         dest: "/home/ubuntu/.kube/config"
         mode: '0640'
         owner: "{{ ansible_user }}"
+
+    - name: Fetch kubeconfig
+      ansible.builtin.fetch:
+        src: "/home/ubuntu/.kube/config"
+        dest: "../environments/rubrik/kubeconfig.yml"
+        flat: true
+        mode: '0640'
+        owner: "{{ ansible_env.USER }}"
