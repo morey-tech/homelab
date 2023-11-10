@@ -1,5 +1,6 @@
 resources:
   - namespace.yaml
+  - storage-class.yaml
 
 helmCharts:
 - name: longhorn
