@@ -38,3 +38,20 @@
         recurse: true  # Equivalent to -R
         force: true    # Equivalent to -f
         state: directory  # Ensure it's treated as a directory
+
+    - name: Output the microk8s kubeconfig
+      ansible.builtin.command: "microk8s config"
+      register: kubeconfig
+      changed_when: false
+
+    # Delete ME
+    - name: Display kubeconfig
+      ansible.builtin.debug:
+        var: kubeconfig.stdout_lines
+
+    - name: Save kubeconfig to environment folder
+      ansible.builtin.copy:
+        content: "{{ kubeconfig.stdout }}"
+        dest: "/home/ubuntu/.kube/config"
+        mode: '0640'
+        owner: "{{ ansible_user }}"
