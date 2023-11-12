@@ -10,6 +10,12 @@ helmCharts:
   # valuesInline:
   version: 1.5.1
   repo: https://charts.longhorn.io
+  valuesInline:
+    # Update for MicroK8s
+    defaultSettings:
+      defaultDataPath: "/longhorn"
+    csi:
+      kubeletRootDir: "/var/snap/microk8s/common/var/lib/kubelet"
 
 patchesStrategicMerge:
   - ./service-account.yaml
