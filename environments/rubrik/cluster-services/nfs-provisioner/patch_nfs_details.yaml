@@ -1,0 +1,22 @@
+# patch_nfs_details.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nfs-client-provisioner
+  name: nfs-client-provisioner
+spec:
+  template:
+    spec:
+      containers:
+        - name: nfs-client-provisioner
+          env:
+            - name: NFS_SERVER
+              value: nfs-mass.lab.home.morey.tech
+            - name: NFS_PATH
+              value: storage-mass/homelab/kind-personal/
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: nfs-mass.lab.home.morey.tech
+            path: storage-mass/homelab/kind-personal/

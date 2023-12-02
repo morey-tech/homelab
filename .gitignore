@@ -1,0 +1,3 @@
+kubeconfig.yml
+# Output from building kustomized helm charts.
+**/cluster-services/*/charts/*

@@ -1,0 +1,19 @@
+resources:
+  - namespace.yaml
+  # - storage-class.yaml
+
+helmCharts:
+- name: longhorn
+  includeCRDs: true
+  namespace: longhorn-system
+  releaseName: longhorn
+  # valuesInline:
+  version: 1.5.1
+  repo: https://charts.longhorn.io
+  valuesInline:
+    # MicroK8s kubelet root dir.
+    csi:
+      kubeletRootDir: "/var/snap/microk8s/common/var/lib/kubelet"
+
+patchesStrategicMerge:
+  - ./service-account.yaml

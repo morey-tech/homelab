@@ -1,7 +1,7 @@
 ---
 - name: Docker
   hosts: 
-  - sandbox_nodes
+  - docker
   become: true
 
   vars:
