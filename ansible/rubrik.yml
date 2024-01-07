@@ -61,6 +61,7 @@
         group: "{{ ansible_user }}"
 
     - name: Save kubeconfig to environment folder
+      run_once: true
       ansible.builtin.copy:
         content: "{{ kubeconfig.stdout }}"
         dest: "/home/ubuntu/.kube/config"
