@@ -49,6 +49,12 @@
       ansible.builtin.debug:
         var: kubeconfig.stdout_lines
 
+    - name: Create .kube directory
+      ansible.builtin.file:
+        path: "/home/ubuntu/.kube"
+        state: directory
+        mode: '0750'
+
     - name: Save kubeconfig to environment folder
       ansible.builtin.copy:
         content: "{{ kubeconfig.stdout }}"
