@@ -5,7 +5,7 @@ metadata:
   namespace: longhorn-system
 spec:
   cron: "* * * * *"
-  task: "longhorn-volv-snapshot"
+  task: "snapshot"
   groups:
   # Having default in groups will automatically schedule this recurring job to any volume with no recurring job.
   - default
