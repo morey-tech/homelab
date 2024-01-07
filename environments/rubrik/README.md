@@ -12,6 +12,14 @@ From the `environments/rubrik` folder, render the manifests for `argo-cd`  with 
 kubectl kustomize ./bootstrap/argo-cd/ | kubectl --kubeconfig kubeconfig.yml apply -f -
 ```
 
+If the CRDs aren't registered quickly enough, you may see the following error. Simply re-run the command.
+```
+resource mapping not found for name: "argo-cd" namespace: "argocd" from "STDIN": no matches for kind "Application" in version "argoproj.io/v1alpha1"
+ensure CRDs are installed first
+resource mapping not found for name: "cluster-services" namespace: "argocd" from "STDIN": no matches for kind "ApplicationSet" in version "argoproj.io/v1alpha1"
+ensure CRDs are installed first
+``` 
+
 ## Connecting to Argo CD
 ```
 kubectl port-forward svc/argocd-server -n argocd 8080:443
