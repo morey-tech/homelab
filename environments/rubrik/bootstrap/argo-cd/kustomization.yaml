@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: argocd
 resources:
   - ./argocd-ns.yaml
-  - https://raw.githubusercontent.com/argoproj/argo-cd/v2.9.3/manifests/install.yaml
+  - https://raw.githubusercontent.com/argoproj/argo-cd/v2.9.3/manifests/ha/install.yaml
   - ./argo-cd-application.yaml
   - ./argocd-server-ingress.yaml
   - ./cluster-services.yaml
