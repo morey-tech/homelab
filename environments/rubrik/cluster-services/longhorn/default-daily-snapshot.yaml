@@ -4,7 +4,7 @@ metadata:
   name: default-daily-snapshot
   namespace: longhorn-system
 spec:
-  cron: "* * * * *"
+  cron: "5 4 * * *" # At 04:05
   task: "snapshot"
   groups:
   # Having default in groups will automatically schedule this recurring job to any volume with no recurring job.
