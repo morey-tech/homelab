@@ -4,7 +4,7 @@ FROM bitnami/kubectl:1.25 as kubectl
 FROM mcr.microsoft.com/vscode/devcontainers/base:0-ubuntu-22.04
 
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y libssl-dev libffi-dev python3-dev python3-pip iputils-ping \
+    && apt-get install -y libssl-dev libffi-dev python3-dev python3-pip iputils-ping dnsutils \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Relative to `.devcontainer/`.
