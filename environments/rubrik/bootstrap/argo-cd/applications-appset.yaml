@@ -11,13 +11,13 @@ spec:
       - path: environments/rubrik/applications/*
   template:
     metadata:
-      name: '{{path[3]}}'
+      name: '{{path.basename}}'
     spec:
       project: default
       source:
         repoURL: https://github.com/morey-tech/homelab.git
         targetRevision: HEAD
-        path: '{{path}}'
+        path: '{{path.basename}}'
       destination:
         server: https://kubernetes.default.svc
         namespace: 'argocd'

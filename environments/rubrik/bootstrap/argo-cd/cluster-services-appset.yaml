@@ -11,7 +11,7 @@ spec:
       - path: environments/rubrik/cluster-services/*
   template:
     metadata:
-      name: '{{path[3]}}'
+      name: '{{path.basename}}'
     spec:
       project: default
       source:
@@ -20,7 +20,7 @@ spec:
         path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: 'argocd'
+        namespace: '{{path.basename}}'
       syncPolicy:
         automated:
           allowEmpty: true
