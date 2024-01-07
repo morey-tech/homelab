@@ -3,9 +3,22 @@ FROM bitnami/kubectl:1.25 as kubectl
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/ubuntu/.devcontainer/base.Dockerfile
 FROM mcr.microsoft.com/vscode/devcontainers/base:0-ubuntu-22.04
 
+ARG USERNAME=tecno
+ARG USER_UID=1001
+ARG USER_GID=$USER_UID
+
+# Add non-root user.
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME --shell /bin/bash
+
+# Install packages, and clean  up apt.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y libssl-dev libffi-dev python3-dev python3-pip iputils-ping dnsutils \
+    && apt-get install -y sudo libssl-dev libffi-dev python3-dev python3-pip iputils-ping dnsutils \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+# Add user to suders file.
+RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
 
 # Relative to `.devcontainer/`.
 COPY requirements.txt /tmp/requirements.txt
@@ -31,4 +44,7 @@ RUN curl -LO "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
     && mv linux-amd64/helm /usr/local/bin/ \
     && rm -rf "helm-v${HELM_VERSION}-linux-amd64.tar.gz" linux-amd64
 
-COPY .bash_aliases /home/vscode/.bash_aliases
+# [Optional] Set the default user. Omit if you want to keep the default as root.
+USER $USERNAME
+
+COPY .bash_aliases /home/$USERNAME/.bash_aliases
