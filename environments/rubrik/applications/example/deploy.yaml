@@ -1,7 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: example
+  name: guestbook
+  namespace: guestbook
 spec:
   replicas: 1
   revisionHistoryLimit: 3
