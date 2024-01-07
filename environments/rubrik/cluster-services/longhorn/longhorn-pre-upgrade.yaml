@@ -1,0 +1,8 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  name: longhorn-pre-upgrade
+  namespace: longhorn-system
+  
