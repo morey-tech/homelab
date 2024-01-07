@@ -17,7 +17,8 @@ metadata:
 spec:
   ingressClassName: public
   rules:
-  - http:
+  - host: longhorn.rubrik.lab.home.morey.tech
+    http:
       paths:
       - pathType: Prefix
         path: "/"
