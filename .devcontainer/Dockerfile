@@ -44,6 +44,12 @@ RUN curl -LO "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
     && mv linux-amd64/helm /usr/local/bin/ \
     && rm -rf "helm-v${HELM_VERSION}-linux-amd64.tar.gz" linux-amd64
 
+ENV K9S_VERSION=v0.30.8
+RUN curl -LO "https://github.com/derailed/k9s/releases/download/${K9S_VERSION}/k9s_Linux_amd64.tar.gz" \
+    && tar -zxvf "k9s_Linux_amd64.tar.gz" \
+    && mv k9s /usr/local/bin/ \
+    && rm -rf "k9s_Linux_amd64.tar.gz" 
+
 # [Optional] Set the default user. Omit if you want to keep the default as root.
 USER $USERNAME
 
