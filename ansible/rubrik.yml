@@ -44,10 +44,13 @@
       register: kubeconfig
       changed_when: false
 
-    # Delete ME
-    - name: Display kubeconfig
-      ansible.builtin.debug:
-        var: kubeconfig.stdout_lines
+    - name: Enable microk8s ingress
+      ansible.builtin.command: "microk8s enable ingress"
+      changed_when: false
+
+    # - name: Display kubeconfig
+    #   ansible.builtin.debug:
+    #     var: kubeconfig.stdout_lines
 
     - name: Create .kube directory
       ansible.builtin.file:
