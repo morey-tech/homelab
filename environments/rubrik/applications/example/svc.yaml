@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: guestbook-ui
-  namespace: guestbook
+  namespace: example
   annotations:
     metallb.universe.tf/address-pool: k8s-hosts-address-pool
 spec:
