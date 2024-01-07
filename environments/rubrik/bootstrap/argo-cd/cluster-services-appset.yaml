@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: cluster-services-appset
+  name: system-appset
 spec:
   generators:
   - git:
       repoURL: https://github.com/morey-tech/homelab.git
       revision: HEAD
       directories:
-      - path: environments/rubrik/cluster-services/*
+      - path: environments/rubrik/system/*
   template:
     metadata:
       name: '{{path.basename}}'
