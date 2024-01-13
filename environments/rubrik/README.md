@@ -15,7 +15,7 @@ ansible-playbook rubik.yaml
 
 For testing on a limited subset of hosts in an environment, use `-l <host-fqdn>`.
 ```
-ansible-playbook rubrik.yml -l rubrik-[abd].lab.home.morey.tech
+ansible-playbook rubrik.yml -l rubrik-[abd].maas.home.morey.tech
 ```
 
 After running the playbook, generate a cluster join command on the "primary" node (default `rubrik-a`) for each additional node:
