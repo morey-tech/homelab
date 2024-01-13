@@ -70,6 +70,7 @@
         group: "{{ ansible_user }}"
 
     - name: Fetch kubeconfig
+      run_once: true
       ansible.builtin.fetch:
         src: "/home/ubuntu/.kube/config"
         dest: "../environments/rubrik/kubeconfig.yml"
