@@ -8,8 +8,9 @@ ARG USER_UID=1001
 ARG USER_GID=$USER_UID
 
 # Add non-root user.
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME --shell /bin/bash
+RUN groupmod -n $USERNAME vscode \
+    && usermod -l $USERNAME vscode \
+    && usermod -d /home/tecno -m tecno
 
 # Install packages, and clean  up apt.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
