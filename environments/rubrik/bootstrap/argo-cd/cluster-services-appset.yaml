@@ -29,3 +29,8 @@ spec:
         syncOptions:
         - allowEmpty=true
         - CreateNamespace=true
+      ignoreDifferences: # Ignore dynamic parameters that cause incorrect OutOfSync status
+        - kind: CustomResourceDefinition
+          group: apiextensions.k8s.io
+          jsonPointers:
+          - /spec/conversion/webhook/clientConfig/caBundle
