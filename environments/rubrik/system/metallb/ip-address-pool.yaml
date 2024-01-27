@@ -1,11 +1,11 @@
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
-  name: k8s-hosts-address-pool
+  name: rubrik-address-pool
   namespace: metallb-system
 spec:
   addresses:
-  - 192.168.8.0/24
+  - 10.8.0.0/16
 ---
 apiVersion: metallb.io/v1beta1
 kind: BGPAdvertisement
@@ -13,7 +13,7 @@ metadata:
   name: bgp-advertisement
 spec:
   ipAddressPools:
-  - k8s-hosts-address-pool
+  - rubrik-address-pool
   aggregationLength: 32 # advertise each route as a /32
 ---
 apiVersion: metallb.io/v1beta2
