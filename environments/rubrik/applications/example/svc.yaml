@@ -12,33 +12,3 @@ spec:
     targetPort: 80
   selector:
     app: guestbook-ui
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: guestbook-ui-2
-  namespace: example
-  annotations:
-    metallb.universe.tf/address-pool: rubrik-address-pool
-spec:
-  type: LoadBalancer
-  ports:
-  - port: 80
-    targetPort: 80
-  selector:
-    app: guestbook-ui
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: guestbook-ui-3
-  namespace: example
-  annotations:
-    metallb.universe.tf/address-pool: rubrik-address-pool
-spec:
-  type: LoadBalancer
-  ports:
-  - port: 80
-    targetPort: 80
-  selector:
-    app: guestbook-ui
