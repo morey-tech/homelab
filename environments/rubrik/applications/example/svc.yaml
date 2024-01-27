@@ -4,7 +4,7 @@ metadata:
   name: guestbook-ui
   namespace: example
   annotations:
-    metallb.universe.tf/address-pool: k8s-hosts-address-pool
+    metallb.universe.tf/address-pool: rubrik-address-pool
 spec:
   type: LoadBalancer
   ports:
@@ -19,7 +19,7 @@ metadata:
   name: guestbook-ui-2
   namespace: example
   annotations:
-    metallb.universe.tf/address-pool: k8s-hosts-address-pool
+    metallb.universe.tf/address-pool: rubrik-address-pool
 spec:
   type: LoadBalancer
   ports:
@@ -34,7 +34,7 @@ metadata:
   name: guestbook-ui-3
   namespace: example
   annotations:
-    metallb.universe.tf/address-pool: k8s-hosts-address-pool
+    metallb.universe.tf/address-pool: rubrik-address-pool
 spec:
   type: LoadBalancer
   ports:
