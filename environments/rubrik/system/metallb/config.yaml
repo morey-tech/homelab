@@ -14,7 +14,8 @@ metadata:
 spec:
   ipAddressPools:
   - rubrik-address-pool
-  aggregationLength: 32 # advertise each route as a /32
+  # Advertise each route as a /32 (i.e. single IP address).
+  aggregationLength: 32
 ---
 apiVersion: metallb.io/v1beta2
 kind: BGPPeer
@@ -22,5 +23,6 @@ metadata:
   name: pfsense-peer
 spec:
   myASN: 64501
+  # ASN of pfSense.
   peerASN: 64500
   peerAddress: 192.168.3.1
