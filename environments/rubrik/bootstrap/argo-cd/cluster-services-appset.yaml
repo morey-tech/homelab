@@ -9,6 +9,10 @@ spec:
       revision: HEAD
       directories:
       - path: environments/rubrik/system/*
+  ignoreApplicationDifferences:
+    # Allow automated sync policy to be disabled manually.
+    - jsonPointers:
+      - /spec/syncPolicy/automated
   template:
     metadata:
       name: '{{path.basename}}'
