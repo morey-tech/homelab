@@ -8,10 +8,19 @@ spec:
   - 192.168.8.0/24
 ---
 apiVersion: metallb.io/v1beta1
-kind: L2Advertisement
+kind: BGPAdvertisement
 metadata:
-  name: k8s-host-l2-advertisement
-  namespace: metallb-system
+  name: bgp-advertisement
 spec:
   ipAddressPools:
   - k8s-hosts-address-pool
+  aggregationLength: 32 # advertise each route as a /32
+---
+apiVersion: metallb.io/v1beta2
+kind: BGPPeer
+metadata:
+  name: pfsense-peer
+spec:
+  myASN: 65200
+  peerASN: 65100
+  peerAddress: 192.168.3.1
