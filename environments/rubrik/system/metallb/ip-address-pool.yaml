@@ -21,6 +21,6 @@ kind: BGPPeer
 metadata:
   name: pfsense-peer
 spec:
-  myASN: 65200
+  myASN: 65100
   peerASN: 65100
   peerAddress: 192.168.3.1
