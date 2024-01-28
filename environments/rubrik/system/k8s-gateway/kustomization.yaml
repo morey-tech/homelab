@@ -1,0 +1,17 @@
+helmCharts:
+- name: k8s-gateway
+  repo: https://ori-edge.github.io/k8s_gateway/
+  namespace: k8s-gateway
+  releaseName: k8s-gateway
+  version: 1.1.15
+  includeCRDs: true
+  valuesInline:
+    domain: morey.tech home.morey.tech lab.home.morey.tech rubrik.lab.home.morey.tech
+    service:
+      annotations:
+        metallb.universe.tf/address-pool: rubrik-address-pool
+      loadBalancerIP: 10.8.0.0
+    fallthrough:
+      enabled: true
+      zones:
+        - morey.tech

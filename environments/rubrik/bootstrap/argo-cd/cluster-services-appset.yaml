@@ -39,3 +39,8 @@ spec:
           group: apiextensions.k8s.io
           jsonPointers:
           - /spec/conversion/webhook/clientConfig/caBundle
+        # Ingnore drive on checksum annotations
+        - kind: Deployment
+          group: apps
+          jsonPointers:
+          - /spec/template/metadata/annotations/checksum~1config
