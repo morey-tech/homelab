@@ -3,6 +3,8 @@ kind: Kustomization
 namespace: ingress
 resources:
   - loadbalancer.yaml
+
+## Disabled in favour of using the MicroK8s ingress add-on.
 #   - https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/baremetal/deploy.yaml
 # patches:
 #   - path: enable-ssl-passthrough-patch.yaml
