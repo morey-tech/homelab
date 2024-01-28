@@ -4,12 +4,12 @@ metadata:
   name: nginx-metallb
   annotations:
     metallb.universe.tf/address-pool: rubrik-address-pool
-    loadBalancerIP: 172.19.0.1
+    loadBalancerIP: 10.8.0.1
 spec:
   ipFamilies:
   - IPv4
   ipFamilyPolicy: SingleStack
-  loadBalancerIP: 172.19.0.1
+  loadBalancerIP: 10.8.0.1
   ports:
   - appProtocol: http
     name: http
