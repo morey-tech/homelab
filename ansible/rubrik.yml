@@ -44,9 +44,9 @@
       register: kubeconfig
       changed_when: false
 
-    - name: Enable microk8s ingress
-      ansible.builtin.command: "microk8s enable ingress"
-      changed_when: false
+    # - name: Enable microk8s ingress
+    #   ansible.builtin.command: "microk8s enable ingress"
+    #   changed_when: false
 
     # - name: Display kubeconfig
     #   ansible.builtin.debug:
