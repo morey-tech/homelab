@@ -5,6 +5,7 @@ metadata:
   namespace: example
   annotations:
     metallb.universe.tf/address-pool: rubrik-address-pool
+    external-dns.alpha.kubernetes.io/hostname: example-svc.rubrik.lab.home.morey.tech
 spec:
   type: LoadBalancer
   ports:
