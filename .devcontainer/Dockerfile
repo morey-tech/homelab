@@ -28,15 +28,15 @@ RUN pip3 install -r /tmp/requirements.txt
 # Add kubectl to main image
 COPY --from=kubectl /opt/bitnami/kubectl/bin/kubectl /usr/local/bin/
 
-RUN VERSION=0.18.5 \
-    && wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v${VERSION}/kubeseal-${VERSION}-linux-amd64.tar.gz \
-    && tar -xvzf kubeseal-${VERSION}-linux-amd64.tar.gz kubeseal \
+RUN KUBESEAL_VERSION=0.18.5 \
+    && wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz \
+    && tar -xvzf kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz kubeseal \
     && mv kubeseal /usr/local/bin/ \
     && chmod 755 /usr/local/bin/kubeseal
 
 # Select desired TAG from https://github.com/argoproj/argo-cd/releases
-RUN VERSION=v2.8.4 \
-    && curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64 \
+RUN ARGOCD_VERSION=v2.8.4 \
+    && curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/$ARGOCD_VERSION/argocd-linux-amd64 \
     && chmod +x /usr/local/bin/argocd
 
 ENV HELM_VERSION=3.13.1
