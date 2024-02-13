@@ -8,7 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
-  ingressClassName: public
+  ingressClassName: nginx
   rules:
   - host: argocd.rubrik.lab.home.morey.tech
     http:
