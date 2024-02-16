@@ -1,6 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: ingress-nginx-system
+namespace: ingress-nginx-internal-system
+nameSuffix: -internal
 resources:
   - https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/baremetal/deploy.yaml
   - ingress-nginx-metalb.yaml
@@ -37,7 +38,7 @@ patches:
         value: '--controller-class=k8s.io/ingress-nginx-internal'
       - op: replace
         path: /spec/template/spec/containers/0/args/4
-        value: '--ingress-class=ingress-nginx-internal'
+        value: '--ingress-class=nginx-internal'
   # Convert Deployment to DaemonSet
   - target:
       group: apps
@@ -55,9 +56,6 @@ patches:
       kind: IngressClass
       name: nginx
     patch: |-
-      - op: replace
-        path: /metadata/name
-        value: 'ingress-nginx-internal'
       - op: replace
         path: /spec/controller
         value: 'k8s.io/ingress-nginx-internal'
