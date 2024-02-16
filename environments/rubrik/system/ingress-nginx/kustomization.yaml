@@ -3,15 +3,23 @@ kind: Kustomization
 namespace: ingress-nginx-system
 resources:
   - https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/baremetal/deploy.yaml
+  - ingress-nginx-metalb.yaml
 
 patches:
-  # - path: loadbalancer.yaml
   - path: enable-ssl-passthrough-patch.yaml
     target:
       group: apps
       version: v1
       kind: Deployment
       name: ingress-nginx-controller
+  # Make sure the --publish-service flag is set to the MetalLB service
+  - target:
+      kind: Deployment
+      name: ingress-nginx-controller
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: '--publish-service=ingress-nginx-system/ingress-nginx-metalb'
   # Convert deployment to daemonset
   - target:
       group: apps

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ingress-nginx-controller
+  name: ingress-nginx-metalb
   annotations:
     metallb.universe.tf/address-pool: rubrik-address-pool
     loadBalancerIP: 10.8.0.1
