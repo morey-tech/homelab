@@ -32,7 +32,7 @@ patches:
     patch: |-
       - op: add
         path: /spec/template/spec/containers/0/args/-
-        value: '--publish-service=ingress-nginx-system/ingress-nginx-metalb-external'
+        value: '--publish-service=ingress-nginx-system/ingress-nginx-metallb-internal'
       - op: replace
         path: /spec/template/spec/containers/0/args/3
         value: '--controller-class=k8s.io/ingress-nginx-internal'
