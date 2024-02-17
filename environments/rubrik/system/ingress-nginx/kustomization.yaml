@@ -27,12 +27,12 @@ patches:
       kind: Deployment
       name: ingress-nginx-controller
     patch: |-
-      - op: add
+      - op: replace
         path: /spec/template/spec/containers/0/args/1
-        value: --enable-ssl-passthrough
-      - op: add
-        path: /spec/template/spec/containers/0/args/-
         value: '--publish-service=ingress-nginx-system/ingress-nginx-metallb'
       - op: replace
         path: /kind
         value: 'DaemonSet'
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --enable-ssl-passthrough
