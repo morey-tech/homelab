@@ -1,0 +1,61 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ingress-nginx-system
+resources:
+  - https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/baremetal/deploy.yaml
+  - ingress-nginx-metalb.yaml
+
+patches:
+  # Make Nginx the default ingress class
+  - target:
+      kind: IngressClass
+      name: nginx
+    patch: |-
+      - op: add
+        path: /metadata/annotations/ingressclass.kubernetes.io~1is-default-class
+        value: "true"
+  # Enable SSL Passthrough
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: ingress-nginx-controller
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/args/1
+        value: --enable-ssl-passthrough
+  # Make sure the --publish-service flag is set to the MetalLB service
+  - target:
+      kind: Deployment
+      name: ingress-nginx-controller
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: '--publish-service=ingress-nginx-system/ingress-nginx-metallb'
+      - op: replace
+        path: /spec/template/spec/containers/0/args/3
+        value: '--controller-class=k8s.io/ingress-nginx'
+      - op: replace
+        path: /spec/template/spec/containers/0/args/4
+        value: '--ingress-class=nginx'
+  # Convert Deployment to DaemonSet
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: ingress-nginx-controller
+    patch: |-
+      - op: replace
+        path: /kind
+        value: 'DaemonSet'
+  # IngressClass
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: IngressClass
+      name: nginx
+    patch: |-
+      - op: replace
+        path: /spec/controller
+        value: 'k8s.io/ingress-nginx'
+
