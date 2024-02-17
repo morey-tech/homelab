@@ -27,20 +27,3 @@ patches:
       - op: replace
         path: /kind
         value: 'DaemonSet'
-    # - op: replace
-    #   path: /spec/template/spec/containers/0/args/3
-    #   value: '--controller-class=k8s.io/ingress-nginx'
-    # - op: replace
-    #   path: /spec/template/spec/containers/0/args/4
-    #   value: '--ingress-class=nginx'
-  # # IngressClass
-  # - target:
-  #     group: networking.k8s.io
-  #     version: v1
-  #     kind: IngressClass
-  #     name: nginx
-  #   patch: |-
-  #     - op: replace
-  #       path: /spec/controller
-  #       value: 'k8s.io/ingress-nginx'
-
