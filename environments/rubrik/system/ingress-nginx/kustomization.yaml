@@ -8,16 +8,16 @@ helmCharts:
 - name: ingress-nginx
   includeCRDs: true
   namespace: ingress-nginx-system
-  releaseName: ingress-nginx
-  # releaseName: ingress-nginx-internal
+  # releaseName: ingress-nginx
+  releaseName: ingress-nginx-internal
   version: 4.9.0
   repo: https://kubernetes.github.io/ingress-nginx
   valuesInline:
     controller:
       kind: DaemonSet
       ingressClassResource:
-        name: ingress-nginx
-        # name: ingress-nginx-internal
+        # name: ingress-nginx
+        name: ingress-nginx-internal
         # Make this the default ingress class for the cluster.
         default: true
       publishService:
@@ -29,8 +29,8 @@ helmCharts:
 patches:
   - target:
       kind: DaemonSet
-      name: ingress-nginx-controller
-      # name: ingress-nginx-internal-controller
+      # name: ingress-nginx-controller
+      name: ingress-nginx-internal-controller
     patch: |-
       # Enable ssl-passthrough on the controller.
       - op: add
