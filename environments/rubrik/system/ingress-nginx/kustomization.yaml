@@ -27,12 +27,20 @@ patches:
       kind: Deployment
       name: ingress-nginx-controller
     patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/args/1
-        value: '--publish-service=ingress-nginx-system/ingress-nginx-metallb'
+      # Convert to daemonset to run controllers on each node.
       - op: replace
         path: /kind
         value: 'DaemonSet'
+      # After converting, remove fields specific to Deployment.
+      - op: remove
+        path: /spec/minReadySeconds
+      - op: remove
+        path: /spec/replicas
+      # Publish the metallb service.
+      - op: replace
+        path: /spec/template/spec/containers/0/args/1
+        value: '--publish-service=ingress-nginx-system/ingress-nginx-metallb'
+      # Enable ssl-passthrough on the controller.
       - op: add
         path: /spec/template/spec/containers/0/args/-
         value: --enable-ssl-passthrough
