@@ -8,7 +8,7 @@ helmCharts:
 - name: ingress-nginx
   includeCRDs: true
   namespace: ingress-nginx-system
-  releaseName: ingress-nginx
+  releaseName: ingress-nginx-internal
   version: 4.9.0
   repo: https://kubernetes.github.io/ingress-nginx
   # valuesInline:
