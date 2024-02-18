@@ -8,7 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"  # Fixes infinite 307 redirects.
 spec:
-  # ingressClassName: ingress-nginx-internal
+  ingressClassName: ingress-nginx-internal
   rules:
   - host: argocd.rubrik.lab.home.morey.tech
     http:
