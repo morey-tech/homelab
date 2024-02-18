@@ -15,7 +15,7 @@ metadata:
     # custom max body size for file uploading like backing image uploading
     nginx.ingress.kubernetes.io/proxy-body-size: 10000m
 spec:
-  ingressClassName: ingress-nginx-internal
+  ingressClassName: ingress-nginx
   rules:
   - host: longhorn.rubrik.lab.home.morey.tech
     http:
