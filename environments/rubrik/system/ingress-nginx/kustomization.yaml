@@ -11,7 +11,9 @@ helmCharts:
   releaseName: ingress-nginx-internal
   version: 4.9.0
   repo: https://kubernetes.github.io/ingress-nginx
-  # valuesInline:
+  valuesInline:
+    ingressClassResource:
+      name: ingress-nginx-internal
 
 patches:
   # Make Nginx the default ingress class
