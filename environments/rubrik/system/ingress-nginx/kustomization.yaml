@@ -27,11 +27,32 @@ helmCharts:
       service: 
         annotations:
           argocd.argoproj.io/sync-wave: 1
+- name: ingress-nginx
+  includeCRDs: true
+  namespace: ingress-nginx-system
+  releaseName: ingress-nginx-external
+  version: 4.9.0
+  repo: https://kubernetes.github.io/ingress-nginx
+  valuesInline:
+    controller:
+      kind: DaemonSet
+      ingressClassResource:
+        name: ingress-nginx-external
+        # Make this the default ingress class for the cluster.
+        default: true
+        controllerValue: "k8s.io/ingress-nginx-external"
+      # https://github.com/kubernetes/ingress-nginx/blob/86f3af8dead82f2d0905dceddeba213751e15b50/charts/ingress-nginx/templates/_params.tpl#L18-L20
+      ingressClass: ingress-nginx-external
+      publishService:
+        # Publish the metallb Service.
+        pathOverride: "ingress-nginx-system/ingress-nginx-external-metallb"
+      service: 
+        annotations:
+          argocd.argoproj.io/sync-wave: 1
 
 patches:
   - target:
       kind: DaemonSet
-      # name: ingress-nginx-internal-controller
     patch: |-
       # Enable ssl-passthrough on the controller.
       - op: add
