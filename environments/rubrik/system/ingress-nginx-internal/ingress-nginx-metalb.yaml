@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ingress-nginx-metallb
+  name: ingress-nginx-internal-metallb
   annotations:
     metallb.universe.tf/address-pool: rubrik-address-pool
     loadBalancerIP: 10.8.0.1
@@ -23,7 +23,7 @@ spec:
     targetPort: https
   selector:
     app.kubernetes.io/component: controller
-    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/instance: ingress-nginx-internal
     app.kubernetes.io/name: ingress-nginx
   type: LoadBalancer
   externalTrafficPolicy: Local

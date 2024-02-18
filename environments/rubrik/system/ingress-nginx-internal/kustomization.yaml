@@ -1,61 +1,38 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: ingress-nginx-internal-system
-nameSuffix: -internal
+namespace: ingress-nginx-system
 resources:
-  - https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/baremetal/deploy.yaml
-  - ingress-nginx-metalb.yaml
+  - ingress-nginx-internal-metalb.yaml
+
+helmCharts:
+- name: ingress-nginx
+  includeCRDs: true
+  namespace: ingress-nginx-internal-system
+  releaseName: ingress-nginx-internal
+  version: 4.9.0
+  repo: https://kubernetes.github.io/ingress-nginx
+  valuesInline:
+    controller:
+      kind: DaemonSet
+      ingressClassResource:
+        name: ingress-nginx-internal
+        # Make this the default ingress class for the cluster.
+        default: true
+        controllerValue: "k8s.io/ingress-nginx-internal"
+      # https://github.com/kubernetes/ingress-nginx/blob/86f3af8dead82f2d0905dceddeba213751e15b50/charts/ingress-nginx/templates/_params.tpl#L18-L20
+      ingressClass: ingress-nginx-internal
+      publishService:
+        # Publish the metallb Service.
+        pathOverride: "ingress-nginx-system/ingress-nginx-internal-metallb"
+      service: 
+        annotations:
+          argocd.argoproj.io/sync-wave: 1
 
 patches:
-  # Make Nginx the default ingress class
   - target:
-      kind: IngressClass
-      name: nginx
+      kind: DaemonSet
     patch: |-
-      - op: add
-        path: /metadata/annotations/ingressclass.kubernetes.io~1is-default-class
-        value: "true"
-  # Enable SSL Passthrough
-  - target:
-      group: apps
-      version: v1
-      kind: Deployment
-      name: ingress-nginx-controller
-    patch: |-
-      - op: add
-        path: /spec/template/spec/containers/0/args/1
-        value: --enable-ssl-passthrough
-  # Make sure the --publish-service flag is set to the MetalLB service
-  - target:
-      kind: Deployment
-      name: ingress-nginx-controller
-    patch: |-
+      # Enable ssl-passthrough on the controller.
       - op: add
         path: /spec/template/spec/containers/0/args/-
-        value: '--publish-service=ingress-nginx-internal-system/ingress-nginx-metallb-internal'
-      - op: replace
-        path: /spec/template/spec/containers/0/args/3
-        value: '--controller-class=k8s.io/ingress-nginx-internal'
-      - op: replace
-        path: /spec/template/spec/containers/0/args/4
-        value: '--ingress-class=nginx-internal'
-  # Convert Deployment to DaemonSet
-  - target:
-      group: apps
-      version: v1
-      kind: Deployment
-      name: ingress-nginx-controller
-    patch: |-
-      - op: replace
-        path: /kind
-        value: 'DaemonSet'
-  # IngressClass
-  - target:
-      group: networking.k8s.io
-      version: v1
-      kind: IngressClass
-      name: nginx
-    patch: |-
-      - op: replace
-        path: /spec/controller
-        value: 'k8s.io/ingress-nginx-internal'
+        value: --enable-ssl-passthrough
