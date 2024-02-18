@@ -7,7 +7,6 @@ resources:
 helmCharts:
 - name: ingress-nginx
   includeCRDs: true
-  namespace: ingress-nginx-external-system
   releaseName: ingress-nginx-external
   version: 4.9.0
   repo: https://kubernetes.github.io/ingress-nginx
