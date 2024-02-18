@@ -12,18 +12,13 @@ helmCharts:
   version: 4.9.0
   repo: https://kubernetes.github.io/ingress-nginx
   valuesInline:
-    ingressClassResource:
-      name: ingress-nginx-internal
+    controller:
+      ingressClassResource:
+        name: ingress-nginx-internal
+        # Make this the default ingress class for the cluster.
+        default: true
 
 patches:
-  # Make Nginx the default ingress class
-  - target:
-      kind: IngressClass
-      name: nginx
-    patch: |-
-      - op: add
-        path: /metadata/annotations/ingressclass.kubernetes.io~1is-default-class
-        value: "true"
   - target:
       kind: Deployment
       name: ingress-nginx-controller
