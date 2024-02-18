@@ -20,6 +20,8 @@ helmCharts:
         name: ingress-nginx-internal
         # Make this the default ingress class for the cluster.
         default: true
+      # https://github.com/kubernetes/ingress-nginx/blob/86f3af8dead82f2d0905dceddeba213751e15b50/charts/ingress-nginx/templates/_params.tpl#L18-L20
+      ingressClass: ingress-nginx-internal
       publishService:
         # Publish the metallb Service.
         pathOverride: "ingress-nginx-system/ingress-nginx-metallb"
