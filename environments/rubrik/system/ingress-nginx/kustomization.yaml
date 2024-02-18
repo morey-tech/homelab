@@ -23,8 +23,9 @@ helmCharts:
       publishService:
         # Publish the metallb Service.
         pathOverride: "ingress-nginx-system/ingress-nginx-metallb"
-      # service: 
-      #   annotations: 
+      service: 
+        annotations:
+          argocd.argoproj.io/sync-wave: 1
 
 patches:
   - target:
