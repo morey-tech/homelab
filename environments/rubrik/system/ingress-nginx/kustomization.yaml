@@ -21,7 +21,7 @@ helmCharts:
 patches:
   - target:
       kind: Deployment
-      name: ingress-nginx-controller
+      name: ingress-nginx-internal-controller
     patch: |-
       # Convert to daemonset to run controllers on each node.
       - op: replace
