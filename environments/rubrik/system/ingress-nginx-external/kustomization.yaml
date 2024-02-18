@@ -23,7 +23,7 @@ helmCharts:
       ingressClass: ingress-nginx-external
       publishService:
         # Publish the metallb Service.
-        pathOverride: "ingress-nginx-system/ingress-nginx-external-metallb"
+        pathOverride: "ingress-nginx-external-system/ingress-nginx-external-metallb"
       service: 
         annotations:
           argocd.argoproj.io/sync-wave: 1
