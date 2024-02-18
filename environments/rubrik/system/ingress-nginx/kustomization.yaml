@@ -13,29 +13,22 @@ helmCharts:
   repo: https://kubernetes.github.io/ingress-nginx
   valuesInline:
     controller:
+      kind: DaemonSet
       ingressClassResource:
         name: ingress-nginx-internal
         # Make this the default ingress class for the cluster.
         default: true
+      publishService:
+        # Publish the metallb Service.
+        pathOverride: "ingress-nginx-system/ingress-nginx-metallb"
+      # service: 
+      #   annotations: 
 
 patches:
   - target:
-      kind: Deployment
+      kind: DaemonSet
       name: ingress-nginx-internal-controller
     patch: |-
-      # Convert to daemonset to run controllers on each node.
-      - op: replace
-        path: /kind
-        value: 'DaemonSet'
-      # After converting, remove fields specific to Deployment.
-      - op: remove
-        path: /spec/minReadySeconds
-      - op: remove
-        path: /spec/replicas
-      # Publish the metallb service.
-      - op: replace
-        path: /spec/template/spec/containers/0/args/1
-        value: '--publish-service=ingress-nginx-system/ingress-nginx-metallb'
       # Enable ssl-passthrough on the controller.
       - op: add
         path: /spec/template/spec/containers/0/args/-
