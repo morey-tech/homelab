@@ -9,8 +9,6 @@ spec:
       revision: HEAD
       directories:
       - path: environments/rubrik/system/*
-      - path: environments/rubrik/system/ingress-nginx-internal
-        exclude: true
   ignoreApplicationDifferences:
     # Allow automated sync policy to be disabled manually.
     - jsonPointers:
