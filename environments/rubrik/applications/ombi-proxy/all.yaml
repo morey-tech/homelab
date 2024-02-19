@@ -22,6 +22,32 @@ spec:
         path: /
         pathType: ImplementationSpecific
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Enable External DNS for this Ingress.
+    external-dns.alpha.kubernetes.io/include: 'true'
+    # Set the target to the cluster apex domain.
+    # Defaults to the LoadBalancer IP, which is local only.
+    external-dns.alpha.kubernetes.io/target: rubrik.lab.home.morey.tech
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
+  name: ombi-proxy-external
+spec:
+  ingressClassName: ingress-nginx-external
+  rules:
+  - host: ombi.morey.tech
+    http:
+      paths:
+      - backend:
+          service:
+            name: ombi-proxy
+            port:
+              number: 80
+        path: /
+        pathType: ImplementationSpecific
+---
 apiVersion: v1
 kind: Service
 metadata:
