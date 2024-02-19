@@ -33,9 +33,12 @@ metadata:
     nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
     nginx.ingress.kubernetes.io/ssl-passthrough: "false"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    # Enable External DNS for this Ingress.
     external-dns.alpha.kubernetes.io/include: 'true'
+    # Set the target to the cluster apex domain.
+    # Defaults to the LoadBalancer IP, which is local only.
     external-dns.alpha.kubernetes.io/target: rubrik.lab.home.morey.tech
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: 'false'
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
 spec:
   ingressClassName: ingress-nginx-external
   rules:
