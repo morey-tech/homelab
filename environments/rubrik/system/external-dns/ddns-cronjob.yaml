@@ -81,3 +81,4 @@ spec:
             - name: IP_HOSTNAME_UNPROXIED
               value: unproxied.rubrik.lab.home.morey.tech
           restartPolicy: OnFailure
+          successfulJobsHistoryLimit: 1
