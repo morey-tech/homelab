@@ -4,3 +4,4 @@ metadata:
   name: argocd-cm
 data:
   kustomize.buildOptions: --enable-helm
+  application.resourceTrackingMethod: annotation+label
