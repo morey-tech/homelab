@@ -9,6 +9,7 @@ helmCharts:
   includeCRDs: true
   version: 1.13.0
   repo: https://kubernetes-sigs.github.io/external-dns
+  releaseName: external-dns
   valuesInline:
     sources:
       - ingress
