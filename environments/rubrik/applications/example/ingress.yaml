@@ -42,7 +42,7 @@ metadata:
 spec:
   ingressClassName: ingress-nginx-external
   rules:
-  - host: example-external.rubrik.lab.home.morey.tech
+  - host: example.morey.tech
     http:
       paths:
       - path: /
