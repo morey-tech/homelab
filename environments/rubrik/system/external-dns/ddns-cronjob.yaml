@@ -1,0 +1,77 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ddns
+rules:
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ddns
+subjects:
+- kind: ServiceAccount
+  name: ddns
+  namespace: external-dns
+roleRef:
+  kind: Role
+  name: ddns
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ddns
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ddns
+spec:
+  schedule: "*/2 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: ddns
+          containers:
+          - name: ddns
+            image: alpine/k8s:1.26.0
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - -c
+            - |
+              cat << EOF > /tmp/ingress.yml && kubectl apply -f /tmp/ingress.yml
+              apiVersion: networking.k8s.io/v1
+              kind: Ingress
+              metadata:
+                name: rubrik-lab-home-morey-tech-ip
+                annotations:
+                  external-dns.alpha.kubernetes.io/hostname: '$IP_HOSTNAME_PROXIED'
+                  external-dns.alpha.kubernetes.io/target: '$(curl --silent ifconfig.me)'
+                  external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
+              spec:
+                rules:
+                - host: '$IP_HOSTNAME_PROXIED'
+              ---
+              apiVersion: networking.k8s.io/v1
+              kind: Ingress
+              metadata:
+                name: unproxied-rubrik-lab-home-morey-tech-ip
+                annotations:
+                  external-dns.alpha.kubernetes.io/hostname: '$IP_HOSTNAME_UNPROXIED'
+                  external-dns.alpha.kubernetes.io/target: '$(curl --silent ifconfig.me)'
+                  external-dns.alpha.kubernetes.io/cloudflare-proxied: 'false'
+              spec:
+                rules:
+                - host: '$IP_HOSTNAME_UNPROXIED'
+              EOF
+            env:
+            - name: IP_HOSTNAME_PROXIED
+              value: rubrik.lab.home.morey.tech
+            - name: IP_HOSTNAME_UNPROXIED
+              value: unproxied.rubrik.lab.home.morey.tech
+          restartPolicy: OnFailure
