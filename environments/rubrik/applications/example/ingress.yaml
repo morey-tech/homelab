@@ -8,7 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     nginx.ingress.kubernetes.io/whitelist-source-range: "192.168.0.0/16,10.8.0.0/16" # Forbid access from external networks
 spec:
-  ingressClassName: ingress-nginx-external
+  ingressClassName: ingress-nginx-internal
   rules:
   - host: example.rubrik.lab.home.morey.tech
     http:
@@ -24,3 +24,28 @@ spec:
   # - hosts:
   #   - example.rubrik.lab.home.morey.tech
   #   secretName: example.rubrik.lab.home.morey.tech-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress-external
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    external-dns.alpha.kubernetes.io/include: 'true'
+    external-dns.alpha.kubernetes.io/hostname: rubrik.lab.home.morey.tech
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: 'false'
+spec:
+  ingressClassName: ingress-nginx-external
+  rules:
+  - host: example.rubrik.lab.home.morey.tech
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: guestbook-ui
+            port:
+              name: http
