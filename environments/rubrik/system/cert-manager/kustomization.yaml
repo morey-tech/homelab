@@ -15,3 +15,7 @@ helmCharts:
     extraArgs:
       - '--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53'
       # - '--feature-gates=ExperimentalGatewayAPISupport=true'
+    global:
+      leaderElection:
+        # Override the namespace used for the leader election lease
+        namespace: "cert-manager-system"
