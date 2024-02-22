@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cert-manager-system
+# resources:
+#   - cloudflare-api-token-secret.yaml
+
+helmCharts:
+- name: cert-manager
+  includeCRDs: true
+  releaseName: cert-manager
+  version: 1.8.0
+  repo: https://charts.jetstack.io
+  valuesInline:
+    includeCRDs: true
+    extraArgs:
+      - '--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53'
+      # - '--feature-gates=ExperimentalGatewayAPISupport=true'
