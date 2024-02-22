@@ -11,7 +11,7 @@ helmCharts:
   version: 1.8.0
   repo: https://charts.jetstack.io
   valuesInline:
-    includeCRDs: true
+    installCRDs: true
     extraArgs:
       - '--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53'
       # - '--feature-gates=ExperimentalGatewayAPISupport=true'
