@@ -26,7 +26,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
     # Enable External DNS for this Ingress.
     external-dns.alpha.kubernetes.io/include: 'true'
     # Set the target to the cluster apex domain.
