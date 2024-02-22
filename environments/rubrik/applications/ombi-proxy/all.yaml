@@ -27,8 +27,6 @@ kind: Ingress
 metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"  # Fixes infinite 307 redirects.
     # Enable External DNS for this Ingress.
     external-dns.alpha.kubernetes.io/include: 'true'
     # Set the target to the cluster apex domain.
