@@ -20,16 +20,13 @@ spec:
             name: guestbook-ui
             port:
               name: http
-  # tls:
-  # - hosts:
-  #   - example.rubrik.lab.home.morey.tech
-  #   secretName: example.rubrik.lab.home.morey.tech-tls
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: example-ingress-external
   annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
     nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
     nginx.ingress.kubernetes.io/ssl-passthrough: "false"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
@@ -52,3 +49,7 @@ spec:
             name: guestbook-ui
             port:
               name: http
+  tls:
+  - hosts:
+    - example.morey.tech
+    secretName: example.morey.tech
