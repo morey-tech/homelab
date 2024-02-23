@@ -14,13 +14,10 @@ helmCharts:
   repo: https://charts.jetstack.io
   valuesInline:
     installCRDs: true
-    # fix webhook ca inject annoation
-    # Kustomize does not set the Release.namespace which breaks stuff (e.g. sets it to default).
-    # namespace: cert-manager-system
     extraArgs:
       - '--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53'
       # - '--feature-gates=ExperimentalGatewayAPISupport=true'
-    # global:
-    #   leaderElection:
-    #     # Override the namespace used for the leader election lease
-    #     namespace: "cert-manager-system"
+    global:
+      leaderElection:
+        # Override the namespace used for the leader election lease
+        namespace: "cert-manager-system"
