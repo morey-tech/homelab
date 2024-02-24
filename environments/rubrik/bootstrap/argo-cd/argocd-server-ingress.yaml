@@ -24,4 +24,4 @@ spec:
   tls:
     - hosts:
         - argocd.rubrik.lab.home.morey.tech
-      secretName: argocd.rubrik.lab.home.morey.tech
+      secretName: argocd-server-tls  # as execpted by argocd-server for ssl passthrough
