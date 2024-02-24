@@ -3,9 +3,8 @@ kind: Ingress
 metadata:
   name: example-ingress
   annotations:
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/ssl-passthrough: "false"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/whitelist-source-range: "192.168.0.0/16,10.8.0.0/16" # Forbid access from external networks
 spec:
   ingressClassName: ingress-nginx-internal
@@ -20,6 +19,10 @@ spec:
             name: guestbook-ui
             port:
               name: http
+  tls:
+    - hosts:
+        - example.rubrik.lab.home.morey.tech
+      secretName: example.rubrik.lab.home.morey.tech
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
