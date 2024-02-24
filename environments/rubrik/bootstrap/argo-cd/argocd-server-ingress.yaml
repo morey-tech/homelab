@@ -4,6 +4,7 @@ metadata:
   name: argocd-server-ingress
   namespace: argocd
   annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"  # Fixes infinite 307 redirects.
@@ -20,3 +21,7 @@ spec:
             name: argocd-server
             port:
               name: https
+  tls:
+    - hosts:
+        - argocd.rubrik.lab.home.morey.tech
+      secretName: argocd.rubrik.lab.home.morey.tech

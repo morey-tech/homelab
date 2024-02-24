@@ -4,6 +4,7 @@ metadata:
   name: longhorn-ingress
   namespace: longhorn-system
   annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
     # # type of authentication
     # nginx.ingress.kubernetes.io/auth-type: basic
     # # prevent the controller from redirecting (308) to HTTPS
@@ -27,3 +28,7 @@ spec:
             name: longhorn-frontend
             port:
               name: http
+  tls:
+    - hosts:
+        - longhorn.rubrik.lab.home.morey.tech
+      secretName: longhorn.rubrik.lab.home.morey.tech
