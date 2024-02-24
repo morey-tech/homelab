@@ -1,3 +1,4 @@
 kubeconfig.yml
 # Output from building kustomized helm charts.
 **/*/*/charts/*
+environments/rubrik/system/external-secrets/bitwarden-secret.yaml
