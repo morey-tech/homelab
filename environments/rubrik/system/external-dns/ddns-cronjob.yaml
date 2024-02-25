@@ -69,7 +69,13 @@ spec:
                   external-dns.alpha.kubernetes.io/target: '$(curl --silent ifconfig.me)'
                   external-dns.alpha.kubernetes.io/cloudflare-proxied: 'false'
                   external-dns.alpha.kubernetes.io/include: 'true'
-                  argocd.argoproj.io/tracking-id: 'external-dns:networking/Ingress:external-dns-system/external-dns'
+                ownerReferences:
+                  - apiVersion: batch/v1
+                    blockOwnerDeletion: false
+                    controller: true
+                    kind: CronJob
+                    name: ddns
+                    uuid: $UUID
               spec:
                 ingressClassName: ingress-nginx-external
                 rules:
@@ -80,5 +86,9 @@ spec:
               value: rubrik.lab.home.morey.tech
             - name: IP_HOSTNAME_UNPROXIED
               value: unproxied.rubrik.lab.home.morey.tech
+            - name: UUID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uuid
           restartPolicy: OnFailure
   successfulJobsHistoryLimit: 1
