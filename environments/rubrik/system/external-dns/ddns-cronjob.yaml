@@ -44,6 +44,7 @@ spec:
             - /bin/sh
             - -c
             - |
+              export CRONJOB_UID=$(kubectl get cronjob ddns -n external-dns-system -o=jsonpath='{.metadata.uid}')
               cat << EOF > /tmp/ingress.yml && kubectl apply -f /tmp/ingress.yml
               apiVersion: networking.k8s.io/v1
               kind: Ingress
@@ -75,7 +76,7 @@ spec:
                     controller: true
                     kind: CronJob
                     name: ddns
-                    uid: $UID
+                    uid: $CRONJOB_UID
               spec:
                 ingressClassName: ingress-nginx-external
                 rules:
@@ -86,9 +87,5 @@ spec:
               value: rubrik.lab.home.morey.tech
             - name: IP_HOSTNAME_UNPROXIED
               value: unproxied.rubrik.lab.home.morey.tech
-            - name: UID
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.uid
           restartPolicy: OnFailure
   successfulJobsHistoryLimit: 1
