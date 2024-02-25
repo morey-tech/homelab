@@ -14,9 +14,9 @@ spec:
             - name: NFS_SERVER
               value: nfs-mass.lab.home.morey.tech
             - name: NFS_PATH
-              value: storage-mass/homelab/kind-personal/
+              value: storage-mass/clusters/rubrik.lab.home.morey.tech/
       volumes:
         - name: nfs-client-root
           nfs:
             server: nfs-mass.lab.home.morey.tech
-            path: storage-mass/homelab/kind-personal/
+            path: storage-mass/clusters/rubrik.lab.home.morey.tech/
