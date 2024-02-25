@@ -55,7 +55,13 @@ spec:
                   external-dns.alpha.kubernetes.io/target: '$(curl --silent ifconfig.me)'
                   external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
                   external-dns.alpha.kubernetes.io/include: 'true'
-                  argocd.argoproj.io/tracking-id: 'external-dns:networking/Ingress:external-dns-system/external-dns'
+                ownerReferences:
+                  - apiVersion: batch/v1
+                    blockOwnerDeletion: false
+                    controller: true
+                    kind: CronJob
+                    name: ddns
+                    uid: $CRONJOB_UID
               spec:
                 ingressClassName: ingress-nginx-external
                 rules:
