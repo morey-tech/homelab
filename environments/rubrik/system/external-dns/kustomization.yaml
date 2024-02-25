@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: external-dns-system
 resources:
   - ddns-cronjob.yaml
+  - cloudflare-auth-secret.yaml
 
 helmCharts:
 - name: external-dns
