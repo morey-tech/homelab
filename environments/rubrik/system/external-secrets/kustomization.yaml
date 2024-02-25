@@ -4,6 +4,7 @@ namespace: external-secrets-system
 resources:
   - bitwarden-cli-deploy.yaml
   # - bitwarden-secret.yaml
+  - secret-stores.yaml
 
 helmCharts:
 - name: external-secrets
