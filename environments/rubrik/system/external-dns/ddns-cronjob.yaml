@@ -75,7 +75,7 @@ spec:
                     controller: true
                     kind: CronJob
                     name: ddns
-                    uuid: $UUID
+                    uid: $UID
               spec:
                 ingressClassName: ingress-nginx-external
                 rules:
@@ -86,9 +86,9 @@ spec:
               value: rubrik.lab.home.morey.tech
             - name: IP_HOSTNAME_UNPROXIED
               value: unproxied.rubrik.lab.home.morey.tech
-            - name: UUID
+            - name: UID
               valueFrom:
                 fieldRef:
-                  fieldPath: metadata.uuid
+                  fieldPath: metadata.uid
           restartPolicy: OnFailure
   successfulJobsHistoryLimit: 1
