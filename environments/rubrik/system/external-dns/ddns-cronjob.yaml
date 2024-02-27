@@ -54,7 +54,7 @@ spec:
                 name: rubrik-lab-home-morey-tech-ip
                 annotations:
                   external-dns.alpha.kubernetes.io/hostname: '$IP_HOSTNAME_PROXIED'
-                  external-dns.alpha.kubernetes.io/target: '$(curl --silent ifconfig.me)'
+                  external-dns.alpha.kubernetes.io/target: '$PUBLIC_IP'
                   external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
                   external-dns.alpha.kubernetes.io/include: 'true'
                 ownerReferences:
@@ -75,7 +75,7 @@ spec:
                 name: unproxied-rubrik-lab-home-morey-tech-ip
                 annotations:
                   external-dns.alpha.kubernetes.io/hostname: '$IP_HOSTNAME_UNPROXIED'
-                  external-dns.alpha.kubernetes.io/target: '$(curl --silent ifconfig.me)'
+                  external-dns.alpha.kubernetes.io/target: '$PUBLIC_IP'
                   external-dns.alpha.kubernetes.io/cloudflare-proxied: 'false'
                   external-dns.alpha.kubernetes.io/include: 'true'
                 ownerReferences:
