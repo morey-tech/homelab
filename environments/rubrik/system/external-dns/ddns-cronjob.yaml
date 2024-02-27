@@ -44,6 +44,8 @@ spec:
             - /bin/sh
             - -c
             - |
+              export PUBLIC_IP=$(curl --silent ifconfig.me)
+              echo "The current public IP is: $PUBLIC_IP"
               export CRONJOB_UID=$(kubectl get cronjob ddns -n external-dns-system -o=jsonpath='{.metadata.uid}')
               cat << EOF > /tmp/ingress.yml && kubectl apply -f /tmp/ingress.yml
               apiVersion: networking.k8s.io/v1
