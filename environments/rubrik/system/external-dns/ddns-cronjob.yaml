@@ -6,6 +6,9 @@ rules:
 - apiGroups: ["networking.k8s.io"]
   resources: ["ingresses"]
   verbs: ["*"]
+- apiGroups: ["batch"]
+  resources: ["cronjobs"]
+  verbs: ["*"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -14,7 +17,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: ddns
-  namespace: external-dns
+  namespace: external-dns-system
 roleRef:
   kind: Role
   name: ddns
@@ -46,7 +49,7 @@ spec:
             - |
               export PUBLIC_IP=$(curl --silent ifconfig.me)
               echo "The current public IP is: $PUBLIC_IP"
-              export CRONJOB_UID=$(kubectl get cronjob ddns -n external-dns-system -o=jsonpath='{.metadata.uid}')
+              export CRONJOB_UID=$(kubectl get cronjob ddns -o=jsonpath='{.metadata.uid}')
               cat << EOF > /tmp/ingress.yml && kubectl apply -f /tmp/ingress.yml
               apiVersion: networking.k8s.io/v1
               kind: Ingress
