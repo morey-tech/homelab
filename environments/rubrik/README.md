@@ -42,7 +42,7 @@ kubeconfig-set
 
 Render the manifests for `argo-cd`  with kustomize, and apply them to the cluster.
 ```
-kubectl kustomize ./system/argo-cd/ | kubectl apply -f -
+kubectl apply -k ./system/argo-cd/
 kubectl wait deployment -n argocd --all --for=condition=Available=True --timeout=90s
 ```
 
