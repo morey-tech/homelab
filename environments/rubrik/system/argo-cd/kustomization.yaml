@@ -5,8 +5,6 @@ resources:
   - ./argocd-ns.yaml
   - https://raw.githubusercontent.com/argoproj/argo-cd/v2.10.1/manifests/ha/install.yaml
   - ./argocd-server-ingress.yaml
-  - ./argo-cd-app.yaml
-  - ./system-appset.yaml
-  - ./applications-appset.yaml
-patchesStrategicMerge:
-  - ./argocd-cm.yaml
+
+patches:
+  - path: ./argocd-cm.yaml
