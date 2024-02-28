@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: argo-cd
+  name: argo-cd-config
   namespace: argocd
 spec:
   destination:
@@ -14,7 +14,7 @@ spec:
     kind: Application
   project: default
   source:
-    path: environments/rubrik/bootstrap/argo-cd
+    path: environments/rubrik/argo-cd-config
     repoURL: https://github.com/morey-tech/homelab.git
     targetRevision: HEAD
   syncPolicy:

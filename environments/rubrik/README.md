@@ -29,23 +29,27 @@ ansible rubrik-<n>.maas.home.morey.tech -a "microk8s join 192.168.3.17:25000/xxx
 ```
 
 ## How to bootstrap the cluster:
-Optionally, after running the ansible script in `ansible/` for the `rubrik` environment, set the kube config.
+After running the ansible script in `ansible/` for the `rubrik` environment, set the kube config.
 ```
-export KUBECONFIG=kubeconfig.yml
-```
-
-From the `environments/rubrik` folder, render the manifests for `argo-cd`  with kustomize, and apply them to the cluster.
-```
-kubectl kustomize ./bootstrap/argo-cd/ | kubectl --kubeconfig kubeconfig.yml apply -f -
+# starting in ansible/
+cd ../environments/rubrik
+kubeconfig-set
 ```
 
-If the CRDs aren't registered quickly enough, you may see the following error. Simply re-run the command.
+:::note
+`kubeconfig-set` is a bash alias for `export KUBECONFIG=kubeconfig.yaml`.
+:::
+
+Render the manifests for `argo-cd`  with kustomize, and apply them to the cluster.
 ```
-resource mapping not found for name: "argo-cd" namespace: "argocd" from "STDIN": no matches for kind "Application" in version "argoproj.io/v1alpha1"
-ensure CRDs are installed first
-resource mapping not found for name: "cluster-services" namespace: "argocd" from "STDIN": no matches for kind "ApplicationSet" in version "argoproj.io/v1alpha1"
-ensure CRDs are installed first
-``` 
+kubectl kustomize ./system/argo-cd/ | kubectl apply -f -
+kubectl wait deployment -n argocd --all --for=condition=Available=True --timeout=90s
+```
+
+Wait for Argo CD to be ready. Then apply the configuration for Argo CD (e.g. the Applications, ApplicationSets, AppProjects).
+```
+kubectl kustomize ./argo-cd-config/ | kubectl apply -f -
+```
 
 ## Connecting to Argo CD
 ```
