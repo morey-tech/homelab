@@ -48,7 +48,7 @@ kubectl wait deployment -n argocd --all --for=condition=Available=True --timeout
 
 Wait for Argo CD to be ready. Then apply the configuration for Argo CD (e.g. the Applications, ApplicationSets, AppProjects).
 ```
-kubectl kustomize ./argo-cd-config/ | kubectl apply -f -
+kubectl apply -f bootstrap/
 ```
 
 ## Connecting to Argo CD
