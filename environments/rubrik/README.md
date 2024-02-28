@@ -28,7 +28,8 @@ Copy the generated `microk8s join` command in the output and run it on the other
 ansible rubrik-<n>.maas.home.morey.tech -a "microk8s join 192.168.3.17:25000/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/xxxxxxxxxx" 
 ```
 
-## How to bootstrap the cluster:
+## How to bootstrap the cluster
+### Argo CD
 After running the ansible script in `ansible/` for the `rubrik` environment, set the kube config.
 ```
 # starting in ansible/
@@ -42,13 +43,25 @@ kubeconfig-set
 
 Render the manifests for `argo-cd`  with kustomize, and apply them to the cluster.
 ```
-kubectl apply -k ./system/argo-cd/
+kubectl apply -k system/argo-cd/
 kubectl wait deployment -n argocd --all --for=condition=Available=True --timeout=90s
 ```
 
 Wait for Argo CD to be ready. Then apply the configuration for Argo CD (e.g. the Applications, ApplicationSets, AppProjects).
 ```
 kubectl apply -f bootstrap/
+```
+### External Secrets
+External Secrets Operator (ESO) is used to populate Kubernetes Secrets in the cluster with secrets stored in Bitwarden. To bootstrap the cluster, the `bitwarden-cli` Secret used by ESO needs to be created manually. The contents of which can be found in the Notes section of the `rubrik.lab.home.morey.tech external-secrets bitwarden` entry in `n*******s@morey.tech` Bitwarden account.
+
+Confirm that Argo CD has deployed External Secrets.
+```
+kubectl wait deployment -n external-secrets-system --all --for=condition=Available=True --timeout=90s
+```
+
+Copy the contents to `system/external-secrets/bitwarden-secret.yaml`, then apply it to the cluster:
+```
+kubectl apply -n external-secrets-system -f system/external-secrets/bitwarden-secret.yaml
 ```
 
 ## Connecting to Argo CD
