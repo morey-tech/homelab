@@ -52,13 +52,12 @@ kubectl apply -f bootstrap/
 ```
 
 ## Connecting to Argo CD
+In the event that the `argocd.` ingress is not working correctly, port-forward the `argocd-server` Service.
 ```
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
-If running in a dev container, VS code should automatically set up the forward from the container to your workstation.
-
-Then, go to [https://127.0.0.1:8080/](https://127.0.0.1:8080).
+Navigate to [argocd.rubrik.lab.home.morey.tech](https://argocd.rubrik.lab.home.morey.tech).
 
 Get the generated admin password with:
 ```
