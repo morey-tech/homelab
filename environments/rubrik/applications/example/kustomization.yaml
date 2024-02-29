@@ -5,4 +5,4 @@ resources:
   - deploy.yaml
   - ingress.yaml
   - pvc.yaml
-  - svc.yaml
+  - svc1.yaml
