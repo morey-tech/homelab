@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: bitwarden-cli
-          image: ghcr.io/noahburrell0/bitwarden@sha256:1d479402acf26254de433219244d407a5c2c66ab8acc3a572433b16e37697a8c
+          image: ghcr.io/morey-tech/bitwarden-cli:v0.1.0
           imagePullPolicy: IfNotPresent
           resources: {}
           env:
