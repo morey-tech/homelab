@@ -17,5 +17,3 @@ data:
         redirectURI: https://argocd.rubrik.lab.home.morey.tech/api/dex/callback
         loadAllGroups: false
         useLoginAsID: false
-      scopes:
-      - email

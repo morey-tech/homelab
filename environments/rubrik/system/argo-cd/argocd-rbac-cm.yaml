@@ -5,3 +5,4 @@ metadata:
 data:
   policy.github-sso.csv: |
     g, gcdcai6k@duck.com, role:admin
+  scopes: '[groups, email]'
