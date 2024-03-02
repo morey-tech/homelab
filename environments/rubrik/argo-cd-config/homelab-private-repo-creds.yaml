@@ -22,7 +22,6 @@ spec:
         labels:
           argocd.argoproj.io/secret-type: repository
   data:
-  # Example with a custom Field in the bitwarden vault item
   - secretKey: appID
     sourceRef:
       storeRef:
