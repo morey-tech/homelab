@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: argocd-rbac-cm
 data:
-  policy.tester-overlay.csv: |
+  policy.github-sso.csv: |
     g, gcdcai6k@duck.com, role:admin
