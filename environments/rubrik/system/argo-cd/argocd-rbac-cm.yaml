@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+data:
+  policy.tester-overlay.csv: |
+    g, gcdcai6k@duck.com, role:admin
