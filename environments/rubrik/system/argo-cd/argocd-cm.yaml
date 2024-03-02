@@ -3,5 +3,17 @@ kind: ConfigMap
 metadata:
   name: argocd-cm
 data:
+  url: https://argocd.rubrik.lab.home.morey.tech
   kustomize.buildOptions: --enable-helm
   application.resourceTrackingMethod: annotation
+  dex.config: |
+    connectors:
+    - type: github
+      id: github
+      name: GitHub
+      config:
+        clientID: $github-sso:clientID
+        clientSecret: $github-sso:clientSecret
+        redirectURI: https://argocd.rubrik.lab.home.morey.tech/api/dex/callback
+        loadAllGroups: false
+        useLoginAsID: false
