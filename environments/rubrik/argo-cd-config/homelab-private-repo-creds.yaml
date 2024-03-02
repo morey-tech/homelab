@@ -1,0 +1,51 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: github-homelab-private
+spec:
+  target:
+    name: github-homelab-private
+    deletionPolicy: Delete
+    template:
+      type: Opaque
+      data:
+        githubAppID: |-
+          {{ .appID }}
+        githubAppInstallationID: |-
+          {{ .installID }}
+        githubAppPrivateKey: |-
+          {{ .privateKey }}
+        project: default
+        type: git
+        url: https://github.com/morey-tech/homelab-private
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repository
+  data:
+  # Example with a custom Field in the bitwarden vault item
+  - secretKey: appID
+    sourceRef:
+      storeRef:
+        name: bitwarden-fields
+        kind: ClusterSecretStore
+    remoteRef:
+      key: e6827b60-eddf-4081-b6e5-b1270013b87c
+      property: app-id
+  - secretKey: installID
+    sourceRef:
+      storeRef:
+        name: bitwarden-fields
+        kind: ClusterSecretStore
+    remoteRef:
+      key: e6827b60-eddf-4081-b6e5-b1270013b87c
+      property: install-id
+  - secretKey: privateKey
+    sourceRef:
+      storeRef:
+        name: bitwarden-fields
+        kind: ClusterSecretStore
+    remoteRef:
+      key: e6827b60-eddf-4081-b6e5-b1270013b87c
+      property: private-key-base64
+      decodingStrategy: Base64
+  
