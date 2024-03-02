@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: ingress-nginx-external-metallb
   annotations:
-    metallb.universe.tf/address-pool: rubrik-address-pool
+    metallb.universe.tf/address-pool: rubrik-static-address-pool
     loadBalancerIP: 10.8.0.2
 spec:
   ipFamilies:

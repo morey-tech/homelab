@@ -1,11 +1,20 @@
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
-  name: rubrik-address-pool
+  name: rubrik-static-address-pool
   namespace: metallb-system
 spec:
   addresses:
   - 10.8.0.0/16
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: rubrik-dynamic-address-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 10.9.0.0/16
 ---
 apiVersion: metallb.io/v1beta1
 kind: BGPAdvertisement
@@ -13,7 +22,8 @@ metadata:
   name: bgp-advertisement
 spec:
   ipAddressPools:
-  - rubrik-address-pool
+  - rubrik-static-address-pool
+  - rubrik-dynamic-address-pool
   # Advertise each route as a /32 (i.e. single IP address).
   aggregationLength: 32
 ---

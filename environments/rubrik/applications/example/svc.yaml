@@ -4,7 +4,7 @@ metadata:
   name: guestbook-ui
   namespace: example
   annotations:
-    metallb.universe.tf/address-pool: rubrik-address-pool
+    metallb.universe.tf/address-pool: rubrik-dynamic-address-pool
     external-dns.alpha.kubernetes.io/hostname: example-svc.rubrik.lab.home.morey.tech
 spec:
   type: LoadBalancer
