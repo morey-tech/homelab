@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: bitwarden-cli
-          image: ghcr.io/morey-tech/bitwarden-cli:v0.1.0
+          image: ghcr.io/morey-tech/bitwarden-cli:latest
           imagePullPolicy: IfNotPresent
           resources: {}
           env:

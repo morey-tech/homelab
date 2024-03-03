@@ -18,3 +18,7 @@ helmCharts:
       requests:
         cpu: 100m
         memory: 256Mi
+
+images:
+  - name: ghcr.io/morey-tech/bitwarden-cli
+    newTag: v0.1.0
