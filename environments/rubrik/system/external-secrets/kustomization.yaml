@@ -5,7 +5,6 @@ resources:
   - bitwarden-cli-deploy.yaml
   # - bitwarden-secret.yaml
   - secret-stores.yaml
-  - example-secret.yaml
 
 helmCharts:
 - name: external-secrets
