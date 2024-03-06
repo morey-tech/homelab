@@ -36,7 +36,7 @@ spec:
         - allowEmpty=true
         - CreateNamespace=true
   templatePatch: |
-    {{- if .path.basename == "metallb" }}
+    {{- if path.basename == "metallb" }}
     spec:
       ignoreDifferences:
         # Ignore generated caBundle on MetalLB 
@@ -45,7 +45,7 @@ spec:
           jsonPointers:
           - /spec/conversion/webhook/clientConfig/caBundle
     {{- end }}
-    {{- if .path.basename == "k8s-gateway" }}
+    {{- if path.basename == "k8s-gateway" }}
     spec:
       ignoreDifferences:
         - kind: Deployment
