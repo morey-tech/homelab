@@ -1,4 +1,6 @@
 .terraform/
 terraform.tfstate
-terraform.tfstate.bckp
+terraform.tfstate.backup
 terraform.tfstate.local
+# Ignore because it contains sensitive values.
+terraform.tfvars
