@@ -102,6 +102,15 @@ resource "maas_dns_domain" "maas_home_morey_tech" {
   is_default    = true
 }
 
+resource "maas_device" "pfsense" {
+  domain   = maas_dns_domain.maas_home_morey_tech.name
+  hostname = "pfsense"
+  zone     = "default"
+  network_interfaces {
+    mac_address = "b2:c5:36:91:5b:79"
+  }
+}
+
 resource "maas_resource_pool" "rubrik_k8s_hosts" {
   name = "rubrik-k8s-hosts"
 }
@@ -338,14 +347,5 @@ resource "maas_instance" "rubrik_k8s_hosts" {
   }
   deploy_params {
     distro_series = "jammy"
-  }
-}
-
-resource "maas_device" "pfsense" {
-  domain   = maas_dns_domain.maas_home_morey_tech.name
-  hostname = "pfsense"
-  zone     = "default"
-  network_interfaces {
-    mac_address = "b2:c5:36:91:5b:79"
   }
 }
