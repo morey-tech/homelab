@@ -2,6 +2,6 @@
 terraform.tfstate
 terraform.tfstate.backup
 terraform.tfstate.*.backup
-terraform.tfstate.lock.info
+.terraform.tfstate.lock.info
 # Ignore because it contains sensitive values.
 terraform.tfvars
