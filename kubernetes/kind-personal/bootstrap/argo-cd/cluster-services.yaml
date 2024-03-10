@@ -8,7 +8,7 @@ spec:
       repoURL: https://github.com/morey-tech/homelab.git
       revision: HEAD
       directories:
-      - path: environments/kind-personal/cluster-services/*
+      - path: kubernetes/kind-personal/cluster-services/*
   template:
     metadata:
       name: '{{path[3]}}'

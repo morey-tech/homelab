@@ -14,7 +14,7 @@ spec:
     kind: Application
   project: default
   source:
-    path: environments/rubrik/argo-cd-config
+    path: kubernetes/rubrik/argo-cd-config
     repoURL: https://github.com/morey-tech/homelab.git
     targetRevision: HEAD
   syncPolicy:

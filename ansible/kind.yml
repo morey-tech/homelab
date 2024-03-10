@@ -59,7 +59,7 @@
     - name: Fetch generated kubeconfig. 
       ansible.builtin.fetch:
         src: /root/.kube/config
-        dest: ../environments/{{ ansible_hostname }}/kubeconfig.yml
+        dest: ../kubernetes/{{ ansible_hostname }}/kubeconfig.yml
         flat: yes
       tags:
         - never

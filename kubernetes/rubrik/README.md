@@ -62,7 +62,7 @@ ansible rubrik-[abcd]* -a "microk8s reset" -b
 After running the ansible script in `ansible/` for the `rubrik` environment, set the kube config.
 ```
 # starting in ansible/
-cd ../environments/rubrik
+cd ../kubernetes/rubrik
 kubeconfig-set
 ```
 

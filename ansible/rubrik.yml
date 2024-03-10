@@ -73,7 +73,7 @@
       run_once: true
       ansible.builtin.fetch:
         src: "/home/ubuntu/.kube/config"
-        dest: "../environments/rubrik/kubeconfig.yml"
+        dest: "../kubernetes/rubrik/kubeconfig.yml"
         flat: true
         mode: '0640'
         owner: "{{ ansible_env.USER }}"

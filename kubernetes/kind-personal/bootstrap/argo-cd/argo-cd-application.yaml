@@ -14,7 +14,7 @@ spec:
     kind: Application
   project: default
   source:
-    path: environments/kind-personal/bootstrap/argo-cd
+    path: kubernetes/kind-personal/bootstrap/argo-cd
     repoURL: https://github.com/morey-tech/homelab.git
     targetRevision: HEAD
   syncPolicy:
