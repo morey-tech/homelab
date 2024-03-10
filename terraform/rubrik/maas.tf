@@ -82,6 +82,12 @@ resource "maas_subnet" "k8s_hosts" {
   name       = "k8s-hosts"
   gateway_ip = "192.168.8.1"
   ip_ranges {
+    type     = "reserved"
+    start_ip = "192.168.8.100"
+    end_ip   = "192.168.8.199"
+    comment  = "host static assignments"
+  }
+  ip_ranges {
     type     = "dynamic"
     start_ip = "192.168.8.200"
     end_ip   = "192.168.8.250"
@@ -421,7 +427,7 @@ resource "maas_block_device" "rubrik_d_sdb" {
 
 # A MAAS instance deploys an OS onto ready machines.
 resource "maas_instance" "rubrik_k8s_hosts" {
-  count = 1 # The number of nodes to provision from the pool.
+  count = 0 # The number of nodes to provision from the pool.
   allocate_params {
     pool = maas_resource_pool.rubrik_k8s_hosts.name
   }
