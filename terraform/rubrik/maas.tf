@@ -1,3 +1,7 @@
+resource "maas_fabric" "home_morey_tech" {
+  name = "home-morey-tech"
+}
+
 resource "maas_machine" "rubrik_c" {
   power_type = "ipmi"
   power_parameters = jsonencode({
@@ -7,7 +11,7 @@ resource "maas_machine" "rubrik_c" {
     "power_address": "192.168.3.202",
     "power_boot_type": "auto",
     "power_driver": "LAN_2_0",
-    "power_pass": var.mass_power_pass,
+    "power_pass": var.maas_power_pass,
     "power_user": "maas",
     "privilege_level": "ADMIN"
   })
