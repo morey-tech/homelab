@@ -119,3 +119,31 @@ resource "maas_machine" "rubrik_c" {
   })
   pxe_mac_address = "0c:c4:7a:52:0f:8e"
 }
+
+resource "maas_network_interface_physical" "rubrik_c_eno1" {
+  machine     = maas_machine.rubrik_c.id
+  mac_address = "0c:c4:7a:52:0f:8e"
+  name        = "eno1"
+  vlan        = maas_vlan.lab.id
+}
+
+resource "maas_network_interface_physical" "rubrik_c_eno2" {
+  machine     = maas_machine.rubrik_c.id
+  mac_address = "0c:c4:7a:52:0f:8f"
+  name        = "eno2"
+  vlan        = maas_vlan.lab.id
+}
+
+resource "maas_network_interface_physical" "rubrik_c_ens1f0" {
+  machine     = maas_machine.rubrik_c.id
+  mac_address = "0c:c4:7a:58:47:14"
+  name        = "ens1f0"
+  vlan        = maas_vlan.lab.id
+}
+
+resource "maas_network_interface_physical" "rubrik_c_ens1f1" {
+  machine     = maas_machine.rubrik_c.id
+  mac_address = "0c:c4:7a:58:47:15"
+  name        = "ens1f1"
+  vlan        = 0
+}
