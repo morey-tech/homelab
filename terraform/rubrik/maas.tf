@@ -147,3 +147,12 @@ resource "maas_network_interface_physical" "rubrik_c_ens1f1" {
   name        = "ens1f1"
   vlan        = 0
 }
+
+resource "maas_network_interface_link" "rubrik_c_eno1" {
+  machine           = maas_machine.rubrik_c.id
+  network_interface = maas_network_interface_physical.rubrik_c_eno1.id
+  subnet            = maas_subnet.lab.id
+  mode              = "STATIC"
+  ip_address        = "192.168.3.18"
+  default_gateway   = true
+}
