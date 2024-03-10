@@ -12,7 +12,7 @@ resource "maas_vlan" "lab" {
   fabric = maas_fabric.home_morey_tech.id
   vid    = 3
   # name   = "lab"
-  name   = "untagged"
+  name = "untagged"
 }
 
 resource "maas_vlan" "bmc" {
@@ -107,9 +107,9 @@ resource "maas_resource_pool" "rubrik_k8s_hosts" {
 }
 
 resource "maas_machine" "rubrik_a" {
-  hostname = "rubrik-a"
-  domain = maas_dns_domain.maas_home_morey_tech.name
-  pool = maas_resource_pool.rubrik_k8s_hosts.name
+  hostname   = "rubrik-a"
+  domain     = maas_dns_domain.maas_home_morey_tech.name
+  pool       = maas_resource_pool.rubrik_k8s_hosts.name
   power_type = "ipmi"
   power_parameters = jsonencode({
     "cipher_suite_id" : "3",
@@ -163,9 +163,9 @@ resource "maas_network_interface_link" "rubrik_a_eno1" {
 }
 
 resource "maas_machine" "rubrik_b" {
-  hostname = "rubrik-b"
-  domain = maas_dns_domain.maas_home_morey_tech.name
-  pool = maas_resource_pool.rubrik_k8s_hosts.name
+  hostname   = "rubrik-b"
+  domain     = maas_dns_domain.maas_home_morey_tech.name
+  pool       = maas_resource_pool.rubrik_k8s_hosts.name
   power_type = "ipmi"
   power_parameters = jsonencode({
     "cipher_suite_id" : "3",
@@ -219,9 +219,9 @@ resource "maas_network_interface_link" "rubrik_b_eno1" {
 }
 
 resource "maas_machine" "rubrik_c" {
-  hostname = "rubrik-c"
-  domain = maas_dns_domain.maas_home_morey_tech.name
-  pool = maas_resource_pool.rubrik_k8s_hosts.name
+  hostname   = "rubrik-c"
+  domain     = maas_dns_domain.maas_home_morey_tech.name
+  pool       = maas_resource_pool.rubrik_k8s_hosts.name
   power_type = "ipmi"
   power_parameters = jsonencode({
     "cipher_suite_id" : "3",
@@ -275,9 +275,9 @@ resource "maas_network_interface_link" "rubrik_c_eno1" {
 }
 
 resource "maas_machine" "rubrik_d" {
-  hostname = "rubrik-d"
-  domain = maas_dns_domain.maas_home_morey_tech.name
-  pool = maas_resource_pool.rubrik_k8s_hosts.name
+  hostname   = "rubrik-d"
+  domain     = maas_dns_domain.maas_home_morey_tech.name
+  pool       = maas_resource_pool.rubrik_k8s_hosts.name
   power_type = "ipmi"
   power_parameters = jsonencode({
     "cipher_suite_id" : "3",
@@ -332,7 +332,7 @@ resource "maas_network_interface_link" "rubrik_d_eno1" {
 
 # A MAAS instance deploys an OS onto ready machines.
 resource "maas_instance" "rubrik_k8s_hosts" {
-  count = 1  # The number of nodes to provision from the pool.
+  count = 1 # The number of nodes to provision from the pool.
   allocate_params {
     pool = maas_resource_pool.rubrik_k8s_hosts.name
   }
@@ -342,9 +342,9 @@ resource "maas_instance" "rubrik_k8s_hosts" {
 }
 
 resource "maas_device" "pfsense" {
-  domain      = maas_dns_domain.maas_home_morey_tech.name
-  hostname    = "pfsense"
-  zone        = "default"
+  domain   = maas_dns_domain.maas_home_morey_tech.name
+  hostname = "pfsense"
+  zone     = "default"
   network_interfaces {
     mac_address = "b2:c5:36:91:5b:79"
   }

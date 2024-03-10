@@ -3,7 +3,7 @@ variable "maas_api_key" {
 }
 
 variable "maas_power_user" {
-  type = string
+  type    = string
   default = "maas"
 }
 
