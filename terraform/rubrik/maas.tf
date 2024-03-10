@@ -103,6 +103,8 @@ resource "maas_dns_domain" "maas_home_morey_tech" {
 }
 
 resource "maas_machine" "rubrik_c" {
+  hostname = "rubrik-c"
+  domain = maas_dns_domain.maas_home_morey_tech.name
   power_type = "ipmi"
   power_parameters = jsonencode({
     "cipher_suite_id" : "3",
