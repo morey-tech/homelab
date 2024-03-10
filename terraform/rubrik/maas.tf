@@ -161,3 +161,14 @@ resource "maas_network_interface_link" "rubrik_c_eno1" {
   ip_address        = "192.168.3.18"
   default_gateway   = true
 }
+
+# A MAAS instance deploys an OS onto ready machines.
+resource "maas_instance" "rubrik_k8s_hosts" {
+  count = 1
+  allocate_params {
+    pool = maas_resource_pool.rubrik_k8s_hosts.name
+  }
+  deploy_params {
+    distro_series = "jammy"
+  }
+}
