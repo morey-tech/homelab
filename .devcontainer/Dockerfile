@@ -58,6 +58,12 @@ RUN curl -Lo /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/
     && mv /tmp/kustomize /usr/local/bin/kustomize \
     && chmod +x /usr/local/bin/kustomize
 
+ENV TERRAFORM_VERSION=1.7.4
+RUN curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" \
+    && unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
+    && mv terraform /usr/local/bin/ \
+    && rm -rf terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+
 # [Optional] Set the default user. Omit if you want to keep the default as root.
 USER $USERNAME
 
