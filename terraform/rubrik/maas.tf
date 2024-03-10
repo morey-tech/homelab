@@ -106,62 +106,6 @@ resource "maas_resource_pool" "rubrik_k8s_hosts" {
   name = "rubrik-k8s-hosts"
 }
 
-resource "maas_machine" "rubrik_c" {
-  hostname = "rubrik-c"
-  domain = maas_dns_domain.maas_home_morey_tech.name
-  pool = maas_resource_pool.rubrik_k8s_hosts.name
-  power_type = "ipmi"
-  power_parameters = jsonencode({
-    "cipher_suite_id" : "3",
-    "k_g" : "",
-    "mac_address" : "0C:C4:7A:5A:8A:30",
-    "power_address" : "192.168.3.210",
-    "power_boot_type" : "auto",
-    "power_driver" : "LAN_2_0",
-    "power_pass" : var.maas_power_pass,
-    "power_user" : var.maas_power_user,
-    "privilege_level" : "ADMIN"
-  })
-  pxe_mac_address = "0c:c4:7a:52:0f:8e"
-}
-
-resource "maas_network_interface_physical" "rubrik_c_eno1" {
-  machine     = maas_machine.rubrik_c.id
-  mac_address = "0c:c4:7a:52:0f:8e"
-  name        = "eno1"
-  vlan        = maas_vlan.lab.id
-}
-
-resource "maas_network_interface_physical" "rubrik_c_eno2" {
-  machine     = maas_machine.rubrik_c.id
-  mac_address = "0c:c4:7a:52:0f:8f"
-  name        = "eno2"
-  vlan        = maas_vlan.lab.id
-}
-
-resource "maas_network_interface_physical" "rubrik_c_ens1f0" {
-  machine     = maas_machine.rubrik_c.id
-  mac_address = "0c:c4:7a:58:47:14"
-  name        = "ens1f0"
-  vlan        = maas_vlan.lab.id
-}
-
-resource "maas_network_interface_physical" "rubrik_c_ens1f1" {
-  machine     = maas_machine.rubrik_c.id
-  mac_address = "0c:c4:7a:58:47:15"
-  name        = "ens1f1"
-  vlan        = 0
-}
-
-resource "maas_network_interface_link" "rubrik_c_eno1" {
-  machine           = maas_machine.rubrik_c.id
-  network_interface = maas_network_interface_physical.rubrik_c_eno1.id
-  subnet            = maas_subnet.lab.id
-  mode              = "STATIC"
-  ip_address        = "192.168.3.18"
-  default_gateway   = true
-}
-
 resource "maas_machine" "rubrik_a" {
   hostname = "rubrik-a"
   domain = maas_dns_domain.maas_home_morey_tech.name
@@ -271,6 +215,62 @@ resource "maas_network_interface_link" "rubrik_b_eno1" {
   subnet            = maas_subnet.lab.id
   mode              = "STATIC"
   ip_address        = "192.168.3.16"
+  default_gateway   = true
+}
+
+resource "maas_machine" "rubrik_c" {
+  hostname = "rubrik-c"
+  domain = maas_dns_domain.maas_home_morey_tech.name
+  pool = maas_resource_pool.rubrik_k8s_hosts.name
+  power_type = "ipmi"
+  power_parameters = jsonencode({
+    "cipher_suite_id" : "3",
+    "k_g" : "",
+    "mac_address" : "0C:C4:7A:5A:8A:30",
+    "power_address" : "192.168.3.210",
+    "power_boot_type" : "auto",
+    "power_driver" : "LAN_2_0",
+    "power_pass" : var.maas_power_pass,
+    "power_user" : var.maas_power_user,
+    "privilege_level" : "ADMIN"
+  })
+  pxe_mac_address = "0c:c4:7a:52:0f:8e"
+}
+
+resource "maas_network_interface_physical" "rubrik_c_eno1" {
+  machine     = maas_machine.rubrik_c.id
+  mac_address = "0c:c4:7a:52:0f:8e"
+  name        = "eno1"
+  vlan        = maas_vlan.lab.id
+}
+
+resource "maas_network_interface_physical" "rubrik_c_eno2" {
+  machine     = maas_machine.rubrik_c.id
+  mac_address = "0c:c4:7a:52:0f:8f"
+  name        = "eno2"
+  vlan        = maas_vlan.lab.id
+}
+
+resource "maas_network_interface_physical" "rubrik_c_ens1f0" {
+  machine     = maas_machine.rubrik_c.id
+  mac_address = "0c:c4:7a:58:47:14"
+  name        = "ens1f0"
+  vlan        = maas_vlan.lab.id
+}
+
+resource "maas_network_interface_physical" "rubrik_c_ens1f1" {
+  machine     = maas_machine.rubrik_c.id
+  mac_address = "0c:c4:7a:58:47:15"
+  name        = "ens1f1"
+  vlan        = 0
+}
+
+resource "maas_network_interface_link" "rubrik_c_eno1" {
+  machine           = maas_machine.rubrik_c.id
+  network_interface = maas_network_interface_physical.rubrik_c_eno1.id
+  subnet            = maas_subnet.lab.id
+  mode              = "STATIC"
+  ip_address        = "192.168.3.18"
   default_gateway   = true
 }
 
