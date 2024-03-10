@@ -332,11 +332,20 @@ resource "maas_network_interface_link" "rubrik_d_eno1" {
 
 # A MAAS instance deploys an OS onto ready machines.
 resource "maas_instance" "rubrik_k8s_hosts" {
-  count = 1
+  count = 1  # The number of nodes to provision from the pool.
   allocate_params {
     pool = maas_resource_pool.rubrik_k8s_hosts.name
   }
   deploy_params {
     distro_series = "jammy"
+  }
+}
+
+resource "maas_device" "pfsense" {
+  domain      = maas_dns_domain.maas_home_morey_tech.name
+  hostname    = "pfsense"
+  zone        = "default"
+  network_interfaces {
+    mac_address = "b2:c5:36:91:5b:79"
   }
 }
