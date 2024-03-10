@@ -89,6 +89,19 @@ resource "maas_subnet" "k8s_hosts" {
   }
 }
 
+resource "maas_dns_domain" "lab_home_morey_tech" {
+  name          = "lab.home.morey.tech"
+  ttl           = 60
+  authoritative = true
+}
+
+resource "maas_dns_domain" "maas_home_morey_tech" {
+  name          = "maas.home.morey.tech"
+  ttl           = 60
+  authoritative = true
+  is_default    = true
+}
+
 resource "maas_machine" "rubrik_c" {
   power_type = "ipmi"
   power_parameters = jsonencode({
