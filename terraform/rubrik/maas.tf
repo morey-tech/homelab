@@ -171,6 +171,26 @@ resource "maas_network_interface_link" "rubrik_a_eno1" {
   default_gateway   = true
 }
 
+resource "maas_block_device" "rubrik_a_sdb" {
+  machine        = maas_machine.rubrik_a.id
+  name           = "sdb"
+  model          = "INTEL SSDSC2BA40"
+  serial         = "BTTV5053068F400HGN"
+  block_size     = 4096
+  size_gigabytes = 372
+  tags = [
+    "ssd",
+    "longhorn",
+  ]
+
+  partitions {
+    mount_point    = "/var/lib/longhorn/"
+    fs_type        = "ext4"
+    size_gigabytes = 371
+    tags           = []
+  }
+}
+
 resource "maas_machine" "rubrik_b" {
   hostname   = "rubrik-b"
   domain     = maas_dns_domain.maas_home_morey_tech.name
@@ -225,6 +245,26 @@ resource "maas_network_interface_link" "rubrik_b_eno1" {
   mode              = "STATIC"
   ip_address        = "192.168.3.16"
   default_gateway   = true
+}
+
+resource "maas_block_device" "rubrik_b_sdb" {
+  machine        = maas_machine.rubrik_b.id
+  name           = "sdb"
+  model          = "INTEL SSDSC2BA40"
+  serial         = "BTTV505307CP400HGN"
+  block_size     = 4096
+  size_gigabytes = 372
+  tags = [
+    "ssd",
+    "longhorn",
+  ]
+
+  partitions {
+    mount_point    = "/var/lib/longhorn/"
+    fs_type        = "ext4"
+    size_gigabytes = 371
+    tags           = []
+  }
 }
 
 resource "maas_machine" "rubrik_c" {
@@ -283,6 +323,26 @@ resource "maas_network_interface_link" "rubrik_c_eno1" {
   default_gateway   = true
 }
 
+resource "maas_block_device" "rubrik_c_sdb" {
+  machine        = maas_machine.rubrik_c.id
+  name           = "sdb"
+  model          = "INTEL SSDSC2BA40"
+  serial         = "BTTV505307LU400HGN"
+  block_size     = 4096
+  size_gigabytes = 372
+  tags = [
+    "ssd",
+    "longhorn",
+  ]
+
+  partitions {
+    mount_point    = "/var/lib/longhorn/"
+    fs_type        = "ext4"
+    size_gigabytes = 371
+    tags           = []
+  }
+}
+
 resource "maas_machine" "rubrik_d" {
   hostname   = "rubrik-d"
   domain     = maas_dns_domain.maas_home_morey_tech.name
@@ -337,6 +397,26 @@ resource "maas_network_interface_link" "rubrik_d_eno1" {
   mode              = "STATIC"
   ip_address        = "192.168.3.17"
   default_gateway   = true
+}
+
+resource "maas_block_device" "rubrik_d_sdb" {
+  machine        = maas_machine.rubrik_d.id
+  name           = "sdb"
+  model          = "INTEL SSDSC2BA40"
+  serial         = "BTTV505400MR400HGN"
+  block_size     = 4096
+  size_gigabytes = 372
+  tags = [
+    "ssd",
+    "longhorn",
+  ]
+
+  partitions {
+    mount_point    = "/var/lib/longhorn/"
+    fs_type        = "ext4"
+    size_gigabytes = 371
+    tags           = []
+  }
 }
 
 # A MAAS instance deploys an OS onto ready machines.
