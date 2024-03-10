@@ -12,7 +12,7 @@ resource "maas_machine" "rubrik_c" {
     "power_boot_type" : "auto",
     "power_driver" : "LAN_2_0",
     "power_pass" : var.maas_power_pass,
-    "power_user" : "maas",
+    "power_user" : var.maas_power_user,
     "privilege_level" : "ADMIN"
   })
   pxe_mac_address = "0c:c4:7a:52:0f:8e"
