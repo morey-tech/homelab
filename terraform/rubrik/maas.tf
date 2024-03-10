@@ -60,8 +60,8 @@ resource "maas_subnet" "lab" {
     comment  = "proxmox"
   }
   ip_ranges {
-    type     = "reserved"
-    start_ip = "192.168.3.200"
+    type     = "dynamic"
+    start_ip = "192.168.3.210"
     end_ip   = "192.168.3.250"
     comment  = "lab bmc"
   }
@@ -115,7 +115,7 @@ resource "maas_machine" "rubrik_c" {
     "cipher_suite_id" : "3",
     "k_g" : "",
     "mac_address" : "0C:C4:7A:5A:8A:30",
-    "power_address" : "192.168.3.202",
+    "power_address" : "192.168.3.210",
     "power_boot_type" : "auto",
     "power_driver" : "LAN_2_0",
     "power_pass" : var.maas_power_pass,
