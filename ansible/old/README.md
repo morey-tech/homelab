@@ -13,12 +13,12 @@ Each Evironment get's a playbook, so to provision an environment run:
 ansible-playbook <name>.yaml
 ```
 
-For example, for the `rubrik` environment:
+For example:
 ```
-ansible-playbook rubik.yaml
+ansible-playbook kind-personal.yaml
 ```
 
 For testing on a limited subset of hosts in an environment, use `-l <host-fqdn>`.
 ```
-ansible-playbook rubrik.yml -l rubrik-a.lab.home.morey.tech
+ansible-playbook kind-personal.yml -l rubrik-a.lab.home.morey.tech
 ```

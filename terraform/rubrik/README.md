@@ -1,5 +1,4 @@
-# Terraform
-## Rubrik
+# Terraform: Rubrik
 Populate the local `terraform.tfvars` file:
 ```
 # terraform.tfvars
