@@ -58,7 +58,6 @@ ansible rubrik-[abcd]* -a "microk8s reset" -b
 ```
 
 ## How to bootstrap the cluster
-### Argo CD
 After running the ansible script in `ansible/` for the `rubrik` environment, set the kube config.
 ```
 # starting in ansible/
@@ -75,6 +74,20 @@ Test connectivity to the Kubernetes cluster:
 k get nodes
 ```
 
+### External Secrets
+External Secrets Operator (ESO) is used to populate Kubernetes Secrets in the cluster with secrets stored in Bitwarden.
+
+```
+kubectl create namespace external-secrets-system
+kustomize build system/external-secrets/ --enable-helm | kubectl apply -f -
+```
+
+To bootstrap the cluster, the `bitwarden-cli` Secret used by ESO needs to be created manually. The contents of which can be found in the Notes section of the `rubrik.lab.home.morey.tech external-secrets bitwarden` entry in `n*******s@morey.tech` Bitwarden account. Copy the contents to `system/external-secrets/bitwarden-secret.yaml`, then apply it to the cluster:
+```
+kubectl apply -n external-secrets-system -f system/external-secrets/bitwarden-secret.yaml
+```
+
+### Argo CD
 Render the manifests for `argo-cd`  with kustomize, and apply them to the cluster.
 ```
 kubectl apply -k system/argo-cd/
@@ -84,18 +97,6 @@ kubectl wait deployment -n argocd --all --for=condition=Available=True --timeout
 Wait for Argo CD to be ready. Then apply the configuration for Argo CD (e.g. the Applications, ApplicationSets, AppProjects).
 ```
 kubectl apply -f bootstrap/
-```
-### External Secrets
-External Secrets Operator (ESO) is used to populate Kubernetes Secrets in the cluster with secrets stored in Bitwarden. To bootstrap the cluster, the `bitwarden-cli` Secret used by ESO needs to be created manually. The contents of which can be found in the Notes section of the `rubrik.lab.home.morey.tech external-secrets bitwarden` entry in `n*******s@morey.tech` Bitwarden account.
-
-Confirm that Argo CD has deployed External Secrets.
-```
-kubectl wait --for jsonpath='{.status.phase}=Active' --timeout=5s namespace/external-secrets-system
-```
-
-Copy the contents to `system/external-secrets/bitwarden-secret.yaml`, then apply it to the cluster:
-```
-kubectl apply -n external-secrets-system -f system/external-secrets/bitwarden-secret.yaml
 ```
 
 ## Connecting to Argo CD
