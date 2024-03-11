@@ -427,7 +427,7 @@ resource "maas_block_device" "rubrik_d_sdb" {
 
 # A MAAS instance deploys an OS onto ready machines.
 resource "maas_instance" "rubrik_k8s_hosts" {
-  count = 0 # The number of nodes to provision from the pool.
+  count = 1 # The number of nodes to provision from the pool.
   allocate_params {
     pool = maas_resource_pool.rubrik_k8s_hosts.name
   }
