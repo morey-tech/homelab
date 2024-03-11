@@ -158,23 +158,32 @@ resource "maas_network_interface_physical" "rubrik_a_ens1f0" {
   machine     = maas_machine.rubrik_a.id
   mac_address = "0c:c4:7a:58:47:18"
   name        = "ens1f0"
-  vlan        = maas_vlan.lab.id
+  vlan        = 0
 }
 
 resource "maas_network_interface_physical" "rubrik_a_ens1f1" {
   machine     = maas_machine.rubrik_a.id
   mac_address = "0c:c4:7a:58:47:19"
   name        = "ens1f1"
-  vlan        = maas_vlan.lab.id
+  vlan        = maas_vlan.k8s_hosts.id
 }
 
 resource "maas_network_interface_link" "rubrik_a_eno1" {
   machine           = maas_machine.rubrik_a.id
   network_interface = maas_network_interface_physical.rubrik_a_eno1.id
-  subnet            = maas_subnet.lab.id
+  subnet            = maas_subnet.lab.cidr
   mode              = "STATIC"
   ip_address        = "192.168.3.15"
   default_gateway   = true
+}
+
+resource "maas_network_interface_link" "rubrik_a_ens1f1" {
+  machine           = maas_machine.rubrik_a.id
+  network_interface = maas_network_interface_physical.rubrik_a_ens1f1.id
+  subnet            = maas_subnet.k8s_hosts.cidr
+  mode              = "STATIC"
+  ip_address        = "192.168.8.10"
+  default_gateway   = false
 }
 
 resource "maas_block_device" "rubrik_a_sdb" {
