@@ -1,11 +1,6 @@
-# Homelab
-
-## Ansible
-
-```
-ansible-playbook kind-personal.yml -t <action>
-```
-actions:
-- `template` - Add cluster config to host.
-- `create` - Create the cluster, when one doesn't exist.
-- `recreate
+# Morey Tech: Homelab
+## Environments
+### Rubrik
+#### - [Terraform](terraform/rubrik/README.md)
+#### - [Ansible](ansible/rubrik/README.md)
+#### - [Kubernetes](kubernetes/rubrik/README.md)
