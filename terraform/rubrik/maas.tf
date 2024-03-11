@@ -171,7 +171,7 @@ resource "maas_network_interface_physical" "rubrik_a_ens1f1" {
 resource "maas_network_interface_link" "rubrik_a_eno1" {
   machine           = maas_machine.rubrik_a.id
   network_interface = maas_network_interface_physical.rubrik_a_eno1.id
-  subnet            = maas_subnet.lab.id
+  subnet            = maas_subnet.lab.cidr
   mode              = "STATIC"
   ip_address        = "192.168.3.15"
   default_gateway   = true
@@ -247,7 +247,7 @@ resource "maas_network_interface_physical" "rubrik_b_ens1f1" {
 resource "maas_network_interface_link" "rubrik_b_eno1" {
   machine           = maas_machine.rubrik_b.id
   network_interface = maas_network_interface_physical.rubrik_b_eno1.id
-  subnet            = maas_subnet.lab.id
+  subnet            = maas_subnet.lab.cidr
   mode              = "STATIC"
   ip_address        = "192.168.3.16"
   default_gateway   = true
@@ -323,7 +323,7 @@ resource "maas_network_interface_physical" "rubrik_c_ens1f1" {
 resource "maas_network_interface_link" "rubrik_c_eno1" {
   machine           = maas_machine.rubrik_c.id
   network_interface = maas_network_interface_physical.rubrik_c_eno1.id
-  subnet            = maas_subnet.lab.id
+  subnet            = maas_subnet.lab.cidr
   mode              = "STATIC"
   ip_address        = "192.168.3.18"
   default_gateway   = true
@@ -399,7 +399,7 @@ resource "maas_network_interface_physical" "rubrik_d_ens1f1" {
 resource "maas_network_interface_link" "rubrik_d_eno1" {
   machine           = maas_machine.rubrik_d.id
   network_interface = maas_network_interface_physical.rubrik_d_eno1.id
-  subnet            = maas_subnet.lab.id
+  subnet            = maas_subnet.lab.cidr
   mode              = "STATIC"
   ip_address        = "192.168.3.17"
   default_gateway   = true
