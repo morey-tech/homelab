@@ -3,6 +3,7 @@ kind: ApplicationSet
 metadata:
   name: system-appset
 spec:
+  goTemplate: true
   generators:
   - git:
       repoURL: https://github.com/morey-tech/homelab.git
@@ -17,16 +18,16 @@ spec:
       - /spec/source/targetRevision
   template:
     metadata:
-      name: '{{path.basename}}'
+      name: '{{.path.basename}}'
     spec:
       project: default
       source:
         repoURL: https://github.com/morey-tech/homelab.git
         targetRevision: HEAD
-        path: '{{path}}'
+        path: '{{.path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{path.basename}}-system'
+        namespace: '{{.path.basename}}-system'
       syncPolicy:
         automated:
           allowEmpty: true
@@ -36,7 +37,7 @@ spec:
         - allowEmpty=true
         - CreateNamespace=true
   templatePatch: |
-    {{- if path.basename == "metallb" }}
+    {{- if .path.basename == "metallb" }}
     spec:
       ignoreDifferences:
         # Ignore generated caBundle on MetalLB 
@@ -45,7 +46,7 @@ spec:
           jsonPointers:
           - /spec/conversion/webhook/clientConfig/caBundle
     {{- end }}
-    {{- if path.basename == "k8s-gateway" }}
+    {{- if .path.basename == "k8s-gateway" }}
     spec:
       ignoreDifferences:
         - kind: Deployment
