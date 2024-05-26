@@ -1,0 +1,4 @@
+controlPlane:
+  distro:
+    k3s:
+      enabled: true
