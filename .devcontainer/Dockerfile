@@ -80,6 +80,11 @@ RUN curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terr
     && mv terraform /usr/local/bin/ \
     && rm -rf terraform_${TERRAFORM_VERSION}_linux_amd64.zip
 
+ENV VCLUSTER_VERSION=v0.20.0-beta.1
+RUN curl -L -o vcluster "https://github.com/loft-sh/vcluster/releases/download/${VCLUSTER_VERSION}/vcluster-linux-amd64" \
+    && install -c -m 0755 vcluster /usr/local/bin \
+    && rm -f vcluster
+
 # Add aliases and such
 RUN echo 'source /etc/profile.d/bash_completion.sh' >> /etc/bash.bashrc \
     && echo 'alias k="kubectl"' >> /etc/bash.bashrc \
