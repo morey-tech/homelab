@@ -13,9 +13,13 @@ helmCharts:
   version: 1.5.1
   repo: https://charts.longhorn.io
   valuesInline:
+    # https://github.com/longhorn/longhorn/blob/master/chart/values.yaml
     # MicroK8s kubelet root dir.
     csi:
       kubeletRootDir: "/var/snap/microk8s/common/var/lib/kubelet"
+    defaultSettings: 
+      # Endpoint used to access the backupstore.
+      backupTarget: nfs://192.168.3.104:/storage-mass/rubrik/longhorn
 
 patches:
   - path: ./service-account.yaml
