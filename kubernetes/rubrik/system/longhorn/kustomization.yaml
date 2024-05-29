@@ -20,6 +20,10 @@ helmCharts:
     defaultSettings: 
       # Endpoint used to access the backupstore.
       backupTarget: nfs://192.168.3.104:/storage-mass/rubrik/longhorn
+      # Allow multiple replicas on a single node. Rebalance replicas across nodes.
+      # https://github.com/morey-tech/homelab/issues/39
+      replicaSoftAntiAffinity: true
+      replicaAutoBalance: best-effort
 
 patches:
   - path: ./service-account.yaml
