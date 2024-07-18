@@ -11,6 +11,7 @@
           - nfs-common
           - open-iscsi
           - snapd
+          - parted
         state: present
         update_cache: true
 
@@ -78,3 +79,29 @@
         flat: true
         mode: '0640'
         owner: "{{ ansible_env.USER }}"
+
+    - name: Create partition on the disk
+      community.general.parted:
+        device: /dev/vda
+        state: present
+        number: 1
+        part_start: 0%
+        part_end: 100%
+
+    - name: Format the partition
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/vda1
+
+    - name: Create /var/lib/longhorn/ directory
+      ansible.builtin.file:
+        path: /var/lib/longhorn/
+        state: directory
+        mode: '0640'
+
+    - name: Mount the partition to /var/lib/longhorn/
+      ansible.posix.mount:
+        path: /var/lib/longhorn/
+        src: /dev/vda1
+        fstype: ext4
+        state: mounted
