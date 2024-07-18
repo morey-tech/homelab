@@ -10,6 +10,7 @@
         name:
           - nfs-common
           - open-iscsi
+          - snapd
         state: present
         update_cache: true
 
@@ -40,7 +41,7 @@
         state: directory  # Ensure it's treated as a directory
 
     - name: Output the microk8s kubeconfig
-      ansible.builtin.command: "microk8s config"
+      ansible.builtin.command: "/snap/bin/microk8s config"
       register: kubeconfig
       changed_when: false
 
