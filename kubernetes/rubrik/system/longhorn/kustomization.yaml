@@ -20,7 +20,7 @@ helmCharts:
       kubeletRootDir: "/var/snap/microk8s/common/var/lib/kubelet"
     defaultSettings: 
       # Endpoint used to access the backupstore.
-      backupTarget: nfs://192.168.3.104:/storage-mass/rubrik/longhorn
+      backupTarget: nfs://192.168.1.20:/storage-mass/rubrik/longhorn
       # Allow multiple replicas on a single node. Rebalance replicas across nodes.
       # https://github.com/morey-tech/homelab/issues/39
       replicaSoftAntiAffinity: true
