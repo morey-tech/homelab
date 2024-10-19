@@ -41,6 +41,12 @@ RUN curl -Lo konfig https://github.com/corneliusweig/konfig/raw/${KONFIG_VERSION
     && chmod +x konfig \
     && sudo mv -i konfig /usr/local/bin
 
+ENV KUBENEAT_VERSION=v2.0.4
+RUN wget https://github.com/itaysk/kubectl-neat/releases/download/${KUBENEAT_VERSION}/kubectl-neat_linux_amd64.tar.gz \
+    && tar -xvzf kubectl-neat_linux_amd64.tar.gz kubectl-neat \
+    && mv kubectl-neat /usr/local/bin/kubeneat \
+    && chmod 755 /usr/local/bin/kubeneat
+
 ENV KUBESEAL_VERSION=0.18.5
 RUN wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz \
     && tar -xvzf kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz kubeseal \
