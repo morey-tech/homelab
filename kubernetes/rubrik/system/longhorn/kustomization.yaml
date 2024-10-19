@@ -3,7 +3,7 @@ resources:
   - ingress.yaml
   - default-daily-backup.yaml
   - default-daily-snapshot.yaml
-  - storage-class.yaml
+  # - storage-class.yaml
 
 helmCharts:
 - name: longhorn
