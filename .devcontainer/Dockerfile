@@ -41,15 +41,15 @@ RUN curl -Lo konfig https://github.com/corneliusweig/konfig/raw/${KONFIG_VERSION
     && chmod +x konfig \
     && sudo mv -i konfig /usr/local/bin
 
-RUN KUBESEAL_VERSION=0.18.5 \
-    && wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz \
+ENV KUBESEAL_VERSION=0.18.5
+RUN wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz \
     && tar -xvzf kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz kubeseal \
     && mv kubeseal /usr/local/bin/ \
     && chmod 755 /usr/local/bin/kubeseal
 
 # Select desired TAG from https://github.com/argoproj/argo-cd/releases
-RUN ARGOCD_VERSION=v2.8.4 \
-    && curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/$ARGOCD_VERSION/argocd-linux-amd64 \
+ENV ARGOCD_VERSION=v2.8.4
+RUN curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/$ARGOCD_VERSION/argocd-linux-amd64 \
     && chmod +x /usr/local/bin/argocd \
     && echo 'source <(argocd completion bash)' >> /usr/share/bash-completion/completions/argocd
 
