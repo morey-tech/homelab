@@ -1,0 +1,14 @@
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: 15-min-backup-100-retain
+  namespace: longhorn-system
+spec:
+  concurrency: 2
+  cron: '*/15 * * * *'  # Every 15 minutes.
+  # Having default in groups will automatically schedule this recurring job to any volume with no recurring job.
+  groups:
+  - default
+  name: 15-min-backup-100-retain
+  retain: 100  # Just over a day of retained.
+  task: backup
