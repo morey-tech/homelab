@@ -5,3 +5,4 @@ metadata:
 data:
   kustomize.buildOptions: --enable-helm
   application.resourceTrackingMethod: annotation
+  exec.enabled: "true"
