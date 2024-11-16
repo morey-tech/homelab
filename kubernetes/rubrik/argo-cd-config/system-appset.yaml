@@ -56,6 +56,12 @@ spec:
     {{- end }}
     {{- if eq .path.basename "prometheus" }}
     spec:
+      ignoreDifferences:
+        # Ignore generated caBundle 
+        - kind: MutatingWebhookConfiguration
+          group: admissionregistration.k8s.io
+          jsonPointers:
+          - /spec/webhooks/-/admissionReviewVersions/clientConfig/caBundle
       syncPolicy:
         syncOptions:
         - ServerSideApply=true
