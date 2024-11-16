@@ -71,6 +71,11 @@ spec:
           name: prometheus-grafana
           jqPathExpressions:
           - .spec.template.spec.containers[]?.resources
+        - kind: Deployment
+          group: apps
+          name: prometheus-kube-state-metrics
+          jqPathExpressions:
+          - .spec.template.spec.containers[]?.resources
         - kind: DaemonSet
           group: apps
           name: prometheus-prometheus-node-exporter
