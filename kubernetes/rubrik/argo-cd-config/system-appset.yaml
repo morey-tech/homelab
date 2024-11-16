@@ -62,6 +62,20 @@ spec:
           group: admissionregistration.k8s.io
           jqPathExpressions:
           - .webhooks[]?.clientConfig.caBundle
+        - kind: ValidatingWebhookConfiguration
+          group: admissionregistration.k8s.io
+          jqPathExpressions:
+          - .webhooks[]?.clientConfig.caBundle
+        - kind: Deployment
+          group: apps
+          name: prometheus-grafana
+          jqPathExpressions:
+          - .spec.template.spec.containers[]?.resources
+        - kind: DaemonSet
+          group: apps
+          name: prometheus-prometheus-node-exporter
+          jqPathExpressions:
+          - .spec.template.spec.containers[]?.resources
       syncPolicy:
         syncOptions:
         - ServerSideApply=true
