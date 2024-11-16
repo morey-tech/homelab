@@ -54,3 +54,9 @@ spec:
           jsonPointers:
           - /spec/template/metadata/annotations/checksum~1config
     {{- end }}
+    {{- if eq .path.basename "prometheus" }}
+    spec:
+      syncPolicy:
+        syncOptions:
+        - ServerSideApply=true
+    {{- end }}
