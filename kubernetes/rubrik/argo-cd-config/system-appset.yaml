@@ -60,8 +60,8 @@ spec:
         # Ignore generated caBundle 
         - kind: MutatingWebhookConfiguration
           group: admissionregistration.k8s.io
-          jsonPointers:
-          - /spec/webhooks/-/admissionReviewVersions/clientConfig/caBundle
+          jqPathExpressions:
+          - .spec.webhooks[]?.admissionReviewVersions.clientConfig.caBundle
       syncPolicy:
         syncOptions:
         - ServerSideApply=true
