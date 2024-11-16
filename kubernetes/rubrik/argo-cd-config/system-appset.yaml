@@ -61,7 +61,7 @@ spec:
         - kind: MutatingWebhookConfiguration
           group: admissionregistration.k8s.io
           jqPathExpressions:
-          - .spec.webhooks[]?.admissionReviewVersions.clientConfig.caBundle
+          - .spec.webhooks[]?.clientConfig.caBundle
       syncPolicy:
         syncOptions:
         - ServerSideApply=true
