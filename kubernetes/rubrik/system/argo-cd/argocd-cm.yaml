@@ -6,3 +6,18 @@ data:
   kustomize.buildOptions: --enable-helm
   application.resourceTrackingMethod: annotation
   exec.enabled: "true"
+  # Trigger refresh of AppSet.
+  resource.customizations.actions.argoproj.io_ApplicationSet: |
+    discovery.lua: |
+      actions = {}
+      actions["refresh"] = {}
+      return actions
+    definitions:
+      - name: refresh
+        action.lua: |
+          local os = require("os")
+          if obj.metadata.annotations == nil then
+              obj.metadata.annotations = {}
+          end
+          obj.metadata.annotations["argoproj.io/refreshedAt"] = os.date("!%Y-%m-%dT%XZ")
+          return obj
