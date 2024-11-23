@@ -1,0 +1,74 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: unifi
+
+helmCharts:
+- name: unifi
+  includeCRDs: true
+  version: 5.1.2
+  repo: https://k8s-at-home.com/charts/
+  releaseName: unifi
+  namespace: unifi
+  valuesInline:
+    image:
+      pullPolicy: IfNotPresent
+      tag: v7.2.95
+      repository: jacobalberty/unifi
+
+    service:
+      main:
+        type: LoadBalancer
+        annotations:
+          metallb.universe.tf/address-pool: lan-unifi-address-pool
+        loadBalancerIP: 192.168.1.13
+      udp:
+        enabled: true
+        type: LoadBalancer
+        annotations:
+          metallb.universe.tf/address-pool: lan-unifi-address-pool
+        loadBalancerIP: 192.168.1.13
+        ports:
+          stun:
+            enabled: true
+            port: 3478
+            protocol: UDP
+          syslog:
+            enabled: true
+            port: 5514
+            protocol: UDP
+          discovery:
+            enabled: true
+            port: 10001
+            protocol: UDP
+
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          kubernetes.io/ingress.class: ingress-nginx-internal
+          cert-manager.io/cluster-issuer: letsencrypt
+          nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+          nginx.ingress.kubernetes.io/ssl-redirect: "true"
+          nginx.ingress.kubernetes.io/proxy-body-size: 1024m
+        hosts:
+          - host: unifi.rubrik.lab.home.morey.tech
+            paths:
+            - path: /
+              pathType: Prefix
+        tls:
+        - secretName: unifi.rubrik.lab.home.morey.tech
+          hosts:
+          - unifi.rubrik.lab.home.morey.tech
+
+    persistence:
+      data:
+        enabled: true
+        size: 2147483648
+        accessMode: ReadWriteOnce
+        mountPath: /unifi
+
+    mongodb:
+      enabled: true
+      persistence:
+        enabled: true
+        size: "8589934592"
