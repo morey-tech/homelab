@@ -64,6 +64,10 @@ helmCharts:
             enabled: true
             port: 10001
             protocol: UDP
+          discovery-l2:
+            enabled: true
+            port: 1900
+            protocol: UDP
 
     ingress:
       main:
