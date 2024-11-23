@@ -21,3 +21,13 @@ data:
           end
           obj.metadata.annotations["argoproj.io/refreshedAt"] = os.date("!%Y-%m-%dT%XZ")
           return obj
+  resource.customizations.actions.appsDeployment: |
+    discovery.lua: |
+      actions = {}
+      actions["Scale to Zero"] = {}
+      return actions
+    definitions:
+      - name: Scale to Zero
+        action.lua: |
+          obj.spec.replicas = 0
+          return obj
