@@ -38,7 +38,7 @@ data:
           container = {}
           container.image = "ubuntu"
           container.command = {}
-          container.command[0] = "sleep"
-          container.command[1] = "604800"
-          obj.spec.template.spec.containers[0] = container
+          container.command[1] = "sleep"
+          container.command[2] = "604800"
+          obj.spec.template.spec.containers[1] = container
           return obj
