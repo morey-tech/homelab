@@ -17,6 +17,15 @@ spec:
   - 10.9.0.0/16
 ---
 apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: lan-unifi-address-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 192.168.1.13/32
+---
+apiVersion: metallb.io/v1beta1
 kind: BGPAdvertisement
 metadata:
   name: bgp-advertisement
@@ -24,6 +33,7 @@ spec:
   ipAddressPools:
   - rubrik-static-address-pool
   - rubrik-dynamic-address-pool
+  - lan-unifi-address-pool
   # Advertise each route as a /32 (i.e. single IP address).
   aggregationLength: 32
 ---
