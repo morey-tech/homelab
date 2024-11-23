@@ -15,6 +15,9 @@ helmCharts:
       tag: v8.6.9
       repository: jacobalberty/unifi
 
+    # Fixed discovery on local network.
+    hostNetwork: true
+
     service:
       main:
         type: LoadBalancer
