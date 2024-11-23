@@ -23,7 +23,6 @@ data:
           return obj
   resource.customizations.actions.apps_Deployment: |
     discovery.lua: |
-      actions = {}
       actions["Scale to Zero"] = {}
       return actions
     definitions:
