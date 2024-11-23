@@ -20,12 +20,33 @@ helmCharts:
         type: LoadBalancer
         annotations:
           metallb.universe.tf/address-pool: lan-unifi-address-pool
+          metallb.universe.tf/allow-shared-ip: "192.168.1.13"
         loadBalancerIP: 192.168.1.13
+        ports:
+          http:
+            port: 8443
+            protocol: HTTPS
+          controller:
+            enabled: true
+            port: 8080
+            protocol: TCP
+          speedtest:
+            enabled: true
+            port: 6789
+            protocol: TCP
+          # Moved to UDP service.
+          stun:
+            enabled: false
+          syslog:
+            enabled: false
+          discovery:
+            enabled: false
       udp:
         enabled: true
         type: LoadBalancer
         annotations:
           metallb.universe.tf/address-pool: lan-unifi-address-pool
+          metallb.universe.tf/allow-shared-ip: "192.168.1.13"
         loadBalancerIP: 192.168.1.13
         ports:
           stun:
