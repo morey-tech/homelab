@@ -12,7 +12,7 @@ helmCharts:
   valuesInline:
     image:
       pullPolicy: IfNotPresent
-      tag: v7.2.95
+      tag: v8.6.9
       repository: jacobalberty/unifi
 
     service:
