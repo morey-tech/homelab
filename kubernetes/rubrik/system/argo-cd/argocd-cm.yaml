@@ -43,5 +43,4 @@ data:
           containers[1].command[1] = "sleep"
           containers[1].command[2] = "604800"
           obj.spec.template.spec.containers[1] = container
-          # obj.spec.replicas = 1
           return obj
