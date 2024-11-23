@@ -36,5 +36,6 @@ data:
       - name: Debug Container
         action.lua: |
           obj.spec.template.spec.template.containers[0].image = "ubuntu"
-          obj.spec.template.spec.template.containers[0].command = ["sleep","604800"]
+          obj.spec.template.spec.template.containers[0].command[0] = "sleep"
+          obj.spec.template.spec.template.containers[0].command[1] = "604800"
           return obj
