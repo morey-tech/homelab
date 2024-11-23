@@ -26,9 +26,15 @@ data:
     discovery.lua: |
       actions = {}
       actions["Scale to Zero"] = {}
+      actions["Debug Container"] = {}
       return actions
     definitions:
       - name: Scale to Zero
         action.lua: |
           obj.spec.replicas = 0
+          return obj
+      - name: Debug Container
+        action.lua: |
+          obj.spec.template.spec.template.containers[0].image = "ubuntu"
+          obj.spec.template.spec.template.containers[0].command = ["sleep","604800"]
           return obj
