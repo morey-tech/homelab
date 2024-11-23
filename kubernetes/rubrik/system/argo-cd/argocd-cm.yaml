@@ -35,7 +35,6 @@ data:
           return obj
       - name: Debug Container
         action.lua: |
-          obj.spec.template.spec.containers[1].name = "debug"
           obj.spec.template.spec.containers[1].image = "ubuntu"
           obj.spec.template.spec.containers[1].command = {}
           obj.spec.template.spec.containers[1].command[1] = "sleep"
