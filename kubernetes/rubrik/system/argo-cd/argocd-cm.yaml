@@ -35,10 +35,10 @@ data:
           return obj
       - name: Debug Container
         action.lua: |
-          obj.spec.template.spec.template.containers.0.image = "ubuntu"
-          if obj.spec.template.spec.template.containers.0.command == nil then
-              obj.spec.template.spec.template.containers.0.command = []
+          obj.spec.template.spec.template.containers[0].image = "ubuntu"
+          if obj.spec.template.spec.template.containers[0].command == nil then
+              obj.spec.template.spec.template.containers[0].command = {}
           end
-          obj.spec.template.spec.template.containers.0.command.0 = "sleep"
-          obj.spec.template.spec.template.containers.0.command.0 = "604800"
+          obj.spec.template.spec.template.containers[0].command[0] = "sleep"
+          obj.spec.template.spec.template.containers[0].command[1] = "604800"
           return obj
