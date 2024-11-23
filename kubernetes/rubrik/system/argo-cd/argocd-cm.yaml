@@ -35,11 +35,13 @@ data:
           return obj
       - name: Debug Container
         action.lua: |
-          container = {}
-          container.name = "debug"
-          container.image = "ubuntu"
-          container.command = {}
-          container.command[1] = "sleep"
-          container.command[2] = "604800"
+          containers = {}
+          containers[1] = {}
+          containers[1].name = "debug"
+          containers[1].image = "ubuntu"
+          containers[1].command = {}
+          containers[1].command[1] = "sleep"
+          containers[1].command[2] = "604800"
           obj.spec.template.spec.containers[1] = container
+          # obj.spec.replicas = 1
           return obj
