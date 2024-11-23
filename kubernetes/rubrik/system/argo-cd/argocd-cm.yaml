@@ -36,6 +36,7 @@ data:
       - name: Debug Container
         action.lua: |
           container = {}
+          container.name = "debug"
           container.image = "ubuntu"
           container.command = {}
           container.command[1] = "sleep"
