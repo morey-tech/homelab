@@ -15,7 +15,6 @@ spec:
           {{ .installID }}
         githubAppPrivateKey: |-
           {{ .privateKey }}
-        project: default
         type: git
         url: https://github.com/morey-tech/homelab-private.git
       metadata:
