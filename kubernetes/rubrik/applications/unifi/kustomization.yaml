@@ -22,9 +22,9 @@ helmCharts:
       main:
         type: LoadBalancer
         annotations:
-          metallb.universe.tf/address-pool: rubrik-dynamic-address-pool
-          metallb.universe.tf/allow-shared-ip: "192.168.1.13"
-        # loadBalancerIP: 192.168.1.13
+          metallb.universe.tf/address-pool: rubrik-static-address-pool
+          metallb.universe.tf/allow-shared-ip: "10.8.0.4"
+          metallb.universe.tf/loadBalancerIPs: 10.8.0.4
         ports:
           http:
             port: 8443
@@ -48,9 +48,9 @@ helmCharts:
         enabled: true
         type: LoadBalancer
         annotations:
-          metallb.universe.tf/address-pool: rubrik-dynamic-address-pool
-          metallb.universe.tf/allow-shared-ip: "192.168.1.13"
-        # loadBalancerIP: 192.168.1.13
+          metallb.universe.tf/address-pool: rubrik-static-address-pool
+          metallb.universe.tf/allow-shared-ip: "10.8.0.4"
+          metallb.universe.tf/loadBalancerIPs: 10.8.0.4
         ports:
           stun:
             enabled: true

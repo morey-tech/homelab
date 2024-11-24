@@ -6,6 +6,11 @@ metadata:
 spec:
   addresses:
   - 10.8.0.0/16
+  # 10.8.0.0 - k8s-gateway
+  # 10.8.0.1 - ingress-nginx-internal
+  # 10.8.0.2 - ingress-nginx-external
+  # 10.8.0.3 - plex
+  # 10.8.0.4 - unifi
   autoAssign: false
 ---
 apiVersion: metallb.io/v1beta1
