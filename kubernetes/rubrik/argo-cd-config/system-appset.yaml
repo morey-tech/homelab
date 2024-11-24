@@ -4,6 +4,8 @@ metadata:
   name: system-appset
 spec:
   goTemplate: true
+  syncPolicy:
+    applicationsSync: create-update
   generators:
   - git:
       repoURL: https://github.com/morey-tech/homelab.git

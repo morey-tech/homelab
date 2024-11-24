@@ -3,6 +3,8 @@ kind: ApplicationSet
 metadata:
   name: applications-appset
 spec:
+  syncPolicy:
+    applicationsSync: create-update
   generators:
   - git:
       repoURL: https://github.com/morey-tech/homelab.git
