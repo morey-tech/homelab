@@ -33,7 +33,6 @@ spec:
   ipAddressPools:
   - rubrik-static-address-pool
   - rubrik-dynamic-address-pool
-  - lan-unifi-address-pool
   # Advertise each route as a /32 (i.e. single IP address).
   aggregationLength: 32
 ---
@@ -46,3 +45,12 @@ spec:
   # ASN of pfSense.
   peerASN: 64500
   peerAddress: 192.168.3.1
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: layer-2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - lan-unifi-address-pool
