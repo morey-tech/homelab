@@ -26,6 +26,7 @@ helmCharts:
       service: 
         annotations:
           argocd.argoproj.io/sync-wave: 1
+      allowSnippetAnnotations: true
 
 patches:
   - target:
