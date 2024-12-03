@@ -5,6 +5,14 @@ namespace: immich
 resources:
   - library-pvc.yaml
 
+patches:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: immich-server
+  path: deployment-patch.yaml
+
 helmCharts:
 - name: immich
   includeCRDs: true
@@ -20,7 +28,7 @@ helmCharts:
     immich:
       persistence:
         library:
-          existingClaim: library-data
+          existingClaim: changeme  # see deployment-patch.yaml
 
     postgresql:
       enabled: true
