@@ -51,7 +51,7 @@ helmCharts:
             cert-manager.io/cluster-issuer: letsencrypt
             nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
             nginx.ingress.kubernetes.io/ssl-redirect: "true"
-            nginx.ingress.kubernetes.io/proxy-body-size: 1024m
+            nginx.ingress.kubernetes.io/proxy-body-size: 2048m
           hosts:
             - host: immich.rubrik.lab.home.morey.tech
               paths:
