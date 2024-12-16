@@ -9,6 +9,6 @@ spec:
   groups:
   # Having default in groups will automatically schedule this recurring job to any volume with no recurring job.
   - default
-  retain: 1
+  retain: 31
   concurrency: 2
   # labels:
