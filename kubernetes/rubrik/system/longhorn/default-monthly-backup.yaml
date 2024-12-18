@@ -1,14 +1,14 @@
 apiVersion: longhorn.io/v1beta1
 kind: RecurringJob
 metadata:
-  name: default-daily-snapshot
+  name: default-monthly-backup
   namespace: longhorn-system
 spec:
-  cron: "5 4 * * *" # At 04:05
-  task: "snapshot"
+  cron: "5 7 1 * *" # “At 07:05 on the 1st of the month”
+  task: "backup"
   groups:
   # Having default in groups will automatically schedule this recurring job to any volume with no recurring job.
   - default
-  retain: 31
+  retain: 12
   concurrency: 2
   # labels:
