@@ -15,8 +15,6 @@ data:
               "pods": 20
             targetThresholds:
               "pods": 30
-            metricsUtilization:
-              metricsServer: true
         plugins:
           balance:
             enabled:
