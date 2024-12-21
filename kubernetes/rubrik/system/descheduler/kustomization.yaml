@@ -3,5 +3,6 @@ kind: Kustomization
 namespace: descheduler-system
 resources:
   - github.com/kubernetes-sigs/descheduler/kubernetes/cronjob?ref=release-1.31
-  - low-node-utilization.yaml
-  - pod-life-time.yaml
+
+patches:
+  - patch: descheduler-policy-configmap.yaml
