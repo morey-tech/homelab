@@ -6,3 +6,7 @@ resources:
 
 patches:
   - path: ./descheduler-policy-configmap.yaml
+    target:
+      version: v1
+      kind: ConfigMap
+      name: descheduler-policy-configmap
