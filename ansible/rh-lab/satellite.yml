@@ -1,0 +1,35 @@
+- name: Install Satellite
+  hosts: satellite.rh-lab.morey.tech
+  tasks:
+    ## Currently done during RHEL installation.
+    # - name: Register and auto-subscribe to available content.
+    #   community.general.redhat_subscription:
+    #     state: present
+    #     username: joe_user
+    #     password: somepass
+    #     auto_attach: true
+
+    - name: Enable Satellite RHSM repositories
+      community.general.rhsm_repository:
+        name: "{{ item }}"
+        state: enabled
+      loop:
+        - rhel-9-for-x86_64-baseos-rpms
+        - rhel-9-for-x86_64-appstream-rpms
+        - satellite-6.16-for-rhel-9-x86_64-rpms
+        - satellite-maintenance-6.16-for-rhel-9-x86_64-rpms
+
+    - name: Install the latest version of virt-viewer
+      ansible.builtin.dnf:
+        name: virt-viewer
+        state: latest
+
+    - name: Run Satellite Installer Role
+      ansible.builtin.import_role:
+        name: redhat.satellite_operations.installer
+      vars:
+        satellite_installer_scenario: satellite
+        satellite_installer_package: satellite-installer
+        satellite_installer_options:
+          - '--foreman-initial-organization "Morey Tech - RH Lab"'
+          - '--foreman-initial-admin-password mybadpassword'
