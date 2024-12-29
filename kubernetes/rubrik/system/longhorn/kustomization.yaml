@@ -12,7 +12,7 @@ helmCharts:
   namespace: longhorn-system
   releaseName: longhorn
   # valuesInline:
-  version: 1.6.3
+  version: 1.7.2
   repo: https://charts.longhorn.io
   valuesInline:
     # https://github.com/longhorn/longhorn/blob/master/chart/values.yaml
