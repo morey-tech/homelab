@@ -26,7 +26,7 @@ helmCharts:
       # https://github.com/morey-tech/homelab/issues/39
       replicaSoftAntiAffinity: true
       replicaAutoBalance: best-effort
-      storageMinimalAvailablePercentage: 0.10  # 10% since disk is dedicated.
+      storageMinimalAvailablePercentage: 10  # 10% since disk is dedicated.
 
 patches:
   - path: ./service-account.yaml
