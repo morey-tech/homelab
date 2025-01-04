@@ -3,7 +3,7 @@ resources:
   - ingress.yaml
   - default-daily-backup.yaml
   - default-monthly-backup.yaml
-  - 15-min-snapshot-100-retain.yaml
+  - 30-min-snapshot-50-retain.yaml
   # - storage-class.yaml
 
 helmCharts:
