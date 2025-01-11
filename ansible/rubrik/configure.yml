@@ -15,14 +15,19 @@
         state: present
         update_cache: true
 
+    - name: Install tools (with snap)
+      community.general.snap:
+        name:
+          - jq
+          - kubectl
+
     # sudo snap install microk8s --classic
-    - name: Install snap packages microk8s and related tools
+    # Separate because it requires `--classic`.
+    - name: Install microk8s (with snap)
       community.general.snap:
         name:
           - microk8s
-          - jq
-          - kubectl
-        classic: true
+        classic: true  # required for microk8s with full system access.
 
     # sudo usermod -a -G microk8s {{ ansible_user }}
     - name: Apending microk8s group to user {{ ansible_user }}
