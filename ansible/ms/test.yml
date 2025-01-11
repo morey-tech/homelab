@@ -1,0 +1,35 @@
+---
+- name: Test creating vm on ms-01
+  hosts:
+    - ms-01.home.morey.tech
+  become: true
+
+  tasks:
+    - name: Print user
+      ansible.builtin.debug:
+        msg: "{{ api_user }}"
+    - name: Print token id
+      ansible.builtin.debug:
+        msg: "{{ api_token_id }}"
+    - name: Print token secret
+      ansible.builtin.debug:
+        msg: "{{ api_token_secret }}"
+
+    - name: Create new VM with minimal options
+      community.general.proxmox_kvm:
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ ansible_host }}"
+        vmid: 6254
+        name: test
+        node: ms-01
+        cpu: host
+        cores: 1
+        memory: 2048
+        ide:
+          ide2: 'local:cloudinit,format=qcow2'
+        scsi:
+          scsi0: 'local-lvm:32,iothread=on'
+        net:
+          net0: 'virtio,bridge=vmbr0,tag=3,firewall=1'
