@@ -26,6 +26,7 @@
       ansible.builtin.apt:
         pkg:
           - tmux
+          - python3-proxmoxer
 
     - name: Upgrade all existing packages to latest
       ansible.builtin.apt:
