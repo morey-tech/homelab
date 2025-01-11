@@ -12,13 +12,13 @@ ansible -m ping rubrik-*
 
 Run the Ansible playbook for the `rubrik` environment:
 ```
-ansible-playbook rubrik.yml
+ansible-playbook configure.yml
 ```
 
 :::info
 For testing on a limited subset of hosts in an environment, use `-l <host-fqdn>`.
 ```
-ansible-playbook rubrik.yml -l rubrik-[abd].maas.home.morey.tech
+ansible-playbook configure.yml -l rubrik-[abd].maas.home.morey.tech
 ```
 :::
 
