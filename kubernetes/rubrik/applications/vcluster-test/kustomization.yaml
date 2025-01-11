@@ -8,6 +8,6 @@ helmCharts:
   includeCRDs: true
   releaseName: vcluster-test
   namespace: vcluster-test
-  # version: 
+  version: 0.22.0
   repo: https://charts.loft.sh
   valuesFile: ./vcluster.yaml
