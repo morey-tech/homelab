@@ -19,10 +19,10 @@
         - satellite-6.16-for-rhel-9-x86_64-rpms
         - satellite-maintenance-6.16-for-rhel-9-x86_64-rpms
 
-    - name: Install the latest version of virt-viewer
-      ansible.builtin.dnf:
-        name: virt-viewer
-        state: latest
+    # - name: Install the latest version of virt-viewer
+    #   ansible.builtin.dnf:
+    #     name: virt-viewer
+    #     state: latest
 
     - name: Run Satellite Installer Role
       ansible.builtin.import_role:
