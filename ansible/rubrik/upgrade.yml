@@ -1,0 +1,33 @@
+---
+- name: Upgrade Rubrik nodes
+  hosts:
+    - all
+  become: true
+
+  tasks:
+    - name: Upgrade all existing packages to latest
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+        update_cache: true
+        only_upgrade: true  # Upgrade but do not install packages.
+
+    - name: Remove useless packages from the cache
+      ansible.builtin.apt:
+        autoclean: true
+
+    - name: Remove dependencies that are no longer required
+      ansible.builtin.apt:
+        autoremove: true
+
+    - name: Update tools (with snap)
+      community.general.snap:
+        name:
+          - jq
+          - kubectl
+
+    - name: Update microk8s (with snap)
+      community.general.snap:
+        name:
+          - microk8s
+        classic: true  # required for microk8s with full system access.

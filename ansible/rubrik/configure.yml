@@ -1,5 +1,5 @@
 ---
-- name: Prepare rubrik nodes for K8s
+- name: Configure Rubrik nodes
   hosts:
     - all
   become: true
