@@ -1,0 +1,43 @@
+---
+- name: Configure MS Nodes
+  hosts:
+    - all
+  become: true
+
+  tasks:
+    - name: Add pve no-subscription repo
+      ansible.builtin.apt_repository:
+        repo: deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription
+        state: present
+
+    - name: Remove pve enterpise repo
+      ansible.builtin.apt_repository:
+        repo: deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise
+        state: absent
+        update_cache: false  # required to avoid 401 error.
+
+    - name: Remove ceph enterpise repo
+      ansible.builtin.apt_repository:
+        repo: deb https://enterprise.proxmox.com/debian/ceph-quincy bookworm enterprise
+        state: absent
+        update_cache: false  # required to avoid 401 error.
+
+    - name: Install specific packages
+      ansible.builtin.apt:
+        pkg:
+          - tmux
+
+    - name: Upgrade all existing packages to latest
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+        update_cache: true
+        only_upgrade: true  # Upgrade but do not install packages.
+
+    - name: Remove useless packages from the cache
+      ansible.builtin.apt:
+        autoclean: true
+
+    - name: Remove dependencies that are no longer required
+      ansible.builtin.apt:
+        autoremove: true
