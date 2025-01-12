@@ -27,6 +27,7 @@
         pkg:
           - tmux
           - python3-proxmoxer
+          - libguestfs-tools
 
     - name: Upgrade all existing packages to latest
       ansible.builtin.apt:
