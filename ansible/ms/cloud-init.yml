@@ -1,0 +1,119 @@
+---
+- name: Set Up Debian Cloud-Init VM Template
+  hosts:
+    - ms-01.home.morey.tech
+  become: true
+
+  vars:
+    authorized_keys_path: '/root/.ssh/authorized_keys'
+    image_url: 'https://cdimage.debian.org/images/cloud/bookworm/20241201-1948/debian-12-genericcloud-amd64-20241201-1948.qcow2'
+    image_name: 'debian-12-generic-amd64.qcow2'
+    image_path: '/var/lib/vz/template/qcow/{{ image_name }}'
+    vm_id: '6254'
+
+  tasks:
+    - name: Create VM template
+      community.general.proxmox_kvm:
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ ansible_host }}"
+        vmid: "{{ vm_id }}"
+        name: debian-12-cloudinit-template
+        node: ms-01
+        cores: 2
+        memory: 2048
+        ide:
+          ide2: 'local-nvme:cloudinit'
+        scsihw: virtio-scsi-pci
+        # scsi:
+        #   scsi0: 'local-nvme:32,iothread=on'
+        net:
+          net0: 'virtio,bridge=vmbr0,tag=3,firewall=1'
+      register: createvm_result
+      notify: Update Cloud-Init Disk
+
+    # The VM must exist to convert it to a template. So separate task.
+    - name: Convert VM to template
+      community.general.proxmox_kvm:
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ ansible_host }}"
+        vmid: "{{ vm_id }}"
+        name: debian-12-cloudinit-template
+        node: ms-01
+        state: template
+
+    - name: Configure Cloud-Init Image
+      notify: Update Cloud-Init Disk
+      block:
+        - name: Download cloud-init image
+          ansible.builtin.get_url:
+            url: '{{ image_url }}'
+            dest: '{{ image_path }}'
+            mode: '0440'
+
+        - name: Check if root is allowed to SSH.
+          ansible.builtin.shell:
+            cmd: |
+              set -o pipefail
+              virt-cat --format=qcow2 -a {{ image_path }} /etc/cloud/cloud.cfg | grep disable_root
+            executable: /bin/bash
+          register: check_disable_root
+          changed_when: false
+          failed_when: false
+
+        - name: Allow root to SSH.
+          ansible.builtin.command: virt-edit -a {{ image_path }} /etc/cloud/cloud.cfg -e 's/disable_root:\ true/disable_root:\ false/'
+          when: "check_disable_root.stdout.find('disable_root: true') != -1"
+          register: allowrootssh
+          changed_when: allowrootssh.rc != 0
+
+        - name: Check if root is allowed to SSH with key.
+          ansible.builtin.shell:
+            cmd: |
+              set -o pipefail
+              virt-cat --format=qcow2 -a {{ image_path }} /etc/ssh/sshd_config | grep "PermitRootLogin"'
+            executable: /bin/bash
+          register: check_permit_root_login
+          changed_when: false
+          failed_when: false
+
+        - name: Allow root to use SSH key.
+          ansible.builtin.command:
+            cmd: |
+              virt-edit -a {{ image_path }} /etc/ssh/sshd_config \
+                -e 's/#PermitRootLogin\ prohibit-password/PermitRootLogin\ prohibit-password/'
+          when: check_disable_root.stdout.find("#PermitRootLogin prohibit-password") != -1
+          changed_when: always
+
+        - name: Register wanted authorized_keys contents
+          ansible.builtin.slurp:
+            src: "{{ authorized_keys_path }}"
+          register: root_wanted_authorized_keys
+
+        - name: Register existing root authorized_keys
+          ansible.builtin.shell:
+            cmd: |
+              set -o pipefail
+              virt-cat --format=qcow2 -a {{ image_path }} {{ authorized_keys_path }}
+            executable: /bin/bash
+          register: check_root_authorized_keys
+          changed_when: false
+          failed_when: false
+
+        - name: Add SSH authorized_keys
+          ansible.builtin.command: virt-sysprep -a {{ image_path }} --ssh-inject root:file:{{ authorized_keys_path }}
+          when: check_root_authorized_keys.stdout | trim != root_wanted_authorized_keys['content'] | b64decode | trim
+          changed_when: true
+
+        # - name: Install packages
+        #   ansible.builtin.command: virt-customize -a {{ image_path }} --install qemu-guest-agent --verbose
+        #   register: installpackages_result
+        #   changed_when: "'0 upgraded, 0 newly installed' not in installpackages_result.stderr"
+
+  handlers:
+    - name: Update Cloud-Init Disk
+      # Handlers don't support blocks, include tasks instead.
+      ansible.builtin.include_tasks: ./handlers/update-cloud-init-disk.yml

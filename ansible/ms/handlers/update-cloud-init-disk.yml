@@ -1,0 +1,55 @@
+- name: Import cloudimg to template VM
+  ansible.builtin.command:
+    cmd: "qm importdisk {{ vm_id }} {{ image_path }} local-nvme"
+  register: importdisk_result
+  changed_when: true
+
+- name: Fetch imported disk name
+  ansible.builtin.set_fact:
+    imported_disk: "{{ importdisk_result.stdout_lines[-1] | regex_search('[a-zA-Z0-9-]+:vm-\\d+-disk-\\d+') }}"
+
+- name: Use imported disk
+  community.general.proxmox_kvm:
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    api_host: "{{ ansible_host }}"
+    vmid: "{{ vm_id }}"
+    name: debian-12-cloudinit-template
+    node: ms-01
+    scsi:
+      scsi0: '{{ imported_disk }}'
+    boot: c
+    bootdisk: scsi0
+    agent: 'enabled=1'
+    update: true
+    update_unsafe: true  # Required for scsi update.
+
+- name: Check VM state
+  community.general.proxmox_vm_info:
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    api_host: "{{ ansible_host }}"
+    type: qemu
+    vmid: "{{ vm_id }}"
+    name: debian-12-cloudinit-template
+    node: ms-01
+    config: current
+  register: vm_state
+
+- name: Fetch unused disk names
+  ansible.builtin.set_fact:
+    unused_disks: "{{ vm_state.proxmox_vms.0.config | dict2items | selectattr('key', 'search', '^unused') | map(attribute='key') | list }}"
+
+- name: Remove unused disk(s)
+  community.general.proxmox_disk:
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    api_host: "{{ ansible_host }}"
+    vmid: "{{ vm_id }}"
+    name: debian-12-cloudinit-template
+    disk: "{{ item }}"
+    state: absent
+  loop: "{{ unused_disks }}"
