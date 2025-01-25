@@ -2,6 +2,7 @@
 - name: Set Up Debian Cloud-Init VM Template
   hosts:
     - ms-01.home.morey.tech
+    - pvems[0]  # Only run on one host from group.
   become: true
 
   vars:
@@ -20,7 +21,7 @@
         api_host: "{{ ansible_host }}"
         vmid: "{{ vm_id }}"
         name: debian-12-cloudinit-template
-        node: ms-01
+        node: "{{ ansible_hostname.split('.')[0] }}"
         cores: 2
         memory: 2048
         ide:
@@ -42,12 +43,18 @@
         api_host: "{{ ansible_host }}"
         vmid: "{{ vm_id }}"
         name: debian-12-cloudinit-template
-        node: ms-01
+        node: "{{ ansible_hostname.split('.')[0] }}"
         state: template
 
     - name: Configure Cloud-Init Image
       notify: Update Cloud-Init Disk
       block:
+        - name: Create a directory if it does not exist
+          ansible.builtin.file:
+            path: /var/lib/vz/template/qcow
+            state: directory
+            mode: '0755'
+
         - name: Download cloud-init image
           ansible.builtin.get_url:
             url: '{{ image_url }}'
