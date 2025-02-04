@@ -108,3 +108,5 @@ helmCharts:
       persistence:
         enabled: true
         size: "8589934592"
+      readinessProbe:
+        timeoutSeconds: 10
