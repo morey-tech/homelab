@@ -14,7 +14,7 @@ RUN groupmod -n $USERNAME vscode \
 
 # Install packages, and clean  up apt.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y sudo libssl-dev libffi-dev python3-dev python3-pip iputils-ping dnsutils bash-completion \
+    && apt-get install -y sudo libssl-dev libffi-dev python3-dev python3-pip iputils-ping dnsutils bash-completion apache2-utils \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Add user to suders file.
