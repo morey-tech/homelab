@@ -1,5 +1,3 @@
-FROM bitnami/kubectl:1.25 as kubectl
-
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/ubuntu/.devcontainer/base.Dockerfile
 FROM mcr.microsoft.com/vscode/devcontainers/base:0-ubuntu-22.04
 
@@ -25,8 +23,11 @@ RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
 COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install -r /tmp/requirements.txt
 
-# Add kubectl to main image
-COPY --from=kubectl /opt/bitnami/kubectl/bin/kubectl /usr/local/bin/
+# Install `oc` and `kubectl`
+ENV OC_VERSION=4.17.0-okd-scos.0
+RUN wget https://github.com/openshift/okd/releases/download/${OC_VERSION}/openshift-client-linux-arm64-${OC_VERSION}.tar.gz \
+    && tar -xvf openshift-client-linux-arm64-${OC_VERSION}.tar.gz \
+    && mv oc kubectl /usr/local/bin/
 
 ENV KUBECTX_VERSION=v0.9.5
 RUN curl -Lo /tmp/kubectx.tar.gz "https://github.com/ahmetb/kubectx/releases/download/${KUBECTX_VERSION}/kubectx_${KUBECTX_VERSION}_linux_x86_64.tar.gz" \
