@@ -22,6 +22,7 @@ mypy-extensions==1.0.0
 packaging==21.3
 pathspec==0.11.2
 platformdirs==3.11.0
+proxmoxer==2.2.0
 pycparser==2.21
 Pygments==2.16.1
 pyparsing==3.0.9
