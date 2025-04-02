@@ -14,6 +14,7 @@
 
   tasks:
     # Create cluster in console.redhat.com assisted installer.
+    # https://console.redhat.com/openshift/assisted-installer/clusters
     # - Select "User-Managed Networking".
 
     # Download discovery.iso to storage-pve.
@@ -38,7 +39,6 @@
         net:
           net0: 'virtio,bridge=vmbr0,tag=6,firewall=1'
           # net0: 'virtio={{ mac_address }},bridge=vmbr0,tag=6,firewall=1'
-      register: createvm_result
 
     - name: Check VM state
       community.general.proxmox_vm_info:
