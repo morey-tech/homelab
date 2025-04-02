@@ -1,0 +1,36 @@
+---
+- name: Set Up ocp-lab node VMs
+  hosts:
+    - pvems  # Create a node on each host.
+  become: true
+
+  vars:
+    authorized_keys_path: '/root/.ssh/authorized_keys'
+    image_name: 'ocp-lab-discovery.iso'
+    vm_id: '6253'
+    vm_name_prefix: 'ocp-lab'
+    cluster_name: ocp-lab
+    cluster_version: 4.18.5
+    base_dns_domain: "{{ cluster_name }}.rh-lab.morey.tech"
+
+  tasks:
+    - name: Create VMs
+      community.general.proxmox_kvm:
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ ansible_host }}"
+        vmid: "61{{ ansible_hostname.split('.')[0].split('-')[-1] }}"
+        name: "{{ vm_name_prefix }}-{{ ansible_hostname.split('.')[0].split('-')[-1] }}"
+        node: "{{ ansible_hostname.split('.')[0] }}"
+        cpu: x86-64-v2-AES
+        cores: 8
+        memory: 16384
+        ide:
+          ide2: storage-pve:iso/ocp-lab-discovery.iso,media=cdrom
+        scsihw: virtio-scsi-single
+        scsi:
+          scsi0: 'local-nvme:128,iothread=1'
+        net:
+          net0: 'virtio,bridge=vmbr0,tag=6,firewall=1'
+      register: createvm_result
