@@ -6,6 +6,7 @@
 
   vars:
     cluster_name: 'ocp-lab'
+    node_id: "{{ ansible_hostname.split('.')[0].split('-')[-1] }}"
 
   vars_prompt:
     - name: "destory_confirmation"
@@ -13,13 +14,32 @@
       private: false
 
   tasks:
+    - name: Fail if not "yes"
+      ansible.builtin.fail:
+      when: "destory_confirmation != 'yes'"
+
+    - name: Check if VM exists
+      community.general.proxmox_vm_info:
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ ansible_host }}"
+        vmid: "61{{ node_id }}"
+        name: "{{ cluster_name }}-{{ node_id }}"
+        node: "{{ ansible_hostname.split('.')[0] }}"
+        config: current
+      register: vm_state
+      # failed_when: false
+
     - name: Destroy VMs
       community.general.proxmox_kvm:
         api_user: "{{ api_user }}"
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
         api_host: "{{ ansible_host }}"
-        vmid: "61{{ ansible_hostname.split('.')[0].split('-')[-1] }}"
-        name: "{{ cluster_name }}-{{ ansible_hostname.split('.')[0].split('-')[-1] }}"
+        vmid: "61{{ node_id }}"
+        name: "{{ cluster_name }}-{{ node_id }}"
         node: "{{ ansible_hostname.split('.')[0] }}"
         state: absent
+        force: true
+      when: "vm_state.proxmox_vms != []"
