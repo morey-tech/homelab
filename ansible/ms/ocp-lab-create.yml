@@ -4,18 +4,75 @@
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
 
   vars:
-    authorized_keys_path: '/root/.ssh/authorized_keys'
+    create_assisted_installer: false
+    ssh_authorized_keys: |-
+      ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFBGTLmphmNBJtYpgYVVZrCvu3Hiwfox9szObUvwrqo4 nmorey-mac
     cluster_name: ocp-lab
     cluster_version: 4.18.5
-    base_dns_domain: "{{ cluster_name }}.rh-lab.morey.tech"
+    cluster_dns_zone: "rh-lab.morey.tech"
+    # cluster_domain: "{{ cluster_name }}.{{ cluster_dns_zone }}"
+    cluster_iso_type: "full-iso"
     image_name: '{{ cluster_name }}-discovery.iso'
 
   tasks:
     # Create cluster in console.redhat.com assisted installer.
     # https://console.redhat.com/openshift/assisted-installer/clusters
     # - Select "User-Managed Networking".
+    - name: Create Assisted Installer Cluster # noqa: run-once[task]
+      rhpds.assisted_installer.create_cluster:
+        name: "{{ cluster_name }}"
+        openshift_version: "{{ cluster_version }}"
+        base_dns_domain: "{{ cluster_dns_zone }}"
+        offline_token: "{{ offline_token }}"
+        pull_secret: "{{ pull_secret | to_json }}"
+        high_availability_mode: "Full"
+        service_networks:
+          - cidr: "172.31.0.0/16"
+      delegate_to: localhost
+      run_once: true
+      register: newcluster
+      when: create_assisted_installer
+
+    - name: Pause before starting VMs # noqa: run-once[task]
+      ansible.builtin.debug:
+        msg: "Cluster ID: {{ newcluster.result.id }}"
+      delegate_to: localhost
+      run_once: true
+      when: create_assisted_installer
 
     # Download discovery.iso to storage-pve.
+    - name: Create Infrastructure environment # noqa: run-once[task]
+      rhpds.assisted_installer.create_infra_env:
+        name: "{{ cluster_name }}-infra-env"
+        image_type: "{{ cluster_iso_type }}"
+        cluster_id: "{{ newcluster.result.id }}"
+        ssh_authorized_key: "{{ ssh_authorized_keys }}"
+        offline_token: "{{ offline_token }}"
+        pull_secret: "{{ pull_secret | to_json }}"
+      register: newinfraenv
+      delegate_to: localhost
+      run_once: true
+      when: create_assisted_installer
+
+    - name: Download discovery.iso # noqa: run-once[task]
+      ansible.builtin.get_url:
+        url: "{{ newinfraenv.result.download_url }}"
+        dest: "/mnt/pve/storage-pve/template/iso/{{ image_name }}"
+        mode: '0777'
+        force: true
+      delegate_to: "{{ groups['pvems'][0] }}"
+      run_once: true
+      when: create_assisted_installer
+
+    # Create statis DHCP entries in pfSense.
+    # https://github.com/pfsensible/core
+    # https://github.com/pfsensible/core/wiki/pfsense_dhcp_static
+
+    # Create DNS entires for:
+    # https://github.com/pfsensible/core
+    # api.{{ cluster_domain }}
+    # api-int.{{ cluster_domain }}
+    # *.apps.{{ cluster_domain }}
 
     - name: Create VMs
       community.general.proxmox_kvm:
@@ -38,10 +95,56 @@
           net0: 'virtio={{ mac_address }},bridge=vmbr0,tag=6,firewall=1'
       delegate_to: localhost
 
-    # Create statis DHCP entries in pfSense.
+    - name: Pause before starting VMs
+      ansible.builtin.wait_for:
+        timeout: 3
+      delegate_to: localhost
+
+    - name: Start VMs
+      community.general.proxmox_kvm:
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ api_host }}"
+        vmid: "{{ pve_vm_id }}"
+        name: "{{ inventory_hostname_short }}"
+        node: "{{ pve_node }}"
+        state: started
+      delegate_to: localhost
+
+    - name: Wait for the hosts to be ready  # noqa: run-once[task]
+      rhpds.assisted_installer.wait_for_hosts:
+        cluster_id: "{{ newcluster.result.id }}"
+        offline_token: "{{ offline_token }}"
+        expected_hosts: "{{ play_hosts | length }}"
+        wait_timeout: 300  # Usually ready in 3 - 4 minutes with "full" discovery ISO.
+      delegate_to: localhost
+      run_once: true
+      when: create_assisted_installer
+
+    - name: Start cluster installation  # noqa: run-once[task]
+      rhpds.assisted_installer.install_cluster:
+        cluster_id: "{{ newcluster.result.id }}"
+        offline_token: "{{ offline_token }}"
+        wait_timeout: 1200
+      delegate_to: localhost
+      run_once: true
+      when: create_assisted_installer
+
+    - name: Obtain OpenShift cluster credentials  # noqa: run-once[task]
+      register: credentials
+      rhpds.assisted_installer.get_credentials:
+        cluster_id: "{{ newcluster.result.id }}"
+        offline_token: "{{ offline_token }}"
+      delegate_to: localhost
+      run_once: true
+      when: create_assisted_installer
+
+    - name: Display credentials  # noqa: run-once[task]
+      ansible.builtin.debug:
+        var: credentials.result
+      delegate_to: localhost
+      run_once: true
+      when: create_assisted_installer
 
     # Update load balancer with IPs of nodes?
-
-    # Create DNS entires for:
-    # - ocp-lab-01.rh-lab.morey.tech
-    # * apps.ocp-lab-01.rh-lab.morey.tech
