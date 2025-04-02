@@ -1,0 +1,64 @@
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+    worker_connections 768;
+    # multi_accept on;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+    include /etc/nginx/sites-enabled/*;
+}
+
+stream {
+    upstream openshift_bootstrap {
+        {% for server in nginx_openshift_lb_backend_servers %}
+        server {{ server }}:22623;
+        {% endfor %}
+    }
+
+    upstream openshift_api {
+        {% for server in nginx_openshift_lb_backend_servers %}
+        server {{ server }}:6443;
+        {% endfor %}
+    }
+
+    upstream openshift_https {
+        {% for server in nginx_openshift_lb_backend_servers %}
+        server {{ server }}:443;
+        {% endfor %}
+    }
+
+    upstream openshift_http {
+        {% for server in nginx_openshift_lb_backend_servers %}
+        server {{ server }}:80;
+        {% endfor %}
+    }
+
+    server {
+        listen 22623;
+        proxy_pass openshift_bootstrap;
+    }
+
+    server {
+        listen 6443;
+        proxy_pass openshift_api;
+    }
+
+    server {
+        listen 443;
+        proxy_pass openshift_https;
+    }
+
+    server {
+        listen 80;
+        proxy_pass openshift_http;
+    }
+}

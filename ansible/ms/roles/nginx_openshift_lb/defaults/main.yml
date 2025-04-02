@@ -1,0 +1,3 @@
+---
+# Default backend servers for OpenShift cluster
+nginx_openshift_lb_backend_servers: []

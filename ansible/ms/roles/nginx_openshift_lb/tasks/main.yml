@@ -1,0 +1,21 @@
+---
+- name: Install NGINX
+  ansible.builtin.apt:
+    name: nginx-full
+    state: present
+    update_cache: true
+
+- name: Ensure NGINX is enabled and running
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started
+
+- name: Deploy complete nginx.conf with stream config
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload nginx

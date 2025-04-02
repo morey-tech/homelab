@@ -1,0 +1,14 @@
+---
+- name: Set Up ocp-lab loadbalancer
+  hosts:
+    - ocp-lab-lb.rh-lab.morey.tech
+  become: true
+
+  vars:
+    nginx_openshift_lb_backend_servers:
+      - 192.168.6.102
+      - 192.168.6.103
+      - 192.168.6.104
+
+  roles:
+    - role: nginx_openshift_lb
