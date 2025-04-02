@@ -1,12 +1,10 @@
 ---
 - name: Destroy ocp-lab node VMs
-  hosts:
-    - pvems  # Create a node on each host.
-  become: true
+  hosts: ocp-lab
+  gather_facts: false  # Hosts may not be available, since this playbook destroys them.
 
   vars:
     cluster_name: 'ocp-lab'
-    node_id: "{{ ansible_hostname.split('.')[0].split('-')[-1] }}"
 
   vars_prompt:
     - name: "destory_confirmation"
@@ -23,23 +21,24 @@
         api_user: "{{ api_user }}"
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
-        api_host: "{{ ansible_host }}"
-        vmid: "61{{ node_id }}"
-        name: "{{ cluster_name }}-{{ node_id }}"
-        node: "{{ ansible_hostname.split('.')[0] }}"
+        api_host: "{{ api_host }}"
+        vmid: "{{ pve_vm_id }}"
+        name: "{{ inventory_hostname_short }}"
+        node: "{{ pve_node }}"
         config: current
+      delegate_to: localhost
       register: vm_state
-      # failed_when: false
 
     - name: Destroy VMs
       community.general.proxmox_kvm:
         api_user: "{{ api_user }}"
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
-        api_host: "{{ ansible_host }}"
-        vmid: "61{{ node_id }}"
-        name: "{{ cluster_name }}-{{ node_id }}"
-        node: "{{ ansible_hostname.split('.')[0] }}"
+        api_host: "{{ api_host }}"
+        vmid: "{{ pve_vm_id }}"
+        name: "{{ inventory_hostname_short }}"
+        node: "{{ pve_node }}"
         state: absent
         force: true
+      delegate_to: localhost
       when: "vm_state.proxmox_vms != []"
