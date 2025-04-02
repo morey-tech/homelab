@@ -1,0 +1,65 @@
+---
+- name: Set Up ocp-lab node VMs
+  hosts:
+    - pvems  # Create a node on each host.
+  become: true
+
+  vars:
+    authorized_keys_path: '/root/.ssh/authorized_keys'
+    image_name: '{{ cluster_name }}-discovery.iso'
+    cluster_name: ocp-lab
+    cluster_version: 4.18.5
+    base_dns_domain: "{{ cluster_name }}.rh-lab.morey.tech"
+    node_id: "{{ ansible_hostname.split('.')[0].split('-')[-1] }}"  # Use host id.
+
+  tasks:
+    # Create cluster in console.redhat.com assisted installer.
+    # - Select "User-Managed Networking".
+
+    # Download discovery.iso to storage-pve.
+
+    - name: Create VMs
+      community.general.proxmox_kvm:
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ ansible_host }}"
+        vmid: "61{{ node_id }}"
+        name: "{{ cluster_name }}-{{ node_id }}"
+        node: "{{ ansible_hostname.split('.')[0] }}"
+        cpu: x86-64-v2-AES
+        cores: 8
+        memory: 16384
+        ide:
+          ide2: "storage-pve:iso/{{ image_name }},media=cdrom"
+        scsihw: virtio-scsi-single
+        scsi:
+          scsi0: 'local-nvme:128,iothread=1'
+        net:
+          net0: 'virtio,bridge=vmbr0,tag=6,firewall=1'
+          # net0: 'virtio={{ mac_address }},bridge=vmbr0,tag=6,firewall=1'
+      register: createvm_result
+
+    - name: Check VM state
+      community.general.proxmox_vm_info:
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ ansible_host }}"
+        vmid: "61{{ node_id }}"
+        name: "{{ cluster_name }}-{{ node_id }}"
+        node: "{{ ansible_hostname.split('.')[0] }}"
+        config: current
+      register: vm_state
+      retries: 3  # Sometimes too quick after create.
+
+    # Create statis DHCP entries in pfSense.
+    - name: Print net config for MAC address
+      ansible.builtin.debug:
+        msg: "{{ vm_state.proxmox_vms.0.config.net0 }}"
+
+    # Update load balancer with IPs of nodes?
+
+    # Create DNS entires for:
+    # - ocp-lab-01.rh-lab.morey.tech
+    # * apps.ocp-lab-01.rh-lab.morey.tech
