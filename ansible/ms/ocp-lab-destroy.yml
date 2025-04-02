@@ -1,0 +1,25 @@
+---
+- name: Destroy ocp-lab node VMs
+  hosts:
+    - pvems  # Create a node on each host.
+  become: true
+
+  vars:
+    cluster_name: 'ocp-lab'
+
+  vars_prompt:
+    - name: "destory_confirmation"
+      prompt: "Do you want to destory the vms? (yes/no)?"
+      private: false
+
+  tasks:
+    - name: Destroy VMs
+      community.general.proxmox_kvm:
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ ansible_host }}"
+        vmid: "61{{ ansible_hostname.split('.')[0].split('-')[-1] }}"
+        name: "{{ cluster_name }}-{{ ansible_hostname.split('.')[0].split('-')[-1] }}"
+        node: "{{ ansible_hostname.split('.')[0] }}"
+        state: absent
