@@ -16,7 +16,7 @@
       ansible.builtin.fail:
       when: "destory_confirmation != 'yes'"
 
-    - name: Check if VM exists
+    - name: Check if VM exists  # noqa: run-once[task]
       community.general.proxmox_vm_info:
         api_user: "{{ api_user }}"
         api_token_id: "{{ api_token_id }}"
@@ -29,7 +29,7 @@
       delegate_to: localhost
       register: vm_state
 
-    - name: Destroy VMs
+    - name: Destroy VMs  # noqa: run-once[task]
       community.general.proxmox_kvm:
         api_user: "{{ api_user }}"
         api_token_id: "{{ api_token_id }}"
@@ -40,5 +40,33 @@
         node: "{{ pve_node }}"
         state: absent
         force: true
+        timeout: 60
       delegate_to: localhost
       when: "vm_state.proxmox_vms != []"
+
+    - name: Get a list of clusters  # noqa: run-once[task]
+      rhpds.assisted_installer.list_clusters:
+        offline_token: "{{ offline_token }}"
+      register: listclusters
+      delegate_to: localhost
+      run_once: true
+
+    - name: Show the created clusters and the status  # noqa: run-once[task]
+      ansible.builtin.debug:
+        msg: "cluster_id={{ item.id }}, cluster_name={{ item.name }}"
+      loop: "{{ listclusters.result }}"
+      loop_control:
+        label: "{{ item.name }}"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Remove Assisted Installer Cluster  # noqa: run-once[task]
+      rhpds.assisted_installer.delete_cluster:
+        cluster_id: "{{ item.id }}"
+        offline_token: "{{ offline_token }}"
+      loop: "{{ listclusters.result }}"
+      loop_control:
+        label: "{{ item.name }}, {{ item.id }}"
+      when: item.name == cluster_name
+      delegate_to: localhost
+      run_once: true
