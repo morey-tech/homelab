@@ -80,6 +80,17 @@
     # api-int.{{ cluster_domain }} - api_vips
     # *.apps.{{ cluster_domain }} - ingress_vips
 
+    - name: Create new PVE pool  # noqa: run-once[task]
+      community.general.proxmox_pool:
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ api_host }}"
+        poolid: "{{ cluster_name }}"
+        comment: "{{ cluster_name }} cluster"
+      delegate_to: localhost
+      run_once: true
+
     - name: Create VMs
       community.general.proxmox_kvm:
         api_user: "{{ api_user }}"
