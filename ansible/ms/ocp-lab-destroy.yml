@@ -64,6 +64,7 @@
       rhpds.assisted_installer.delete_cluster:
         cluster_id: "{{ item.id }}"
         offline_token: "{{ offline_token }}"
+        cancel: true
       loop: "{{ listclusters.result }}"
       loop_control:
         label: "{{ item.name }}, {{ item.id }}"
