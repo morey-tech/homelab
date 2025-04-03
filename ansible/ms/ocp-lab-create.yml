@@ -18,7 +18,7 @@
     # Create cluster in console.redhat.com assisted installer.
     # https://console.redhat.com/openshift/assisted-installer/clusters
     # - Select "User-Managed Networking".
-    - name: Create Assisted Installer Cluster # noqa: run-once[task]
+    - name: Create Assisted Installer Cluster  # noqa: run-once[task]
       rhpds.assisted_installer.create_cluster:
         name: "{{ cluster_name }}"
         openshift_version: "{{ cluster_version }}"
@@ -28,20 +28,23 @@
         high_availability_mode: "Full"
         service_networks:
           - cidr: "172.31.0.0/16"
+        api_vips: [ip: "192.168.6.199"]
+        ingress_vips: [ip: "192.168.6.198"]
+        ssh_public_key: "{{ ssh_authorized_keys }}"
       delegate_to: localhost
       run_once: true
       register: newcluster
       when: create_assisted_installer
 
-    - name: Pause before starting VMs # noqa: run-once[task]
+    - name: Print link to assisted installer # noqa: run-once[task]
       ansible.builtin.debug:
-        msg: "Cluster ID: {{ newcluster.result.id }}"
+        msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ newcluster.result.id }}"
       delegate_to: localhost
       run_once: true
       when: create_assisted_installer
 
     # Download discovery.iso to storage-pve.
-    - name: Create Infrastructure environment # noqa: run-once[task]
+    - name: Create Discovery ISO # noqa: run-once[task]
       rhpds.assisted_installer.create_infra_env:
         name: "{{ cluster_name }}-infra-env"
         image_type: "{{ cluster_iso_type }}"
@@ -54,25 +57,25 @@
       run_once: true
       when: create_assisted_installer
 
-    - name: Download discovery.iso # noqa: run-once[task]
+    - name: Download Discovery ISO  # noqa: run-once[task]
       ansible.builtin.get_url:
         url: "{{ newinfraenv.result.download_url }}"
         dest: "/mnt/pve/storage-pve/template/iso/{{ image_name }}"
         mode: '0777'
         force: true
-      delegate_to: "{{ groups['pvems'][0] }}"
+      delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
       run_once: true
       when: create_assisted_installer
+      # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#run-tasks-concurrently-poll-0
 
     # Create statis DHCP entries in pfSense.
-    # https://github.com/pfsensible/core
     # https://github.com/pfsensible/core/wiki/pfsense_dhcp_static
 
     # Create DNS entires for:
     # https://github.com/pfsensible/core
-    # api.{{ cluster_domain }}
-    # api-int.{{ cluster_domain }}
-    # *.apps.{{ cluster_domain }}
+    # api.{{ cluster_domain }} - api_vips
+    # api-int.{{ cluster_domain }} - api_vips
+    # *.apps.{{ cluster_domain }} - ingress_vips
 
     - name: Create VMs
       community.general.proxmox_kvm:
@@ -146,5 +149,3 @@
       delegate_to: localhost
       run_once: true
       when: create_assisted_installer
-
-    # Update load balancer with IPs of nodes?
