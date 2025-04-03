@@ -2,6 +2,6 @@
 collections:
   - name: community.general
     version: "10.5.0"
-  - name: rhpds.assisted_installer
-    # src: git+https://github.com/rhpds/assisted_installer
-    version: 0.0.2
+  # rhpds.assisted_installer
+  - name: git+https://github.com/rhpds/assisted_installer
+    version: v0.0.2
