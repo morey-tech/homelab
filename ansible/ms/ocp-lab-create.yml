@@ -51,6 +51,7 @@
         ssh_authorized_key: "{{ ssh_authorized_keys }}"
         offline_token: "{{ offline_token }}"
         pull_secret: "{{ pull_secret | to_json }}"
+        openshift_version: "{{ cluster_version }}"
       register: newinfraenv
       delegate_to: localhost
       run_once: true
