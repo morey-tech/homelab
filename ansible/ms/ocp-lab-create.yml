@@ -5,8 +5,7 @@
 
   vars:
     create_assisted_installer: false
-    ssh_authorized_keys: |-
-      ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFBGTLmphmNBJtYpgYVVZrCvu3Hiwfox9szObUvwrqo4 nmorey-mac
+    ssh_authorized_keys: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFBGTLmphmNBJtYpgYVVZrCvu3Hiwfox9szObUvwrqo4 nmorey-mac"
     cluster_name: ocp-lab
     cluster_dns_zone: "rh-lab.morey.tech"
     cluster_version: 4.18.5
