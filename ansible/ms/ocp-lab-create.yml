@@ -8,11 +8,10 @@
     ssh_authorized_keys: |-
       ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFBGTLmphmNBJtYpgYVVZrCvu3Hiwfox9szObUvwrqo4 nmorey-mac
     cluster_name: ocp-lab
-    cluster_version: 4.18.5
     cluster_dns_zone: "rh-lab.morey.tech"
-    # cluster_domain: "{{ cluster_name }}.{{ cluster_dns_zone }}"
+    cluster_version: 4.18.5
+    # cluster_fqdn: "{{ cluster_name }}.{{ cluster_dns_zone }}"
     cluster_iso_type: "full-iso"
-    image_name: '{{ cluster_name }}-discovery.iso'
 
   tasks:
     # Create cluster in console.redhat.com assisted installer.
@@ -60,7 +59,7 @@
     - name: Download Discovery ISO  # noqa: run-once[task]
       ansible.builtin.get_url:
         url: "{{ newinfraenv.result.download_url }}"
-        dest: "/mnt/pve/storage-pve/template/iso/{{ image_name }}"
+        dest: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ newcluster.result.id }}-discovery.iso"
         mode: '0777'
         force: true
       delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
@@ -90,7 +89,7 @@
         cores: 8
         memory: 16384
         ide:
-          ide2: "storage-pve:iso/{{ image_name }},media=cdrom"
+          ide2: "storage-pve:iso/{{ cluster_name }}-{{ newcluster.result.id }}-discovery.iso,media=cdrom"
         scsihw: virtio-scsi-single
         scsi:
           scsi0: 'local-nvme:128,iothread=1'

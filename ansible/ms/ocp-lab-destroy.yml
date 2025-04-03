@@ -40,7 +40,7 @@
         node: "{{ pve_node }}"
         state: absent
         force: true
-        timeout: 60
+        timeout: 300
       delegate_to: localhost
       when: "vm_state.proxmox_vms != []"
 
@@ -51,7 +51,7 @@
       delegate_to: localhost
       run_once: true
 
-    - name: Show the created clusters and the status  # noqa: run-once[task]
+    - name: Print the clusters  # noqa: run-once[task]
       ansible.builtin.debug:
         msg: "cluster_id={{ item.id }}, cluster_name={{ item.name }}"
       loop: "{{ listclusters.result }}"
@@ -69,4 +69,15 @@
         label: "{{ item.name }}, {{ item.id }}"
       when: item.name == cluster_name
       delegate_to: localhost
+      run_once: true
+
+    - name: Delete Discovery ISOs  # noqa: run-once[task]
+      ansible.builtin.file:
+        path: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ item.id }}-discovery.iso"
+        state: absent
+      loop: "{{ listclusters.result }}"
+      loop_control:
+        label: "{{ item.name }}, {{ item.id }}"
+      when: item.name == cluster_name
+      delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
       run_once: true
