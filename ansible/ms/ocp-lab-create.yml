@@ -100,6 +100,7 @@
         vmid: "{{ pve_vm_id }}"
         name: "{{ inventory_hostname_short }}"
         node: "{{ pve_node }}"
+        pool: "{{ cluster_name }}"
         cpu: x86-64-v2-AES
         cores: 8
         memory: 16384
