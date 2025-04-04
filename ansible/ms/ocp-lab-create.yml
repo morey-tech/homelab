@@ -7,9 +7,6 @@
     create_assisted_installer: false
 
   tasks:
-    # Create cluster in console.redhat.com assisted installer.
-    # https://console.redhat.com/openshift/assisted-installer/clusters
-    # - Select "User-Managed Networking".
     - name: Create Assisted Installer Cluster  # noqa: run-once[task]
       rhpds.assisted_installer.create_cluster:
         name: "{{ cluster_name }}"
@@ -17,15 +14,13 @@
         base_dns_domain: "{{ cluster_dns_zone }}"
         offline_token: "{{ offline_token }}"
         pull_secret: "{{ pull_secret | to_json }}"
-        high_availability_mode: "Full"
-        cluster_network_cidr: "10.128.0.0/14"
-        cluster_network_host_prefix: "23"
-        service_networks:
-          - cidr: "172.30.0.0/16"
-        machine_networks:
-          - cidr: "192.168.6.0/24"
-        api_vips: [ip: "192.168.6.199"]
-        ingress_vips: [ip: "192.168.6.198"]
+        high_availability_mode: "{{ high_availability_mode }}"
+        cluster_network_cidr: "{{ cluster_network_cidr }}"
+        cluster_network_host_prefix: "{{ cluster_network_host_prefix }}"
+        service_networks: "{{ service_networks }}"
+        machine_networks: "{{ machine_networks }}"
+        api_vips: "{{ api_vips }}"
+        ingress_vips: "{{ ingress_vips }}"
         ssh_public_key: "{{ ssh_authorized_keys }}"
       delegate_to: localhost
       run_once: true
@@ -43,7 +38,7 @@
     - name: Create Discovery ISO # noqa: run-once[task]
       rhpds.assisted_installer.create_infra_env:
         name: "{{ cluster_name }}-infra-env"
-        image_type: "full-iso"
+        image_type: "{{ image_type }}"
         cluster_id: "{{ newcluster.result.id }}"
         ssh_authorized_key: "{{ ssh_authorized_keys }}"
         offline_token: "{{ offline_token }}"
@@ -158,15 +153,3 @@
       delegate_to: localhost
       run_once: true
       when: create_assisted_installer
-
-    # - name: Authenticate to OpenShift cluster
-    #   community.okd.openshift_auth:
-    #     host: https://api.<cluster_name>.<domain>:6443
-    #     username: "{{ credentials.result.username }}"
-    #     password: "{{ credentials.result.password }}"
-    #     validate_certs: false
-    #   register: login_result
-
-    # - name: Display authentication token
-    #   ansible.builtin.debug:
-    #     msg: "Authentication token is {{ login_result.openshift_auth.api_key }}"
