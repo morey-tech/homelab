@@ -1,0 +1,114 @@
+---
+- name: Set Up ocp-lab dns container
+  hosts:
+    - ocp-lab-dns.rh-lab.morey.tech
+  gather_facts: false  # Hosts aren't available, since this playbook creates them.
+  become: true
+  vars:
+    storage: "storage-pve"  # Adjust to your storage name
+    template_name: "debian-11-standard_11.7-1_amd64.tar.zst"
+
+  tasks:
+    - name: Download LXC OS template to Proxmox storage
+      community.general.proxmox_template:
+        api_host: "{{ api_host }}"
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        node: "{{ pve_node }}"
+        storage: "{{ storage }}"
+        content_type: "vztmpl"
+        template: "{{ template_name }}"
+        state: present
+      delegate_to: localhost
+
+    - name: Create LXC container
+      community.general.proxmox:
+        api_host: "{{ api_host }}"
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        node: "{{ pve_node }}"
+        vmid: "{{ pve_vm_id }}"
+        hostname: "{{ inventory_hostname_short }}"
+        # password: "{{ container_password }}"
+        ostemplate: "{{ storage }}:vztmpl/{{ template_name }}"
+        memory: 2048
+        cores: 2
+        disk_volume:
+          storage: local-nvme
+          size: 24
+        netif: '{"net0":"name=eth0,hwaddr={{ mac_address }},ip={{ ip_address }}/{{ net_prefix }},gw={{ gateway_ip }},bridge=vmbr0,tag=6"}'
+        nameserver: "192.168.6.1"
+        searchdomain: "rh-lab.morey.tech"
+        pubkey: "{{ ssh_authorized_keys }}"
+        features: # Fix slow login
+          - nesting=1
+        state: present
+      delegate_to: localhost
+
+    - name: Create DHCP static mapping
+      pfsensible.core.pfsense_dhcp_static:
+        netif: opt3
+        hostname: "{{ inventory_hostname_short }}"
+        macaddr: "{{ mac_address }}"
+        ipaddr: "{{ ip_address }}"
+        ddnsdomainkeyalgorithm: "hmac-md5"  # fixes diff.
+        state: present
+      # become: false
+      delegate_to: pfsense.home.morey.tech
+
+    - name: Start LXC container
+      community.general.proxmox:
+        api_host: "{{ api_host }}"
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        vmid: "{{ pve_vm_id }}"
+        state: started
+      delegate_to: localhost
+
+    - name: Add LXC container to inventory
+      ansible.builtin.add_host:
+        name: "{{ inventory_hostname_short }}.rh-lab.morey.tech"
+        ansible_host: "{{ ip_address }}"
+        ansible_user: root
+      changed_when: false
+
+- name: Configure DNS Server in LXC Container
+  hosts: ocp-lab-dns.rh-lab.morey.tech
+  gather_facts: true
+  become: true
+
+  vars:
+    dns_records:
+      - { name: "api", ip: "192.168.6.199" }
+      - { name: "api-int", ip: "192.168.6.199" }
+      - { name: "*.apps", ip: "192.168.6.198" }
+
+  tasks:
+    - name: Install BIND9
+      ansible.builtin.apt:
+        name: bind9
+        state: present
+        update_cache: true
+
+    - name: Configure BIND9 options
+      ansible.builtin.template:
+        src: named.conf.options.j2
+        dest: /etc/bind/named.conf.options
+        mode: '0644'
+      notify: Restart BIND9
+
+    - name: Configure DNS zone
+      ansible.builtin.template:
+        src: db.ocp-lab.rh-lab.morey.tech.j2
+        dest: /etc/bind/db.ocp-lab.rh-lab.morey.tech
+        mode: '0644'
+      notify: Restart BIND9
+
+  handlers:
+    - name: Restart BIND9
+      ansible.builtin.service:
+        name: bind9
+        state: restarted

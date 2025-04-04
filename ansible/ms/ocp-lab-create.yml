@@ -1,6 +1,6 @@
 ---
 - name: Set Up ocp-lab node VMs
-  hosts: ocp-lab
+  hosts: ocp-lab-nodes
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
 
   vars:

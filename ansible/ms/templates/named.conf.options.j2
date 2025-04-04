@@ -1,0 +1,19 @@
+options {
+    directory "/var/cache/bind";
+
+    recursion yes;
+    allow-query { any; };
+
+    forwarders {
+        192.168.6.1;
+    };
+
+    dnssec-validation auto;
+
+    listen-on { any; };
+};
+
+zone "ocp-lab.rh-lab.morey.tech" {
+    type master;
+    file "/etc/bind/db.ocp-lab.rh-lab.morey.tech";
+};

@@ -1,6 +1,6 @@
 ---
 - name: Destroy ocp-lab node VMs
-  hosts: ocp-lab
+  hosts: ocp-lab-nodes
   gather_facts: false  # Hosts may not be available, since this playbook destroys them.
 
   vars_prompt:
