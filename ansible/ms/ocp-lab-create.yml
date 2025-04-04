@@ -62,7 +62,7 @@
 
     - name: Create DHCP static mapping
       pfsensible.core.pfsense_dhcp_static:
-        netif: opt3
+        netif: opt3  # rh_lab
         hostname: "{{ inventory_hostname_short }}"
         macaddr: "{{ mac_address }}"
         ipaddr: "{{ ip_address }}"
