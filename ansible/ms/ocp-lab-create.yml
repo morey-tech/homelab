@@ -158,3 +158,15 @@
       delegate_to: localhost
       run_once: true
       when: create_assisted_installer
+
+    # - name: Authenticate to OpenShift cluster
+    #   community.okd.openshift_auth:
+    #     host: https://api.<cluster_name>.<domain>:6443
+    #     username: "{{ credentials.result.username }}"
+    #     password: "{{ credentials.result.password }}"
+    #     validate_certs: false
+    #   register: login_result
+
+    # - name: Display authentication token
+    #   ansible.builtin.debug:
+    #     msg: "Authentication token is {{ login_result.openshift_auth.api_key }}"
