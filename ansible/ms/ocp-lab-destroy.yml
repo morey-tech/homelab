@@ -3,9 +3,6 @@
   hosts: ocp-lab
   gather_facts: false  # Hosts may not be available, since this playbook destroys them.
 
-  vars:
-    cluster_name: 'ocp-lab'
-
   vars_prompt:
     - name: "destory_confirmation"
       prompt: "Do you want to destory the vms? (yes/no)?"
@@ -44,7 +41,7 @@
       delegate_to: localhost
       when: "vm_state.proxmox_vms != []"
 
-    - name: Delete PVE pool
+    - name: Delete PVE pool  # noqa: run-once[task]
       community.general.proxmox_pool:
         api_user: "{{ api_user }}"
         api_token_id: "{{ api_token_id }}"
@@ -52,6 +49,9 @@
         api_host: "{{ api_host }}"
         poolid: "{{ cluster_name }}"
         state: absent
+      delegate_to: localhost
+      run_once: true
+
 
     - name: Get a list of clusters  # noqa: run-once[task]
       rhpds.assisted_installer.list_clusters:
@@ -64,7 +64,7 @@
       rhpds.assisted_installer.delete_cluster:
         cluster_id: "{{ item.id }}"
         offline_token: "{{ offline_token }}"
-        cancel: true
+        # cancel: true
       loop: "{{ listclusters.result }}"
       loop_control:
         label: "{{ item.name }}, {{ item.id }}"

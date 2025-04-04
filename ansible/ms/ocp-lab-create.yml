@@ -5,12 +5,6 @@
 
   vars:
     create_assisted_installer: false
-    ssh_authorized_keys: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFBGTLmphmNBJtYpgYVVZrCvu3Hiwfox9szObUvwrqo4 nmorey-mac"
-    cluster_name: ocp-lab
-    cluster_dns_zone: "rh-lab.morey.tech"
-    cluster_version: 4.18.5
-    # cluster_fqdn: "{{ cluster_name }}.{{ cluster_dns_zone }}"
-    cluster_iso_type: "full-iso"
 
   tasks:
     # Create cluster in console.redhat.com assisted installer.
@@ -49,7 +43,7 @@
     - name: Create Discovery ISO # noqa: run-once[task]
       rhpds.assisted_installer.create_infra_env:
         name: "{{ cluster_name }}-infra-env"
-        image_type: "{{ cluster_iso_type }}"
+        image_type: "full-iso"
         cluster_id: "{{ newcluster.result.id }}"
         ssh_authorized_key: "{{ ssh_authorized_keys }}"
         offline_token: "{{ offline_token }}"
