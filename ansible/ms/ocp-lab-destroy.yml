@@ -26,6 +26,22 @@
       delegate_to: localhost
       register: vm_state
 
+    # Stop with force first before destroy to speed up.
+    - name: Stop VMs  # noqa: run-once[task]
+      community.general.proxmox_kvm:
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ api_host }}"
+        vmid: "{{ pve_vm_id }}"
+        name: "{{ inventory_hostname_short }}"
+        node: "{{ pve_node }}"
+        state: stopped
+        force: true
+        timeout: 15  # short graceful shutdown since will be destroyed.
+      delegate_to: localhost
+      when: "vm_state.proxmox_vms != []"
+
     - name: Destroy VMs  # noqa: run-once[task]
       community.general.proxmox_kvm:
         api_user: "{{ api_user }}"
