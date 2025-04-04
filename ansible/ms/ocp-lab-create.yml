@@ -60,8 +60,16 @@
       when: create_assisted_installer
       # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#run-tasks-concurrently-poll-0
 
-    # Create statis DHCP entries in pfSense.
-    # https://github.com/pfsensible/core/wiki/pfsense_dhcp_static
+    - name: Create DHCP static mapping
+      pfsensible.core.pfsense_dhcp_static:
+        netif: opt3
+        hostname: "{{ inventory_hostname_short }}"
+        macaddr: "{{ mac_address }}"
+        ipaddr: "{{ ip_address }}"
+        ddnsdomainkeyalgorithm: "hmac-md5"  # fixes diff.
+        state: present
+      delegate_to: pfsense.home.morey.tech
+      throttle: 1
 
     # Create DNS entires for:
     # https://github.com/pfsensible/core

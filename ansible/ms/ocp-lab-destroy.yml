@@ -52,6 +52,13 @@
       delegate_to: localhost
       run_once: true
 
+    - name: Delete DHCP static mappings
+      pfsensible.core.pfsense_dhcp_static:
+        netif: opt3
+        macaddr: "{{ mac_address }}"
+        state: absent
+      delegate_to: pfsense.home.morey.tech
+      throttle: 1
 
     - name: Get a list of clusters  # noqa: run-once[task]
       rhpds.assisted_installer.list_clusters:
