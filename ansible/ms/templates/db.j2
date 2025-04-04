@@ -1,12 +1,12 @@
 $TTL    604800
-@       IN      SOA     ns.ocp-lab.rh-lab.morey.tech. admin.ocp-lab.rh-lab.morey.tech. (
+@       IN      SOA     ns.{{ cluster_name }}.{{ cluster_dns_zone }}. admin.{{ cluster_name }}.{{ cluster_dns_zone }}. (
                           2         ; Serial
                      604800         ; Refresh
                       86400         ; Retry
                     2419200         ; Expire
                      604800 )       ; Negative Cache TTL
 ;
-@       IN      NS      ns.ocp-lab.rh-lab.morey.tech.
+@       IN      NS      ns.{{ cluster_name }}.{{ cluster_dns_zone }}.
 ns      IN      A       {{ ip_address }}
 {% for record in dns_records %}
 {{ record.name }} IN A {{ record.ip }}

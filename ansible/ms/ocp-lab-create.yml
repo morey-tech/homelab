@@ -71,11 +71,41 @@
       delegate_to: pfsense.home.morey.tech
       throttle: 1
 
-    # Create DNS entires for:
-    # https://github.com/pfsensible/core
-    # api.{{ cluster_domain }} - api_vips
-    # api-int.{{ cluster_domain }} - api_vips
-    # *.apps.{{ cluster_domain }} - ingress_vips
+    - name: Add DNS zone to named.conf.options  # noqa: run-once[task]
+      ansible.builtin.blockinfile:
+        path: /etc/bind/named.conf.options
+        block: |
+          zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
+              type master;
+              file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
+          };
+        marker: "// {mark} ANSIBLE MANAGED BLOCK"
+        insertafter: "EOF"
+        append_newline: true
+        prepend_newline: true
+        state: present
+      notify: Restart BIND9
+      become: true
+      delegate_to: ocp-lab-dns.rh-lab.morey.tech
+      run_once: true
+
+    - name: Configure DNS zone  # noqa: run-once[task]
+      ansible.builtin.template:
+        src: db.j2
+        dest: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
+        mode: '0644'
+      notify: Restart BIND9
+      vars:
+        dns_records:
+          - { name: "api", ip: "{{ api_vips.0.ip }}" }
+          - { name: "api-int", ip: "{{ api_vips.0.ip }}" }
+          - { name: "*.apps", ip: "{{ ingress_vips.0.ip }}" }
+      become: true
+      delegate_to: ocp-lab-dns.rh-lab.morey.tech
+      run_once: true
+
+    - name: Run handleers before creating VMs
+      ansible.builtin.meta: flush_handlers
 
     - name: Create new PVE pool  # noqa: run-once[task]
       community.general.proxmox_pool:
@@ -161,3 +191,11 @@
       delegate_to: localhost
       run_once: true
       when: create_assisted_installer
+
+  handlers:
+    - name: Restart BIND9
+      ansible.builtin.service:
+        name: bind9
+        state: reloaded
+      become: true
+      delegate_to: ocp-lab-dns.rh-lab.morey.tech

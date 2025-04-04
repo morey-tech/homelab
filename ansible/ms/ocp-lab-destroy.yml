@@ -76,6 +76,31 @@
       delegate_to: pfsense.home.morey.tech
       throttle: 1
 
+    - name: Remove DNS zone from named.conf.options  # noqa: run-once[task]
+      ansible.builtin.blockinfile:
+        path: /etc/bind/named.conf.options
+        block: |
+          zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
+              type master;
+              file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
+          };
+        marker: "// {mark} ANSIBLE MANAGED BLOCK"
+        insertafter: "EOF"
+        state: absent
+      notify: Restart BIND9
+      become: true
+      delegate_to: ocp-lab-dns.rh-lab.morey.tech
+      run_once: true
+
+    - name: Delete DNS zone  # noqa: run-once[task]
+      ansible.builtin.file:
+        path: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
+        state: absent
+      notify: Restart BIND9
+      become: true
+      delegate_to: ocp-lab-dns.rh-lab.morey.tech
+      run_once: true
+
     - name: Get a list of clusters  # noqa: run-once[task]
       rhpds.assisted_installer.list_clusters:
         offline_token: "{{ offline_token }}"
@@ -105,3 +130,11 @@
       when: item.name == cluster_name
       delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
       run_once: true
+
+  handlers:
+    - name: Restart BIND9
+      ansible.builtin.service:
+        name: bind9
+        state: reloaded
+      become: true
+      delegate_to: ocp-lab-dns.rh-lab.morey.tech
