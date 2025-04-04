@@ -1,5 +1,5 @@
 ---
-- name: Set Up ocp-lab dns container
+- name: Create ocp-lab-dns LXC
   hosts:
     - ocp-lab-dns.rh-lab.morey.tech
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
@@ -75,17 +75,10 @@
         ansible_user: root
       changed_when: false
 
-- name: Configure DNS Server in LXC Container
+- name: Configure base DNS Server
   hosts: ocp-lab-dns.rh-lab.morey.tech
   gather_facts: true
   become: true
-
-  vars:
-    dns_records:
-      - { name: "api", ip: "192.168.6.199" }
-      - { name: "api-int", ip: "192.168.6.199" }
-      - { name: "*.apps", ip: "192.168.6.198" }
-
   tasks:
     - name: Install BIND9
       ansible.builtin.apt:
@@ -100,15 +93,8 @@
         mode: '0644'
       notify: Restart BIND9
 
-    - name: Configure DNS zone
-      ansible.builtin.template:
-        src: db.ocp-lab.rh-lab.morey.tech.j2
-        dest: /etc/bind/db.ocp-lab.rh-lab.morey.tech
-        mode: '0644'
-      notify: Restart BIND9
-
   handlers:
     - name: Restart BIND9
       ansible.builtin.service:
         name: bind9
-        state: restarted
+        state: reloaded
