@@ -1,4 +1,44 @@
 ---
+- name: Configure cluster DNS
+  hosts: ocp-lab-dns.rh-lab.morey.tech
+  gather_facts: false  # Play have very little to do with this host.
+  become: true
+
+  tasks:
+    - name: Add DNS zone to named.conf.options  # noqa: run-once[task]
+      ansible.builtin.blockinfile:
+        path: /etc/bind/named.conf.options
+        block: |
+          zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
+              type master;
+              file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
+          };
+        marker: "// {mark} ANSIBLE MANAGED BLOCK"
+        insertafter: "EOF"
+        append_newline: true
+        prepend_newline: true
+        state: present
+      notify: Restart BIND9
+      become: true
+
+    - name: Configure DNS zone  # noqa: run-once[task]
+      ansible.builtin.template:
+        src: db.j2
+        dest: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
+        mode: '0644'
+      notify: Restart BIND9
+      vars:
+        dns_records:
+          - { name: "api", ip: "{{ api_vips.0.ip }}" }
+          - { name: "api-int", ip: "{{ api_vips.0.ip }}" }
+          - { name: "*.apps", ip: "{{ ingress_vips.0.ip }}" }
+
+  handlers:
+    - name: Restart BIND9
+      ansible.builtin.service:
+        name: bind9
+        state: reloaded
+
 - name: Set Up ocp-lab node VMs
   hosts: ocp-lab-nodes
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
@@ -70,42 +110,6 @@
         state: present
       delegate_to: pfsense.home.morey.tech
       throttle: 1
-
-    - name: Add DNS zone to named.conf.options  # noqa: run-once[task]
-      ansible.builtin.blockinfile:
-        path: /etc/bind/named.conf.options
-        block: |
-          zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
-              type master;
-              file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
-          };
-        marker: "// {mark} ANSIBLE MANAGED BLOCK"
-        insertafter: "EOF"
-        append_newline: true
-        prepend_newline: true
-        state: present
-      notify: Restart BIND9
-      become: true
-      delegate_to: ocp-lab-dns.rh-lab.morey.tech
-      run_once: true
-
-    - name: Configure DNS zone  # noqa: run-once[task]
-      ansible.builtin.template:
-        src: db.j2
-        dest: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
-        mode: '0644'
-      notify: Restart BIND9
-      vars:
-        dns_records:
-          - { name: "api", ip: "{{ api_vips.0.ip }}" }
-          - { name: "api-int", ip: "{{ api_vips.0.ip }}" }
-          - { name: "*.apps", ip: "{{ ingress_vips.0.ip }}" }
-      become: true
-      delegate_to: ocp-lab-dns.rh-lab.morey.tech
-      run_once: true
-
-    - name: Run handlers before creating VMs
-      ansible.builtin.meta: flush_handlers
 
     - name: Create new PVE pool  # noqa: run-once[task]
       community.general.proxmox_pool:
@@ -191,11 +195,3 @@
       delegate_to: localhost
       run_once: true
       when: create_assisted_installer
-
-  handlers:
-    - name: Restart BIND9
-      ansible.builtin.service:
-        name: bind9
-        state: reloaded
-      become: true
-      delegate_to: ocp-lab-dns.rh-lab.morey.tech
