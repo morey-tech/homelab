@@ -1,0 +1,12 @@
+---
+- name: Destroy ocp-lab node VMs
+  hosts: localhost
+  connection: local
+  gather_facts: false  # Hosts may not be available, since this playbook destroys them.
+
+  tasks:
+    - name: Debug
+      ansible.builtin.debug:
+        msg: "{{ hostvars[item].pve_vm_id }}"
+      throttle: 1
+      loop: "{{ groups['ocp-lab-nodes'] }}"
