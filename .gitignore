@@ -1,3 +1,4 @@
+.ansible/
 kubeconfig.yml
 # Output from building kustomized helm charts.
 **/*/*/charts/*
