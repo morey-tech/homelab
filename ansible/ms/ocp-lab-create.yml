@@ -104,7 +104,7 @@
       delegate_to: ocp-lab-dns.rh-lab.morey.tech
       run_once: true
 
-    - name: Run handleers before creating VMs
+    - name: Run handlers before creating VMs
       ansible.builtin.meta: flush_handlers
 
     - name: Create new PVE pool  # noqa: run-once[task]
