@@ -107,6 +107,10 @@
         dns_ip_address: "{{ hostvars['dns.rh-lab.morey.tech'].ip_address }}"
       delegate_to: dns.rh-lab.morey.tech
 
+    - name: Run Reload BIND9 handler
+      ansible.builtin.meta: flush_handlers
+      delegate_to: dns.rh-lab.morey.tech
+
     - name: Create new PVE pool  # noqa: run-once[task]
       community.general.proxmox_pool:
         api_user: "{{ pve_api_user }}"
