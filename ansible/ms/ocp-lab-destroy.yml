@@ -114,7 +114,7 @@
   tasks:
     - name: Remove DNS zone from named.conf.options  # noqa: run-once[task]
       ansible.builtin.blockinfile:
-        path: /etc/bind/named.conf.options
+        path: /etc/bind/named.conf.local
         block: |
           zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
               type master;

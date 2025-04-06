@@ -95,7 +95,7 @@
 
     - name: Add DNS zone to named.conf.options  # noqa: run-once[task]
       ansible.builtin.blockinfile:
-        path: /etc/bind/named.conf.options
+        path: /etc/bind/named.conf.local
         block: |
           zone "{{ dns_zone }}" {
               type master;
