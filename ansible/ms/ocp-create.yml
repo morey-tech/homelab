@@ -32,7 +32,6 @@
         msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ newcluster.result.id }}"
       when: create_assisted_installer
 
-    # Download discovery.iso to storage-pve.
     - name: Create Discovery ISO # noqa: run-once[task]
       rhpds.assisted_installer.create_infra_env:
         name: "{{ cluster_name }}-infra-env"
@@ -133,15 +132,15 @@
         node: "{{ hostvars[item].pve_node }}"
         pool: "{{ hostvars[item].cluster_name }}"
         cpu: x86-64-v2-AES
-        cores: 8
-        memory: 16384
+        cores: "{{ hostvars[item].cores }}"
+        memory: "{{ hostvars[item].memory }}"
         ide:
           ide2: "storage-pve:iso/{{ hostvars[item].cluster_name }}-{{ newcluster.result.id }}-discovery.iso,media=cdrom"
         scsihw: virtio-scsi-single
         scsi:
           scsi0: 'local-nvme:128,iothread=1'
         net:
-          net0: 'virtio={{ hostvars[item].mac_address }},bridge=vmbr0,tag=6,firewall=1'
+          net0: 'virtio={{ hostvars[item].mac_address }},bridge=vmbr0,tag={{ hostvars[item].vlan_tag }},firewall=1'
       loop: "{{ groups[nodes_group] }}"
 
     - name: Pause before starting VMs
