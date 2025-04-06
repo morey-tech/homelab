@@ -7,7 +7,7 @@ $TTL    604800
                      604800 )       ; Negative Cache TTL
 ;
 @       IN      NS      ns.{{ dns_zone }}.
-ns      IN      A       {{ ip_address }}
+ns      IN      A       {{ dns_ip_address }}
 {% for record in dns_records %}
 {{ record.name }} IN A {{ record.ip }}
 {% endfor %}

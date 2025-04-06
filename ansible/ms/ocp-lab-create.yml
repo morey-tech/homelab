@@ -42,6 +42,7 @@
           { 'name': 'api', 'ip': api_vips.0.ip },
           { 'name': 'api-int', 'ip': api_vips.0.ip },
           { 'name': '*.apps', 'ip': ingress_vips.0.ip }] }}"
+        dns_ip_address: "{{ hostvars['dns.rh-lab.morey.tech'].ip_address }}"
 
   handlers:
     - name: Restart BIND9

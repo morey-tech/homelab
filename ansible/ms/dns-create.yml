@@ -117,6 +117,7 @@
       vars:
         dns_records:
           - { name: "{{ inventory_hostname_short }}", ip: "{{ ip_address }}" }
+        dns_ip_address: "{{ ip_address }}"
 
   handlers:
     - name: Restart BIND9
