@@ -1,56 +1,5 @@
 ---
-- name: Configure cluster DNS
-  hosts: dns.rh-lab.morey.tech
-  gather_facts: false  # Play has very little to do with this host.
-  become: true
-
-  tasks:
-    - name: Add DNS zone to named.conf.options  # noqa: run-once[task]
-      ansible.builtin.blockinfile:
-        path: /etc/bind/named.conf.local
-        block: |
-          zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
-              type master;
-              file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
-          };
-        marker: "// {mark} ANSIBLE MANAGED BLOCK"
-        insertafter: "EOF"
-        append_newline: true
-        prepend_newline: true
-        state: present
-      notify: Restart BIND9
-      become: true
-
-    - name: Initialize node_dns_records
-      ansible.builtin.set_fact:
-        node_dns_records: []
-
-    - name: Add each node DNS record to variable
-      ansible.builtin.set_fact:
-        node_dns_records: "{{ node_dns_records + [{'name': item.split('.')[0], 'ip': hostvars[item].ip_address}] }}"
-      loop: "{{ groups['ocp-lab-nodes'] }}"
-
-    - name: Configure DNS zone  # noqa: run-once[task]
-      ansible.builtin.template:
-        src: db.j2
-        dest: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
-        mode: '0644'
-      notify: Restart BIND9
-      vars:
-        dns_zone: "{{ cluster_name }}.{{ cluster_dns_zone }}"
-        dns_records: "{{ node_dns_records + [
-          { 'name': 'api', 'ip': api_vips.0.ip },
-          { 'name': 'api-int', 'ip': api_vips.0.ip },
-          { 'name': '*.apps', 'ip': ingress_vips.0.ip }] }}"
-        dns_ip_address: "{{ hostvars['dns.rh-lab.morey.tech'].ip_address }}"
-
-  handlers:
-    - name: Restart BIND9
-      ansible.builtin.service:
-        name: bind9
-        state: reloaded
-
-- name: Set Up cluster nodes and installer
+- name: Set Up cluster
   hosts: ocp-lab.rh-lab.morey.tech  # dummy host to represent the cluster
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
 
@@ -115,6 +64,48 @@
       delegate_to: pfsense.home.morey.tech
       throttle: 1
       loop: "{{ groups[nodes_group] }}"
+
+    - name: Add DNS zone to named.conf.options  # noqa: run-once[task]
+      ansible.builtin.blockinfile:
+        path: /etc/bind/named.conf.local
+        block: |
+          zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
+              type master;
+              file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
+          };
+        marker: "// {mark} ANSIBLE MANAGED BLOCK"
+        insertafter: "EOF"
+        append_newline: true
+        prepend_newline: true
+        state: present
+      notify: Restart BIND9
+      delegate_to: dns.rh-lab.morey.tech
+
+    - name: Initialize node_dns_records
+      ansible.builtin.set_fact:
+        node_dns_records: []
+      delegate_to: dns.rh-lab.morey.tech
+
+    - name: Add each node DNS record to variable
+      ansible.builtin.set_fact:
+        node_dns_records: "{{ node_dns_records + [{'name': item.split('.')[0], 'ip': hostvars[item].ip_address}] }}"
+      loop: "{{ groups['ocp-lab-nodes'] }}"
+      delegate_to: dns.rh-lab.morey.tech
+
+    - name: Configure DNS zone  # noqa: run-once[task]
+      ansible.builtin.template:
+        src: db.j2
+        dest: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
+        mode: '0644'
+      notify: Restart BIND9
+      vars:
+        dns_zone: "{{ cluster_name }}.{{ cluster_dns_zone }}"
+        dns_records: "{{ node_dns_records + [
+          { 'name': 'api', 'ip': api_vips.0.ip },
+          { 'name': 'api-int', 'ip': api_vips.0.ip },
+          { 'name': '*.apps', 'ip': ingress_vips.0.ip }] }}"
+        dns_ip_address: "{{ hostvars['dns.rh-lab.morey.tech'].ip_address }}"
+      delegate_to: dns.rh-lab.morey.tech
 
     - name: Create new PVE pool  # noqa: run-once[task]
       community.general.proxmox_pool:
@@ -189,3 +180,10 @@
       ansible.builtin.debug:
         var: credentials.result
       when: create_assisted_installer
+
+  handlers:
+    - name: Restart BIND9
+      ansible.builtin.service:
+        name: bind9
+        state: reloaded
+      delegate_to: dns.rh-lab.morey.tech

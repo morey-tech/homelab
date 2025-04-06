@@ -81,6 +81,27 @@
       loop_control:
         label: "{{ item.item }}"
 
+    - name: Remove DNS zone from named.conf.options  # noqa: run-once[task]
+      ansible.builtin.blockinfile:
+        path: /etc/bind/named.conf.local
+        block: |
+          zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
+              type master;
+              file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
+          };
+        marker: "// {mark} ANSIBLE MANAGED BLOCK"
+        insertafter: "EOF"
+        state: absent
+      notify: Restart BIND9
+      delegate_to: dns.rh-lab.morey.tech
+
+    - name: Delete DNS zone  # noqa: run-once[task]
+      ansible.builtin.file:
+        path: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
+        state: absent
+      notify: Restart BIND9
+      delegate_to: dns.rh-lab.morey.tech
+
     - name: Get a list of clusters  # noqa: run-once[task]
       rhpds.assisted_installer.list_clusters:
         offline_token: "{{ rh_console_offline_token }}"
@@ -106,33 +127,9 @@
       when: item.name == cluster_name
       delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
 
-- name: Destroy cluster DNS
-  hosts: dns.rh-lab.morey.tech
-  gather_facts: false  # Play have very little to do with this host.
-  become: true
-
-  tasks:
-    - name: Remove DNS zone from named.conf.options  # noqa: run-once[task]
-      ansible.builtin.blockinfile:
-        path: /etc/bind/named.conf.local
-        block: |
-          zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
-              type master;
-              file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
-          };
-        marker: "// {mark} ANSIBLE MANAGED BLOCK"
-        insertafter: "EOF"
-        state: absent
-      notify: Restart BIND9
-
-    - name: Delete DNS zone  # noqa: run-once[task]
-      ansible.builtin.file:
-        path: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
-        state: absent
-      notify: Restart BIND9
-
   handlers:
     - name: Restart BIND9
       ansible.builtin.service:
         name: bind9
         state: reloaded
+      delegate_to: dns.rh-lab.morey.tech
