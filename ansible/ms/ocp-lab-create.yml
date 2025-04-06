@@ -1,7 +1,7 @@
 ---
 - name: Configure cluster DNS
   hosts: ocp-lab-dns.rh-lab.morey.tech
-  gather_facts: false  # Play have very little to do with this host.
+  gather_facts: false  # Play has very little to do with this host.
   become: true
 
   tasks:
@@ -40,7 +40,7 @@
         state: reloaded
 
 - name: Set Up ocp-lab node VMs
-  hosts: ocp-lab-nodes
+  hosts: ocp-lab.rh-lab.morey.tech  # dummy host to represent the cluster
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
 
   vars:
@@ -62,16 +62,12 @@
         api_vips: "{{ api_vips }}"
         ingress_vips: "{{ ingress_vips }}"
         ssh_public_key: "{{ ssh_authorized_keys }}"
-      delegate_to: localhost
-      run_once: true
       register: newcluster
       when: create_assisted_installer
 
     - name: Print link to assisted installer # noqa: run-once[task]
       ansible.builtin.debug:
         msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ newcluster.result.id }}"
-      delegate_to: localhost
-      run_once: true
       when: create_assisted_installer
 
     # Download discovery.iso to storage-pve.
@@ -85,8 +81,6 @@
         pull_secret: "{{ pull_secret | to_json }}"
         openshift_version: "{{ cluster_version }}"
       register: newinfraenv
-      delegate_to: localhost
-      run_once: true
       when: create_assisted_installer
 
     - name: Download Discovery ISO  # noqa: run-once[task]
@@ -96,20 +90,20 @@
         mode: '0777'
         force: true
       delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
-      run_once: true
       when: create_assisted_installer
       # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#run-tasks-concurrently-poll-0
 
     - name: Create DHCP static mapping
       pfsensible.core.pfsense_dhcp_static:
         netif: opt3  # rh_lab
-        hostname: "{{ inventory_hostname_short }}"
-        macaddr: "{{ mac_address }}"
-        ipaddr: "{{ ip_address }}"
+        hostname: "{{ hostvars[item].inventory_hostname_short }}"
+        macaddr: "{{ hostvars[item].mac_address }}"
+        ipaddr: "{{ hostvars[item].ip_address }}"
         ddnsdomainkeyalgorithm: "hmac-md5"  # fixes diff.
         state: present
       delegate_to: pfsense.home.morey.tech
       throttle: 1
+      loop: "{{ groups['ocp-lab-nodes'] }}"
 
     - name: Create new PVE pool  # noqa: run-once[task]
       community.general.proxmox_pool:
@@ -119,8 +113,6 @@
         api_host: "{{ api_host }}"
         poolid: "{{ cluster_name }}"
         comment: "{{ cluster_name }} cluster"
-      delegate_to: localhost
-      run_once: true
 
     - name: Create VMs
       community.general.proxmox_kvm:
@@ -128,26 +120,25 @@
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
         api_host: "{{ api_host }}"
-        vmid: "{{ pve_vm_id }}"
-        name: "{{ inventory_hostname_short }}"
-        node: "{{ pve_node }}"
-        pool: "{{ cluster_name }}"
+        vmid: "{{ hostvars[item].pve_vm_id }}"
+        name: "{{ hostvars[item].inventory_hostname_short }}"
+        node: "{{ hostvars[item].pve_node }}"
+        pool: "{{ hostvars[item].cluster_name }}"
         cpu: x86-64-v2-AES
         cores: 8
         memory: 16384
         ide:
-          ide2: "storage-pve:iso/{{ cluster_name }}-{{ newcluster.result.id }}-discovery.iso,media=cdrom"
+          ide2: "storage-pve:iso/{{ hostvars[item].cluster_name }}-{{ newcluster.result.id }}-discovery.iso,media=cdrom"
         scsihw: virtio-scsi-single
         scsi:
           scsi0: 'local-nvme:128,iothread=1'
         net:
-          net0: 'virtio={{ mac_address }},bridge=vmbr0,tag=6,firewall=1'
-      delegate_to: localhost
+          net0: 'virtio={{ hostvars[item].mac_address }},bridge=vmbr0,tag=6,firewall=1'
+      loop: "{{ groups['ocp-lab-nodes'] }}"
 
     - name: Pause before starting VMs
       ansible.builtin.wait_for:
         timeout: 3
-      delegate_to: localhost
 
     - name: Start VMs
       community.general.proxmox_kvm:
@@ -155,20 +146,18 @@
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
         api_host: "{{ api_host }}"
-        vmid: "{{ pve_vm_id }}"
-        name: "{{ inventory_hostname_short }}"
-        node: "{{ pve_node }}"
+        vmid: "{{ hostvars[item].pve_vm_id }}"
+        name: "{{ hostvars[item].inventory_hostname_short }}"
+        node: "{{ hostvars[item].pve_node }}"
         state: started
-      delegate_to: localhost
+      loop: "{{ groups['ocp-lab-nodes'] }}"
 
     - name: Wait for the hosts to be ready  # noqa: run-once[task]
       rhpds.assisted_installer.wait_for_hosts:
         cluster_id: "{{ newcluster.result.id }}"
         offline_token: "{{ offline_token }}"
-        expected_hosts: "{{ play_hosts | length }}"
+        expected_hosts: "{{ groups['ocp-lab-nodes'] | length }}"
         wait_timeout: 300  # Usually ready in 3 - 4 minutes with "full" discovery ISO.
-      delegate_to: localhost
-      run_once: true
       when: create_assisted_installer
 
     - name: Start cluster installation  # noqa: run-once[task]
@@ -176,8 +165,6 @@
         cluster_id: "{{ newcluster.result.id }}"
         offline_token: "{{ offline_token }}"
         wait_timeout: 1200
-      delegate_to: localhost
-      run_once: true
       when: create_assisted_installer
 
     - name: Obtain OpenShift cluster credentials  # noqa: run-once[task]
@@ -185,13 +172,9 @@
       rhpds.assisted_installer.get_credentials:
         cluster_id: "{{ newcluster.result.id }}"
         offline_token: "{{ offline_token }}"
-      delegate_to: localhost
-      run_once: true
       when: create_assisted_installer
 
     - name: Display credentials  # noqa: run-once[task]
       ansible.builtin.debug:
         var: credentials.result
-      delegate_to: localhost
-      run_once: true
       when: create_assisted_installer

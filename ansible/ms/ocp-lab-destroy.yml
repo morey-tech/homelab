@@ -1,6 +1,6 @@
 ---
 - name: Destroy ocp-lab node VMs
-  hosts: ocp-lab-nodes
+  hosts: ocp-lab.rh-lab.morey.tech  # dummy host to represent the cluster
   gather_facts: false  # Hosts may not be available, since this playbook destroys them.
 
   vars_prompt:
@@ -19,12 +19,23 @@
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
         api_host: "{{ api_host }}"
-        vmid: "{{ pve_vm_id }}"
-        name: "{{ inventory_hostname_short }}"
-        node: "{{ pve_node }}"
+        vmid: "{{ hostvars[item].pve_vm_id }}"
+        name: "{{ hostvars[item].inventory_hostname_short }}"
+        node: "{{ hostvars[item].pve_node }}"
         config: current
-      delegate_to: localhost
+      loop: "{{ groups['ocp-lab-nodes'] }}"
       register: vm_state
+
+    - name: Get VMs by host
+      ansible.builtin.set_fact:
+        proxmox_vms: >-
+          {{
+            dict(
+              (vm_state.results | map(attribute='item')) |
+              zip(vm_state.results | map(attribute='proxmox_vms'))
+            )
+          }}
+        # Result: { "hostname": "proxmox_vms contents" }
 
     # Stop with force first before destroy to speed up.
     - name: Stop VMs  # noqa: run-once[task]
@@ -33,14 +44,17 @@
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
         api_host: "{{ api_host }}"
-        vmid: "{{ pve_vm_id }}"
-        name: "{{ inventory_hostname_short }}"
-        node: "{{ pve_node }}"
+        vmid: "{{ hostvars[item.key].pve_vm_id }}"
+        name: "{{ hostvars[item.key].inventory_hostname_short }}"
+        node: "{{ hostvars[item.key].pve_node }}"
         state: stopped
         force: true
         timeout: 15  # short graceful shutdown since will be destroyed.
       delegate_to: localhost
-      when: "vm_state.proxmox_vms != []"
+      loop: "{{ proxmox_vms | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      when: "item.value != []"
 
     - name: Destroy VMs  # noqa: run-once[task]
       community.general.proxmox_kvm:
@@ -48,14 +62,17 @@
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
         api_host: "{{ api_host }}"
-        vmid: "{{ pve_vm_id }}"
-        name: "{{ inventory_hostname_short }}"
-        node: "{{ pve_node }}"
+        vmid: "{{ hostvars[item.key].pve_vm_id }}"
+        name: "{{ hostvars[item.key].inventory_hostname_short }}"
+        node: "{{ hostvars[item.key].pve_node }}"
         state: absent
         force: true
         timeout: 300
       delegate_to: localhost
-      when: "vm_state.proxmox_vms != []"
+      loop: "{{ proxmox_vms | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      when: "item.value != []"
 
     - name: Delete PVE pool  # noqa: run-once[task]
       community.general.proxmox_pool:
@@ -71,10 +88,14 @@
     - name: Delete DHCP static mappings
       pfsensible.core.pfsense_dhcp_static:
         netif: opt3
-        macaddr: "{{ mac_address }}"
+        macaddr: "{{ hostvars[item.key].mac_address }}"
         state: absent
       delegate_to: pfsense.home.morey.tech
       throttle: 1
+      loop: "{{ proxmox_vms | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      when: "item.value != []"
 
     - name: Get a list of clusters  # noqa: run-once[task]
       rhpds.assisted_installer.list_clusters:
