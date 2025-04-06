@@ -1,6 +1,8 @@
 ---
 - name: Destroy cluster
-  hosts: ocp-lab.rh-lab.morey.tech  # dummy host to represent the cluster
+  hosts:
+    - ocp-lab.rh-lab.morey.tech  # dummy host to represent the cluster
+    - ocp-dev.rh-lab.morey.tech  # dummy host to represent the cluster
   gather_facts: false  # Hosts may not be available, since this playbook destroys them.
 
   vars_prompt:
@@ -128,8 +130,9 @@
       delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
 
   handlers:
-    - name: Reload BIND9
+    - name: Reload BIND9  # noqa: run-once[task]
       ansible.builtin.service:
         name: bind9
         state: reloaded
       delegate_to: dns.rh-lab.morey.tech
+      run_once: true

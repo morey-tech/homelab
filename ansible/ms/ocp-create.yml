@@ -1,6 +1,8 @@
 ---
 - name: Set Up cluster
-  hosts: ocp-lab.rh-lab.morey.tech  # dummy host to represent the cluster
+  hosts:
+    - ocp-lab.rh-lab.morey.tech
+    - ocp-dev.rh-lab.morey.tech
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
 
   vars:
@@ -89,7 +91,7 @@
     - name: Add each node DNS record to variable
       ansible.builtin.set_fact:
         node_dns_records: "{{ node_dns_records + [{'name': item.split('.')[0], 'ip': hostvars[item].ip_address}] }}"
-      loop: "{{ groups['ocp-lab-nodes'] }}"
+      loop: "{{ groups[nodes_group] }}"
       delegate_to: dns.rh-lab.morey.tech
 
     - name: Configure DNS zone  # noqa: run-once[task]
@@ -186,8 +188,9 @@
       when: create_assisted_installer
 
   handlers:
-    - name: Reload BIND9
+    - name: Reload BIND9  # noqa: run-once[task]
       ansible.builtin.service:
         name: bind9
         state: reloaded
       delegate_to: dns.rh-lab.morey.tech
+      run_once: true
