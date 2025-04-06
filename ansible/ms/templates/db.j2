@@ -3,8 +3,8 @@ $TTL    604800
                           2         ; Serial
                      604800         ; Refresh
                       86400         ; Retry
-                    2419200         ; Expire
-                     604800 )       ; Negative Cache TTL
+                     3600         ; Expire
+                      300 )       ; Negative Cache TTL
 ;
 @       IN      NS      ns.{{ dns_zone }}.
 ns      IN      A       {{ dns_ip_address }}
