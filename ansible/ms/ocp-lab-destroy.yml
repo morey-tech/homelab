@@ -1,5 +1,5 @@
 ---
-- name: Destroy ocp-lab node VMs
+- name: Destroy cluster
   hosts: ocp-lab.rh-lab.morey.tech  # dummy host to represent the cluster
   gather_facts: false  # Hosts may not be available, since this playbook destroys them.
 
@@ -23,6 +23,7 @@
         name: "{{ hostvars[item].inventory_hostname_short }}"
         node: "{{ hostvars[item].pve_node }}"
         config: current
+      loop: "{{ groups[nodes_group] }}"
       register: vm_states
 
     # Stop with force first before destroy to speed up.

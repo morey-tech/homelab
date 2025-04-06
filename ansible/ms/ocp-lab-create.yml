@@ -39,7 +39,7 @@
         name: bind9
         state: reloaded
 
-- name: Set Up ocp-lab node VMs
+- name: Set Up cluster nodes and installer
   hosts: ocp-lab.rh-lab.morey.tech  # dummy host to represent the cluster
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
 
@@ -103,7 +103,7 @@
         state: present
       delegate_to: pfsense.home.morey.tech
       throttle: 1
-      loop: "{{ groups['ocp-lab-nodes'] }}"
+      loop: "{{ groups[nodes_group] }}"
 
     - name: Create new PVE pool  # noqa: run-once[task]
       community.general.proxmox_pool:
@@ -134,7 +134,7 @@
           scsi0: 'local-nvme:128,iothread=1'
         net:
           net0: 'virtio={{ hostvars[item].mac_address }},bridge=vmbr0,tag=6,firewall=1'
-      loop: "{{ groups['ocp-lab-nodes'] }}"
+      loop: "{{ groups[nodes_group] }}"
 
     - name: Pause before starting VMs
       ansible.builtin.wait_for:
@@ -150,13 +150,13 @@
         name: "{{ hostvars[item].inventory_hostname_short }}"
         node: "{{ hostvars[item].pve_node }}"
         state: started
-      loop: "{{ groups['ocp-lab-nodes'] }}"
+      loop: "{{ groups[nodes_group] }}"
 
     - name: Wait for the hosts to be ready  # noqa: run-once[task]
       rhpds.assisted_installer.wait_for_hosts:
         cluster_id: "{{ newcluster.result.id }}"
         offline_token: "{{ offline_token }}"
-        expected_hosts: "{{ groups['ocp-lab-nodes'] | length }}"
+        expected_hosts: "{{ groups[nodes_group] | length }}"
         wait_timeout: 300  # Usually ready in 3 - 4 minutes with "full" discovery ISO.
       when: create_assisted_installer
 
