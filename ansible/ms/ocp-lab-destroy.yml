@@ -157,5 +157,3 @@
       ansible.builtin.service:
         name: bind9
         state: reloaded
-      become: true
-      delegate_to: ocp-lab-dns.rh-lab.morey.tech
