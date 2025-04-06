@@ -97,9 +97,9 @@
       ansible.builtin.blockinfile:
         path: /etc/bind/named.conf.local
         block: |
-          zone "{{ dns_zone }}" {
+          zone "{{ cluster_dns_zone }}" {
               type master;
-              file "/etc/bind/db.{{ dns_zone }}";
+              file "/etc/bind/db.{{ cluster_dns_zone }}";
           };
         marker: "// {mark} ANSIBLE MANAGED BLOCK"
         insertafter: "EOF"
@@ -111,10 +111,11 @@
     - name: Configure rh-lab DNS zone  # noqa: run-once[task]
       ansible.builtin.template:
         src: db.j2
-        dest: "/etc/bind/db.{{ dns_zone }}"
+        dest: "/etc/bind/db.{{ cluster_dns_zone }}"
         mode: '0644'
       notify: Reload BIND9
       vars:
+        dns_zone: "{{ cluster_dns_zone }}"
         dns_records:
           - { name: "{{ inventory_hostname_short }}", ip: "{{ ip_address }}" }
         dns_ip_address: "{{ ip_address }}"

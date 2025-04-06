@@ -83,7 +83,7 @@
       loop_control:
         label: "{{ item.item }}"
 
-    - name: Remove DNS zone from named.conf.options  # noqa: run-once[task]
+    - name: Remove DNS zone from named.conf.local  # noqa: run-once[task]
       ansible.builtin.blockinfile:
         path: /etc/bind/named.conf.local
         block: |

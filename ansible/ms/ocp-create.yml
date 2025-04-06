@@ -67,7 +67,7 @@
       throttle: 1
       loop: "{{ groups[nodes_group] }}"
 
-    - name: Add DNS zone to named.conf.options  # noqa: run-once[task]
+    - name: Add DNS zone to named.conf.local  # noqa: run-once[task]
       ansible.builtin.blockinfile:
         path: /etc/bind/named.conf.local
         block: |
