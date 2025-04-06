@@ -74,7 +74,7 @@
               type master;
               file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
           };
-        marker: "// {mark} ANSIBLE MANAGED BLOCK"
+        marker: "// {mark} ANSIBLE MANAGED BLOCK for {{ cluster_name }}.{{ cluster_dns_zone }}"
         insertafter: "EOF"
         append_newline: true
         prepend_newline: true
