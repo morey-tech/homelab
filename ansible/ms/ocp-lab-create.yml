@@ -78,7 +78,7 @@
         append_newline: true
         prepend_newline: true
         state: present
-      notify: Restart BIND9
+      notify: Reload BIND9
       delegate_to: dns.rh-lab.morey.tech
 
     - name: Initialize node_dns_records
@@ -97,7 +97,7 @@
         src: db.j2
         dest: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
         mode: '0644'
-      notify: Restart BIND9
+      notify: Reload BIND9
       vars:
         dns_zone: "{{ cluster_name }}.{{ cluster_dns_zone }}"
         dns_records: "{{ node_dns_records + [
@@ -182,7 +182,7 @@
       when: create_assisted_installer
 
   handlers:
-    - name: Restart BIND9
+    - name: Reload BIND9
       ansible.builtin.service:
         name: bind9
         state: reloaded

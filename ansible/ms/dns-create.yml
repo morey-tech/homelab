@@ -91,7 +91,7 @@
         src: named.conf.options.j2
         dest: /etc/bind/named.conf.options
         mode: '0644'
-      notify: Restart BIND9
+      notify: Reload BIND9
 
     - name: Add DNS zone to named.conf.options  # noqa: run-once[task]
       ansible.builtin.blockinfile:
@@ -106,21 +106,21 @@
         append_newline: true
         prepend_newline: true
         state: present
-      notify: Restart BIND9
+      notify: Reload BIND9
 
     - name: Configure rh-lab DNS zone  # noqa: run-once[task]
       ansible.builtin.template:
         src: db.j2
         dest: "/etc/bind/db.{{ dns_zone }}"
         mode: '0644'
-      notify: Restart BIND9
+      notify: Reload BIND9
       vars:
         dns_records:
           - { name: "{{ inventory_hostname_short }}", ip: "{{ ip_address }}" }
         dns_ip_address: "{{ ip_address }}"
 
   handlers:
-    - name: Restart BIND9
+    - name: Reload BIND9
       ansible.builtin.service:
         name: bind9
         state: reloaded
