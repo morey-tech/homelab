@@ -16,13 +16,15 @@
         base_dns_domain: "{{ cluster_dns_zone }}"
         offline_token: "{{ rh_console_offline_token }}"
         pull_secret: "{{ rh_console_pull_secret | to_json }}"
+        # If node group is less than 3, set high availability mode to None for SNO.
         high_availability_mode: "{{ 'Full' if groups[nodes_group] | length >= 3 else 'None' }}"
         cluster_network_cidr: "{{ cluster_network_cidr }}"
         cluster_network_host_prefix: "{{ cluster_network_host_prefix }}"
         service_networks: "{{ service_networks }}"
         machine_networks: "{{ machine_networks }}"
-        api_vips: "{{ api_vips }}"
-        ingress_vips: "{{ ingress_vips }}"
+        # SNO clusters don't have a VIP. Therefore, default to an empty list.
+        api_vips: "{{ api_vips | default([]) }}"
+        ingress_vips: "{{ ingress_vips | default([]) }}"
         ssh_public_key: "{{ ssh_authorized_keys }}"
       register: newcluster
       when: create_assisted_installer
@@ -101,10 +103,11 @@
       notify: Reload BIND9
       vars:
         dns_zone: "{{ cluster_name }}.{{ cluster_dns_zone }}"
+        # SNO clusters don't have a VIP. Therefore, use the first node's IP.
         dns_records: "{{ node_dns_records + [
-          { 'name': 'api', 'ip': api_vips.0.ip },
-          { 'name': 'api-int', 'ip': api_vips.0.ip },
-          { 'name': '*.apps', 'ip': ingress_vips.0.ip }] }}"
+          { 'name': 'api', 'ip': api_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) },
+          { 'name': 'api-int', 'ip': api_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) },
+          { 'name': '*.apps', 'ip': ingress_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) }] }}"
         dns_ip_address: "{{ hostvars['dns.rh-lab.morey.tech'].ip_address }}"
       delegate_to: dns.rh-lab.morey.tech
 
