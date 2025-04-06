@@ -117,7 +117,7 @@
       run_once: true
 
 - name: Destroy cluster DNS
-  hosts: ocp-lab-dns.rh-lab.morey.tech
+  hosts: dns.rh-lab.morey.tech
   gather_facts: false  # Play have very little to do with this host.
   become: true
 

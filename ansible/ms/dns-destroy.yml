@@ -1,7 +1,7 @@
 ---
-- name: Delete ocp-lab-dns LXC
+- name: Delete dns.rh-lab LXC
   hosts:
-    - ocp-lab-dns.rh-lab.morey.tech
+    - dns.rh-lab.morey.tech
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
   become: true
   vars:

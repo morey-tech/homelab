@@ -1,7 +1,7 @@
 ---
-- name: Create ocp-lab-dns LXC
+- name: Create dns LXC
   hosts:
-    - ocp-lab-dns.rh-lab.morey.tech
+    - dns.rh-lab.morey.tech
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
   become: true
   vars:
@@ -76,7 +76,7 @@
       changed_when: false
 
 - name: Configure base DNS Server
-  hosts: ocp-lab-dns.rh-lab.morey.tech
+  hosts: dns.rh-lab.morey.tech
   gather_facts: true
   become: true
   tasks:
@@ -92,6 +92,31 @@
         dest: /etc/bind/named.conf.options
         mode: '0644'
       notify: Restart BIND9
+
+    - name: Add DNS zone to named.conf.options  # noqa: run-once[task]
+      ansible.builtin.blockinfile:
+        path: /etc/bind/named.conf.options
+        block: |
+          zone "{{ dns_zone }}" {
+              type master;
+              file "/etc/bind/db.{{ dns_zone }}";
+          };
+        marker: "// {mark} ANSIBLE MANAGED BLOCK"
+        insertafter: "EOF"
+        append_newline: true
+        prepend_newline: true
+        state: present
+      notify: Restart BIND9
+
+    - name: Configure rh-lab DNS zone  # noqa: run-once[task]
+      ansible.builtin.template:
+        src: db.j2
+        dest: "/etc/bind/db.{{ dns_zone }}"
+        mode: '0644'
+      notify: Restart BIND9
+      vars:
+        dns_records:
+          - { name: "{{ inventory_hostname_short }}", ip: "{{ ip_address }}" }
 
   handlers:
     - name: Restart BIND9

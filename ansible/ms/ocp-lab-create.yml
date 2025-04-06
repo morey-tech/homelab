@@ -1,6 +1,6 @@
 ---
 - name: Configure cluster DNS
-  hosts: ocp-lab-dns.rh-lab.morey.tech
+  hosts: dns.rh-lab.morey.tech
   gather_facts: false  # Play has very little to do with this host.
   become: true
 
@@ -21,6 +21,15 @@
       notify: Restart BIND9
       become: true
 
+    - name: Initialize node_dns_records
+      ansible.builtin.set_fact:
+        node_dns_records: []
+
+    - name: Add each node DNS record to variable
+      ansible.builtin.set_fact:
+        node_dns_records: "{{ node_dns_records + [{'name': item.split('.')[0], 'ip': hostvars[item].ip_address}] }}"
+      loop: "{{ groups['ocp-lab-nodes'] }}"
+
     - name: Configure DNS zone  # noqa: run-once[task]
       ansible.builtin.template:
         src: db.j2
@@ -28,10 +37,11 @@
         mode: '0644'
       notify: Restart BIND9
       vars:
-        dns_records:
-          - { name: "api", ip: "{{ api_vips.0.ip }}" }
-          - { name: "api-int", ip: "{{ api_vips.0.ip }}" }
-          - { name: "*.apps", ip: "{{ ingress_vips.0.ip }}" }
+        dns_zone: "{{ cluster_name }}.{{ cluster_dns_zone }}"
+        dns_records: "{{ node_dns_records + [
+          { 'name': 'api', 'ip': api_vips.0.ip },
+          { 'name': 'api-int', 'ip': api_vips.0.ip },
+          { 'name': '*.apps', 'ip': ingress_vips.0.ip }] }}"
 
   handlers:
     - name: Restart BIND9
@@ -44,7 +54,7 @@
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
 
   vars:
-    create_assisted_installer: false
+    create_assisted_installer: true
 
   tasks:
     - name: Create Assisted Installer Cluster  # noqa: run-once[task]
