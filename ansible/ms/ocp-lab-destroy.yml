@@ -80,7 +80,6 @@
       loop: "{{ vm_states.results }}"
       loop_control:
         label: "{{ item.item }}"
-      when: "item.proxmox_vms != []"
 
     - name: Get a list of clusters  # noqa: run-once[task]
       rhpds.assisted_installer.list_clusters:
