@@ -7,19 +7,19 @@
   tasks:
     - name: Print user
       ansible.builtin.debug:
-        msg: "{{ api_user }}"
+        msg: "{{ pve_api_user }}"
     - name: Print token id
       ansible.builtin.debug:
-        msg: "{{ api_token_id }}"
+        msg: "{{ pve_api_token_id }}"
     - name: Print token secret
       ansible.builtin.debug:
-        msg: "{{ api_token_secret }}"
+        msg: "{{ pve_api_token_secret }}"
 
     - name: Create new VM with minimal options
       community.general.proxmox_kvm:
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
         api_host: "{{ ansible_host }}"
         vmid: 6254
         name: test

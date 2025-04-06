@@ -15,10 +15,10 @@
 
     - name: Check if VM exists  # noqa: run-once[task]
       community.general.proxmox_vm_info:
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        api_host: "{{ api_host }}"
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
         vmid: "{{ hostvars[item].pve_vm_id }}"
         name: "{{ hostvars[item].inventory_hostname_short }}"
         node: "{{ hostvars[item].pve_node }}"
@@ -29,17 +29,16 @@
     # Stop with force first before destroy to speed up.
     - name: Stop VMs  # noqa: run-once[task]
       community.general.proxmox_kvm:
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        api_host: "{{ api_host }}"
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
         vmid: "{{ hostvars[item.item].pve_vm_id }}"
         name: "{{ hostvars[item.item].inventory_hostname_short }}"
         node: "{{ hostvars[item.item].pve_node }}"
         state: stopped
         force: true
         timeout: 15  # short graceful shutdown since will be destroyed.
-      delegate_to: localhost
       loop: "{{ vm_states.results }}"
       loop_control:
         label: "{{ item.item }}"
@@ -47,17 +46,16 @@
 
     - name: Destroy VMs  # noqa: run-once[task]
       community.general.proxmox_kvm:
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        api_host: "{{ api_host }}"
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
         vmid: "{{ hostvars[item.item].pve_vm_id }}"
         name: "{{ hostvars[item.item].inventory_hostname_short }}"
         node: "{{ hostvars[item.item].pve_node }}"
         state: absent
         force: true
         timeout: 300
-      delegate_to: localhost
       loop: "{{ vm_states.results }}"
       loop_control:
         label: "{{ item.item }}"
@@ -65,14 +63,12 @@
 
     - name: Delete PVE pool  # noqa: run-once[task]
       community.general.proxmox_pool:
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        api_host: "{{ api_host }}"
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
         poolid: "{{ cluster_name }}"
         state: absent
-      delegate_to: localhost
-      run_once: true
 
     - name: Delete DHCP static mappings
       pfsensible.core.pfsense_dhcp_static:
@@ -88,22 +84,18 @@
 
     - name: Get a list of clusters  # noqa: run-once[task]
       rhpds.assisted_installer.list_clusters:
-        offline_token: "{{ offline_token }}"
+        offline_token: "{{ rh_console_offline_token }}"
       register: listclusters
-      delegate_to: localhost
-      run_once: true
 
     - name: Remove Assisted Installer Cluster  # noqa: run-once[task]
       rhpds.assisted_installer.delete_cluster:
         cluster_id: "{{ item.id }}"
-        offline_token: "{{ offline_token }}"
+        offline_token: "{{ rh_console_offline_token }}"
         # cancel: true
       loop: "{{ listclusters.result }}"
       loop_control:
         label: "{{ item.name }}, {{ item.id }}"
       when: item.name == cluster_name
-      delegate_to: localhost
-      run_once: true
 
     - name: Delete Discovery ISOs  # noqa: run-once[task]
       ansible.builtin.file:
@@ -114,7 +106,6 @@
         label: "{{ item.name }}, {{ item.id }}"
       when: item.name == cluster_name
       delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
-      run_once: true
 
 - name: Destroy cluster DNS
   hosts: dns.rh-lab.morey.tech

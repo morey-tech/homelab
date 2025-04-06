@@ -62,8 +62,8 @@
         name: "{{ cluster_name }}"
         openshift_version: "{{ cluster_version }}"
         base_dns_domain: "{{ cluster_dns_zone }}"
-        offline_token: "{{ offline_token }}"
-        pull_secret: "{{ pull_secret | to_json }}"
+        offline_token: "{{ rh_console_offline_token }}"
+        pull_secret: "{{ rh_console_pull_secret | to_json }}"
         high_availability_mode: "{{ high_availability_mode }}"
         cluster_network_cidr: "{{ cluster_network_cidr }}"
         cluster_network_host_prefix: "{{ cluster_network_host_prefix }}"
@@ -87,8 +87,8 @@
         image_type: "{{ image_type }}"
         cluster_id: "{{ newcluster.result.id }}"
         ssh_authorized_key: "{{ ssh_authorized_keys }}"
-        offline_token: "{{ offline_token }}"
-        pull_secret: "{{ pull_secret | to_json }}"
+        offline_token: "{{ rh_console_offline_token }}"
+        pull_secret: "{{ rh_console_pull_secret | to_json }}"
         openshift_version: "{{ cluster_version }}"
       register: newinfraenv
       when: create_assisted_installer
@@ -117,19 +117,19 @@
 
     - name: Create new PVE pool  # noqa: run-once[task]
       community.general.proxmox_pool:
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        api_host: "{{ api_host }}"
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
         poolid: "{{ cluster_name }}"
         comment: "{{ cluster_name }} cluster"
 
     - name: Create VMs
       community.general.proxmox_kvm:
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        api_host: "{{ api_host }}"
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
         vmid: "{{ hostvars[item].pve_vm_id }}"
         name: "{{ hostvars[item].inventory_hostname_short }}"
         node: "{{ hostvars[item].pve_node }}"
@@ -152,10 +152,10 @@
 
     - name: Start VMs
       community.general.proxmox_kvm:
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        api_host: "{{ api_host }}"
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
         vmid: "{{ hostvars[item].pve_vm_id }}"
         name: "{{ hostvars[item].inventory_hostname_short }}"
         node: "{{ hostvars[item].pve_node }}"
@@ -165,7 +165,7 @@
     - name: Wait for the hosts to be ready  # noqa: run-once[task]
       rhpds.assisted_installer.wait_for_hosts:
         cluster_id: "{{ newcluster.result.id }}"
-        offline_token: "{{ offline_token }}"
+        offline_token: "{{ rh_console_offline_token }}"
         expected_hosts: "{{ groups[nodes_group] | length }}"
         wait_timeout: 300  # Usually ready in 3 - 4 minutes with "full" discovery ISO.
       when: create_assisted_installer
@@ -173,7 +173,7 @@
     - name: Start cluster installation  # noqa: run-once[task]
       rhpds.assisted_installer.install_cluster:
         cluster_id: "{{ newcluster.result.id }}"
-        offline_token: "{{ offline_token }}"
+        offline_token: "{{ rh_console_offline_token }}"
         wait_timeout: 1200
       when: create_assisted_installer
 
@@ -181,7 +181,7 @@
       register: credentials
       rhpds.assisted_installer.get_credentials:
         cluster_id: "{{ newcluster.result.id }}"
-        offline_token: "{{ offline_token }}"
+        offline_token: "{{ rh_console_offline_token }}"
       when: create_assisted_installer
 
     - name: Display credentials  # noqa: run-once[task]

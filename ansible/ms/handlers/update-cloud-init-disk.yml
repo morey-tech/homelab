@@ -10,9 +10,9 @@
 
 - name: Use imported disk
   community.general.proxmox_kvm:
-    api_user: "{{ api_user }}"
-    api_token_id: "{{ api_token_id }}"
-    api_token_secret: "{{ api_token_secret }}"
+    api_user: "{{ pve_api_user }}"
+    api_token_id: "{{ pve_api_token_id }}"
+    api_token_secret: "{{ pve_api_token_secret }}"
     api_host: "{{ ansible_host }}"
     vmid: "{{ vm_id }}"
     name: debian-12-cloudinit-template
@@ -27,9 +27,9 @@
 
 - name: Check VM state
   community.general.proxmox_vm_info:
-    api_user: "{{ api_user }}"
-    api_token_id: "{{ api_token_id }}"
-    api_token_secret: "{{ api_token_secret }}"
+    api_user: "{{ pve_api_user }}"
+    api_token_id: "{{ pve_api_token_id }}"
+    api_token_secret: "{{ pve_api_token_secret }}"
     api_host: "{{ ansible_host }}"
     type: qemu
     vmid: "{{ vm_id }}"
@@ -44,9 +44,9 @@
 
 - name: Remove unused disk(s)
   community.general.proxmox_disk:
-    api_user: "{{ api_user }}"
-    api_token_id: "{{ api_token_id }}"
-    api_token_secret: "{{ api_token_secret }}"
+    api_user: "{{ pve_api_user }}"
+    api_token_id: "{{ pve_api_token_id }}"
+    api_token_secret: "{{ pve_api_token_secret }}"
     api_host: "{{ ansible_host }}"
     vmid: "{{ vm_id }}"
     name: debian-12-cloudinit-template

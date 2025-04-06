@@ -12,10 +12,10 @@
   tasks:
     - name: Delete LXC OS template from Proxmox storage
       community.general.proxmox_template:
-        api_host: "{{ api_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
         node: "{{ pve_node }}"
         storage: "{{ storage }}"
         content_type: "vztmpl"
@@ -27,10 +27,10 @@
 
     - name: Stop LXC container
       community.general.proxmox:
-        api_host: "{{ api_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
         node: "{{ pve_node }}"
         vmid: "{{ pve_vm_id }}"
         state: stopped
@@ -39,10 +39,10 @@
 
     - name: Delete LXC container
       community.general.proxmox:
-        api_host: "{{ api_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
         node: "{{ pve_node }}"
         vmid: "{{ pve_vm_id }}"
         state: absent
