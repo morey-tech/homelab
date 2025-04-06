@@ -1,8 +1,6 @@
 ---
 - name: Set Up cluster
-  hosts:
-    - ocp-lab.rh-lab.morey.tech
-    - ocp-dev.rh-lab.morey.tech
+  hosts: ocp-clusters
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
 
   vars:
@@ -133,12 +131,12 @@
         vmid: "{{ hostvars[item].pve_vm_id }}"
         name: "{{ hostvars[item].inventory_hostname_short }}"
         node: "{{ hostvars[item].pve_node }}"
-        pool: "{{ hostvars[item].cluster_name }}"
+        pool: "{{ cluster_name }}"
         cpu: x86-64-v2-AES
         cores: "{{ hostvars[item].cores }}"
         memory: "{{ hostvars[item].memory }}"
         ide:
-          ide2: "storage-pve:iso/{{ hostvars[item].cluster_name }}-{{ newcluster.result.id }}-discovery.iso,media=cdrom"
+          ide2: "storage-pve:iso/{{ cluster_name }}-{{ newcluster.result.id }}-discovery.iso,media=cdrom"
         scsihw: virtio-scsi-single
         scsi:
           scsi0: 'local-nvme:128,iothread=1'

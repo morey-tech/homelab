@@ -1,8 +1,6 @@
 ---
 - name: Destroy cluster
-  hosts:
-    - ocp-lab.rh-lab.morey.tech  # dummy host to represent the cluster
-    - ocp-dev.rh-lab.morey.tech  # dummy host to represent the cluster
+  hosts: ocp-clusters 
   gather_facts: false  # Hosts may not be available, since this playbook destroys them.
 
   vars_prompt:
