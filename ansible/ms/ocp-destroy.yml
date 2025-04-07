@@ -1,6 +1,6 @@
 ---
 - name: Destroy cluster
-  hosts: ocp-clusters 
+  hosts: ocp-clusters
   gather_facts: false  # Hosts may not be available, since this playbook destroys them.
 
   vars_prompt:
