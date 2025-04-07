@@ -20,9 +20,8 @@
         cluster_network_host_prefix: "{{ cluster_network_host_prefix }}"
         service_networks: "{{ service_networks }}"
         machine_networks: "{{ machine_networks }}"
-        # SNO clusters don't have a VIP. Therefore, default to an empty list.
-        api_vips: "{{ api_vips | default([]) }}"
-        ingress_vips: "{{ ingress_vips | default([]) }}"
+        api_vips: "{{ api_vips if groups[nodes_group] | length >= 3 else [] }}"
+        ingress_vips: "{{ ingress_vips if groups[nodes_group] | length >= 3 else [] }}"
         ssh_public_key: "{{ ssh_authorized_keys }}"
       register: newcluster
       when: create_assisted_installer
