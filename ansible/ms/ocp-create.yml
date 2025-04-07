@@ -166,6 +166,9 @@
         expected_hosts: "{{ groups[nodes_group] | length }}"
         wait_timeout: 300  # Usually ready in 3 - 4 minutes with "full" discovery ISO.
       when: create_assisted_installer
+      register: wait_for_hosts
+      until: wait_for_hosts.result.status == "ready"
+      retries: 3  # On the off chance that the request fails.
 
     - name: Start cluster installation  # noqa: run-once[task]
       rhpds.assisted_installer.install_cluster:
