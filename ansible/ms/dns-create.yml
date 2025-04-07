@@ -31,7 +31,6 @@
         node: "{{ pve_node }}"
         vmid: "{{ pve_vm_id }}"
         hostname: "{{ inventory_hostname_short }}"
-        # password: "{{ container_password }}"
         ostemplate: "{{ storage }}:vztmpl/{{ template_name }}"
         memory: 2048
         cores: 2
