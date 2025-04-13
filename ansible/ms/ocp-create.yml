@@ -5,8 +5,43 @@
 
   vars:
     create_assisted_installer: true
+    recreate_assisted_installer: false
 
   tasks:
+    - name: Get a list of clusters  # noqa: run-once[task]
+      rhpds.assisted_installer.list_clusters:
+        offline_token: "{{ rh_console_offline_token }}"
+      register: listclusters
+      run_once: true
+
+    - name: Check if cluster already exists  # noqa: run-once[task]
+      ansible.builtin.set_fact:
+        cluster_exists: "{{ item.id }}"
+      loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
+      loop_control:
+        label: "{{ item.name }}, {{ item.id }}"
+      when: item.name == cluster_name
+      register: cluster_exists
+
+    # - name: Fail if cluster already exists  # noqa: run-once[task]
+    #   ansible.builtin.fail:
+    #     msg: "Cluster {{ cluster_name }} already exists. Please use a different name."
+    #   when: cluster_exists is defined
+
+    - name: Remove Assisted Installer Cluster  # noqa: run-once[task]
+      rhpds.assisted_installer.delete_cluster:
+        cluster_id: "{{ item.id }}"
+        offline_token: "{{ rh_console_offline_token }}"
+        # cancel: true
+      loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
+      loop_control:
+        label: "{{ item.name }}, {{ item.id }}"
+      when: item.name == cluster_name and recreate_assisted_installer | bool
+
+    # - name: print cluster_exists
+    #   ansible.builtin.debug:
+    #     msg: "Cluster exists: {{ cluster_exists }}"
+
     - name: Create Assisted Installer Cluster  # noqa: run-once[task]
       rhpds.assisted_installer.create_cluster:
         name: "{{ cluster_name }}"
@@ -24,29 +59,29 @@
         ingress_vips: "{{ ingress_vips if groups[nodes_group] | length >= 3 else [] }}"
         ssh_public_key: "{{ ssh_authorized_keys }}"
       register: newcluster
+      when: create_assisted_installer and (cluster_exists.skipped or recreate_assisted_installer | bool)
+
+    - name: Set cluster_id  # noqa: run-once[task]
+      ansible.builtin.set_fact:
+        cluster_id: >-
+          {{ newcluster.result.id if create_assisted_installer and (cluster_exists.skipped or recreate_assisted_installer | bool) else
+          listclusters.result | selectattr('name', 'equalto', cluster_name) |
+          map(attribute='id') | first }}
+
+    # debug cluster_id
+    - name: Debug cluster_id
+      ansible.builtin.debug:
+        msg: "Selected cluster: {{ cluster_id }}"
+
+    - name: Print link to assisted installer # noqa: run-once[task]
+      ansible.builtin.debug:
+        msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ cluster_id }}"
       when: create_assisted_installer
 
-    - name: Create Discovery ISO # noqa: run-once[task]
-      rhpds.assisted_installer.create_infra_env:
-        name: "{{ cluster_name }}-infra-env"
-        image_type: "{{ image_type }}"
-        cluster_id: "{{ newcluster.result.id }}"
-        ssh_authorized_key: "{{ ssh_authorized_keys }}"
-        offline_token: "{{ rh_console_offline_token }}"
-        pull_secret: "{{ rh_console_pull_secret | to_json }}"
-        openshift_version: "{{ cluster_version }}"
-      register: newinfraenv
-      when: create_assisted_installer
-
-    - name: Download Discovery ISO  # noqa: run-once[task]
-      ansible.builtin.get_url:
-        url: "{{ newinfraenv.result.download_url }}"
-        dest: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ newcluster.result.id }}-discovery.iso"
-        mode: '0777'
-        force: true
-      delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
-      when: create_assisted_installer
-      # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#run-tasks-concurrently-poll-0
+    # # break point
+    # - name: Fail
+    #   ansible.builtin.fail:
+    #     msg: "Break"
 
     - name: Create DHCP static mapping
       pfsensible.core.pfsense_dhcp_static:
@@ -130,14 +165,101 @@
         cpu: x86-64-v2-AES
         cores: "{{ hostvars[item].cores }}"
         memory: "{{ hostvars[item].memory }}"
-        ide:
-          ide2: "storage-pve:iso/{{ cluster_name }}-{{ newcluster.result.id }}-discovery.iso,media=cdrom"
         scsihw: virtio-scsi-single
         scsi:
           scsi0: 'local-nvme:128,iothread=1'
         net:
           net0: 'virtio={{ hostvars[item].mac_address }},bridge=vmbr0,tag={{ hostvars[item].vlan_tag }},firewall=1'
+        # update: true  # Doesn't work if VM already exists.
       loop: "{{ groups[nodes_group] }}"
+      register: create_vms
+      # "msg": "VM ocp-lab-01 with vmid 6101 updated",  == already exists, maybe updated
+      # "msg": "VM ocp-lab-01 with vmid 6101 deployed",  == create
+
+    - name: Check if Discovery ISO exists
+      ansible.builtin.stat:
+        path: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ cluster_id }}-discovery.iso"
+      delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
+      register: discovery_iso_check
+      when: create_assisted_installer and create_vms.changed
+
+    # - name: debug discovery_iso_check
+    #   ansible.builtin.debug:
+    #     var: discovery_iso_check
+
+    - name: Create Discovery ISO # noqa: run-once[task]
+      rhpds.assisted_installer.create_infra_env:
+        name: "{{ cluster_name }}-infra-env"
+        image_type: "{{ image_type }}"
+        cluster_id: "{{ cluster_id }}"
+        ssh_authorized_key: "{{ ssh_authorized_keys }}"
+        offline_token: "{{ rh_console_offline_token }}"
+        pull_secret: "{{ rh_console_pull_secret | to_json }}"
+        openshift_version: "{{ cluster_version }}"
+      register: newinfraenv
+      when: recreate_assisted_installer or (not discovery_iso_check.stat.exists | default(true))
+
+    - name: Download Discovery ISO  # noqa: run-once[task]
+      ansible.builtin.get_url:
+        url: "{{ newinfraenv.result.download_url }}"
+        dest: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ cluster_id }}-discovery.iso"
+        mode: '0777'
+        force: true
+      delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
+      when: newinfraenv.changed or (not discovery_iso_check.stat.exists | default(true))
+      register: download_discovery_iso
+      # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#run-tasks-concurrently-poll-0
+
+    - name: Add IDE2 to VMs
+      community.general.proxmox_kvm:
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        vmid: "{{ hostvars[item].pve_vm_id }}"
+        node: "{{ hostvars[item].pve_node }}"
+        ide:
+          ide2: "storage-pve:iso/{{ cluster_name }}-{{ cluster_id }}-discovery.iso,media=cdrom"
+        # boot: order=scsi0;ide2;net0;
+        update: true
+        update_unsafe: true
+      loop: "{{ groups[nodes_group] }}"
+      when: download_discovery_iso.changed
+
+    - name: Add boot order to VMs
+      community.general.proxmox_kvm:
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        vmid: "{{ hostvars[item].pve_vm_id }}"
+        node: "{{ hostvars[item].pve_node }}"
+        # ide:
+        #   ide2: "storage-pve:iso/{{ cluster_name }}-{{ cluster_id }}-discovery.iso,media=cdrom"
+        boot: order=ide2;scsi0;net0;
+        update: true
+      loop: "{{ groups[nodes_group] }}"
+      when: download_discovery_iso.changed
+
+    # - name: Debug create_vms
+    #   ansible.builtin.debug:
+    #     var: create_vms
+
+    # Stop with force first before destroy to speed up.
+    - name: Stop Existing VMs  # noqa: run-once[task]
+      community.general.proxmox_kvm:
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        vmid: "{{ hostvars[item].pve_vm_id }}"
+        name: "{{ hostvars[item].inventory_hostname_short }}"
+        node: "{{ hostvars[item].pve_node }}"
+        state: stopped
+        force: true
+        timeout: 15
+      loop: "{{ groups[nodes_group] }}"
+      when: download_discovery_iso.changed
 
     - name: Pause before starting VMs
       ansible.builtin.wait_for:
@@ -155,40 +277,57 @@
         state: started
       loop: "{{ groups[nodes_group] }}"
 
+    # - name: Fail
+    #   ansible.builtin.fail:
+    #     msg: "Break"
+
     - name: Print link to assisted installer # noqa: run-once[task]
       ansible.builtin.debug:
-        msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ newcluster.result.id }}"
+        msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ cluster_id }}"
       when: create_assisted_installer
 
     - name: Wait for the hosts to be ready  # noqa: run-once[task]
       rhpds.assisted_installer.wait_for_hosts:
-        cluster_id: "{{ newcluster.result.id }}"
+        cluster_id: "{{ cluster_id }}"
         offline_token: "{{ rh_console_offline_token }}"
         expected_hosts: "{{ groups[nodes_group] | length }}"
         wait_timeout: 300  # Usually ready in 3 - 4 minutes with "full" discovery ISO.
-      when: create_assisted_installer
+      when: newinfraenv.changed or create_vms.changed
       register: wait_for_hosts
       until: wait_for_hosts.result.status == "ready"
       retries: 3  # On the off chance that the request fails.
 
+    - name: Remove discovery ISO from boot order on VMs
+      community.general.proxmox_kvm:
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        vmid: "{{ hostvars[item].pve_vm_id }}"
+        node: "{{ hostvars[item].pve_node }}"
+        boot: order=scsi0;net0;
+        update: true
+      loop: "{{ groups[nodes_group] }}"
+      # when: newinfraenv.changed
+
     - name: Start cluster installation  # noqa: run-once[task]
       rhpds.assisted_installer.install_cluster:
-        cluster_id: "{{ newcluster.result.id }}"
+        cluster_id: "{{ cluster_id }}"
         offline_token: "{{ rh_console_offline_token }}"
         wait_timeout: 1200
-      when: create_assisted_installer
+      # when: create_assisted_installer and create_vms.changed
 
     - name: Obtain OpenShift cluster credentials  # noqa: run-once[task]
       register: credentials
       rhpds.assisted_installer.get_credentials:
-        cluster_id: "{{ newcluster.result.id }}"
+        cluster_id: "{{ cluster_id }}"
         offline_token: "{{ rh_console_offline_token }}"
-      when: create_assisted_installer
+      # when: create_assisted_installer and create_vms.changed
 
     - name: Display credentials  # noqa: run-once[task]
       ansible.builtin.debug:
         var: credentials.result
-      when: create_assisted_installer
+      # when: create_assisted_installer and create_vms.changed
 
   handlers:
     - name: Reload BIND9  # noqa: run-once[task]
