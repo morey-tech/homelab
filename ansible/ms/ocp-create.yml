@@ -236,7 +236,7 @@
         node: "{{ hostvars[item].pve_node }}"
         # ide:
         #   ide2: "storage-pve:iso/{{ cluster_name }}-{{ cluster_id }}-discovery.iso,media=cdrom"
-        boot: order=ide2;scsi0;net0;
+        boot: order=scsi0;ide2;net0;
         update: true
       loop: "{{ groups[nodes_group] }}"
       when: download_discovery_iso.changed
@@ -258,6 +258,26 @@
         state: stopped
         force: true
         timeout: 15
+      loop: "{{ groups[nodes_group] }}"
+      when: download_discovery_iso.changed
+
+    - name: Recreate boot disk
+      community.general.proxmox_disk:
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        vmid: "{{ hostvars[item].pve_vm_id }}"
+        name: "{{ hostvars[item].inventory_hostname_short }}"
+        # scsi:
+        #   scsi0: 'local-nvme:128,iothread=1'
+        disk: scsi0
+        format: raw
+        storage: local-nvme
+        size: 128
+        create: forced  # recreate
+        iothread: 1
+        state: present
       loop: "{{ groups[nodes_group] }}"
       when: download_discovery_iso.changed
 
