@@ -5,83 +5,74 @@
 
   vars:
     create_assisted_installer: true
-    recreate_assisted_installer: false
+    recreate: false
 
   tasks:
-    - name: Get a list of clusters  # noqa: run-once[task]
-      rhpds.assisted_installer.list_clusters:
-        offline_token: "{{ rh_console_offline_token }}"
-      register: listclusters
-      run_once: true
+    - name: Assisted Installer
+      block:
+        - name: Get a list of clusters  # noqa: run-once[task]
+          rhpds.assisted_installer.list_clusters:
+            offline_token: "{{ rh_console_offline_token }}"
+          register: listclusters
+          run_once: true
 
-    - name: Check if cluster already exists  # noqa: run-once[task]
-      ansible.builtin.set_fact:
-        cluster_exists: "{{ item.id }}"
-      loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
-      loop_control:
-        label: "{{ item.name }}, {{ item.id }}"
-      when: item.name == cluster_name
-      register: cluster_exists
+        - name: Delete Existing Assisted Installers (When Recreate)
+          rhpds.assisted_installer.delete_cluster:
+            cluster_id: "{{ item.id }}"
+            offline_token: "{{ rh_console_offline_token }}"
+          loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
+          loop_control:
+            label: "{{ item.name }}, {{ item.id }}"
+          when: recreate
 
-    # - name: Fail if cluster already exists  # noqa: run-once[task]
-    #   ansible.builtin.fail:
-    #     msg: "Cluster {{ cluster_name }} already exists. Please use a different name."
-    #   when: cluster_exists is defined
+        - name: Set cluster_id to existing installer
+          ansible.builtin.set_fact:
+            # Last should be the most recent one.
+            cluster_id: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | map(attribute='id') | last }}"
+          # loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
+          # loop_control:
+          #   label: "{{ item.name }}, {{ item.id }}"
+          # register: cluster_exists
+          when: listclusters.result | selectattr('name', 'equalto', cluster_name) | list | length > 0
 
-    - name: Remove Assisted Installer Cluster  # noqa: run-once[task]
-      rhpds.assisted_installer.delete_cluster:
-        cluster_id: "{{ item.id }}"
-        offline_token: "{{ rh_console_offline_token }}"
-        # cancel: true
-      loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
-      loop_control:
-        label: "{{ item.name }}, {{ item.id }}"
-      when: item.name == cluster_name and recreate_assisted_installer | bool
+        - name: Create Assisted Installer Cluster
+          rhpds.assisted_installer.create_cluster:
+            name: "{{ cluster_name }}"
+            openshift_version: "{{ cluster_version }}"
+            base_dns_domain: "{{ cluster_dns_zone }}"
+            offline_token: "{{ rh_console_offline_token }}"
+            pull_secret: "{{ rh_console_pull_secret | to_json }}"
+            # If node group is less than 3, set high availability mode to None for SNO.
+            high_availability_mode: "{{ 'Full' if groups[nodes_group] | length >= 3 else 'None' }}"
+            cluster_network_cidr: "{{ cluster_network_cidr }}"
+            cluster_network_host_prefix: "{{ cluster_network_host_prefix }}"
+            service_networks: "{{ service_networks }}"
+            machine_networks: "{{ machine_networks }}"
+            api_vips: "{{ api_vips if groups[nodes_group] | length >= 3 else [] }}"
+            ingress_vips: "{{ ingress_vips if groups[nodes_group] | length >= 3 else [] }}"
+            ssh_public_key: "{{ ssh_authorized_keys }}"
+          register: newcluster
+          when: not cluster_id or recreate
 
-    # - name: print cluster_exists
-    #   ansible.builtin.debug:
-    #     msg: "Cluster exists: {{ cluster_exists }}"
+        - name: Set cluster_id to new installer
+          ansible.builtin.set_fact:
+            cluster_id: "{{ newcluster.result.id }}"
+          when: not cluster_id or recreate
 
-    - name: Create Assisted Installer Cluster  # noqa: run-once[task]
-      rhpds.assisted_installer.create_cluster:
-        name: "{{ cluster_name }}"
-        openshift_version: "{{ cluster_version }}"
-        base_dns_domain: "{{ cluster_dns_zone }}"
-        offline_token: "{{ rh_console_offline_token }}"
-        pull_secret: "{{ rh_console_pull_secret | to_json }}"
-        # If node group is less than 3, set high availability mode to None for SNO.
-        high_availability_mode: "{{ 'Full' if groups[nodes_group] | length >= 3 else 'None' }}"
-        cluster_network_cidr: "{{ cluster_network_cidr }}"
-        cluster_network_host_prefix: "{{ cluster_network_host_prefix }}"
-        service_networks: "{{ service_networks }}"
-        machine_networks: "{{ machine_networks }}"
-        api_vips: "{{ api_vips if groups[nodes_group] | length >= 3 else [] }}"
-        ingress_vips: "{{ ingress_vips if groups[nodes_group] | length >= 3 else [] }}"
-        ssh_public_key: "{{ ssh_authorized_keys }}"
-      register: newcluster
-      when: create_assisted_installer and (cluster_exists.skipped or recreate_assisted_installer | bool)
+        # debug cluster_id
+        - name: Print selected cluster_id
+          ansible.builtin.debug:
+            msg: "{{ cluster_id }}"
 
-    - name: Set cluster_id  # noqa: run-once[task]
-      ansible.builtin.set_fact:
-        cluster_id: >-
-          {{ newcluster.result.id if create_assisted_installer and (cluster_exists.skipped or recreate_assisted_installer | bool) else
-          listclusters.result | selectattr('name', 'equalto', cluster_name) |
-          map(attribute='id') | first }}
+        - name: Print link to assisted installer # noqa: run-once[task]
+          ansible.builtin.debug:
+            msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ cluster_id }}"
+          when: create_assisted_installer
 
-    # debug cluster_id
-    - name: Debug cluster_id
-      ansible.builtin.debug:
-        msg: "Selected cluster: {{ cluster_id }}"
-
-    - name: Print link to assisted installer # noqa: run-once[task]
-      ansible.builtin.debug:
-        msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ cluster_id }}"
-      when: create_assisted_installer
-
-    # # break point
-    # - name: Fail
-    #   ansible.builtin.fail:
-    #     msg: "Break"
+    # break point
+    - name: Fail
+      ansible.builtin.fail:
+        msg: "Break"
 
     - name: Create DHCP static mapping
       pfsensible.core.pfsense_dhcp_static:
@@ -96,7 +87,7 @@
       throttle: 1
       loop: "{{ groups[nodes_group] }}"
 
-    - name: Add DNS zone to named.conf.local  # noqa: run-once[task]
+    - name: Add DNS zone to named.conf.local
       ansible.builtin.blockinfile:
         path: /etc/bind/named.conf.local
         block: |
@@ -123,7 +114,7 @@
       loop: "{{ groups[nodes_group] }}"
       delegate_to: dns.rh-lab.morey.tech
 
-    - name: Configure DNS zone  # noqa: run-once[task]
+    - name: Configure DNS zone
       ansible.builtin.template:
         src: db.j2
         dest: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
@@ -143,7 +134,7 @@
       ansible.builtin.meta: flush_handlers
       delegate_to: dns.rh-lab.morey.tech
 
-    - name: Create new PVE pool  # noqa: run-once[task]
+    - name: Create new PVE pool
       community.general.proxmox_pool:
         api_user: "{{ pve_api_user }}"
         api_token_id: "{{ pve_api_token_id }}"
@@ -174,7 +165,7 @@
       loop: "{{ groups[nodes_group] }}"
       register: create_vms
       # "msg": "VM ocp-lab-01 with vmid 6101 updated",  == already exists, maybe updated
-      # "msg": "VM ocp-lab-01 with vmid 6101 deployed",  == create
+      # "msg": "VM ocp-lab-01 with vmid 6101 deployed", == create
 
     - name: Check if Discovery ISO exists
       ansible.builtin.stat:
@@ -197,9 +188,9 @@
         pull_secret: "{{ rh_console_pull_secret | to_json }}"
         openshift_version: "{{ cluster_version }}"
       register: newinfraenv
-      when: recreate_assisted_installer or (not discovery_iso_check.stat.exists | default(true))
+      when: recreate or (not discovery_iso_check.stat.exists | default(true))
 
-    - name: Download Discovery ISO  # noqa: run-once[task]
+    - name: Download Discovery ISO
       ansible.builtin.get_url:
         url: "{{ newinfraenv.result.download_url }}"
         dest: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ cluster_id }}-discovery.iso"
@@ -246,7 +237,7 @@
     #     var: create_vms
 
     # Stop with force first before destroy to speed up.
-    - name: Stop Existing VMs  # noqa: run-once[task]
+    - name: Stop Existing VMs
       community.general.proxmox_kvm:
         api_user: "{{ pve_api_user }}"
         api_token_id: "{{ pve_api_token_id }}"
@@ -306,7 +297,7 @@
         msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ cluster_id }}"
       when: create_assisted_installer
 
-    - name: Wait for the hosts to be ready  # noqa: run-once[task]
+    - name: Wait for the hosts to be ready
       rhpds.assisted_installer.wait_for_hosts:
         cluster_id: "{{ cluster_id }}"
         offline_token: "{{ rh_console_offline_token }}"
@@ -330,27 +321,27 @@
       loop: "{{ groups[nodes_group] }}"
       # when: newinfraenv.changed
 
-    - name: Start cluster installation  # noqa: run-once[task]
+    - name: Start cluster installation
       rhpds.assisted_installer.install_cluster:
         cluster_id: "{{ cluster_id }}"
         offline_token: "{{ rh_console_offline_token }}"
         wait_timeout: 1200
       # when: create_assisted_installer and create_vms.changed
 
-    - name: Obtain OpenShift cluster credentials  # noqa: run-once[task]
+    - name: Obtain OpenShift cluster credentials
       register: credentials
       rhpds.assisted_installer.get_credentials:
         cluster_id: "{{ cluster_id }}"
         offline_token: "{{ rh_console_offline_token }}"
       # when: create_assisted_installer and create_vms.changed
 
-    - name: Display credentials  # noqa: run-once[task]
+    - name: Display credentials
       ansible.builtin.debug:
         var: credentials.result
       # when: create_assisted_installer and create_vms.changed
 
   handlers:
-    - name: Reload BIND9  # noqa: run-once[task]
+    - name: Reload BIND9
       ansible.builtin.service:
         name: bind9
         state: reloaded
