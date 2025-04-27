@@ -69,11 +69,6 @@
             msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ cluster_id }}"
           when: create_assisted_installer
 
-    # break point
-    - name: Fail
-      ansible.builtin.fail:
-        msg: "Break"
-
     - name: Create DHCP static mapping
       pfsensible.core.pfsense_dhcp_static:
         netif: opt3  # rh_lab
@@ -87,52 +82,55 @@
       throttle: 1
       loop: "{{ groups[nodes_group] }}"
 
-    - name: Add DNS zone to named.conf.local
-      ansible.builtin.blockinfile:
-        path: /etc/bind/named.conf.local
-        block: |
-          zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
-              type master;
-              file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
-          };
-        marker: "// {mark} ANSIBLE MANAGED BLOCK for {{ cluster_name }}.{{ cluster_dns_zone }}"
-        insertafter: "EOF"
-        append_newline: true
-        prepend_newline: true
-        state: present
-      notify: Reload BIND9
+    - name: DNS Configuration
       delegate_to: dns.rh-lab.morey.tech
+      block:
+        - name: Add DNS zone to named.conf.local
+          ansible.builtin.blockinfile:
+            path: /etc/bind/named.conf.local
+            block: |
+              zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
+                  type master;
+                  file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
+              };
+            marker: "// {mark} ANSIBLE MANAGED BLOCK for {{ cluster_name }}.{{ cluster_dns_zone }}"
+            insertafter: "EOF"
+            append_newline: true
+            prepend_newline: true
+            state: present
+          notify: Reload BIND9
 
-    - name: Initialize node_dns_records
-      ansible.builtin.set_fact:
-        node_dns_records: []
-      delegate_to: dns.rh-lab.morey.tech
+        - name: Initialize node_dns_records
+          ansible.builtin.set_fact:
+            node_dns_records: []
 
-    - name: Add each node DNS record to variable
-      ansible.builtin.set_fact:
-        node_dns_records: "{{ node_dns_records + [{'name': item.split('.')[0], 'ip': hostvars[item].ip_address}] }}"
-      loop: "{{ groups[nodes_group] }}"
-      delegate_to: dns.rh-lab.morey.tech
+        - name: Add each node DNS record to variable
+          ansible.builtin.set_fact:
+            node_dns_records: "{{ node_dns_records + [{'name': item.split('.')[0], 'ip': hostvars[item].ip_address}] }}"
+          loop: "{{ groups[nodes_group] }}"
 
-    - name: Configure DNS zone
-      ansible.builtin.template:
-        src: db.j2
-        dest: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
-        mode: '0644'
-      notify: Reload BIND9
-      vars:
-        dns_zone: "{{ cluster_name }}.{{ cluster_dns_zone }}"
-        # SNO clusters don't have a VIP. Therefore, use the first node's IP.
-        dns_records: "{{ node_dns_records + [
-          { 'name': 'api', 'ip': api_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) },
-          { 'name': 'api-int', 'ip': api_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) },
-          { 'name': '*.apps', 'ip': ingress_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) }] }}"
-        dns_ip_address: "{{ hostvars['dns.rh-lab.morey.tech'].ip_address }}"
-      delegate_to: dns.rh-lab.morey.tech
+        - name: Configure DNS zone
+          ansible.builtin.template:
+            src: db.j2
+            dest: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
+            mode: '0644'
+          notify: Reload BIND9
+          vars:
+            dns_zone: "{{ cluster_name }}.{{ cluster_dns_zone }}"
+            # SNO clusters don't have a VIP. Therefore, use the first node's IP.
+            dns_records: "{{ node_dns_records + [
+              { 'name': 'api', 'ip': api_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) },
+              { 'name': 'api-int', 'ip': api_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) },
+              { 'name': '*.apps', 'ip': ingress_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) }] }}"
+            dns_ip_address: "{{ hostvars['dns.rh-lab.morey.tech'].ip_address }}"
 
-    - name: Run Reload BIND9 handler
-      ansible.builtin.meta: flush_handlers
-      delegate_to: dns.rh-lab.morey.tech
+        - name: Run Reload BIND9 handler
+          ansible.builtin.meta: flush_handlers
+
+    # break point
+    - name: Fail
+      ansible.builtin.fail:
+        msg: "Break"
 
     - name: Create new PVE pool
       community.general.proxmox_pool:
