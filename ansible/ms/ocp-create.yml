@@ -15,10 +15,14 @@
           register: listclusters
           run_once: true
 
+        # - name: Delete Existing Assisted Installers (When Recreate)
+        #   rhpds.assisted_installer.:
+
         - name: Delete Existing Assisted Installers (When Recreate)
           rhpds.assisted_installer.delete_cluster:
             cluster_id: "{{ item.id }}"
             offline_token: "{{ rh_console_offline_token }}"
+            cancel: true
           loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
           loop_control:
             label: "{{ item.name }}, {{ item.id }}"
@@ -57,12 +61,12 @@
             ingress_vips: "{{ ingress_vips if groups[nodes_group] | length >= 3 else [] }}"
             ssh_public_key: "{{ ssh_authorized_keys }}"
           register: newcluster
-          when: not cluster_id or recreate
+          when: not cluster_id is defined or recreate
 
         - name: Set cluster_id to new installer
           ansible.builtin.set_fact:
             cluster_id: "{{ newcluster.result.id }}"
-          when: not cluster_id or recreate
+          when: not cluster_id is defined or recreate
 
         # debug cluster_id
         - name: Print selected cluster_id
