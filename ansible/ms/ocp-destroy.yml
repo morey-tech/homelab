@@ -112,10 +112,9 @@
         cluster_id: "{{ item.id }}"
         offline_token: "{{ rh_console_offline_token }}"
         # cancel: true
-      loop: "{{ listclusters.result }}"
+      loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
       loop_control:
         label: "{{ item.name }}, {{ item.id }}"
-      when: item.name == cluster_name
 
     - name: Delete Discovery ISOs  # noqa: run-once[task]
       ansible.builtin.file:

@@ -4,49 +4,74 @@
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
 
   vars:
-    create_assisted_installer: true
+    recreate: false
 
   tasks:
-    - name: Create Assisted Installer Cluster  # noqa: run-once[task]
-      rhpds.assisted_installer.create_cluster:
-        name: "{{ cluster_name }}"
-        openshift_version: "{{ cluster_version }}"
-        base_dns_domain: "{{ cluster_dns_zone }}"
-        offline_token: "{{ rh_console_offline_token }}"
-        pull_secret: "{{ rh_console_pull_secret | to_json }}"
-        # If node group is less than 3, set high availability mode to None for SNO.
-        high_availability_mode: "{{ 'Full' if groups[nodes_group] | length >= 3 else 'None' }}"
-        cluster_network_cidr: "{{ cluster_network_cidr }}"
-        cluster_network_host_prefix: "{{ cluster_network_host_prefix }}"
-        service_networks: "{{ service_networks }}"
-        machine_networks: "{{ machine_networks }}"
-        api_vips: "{{ api_vips if groups[nodes_group] | length >= 3 else [] }}"
-        ingress_vips: "{{ ingress_vips if groups[nodes_group] | length >= 3 else [] }}"
-        ssh_public_key: "{{ ssh_authorized_keys }}"
-      register: newcluster
-      when: create_assisted_installer
+    - name: Assisted Installer
+      block:
+        - name: Get a list of clusters  # noqa: run-once[task]
+          rhpds.assisted_installer.list_clusters:
+            offline_token: "{{ rh_console_offline_token }}"
+          register: listclusters
+          run_once: true
 
-    - name: Create Discovery ISO # noqa: run-once[task]
-      rhpds.assisted_installer.create_infra_env:
-        name: "{{ cluster_name }}-infra-env"
-        image_type: "{{ image_type }}"
-        cluster_id: "{{ newcluster.result.id }}"
-        ssh_authorized_key: "{{ ssh_authorized_keys }}"
-        offline_token: "{{ rh_console_offline_token }}"
-        pull_secret: "{{ rh_console_pull_secret | to_json }}"
-        openshift_version: "{{ cluster_version }}"
-      register: newinfraenv
-      when: create_assisted_installer
+        - name: Delete Existing Assisted Installers (When Recreate)
+          rhpds.assisted_installer.delete_cluster:
+            cluster_id: "{{ item.id }}"
+            offline_token: "{{ rh_console_offline_token }}"
+          loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
+          loop_control:
+            label: "{{ item.name }}, {{ item.id }}"
+          when: recreate
 
-    - name: Download Discovery ISO  # noqa: run-once[task]
-      ansible.builtin.get_url:
-        url: "{{ newinfraenv.result.download_url }}"
-        dest: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ newcluster.result.id }}-discovery.iso"
-        mode: '0777'
-        force: true
-      delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
-      when: create_assisted_installer
-      # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#run-tasks-concurrently-poll-0
+        - name: Delete Existing Discovery ISOs
+          ansible.builtin.file:
+            path: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ item.id }}-discovery.iso"
+            state: absent
+          loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
+          loop_control:
+            label: "{{ item.name }}, {{ item.id }}"
+          when: recreate
+          delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
+
+        - name: Set cluster_id to existing installer
+          ansible.builtin.set_fact:
+            # Last should be the most recent one.
+            cluster_id: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | map(attribute='id') | last }}"
+          when: listclusters.result | selectattr('name', 'equalto', cluster_name) | list | length > 0
+
+        - name: Create Assisted Installer Cluster
+          rhpds.assisted_installer.create_cluster:
+            name: "{{ cluster_name }}"
+            openshift_version: "{{ cluster_version }}"
+            base_dns_domain: "{{ cluster_dns_zone }}"
+            offline_token: "{{ rh_console_offline_token }}"
+            pull_secret: "{{ rh_console_pull_secret | to_json }}"
+            # If node group is less than 3, set high availability mode to None for SNO.
+            high_availability_mode: "{{ 'Full' if groups[nodes_group] | length >= 3 else 'None' }}"
+            cluster_network_cidr: "{{ cluster_network_cidr }}"
+            cluster_network_host_prefix: "{{ cluster_network_host_prefix }}"
+            service_networks: "{{ service_networks }}"
+            machine_networks: "{{ machine_networks }}"
+            api_vips: "{{ api_vips if groups[nodes_group] | length >= 3 else [] }}"
+            ingress_vips: "{{ ingress_vips if groups[nodes_group] | length >= 3 else [] }}"
+            ssh_public_key: "{{ ssh_authorized_keys }}"
+          register: newcluster
+          when: not cluster_id or recreate
+
+        - name: Set cluster_id to new installer
+          ansible.builtin.set_fact:
+            cluster_id: "{{ newcluster.result.id }}"
+          when: not cluster_id or recreate
+
+        # debug cluster_id
+        - name: Print selected cluster_id
+          ansible.builtin.debug:
+            msg: "{{ cluster_id }}"
+
+        - name: Print link to assisted installer
+          ansible.builtin.debug:
+            msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ cluster_id }}"
 
     - name: Create DHCP static mapping
       pfsensible.core.pfsense_dhcp_static:
@@ -61,134 +86,140 @@
       throttle: 1
       loop: "{{ groups[nodes_group] }}"
 
-    - name: Add DNS zone to named.conf.local  # noqa: run-once[task]
-      ansible.builtin.blockinfile:
-        path: /etc/bind/named.conf.local
-        block: |
-          zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
-              type master;
-              file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
-          };
-        marker: "// {mark} ANSIBLE MANAGED BLOCK for {{ cluster_name }}.{{ cluster_dns_zone }}"
-        insertafter: "EOF"
-        append_newline: true
-        prepend_newline: true
-        state: present
-      notify: Reload BIND9
+    - name: DNS Configuration
       delegate_to: dns.rh-lab.morey.tech
+      block:
+        - name: Add DNS zone to named.conf.local
+          ansible.builtin.blockinfile:
+            path: /etc/bind/named.conf.local
+            block: |
+              zone "{{ cluster_name }}.{{ cluster_dns_zone }}" {
+                  type master;
+                  file "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}";
+              };
+            marker: "// {mark} ANSIBLE MANAGED BLOCK for {{ cluster_name }}.{{ cluster_dns_zone }}"
+            insertafter: "EOF"
+            append_newline: true
+            prepend_newline: true
+            state: present
+          notify: Reload BIND9
 
-    - name: Initialize node_dns_records
-      ansible.builtin.set_fact:
-        node_dns_records: []
-      delegate_to: dns.rh-lab.morey.tech
+        - name: Initialize node_dns_records
+          ansible.builtin.set_fact:
+            node_dns_records: []
 
-    - name: Add each node DNS record to variable
-      ansible.builtin.set_fact:
-        node_dns_records: "{{ node_dns_records + [{'name': item.split('.')[0], 'ip': hostvars[item].ip_address}] }}"
-      loop: "{{ groups[nodes_group] }}"
-      delegate_to: dns.rh-lab.morey.tech
+        - name: Add each node DNS record to variable
+          ansible.builtin.set_fact:
+            node_dns_records: "{{ node_dns_records + [{'name': item.split('.')[0], 'ip': hostvars[item].ip_address}] }}"
+          loop: "{{ groups[nodes_group] }}"
 
-    - name: Configure DNS zone  # noqa: run-once[task]
-      ansible.builtin.template:
-        src: db.j2
-        dest: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
-        mode: '0644'
-      notify: Reload BIND9
-      vars:
-        dns_zone: "{{ cluster_name }}.{{ cluster_dns_zone }}"
-        # SNO clusters don't have a VIP. Therefore, use the first node's IP.
-        dns_records: "{{ node_dns_records + [
-          { 'name': 'api', 'ip': api_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) },
-          { 'name': 'api-int', 'ip': api_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) },
-          { 'name': '*.apps', 'ip': ingress_vips.0.ip | default(hostvars[groups[nodes_group][0]].ip_address) }] }}"
-        dns_ip_address: "{{ hostvars['dns.rh-lab.morey.tech'].ip_address }}"
-      delegate_to: dns.rh-lab.morey.tech
+        - name: Configure DNS zone
+          ansible.builtin.template:
+            src: db.j2
+            dest: "/etc/bind/db.{{ cluster_name }}.{{ cluster_dns_zone }}"
+            mode: '0644'
+          notify: Reload BIND9
+          vars:
+            dns_zone: "{{ cluster_name }}.{{ cluster_dns_zone }}"
+            # SNO clusters don't have a VIP. Therefore, use the first node's IP.
+            dns_records: "{{ node_dns_records + [
+              { 'name': 'api', 'ip': api_vips.0.ip if groups[nodes_group] | length > 1 else hostvars[groups[nodes_group][0]].ip_address },
+              { 'name': 'api-int', 'ip': api_vips.0.ip if groups[nodes_group] | length > 1 else hostvars[groups[nodes_group][0]].ip_address },
+              { 'name': '*.apps', 'ip': ingress_vips.0.ip if groups[nodes_group] | length > 1 else hostvars[groups[nodes_group][0]].ip_address }] }}"
+            dns_ip_address: "{{ hostvars['dns.rh-lab.morey.tech'].ip_address }}"
 
-    - name: Run Reload BIND9 handler
-      ansible.builtin.meta: flush_handlers
-      delegate_to: dns.rh-lab.morey.tech
+    - name: Proxmox Configuration
+      block:
+        - name: Create new PVE pool
+          community.general.proxmox_pool:
+            api_user: "{{ pve_api_user }}"
+            api_token_id: "{{ pve_api_token_id }}"
+            api_token_secret: "{{ pve_api_token_secret }}"
+            api_host: "{{ pve_api_host }}"
+            poolid: "{{ cluster_name }}"
+            comment: "{{ cluster_name }} cluster"
 
-    - name: Create new PVE pool  # noqa: run-once[task]
-      community.general.proxmox_pool:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
-        poolid: "{{ cluster_name }}"
-        comment: "{{ cluster_name }} cluster"
+        - name: Check if VM exists
+          community.general.proxmox_vm_info:
+            api_user: "{{ pve_api_user }}"
+            api_token_id: "{{ pve_api_token_id }}"
+            api_token_secret: "{{ pve_api_token_secret }}"
+            api_host: "{{ pve_api_host }}"
+            vmid: "{{ hostvars[item].pve_vm_id }}"
+            name: "{{ hostvars[item].inventory_hostname_short }}"
+            node: "{{ hostvars[item].pve_node }}"
+            config: current
+          loop: "{{ groups[nodes_group] }}"
+          loop_control:
+            label: "{{ hostvars[item].inventory_hostname_short }}"
+          register: vm_states
 
-    - name: Create VMs
-      community.general.proxmox_kvm:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
-        vmid: "{{ hostvars[item].pve_vm_id }}"
-        name: "{{ hostvars[item].inventory_hostname_short }}"
-        node: "{{ hostvars[item].pve_node }}"
-        pool: "{{ cluster_name }}"
-        cpu: x86-64-v2-AES
-        cores: "{{ hostvars[item].cores }}"
-        memory: "{{ hostvars[item].memory }}"
-        ide:
-          ide2: "storage-pve:iso/{{ cluster_name }}-{{ newcluster.result.id }}-discovery.iso,media=cdrom"
-        scsihw: virtio-scsi-single
-        scsi:
-          scsi0: 'local-nvme:128,iothread=1'
-        net:
-          net0: 'virtio={{ hostvars[item].mac_address }},bridge=vmbr0,tag={{ hostvars[item].vlan_tag }},firewall=1'
-      loop: "{{ groups[nodes_group] }}"
+        # debug vm_states
+        - name: Set proxmox_vms fact
+          ansible.builtin.set_fact:
+            proxmox_vms: "{{ vm_states.results[0].proxmox_vms }}"
 
-    - name: Pause before starting VMs
-      ansible.builtin.wait_for:
-        timeout: 3
+        # Stop with force first before destroy to speed up.
+        - name: Stop Existing VMs To Prepare for Deletion # noqa: run-once[task]
+          community.general.proxmox_kvm:
+            api_user: "{{ pve_api_user }}"
+            api_token_id: "{{ pve_api_token_id }}"
+            api_token_secret: "{{ pve_api_token_secret }}"
+            api_host: "{{ pve_api_host }}"
+            vmid: "{{ item.vmid }}"
+            name: "{{ item.name }}"
+            node: "{{ item.node }}"
+            state: stopped
+            force: true
+            timeout: 15  # short graceful shutdown since will be destroyed.
+          loop: "{{ proxmox_vms }}"
+          loop_control:
+            label: "{{ item.name }}"
+          when: recreate
 
-    - name: Start VMs
-      community.general.proxmox_kvm:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
-        vmid: "{{ hostvars[item].pve_vm_id }}"
-        name: "{{ hostvars[item].inventory_hostname_short }}"
-        node: "{{ hostvars[item].pve_node }}"
-        state: started
-      loop: "{{ groups[nodes_group] }}"
+        # Stop with force first before destroy to speed up.
+        - name: Delete Existing VMs
+          community.general.proxmox_kvm:
+            api_user: "{{ pve_api_user }}"
+            api_token_id: "{{ pve_api_token_id }}"
+            api_token_secret: "{{ pve_api_token_secret }}"
+            api_host: "{{ pve_api_host }}"
+            vmid: "{{ item.vmid }}"
+            name: "{{ item.name }}"
+            node: "{{ item.node }}"
+            state: absent
+          loop: "{{ proxmox_vms }}"
+          loop_control:
+            label: "{{ item.name }}"
+          when: recreate
 
-    - name: Print link to assisted installer # noqa: run-once[task]
-      ansible.builtin.debug:
-        msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ newcluster.result.id }}"
-      when: create_assisted_installer
-
-    - name: Wait for the hosts to be ready  # noqa: run-once[task]
-      rhpds.assisted_installer.wait_for_hosts:
-        cluster_id: "{{ newcluster.result.id }}"
-        offline_token: "{{ rh_console_offline_token }}"
-        expected_hosts: "{{ groups[nodes_group] | length }}"
-        wait_timeout: 300  # Usually ready in 3 - 4 minutes with "full" discovery ISO.
-      when: create_assisted_installer
-      register: wait_for_hosts
-      until: wait_for_hosts.result.status == "ready"
-      retries: 3  # On the off chance that the request fails.
-
-    - name: Start cluster installation  # noqa: run-once[task]
-      rhpds.assisted_installer.install_cluster:
-        cluster_id: "{{ newcluster.result.id }}"
-        offline_token: "{{ rh_console_offline_token }}"
-        wait_timeout: 1200
-      when: create_assisted_installer
-
-    - name: Obtain OpenShift cluster credentials  # noqa: run-once[task]
-      register: credentials
-      rhpds.assisted_installer.get_credentials:
-        cluster_id: "{{ newcluster.result.id }}"
-        offline_token: "{{ rh_console_offline_token }}"
-      when: create_assisted_installer
-
-    - name: Display credentials  # noqa: run-once[task]
-      ansible.builtin.debug:
-        var: credentials.result
-      when: create_assisted_installer
+        - name: Create VMs
+          community.general.proxmox_kvm:
+            api_user: "{{ pve_api_user }}"
+            api_token_id: "{{ pve_api_token_id }}"
+            api_token_secret: "{{ pve_api_token_secret }}"
+            api_host: "{{ pve_api_host }}"
+            vmid: "{{ hostvars[item].pve_vm_id }}"
+            name: "{{ hostvars[item].inventory_hostname_short }}"
+            node: "{{ hostvars[item].pve_node }}"
+            pool: "{{ cluster_name }}"
+            cpu: x86-64-v2-AES
+            cores: "{{ hostvars[item].cores }}"
+            memory: "{{ hostvars[item].memory }}"
+            scsihw: virtio-scsi-single
+            scsi:
+              scsi0: 'local-nvme:128,iothread=1'
+            net:
+              net0: 'virtio={{ hostvars[item].mac_address }},bridge=vmbr0,tag={{ hostvars[item].vlan_tag }},firewall=1'
+            # update: true  # Doesn't work if VM already exists.
+          loop: "{{ groups[nodes_group] }}"
+          loop_control:
+            label: "{{ hostvars[item].inventory_hostname_short }}"
+          notify:
+            - Configure Discovery ISO
+            - Install Cluster
+          # "msg": "VM ocp-lab-01 with vmid 6101 updated",  == already exists, maybe updated
+          # "msg": "VM ocp-lab-01 with vmid 6101 deployed", == create
 
   handlers:
     - name: Reload BIND9  # noqa: run-once[task]
@@ -197,3 +228,11 @@
         state: reloaded
       delegate_to: dns.rh-lab.morey.tech
       run_once: true
+
+    - name: Configure Discovery ISO
+      ansible.builtin.include_tasks:
+        file: tasks/discovery-iso.yml
+
+    - name: Install Cluster
+      ansible.builtin.include_tasks:
+        file: tasks/install-cluster.yml
