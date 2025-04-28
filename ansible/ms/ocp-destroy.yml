@@ -120,10 +120,9 @@
       ansible.builtin.file:
         path: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ item.id }}-discovery.iso"
         state: absent
-      loop: "{{ listclusters.result }}"
+      loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
       loop_control:
         label: "{{ item.name }}, {{ item.id }}"
-      when: item.name == cluster_name
       delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
 
   handlers:
