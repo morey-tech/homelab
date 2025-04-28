@@ -1,0 +1,45 @@
+- name: Pause before starting VMs
+  ansible.builtin.wait_for:
+    timeout: 3
+
+- name: Start VMs
+  community.general.proxmox_kvm:
+    api_user: "{{ pve_api_user }}"
+    api_token_id: "{{ pve_api_token_id }}"
+    api_token_secret: "{{ pve_api_token_secret }}"
+    api_host: "{{ pve_api_host }}"
+    vmid: "{{ hostvars[item].pve_vm_id }}"
+    name: "{{ hostvars[item].inventory_hostname_short }}"
+    node: "{{ hostvars[item].pve_node }}"
+    state: started
+  loop: "{{ groups[nodes_group] }}"
+
+- name: Print link to assisted installer
+  ansible.builtin.debug:
+    msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ cluster_id }}"
+
+- name: Wait for the hosts to be ready
+  rhpds.assisted_installer.wait_for_hosts:
+    cluster_id: "{{ cluster_id }}"
+    offline_token: "{{ rh_console_offline_token }}"
+    expected_hosts: "{{ groups[nodes_group] | length }}"
+    wait_timeout: 300  # Usually ready in 3 - 4 minutes with "full" discovery ISO.
+  register: wait_for_hosts
+  until: wait_for_hosts.result.status == "ready"
+  retries: 3  # On the off chance that the request fails.
+
+- name: Start cluster installation
+  rhpds.assisted_installer.install_cluster:
+    cluster_id: "{{ cluster_id }}"
+    offline_token: "{{ rh_console_offline_token }}"
+    wait_timeout: 1200
+
+- name: Obtain OpenShift cluster credentials
+  register: credentials
+  rhpds.assisted_installer.get_credentials:
+    cluster_id: "{{ cluster_id }}"
+    offline_token: "{{ rh_console_offline_token }}"
+
+- name: Display credentials
+  ansible.builtin.debug:
+    var: credentials.result

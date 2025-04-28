@@ -1,0 +1,49 @@
+- name: Create Discovery ISO
+  rhpds.assisted_installer.create_infra_env:
+    name: "{{ cluster_name }}-infra-env"
+    image_type: "{{ image_type }}"
+    cluster_id: "{{ cluster_id }}"
+    ssh_authorized_key: "{{ ssh_authorized_keys }}"
+    offline_token: "{{ rh_console_offline_token }}"
+    pull_secret: "{{ rh_console_pull_secret | to_json }}"
+    openshift_version: "{{ cluster_version }}"
+  register: newinfraenv
+
+- name: Download Discovery ISO
+  ansible.builtin.get_url:
+    url: "{{ newinfraenv.result.download_url }}"
+    dest: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ cluster_id }}-discovery.iso"
+    mode: '0777'
+    force: true
+  delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
+  register: download_discovery_iso
+  # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#run-tasks-concurrently-poll-0
+
+- name: Add IDE2 to VMs
+  community.general.proxmox_kvm:
+    api_user: "{{ pve_api_user }}"
+    api_token_id: "{{ pve_api_token_id }}"
+    api_token_secret: "{{ pve_api_token_secret }}"
+    api_host: "{{ pve_api_host }}"
+    vmid: "{{ hostvars[item].pve_vm_id }}"
+    node: "{{ hostvars[item].pve_node }}"
+    ide:
+      ide2: "storage-pve:iso/{{ cluster_name }}-{{ cluster_id }}-discovery.iso,media=cdrom"
+    # boot: order=scsi0;ide2;net0;
+    update: true
+    update_unsafe: true
+  loop: "{{ groups[nodes_group] }}"
+
+- name: Add boot order to VMs
+  community.general.proxmox_kvm:
+    api_user: "{{ pve_api_user }}"
+    api_token_id: "{{ pve_api_token_id }}"
+    api_token_secret: "{{ pve_api_token_secret }}"
+    api_host: "{{ pve_api_host }}"
+    vmid: "{{ hostvars[item].pve_vm_id }}"
+    node: "{{ hostvars[item].pve_node }}"
+    # ide:
+    #   ide2: "storage-pve:iso/{{ cluster_name }}-{{ cluster_id }}-discovery.iso,media=cdrom"
+    boot: order=scsi0;ide2;net0;
+    update: true
+  loop: "{{ groups[nodes_group] }}"
