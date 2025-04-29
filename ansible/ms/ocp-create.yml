@@ -8,6 +8,7 @@
 
   tasks:
     - name: Assisted Installer
+      tags: assisted_installer
       block:
         - name: Get a list of clusters  # noqa: run-once[task]
           rhpds.assisted_installer.list_clusters:
@@ -22,7 +23,7 @@
           rhpds.assisted_installer.delete_cluster:
             cluster_id: "{{ item.id }}"
             offline_token: "{{ rh_console_offline_token }}"
-            cancel: true
+            # cancel: true  # This errors if cluster is not in progress.
           loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
           loop_control:
             label: "{{ item.name }}, {{ item.id }}"
@@ -89,8 +90,10 @@
       delegate_to: pfsense.home.morey.tech
       throttle: 1
       loop: "{{ groups[nodes_group] }}"
+      tags: dhcp
 
     - name: DNS Configuration
+      tags: dns
       delegate_to: dns.rh-lab.morey.tech
       block:
         - name: Add DNS zone to named.conf.local
@@ -133,6 +136,7 @@
             dns_ip_address: "{{ hostvars['dns.rh-lab.morey.tech'].ip_address }}"
 
     - name: Proxmox Configuration
+      tags: proxmox
       block:
         - name: Create new PVE pool
           community.general.proxmox_pool:
@@ -219,11 +223,25 @@
           loop: "{{ groups[nodes_group] }}"
           loop_control:
             label: "{{ hostvars[item].inventory_hostname_short }}"
-          notify:
-            - Configure Discovery ISO
-            - Install Cluster
+          register: vm_create
           # "msg": "VM ocp-lab-01 with vmid 6101 updated",  == already exists, maybe updated
           # "msg": "VM ocp-lab-01 with vmid 6101 deployed", == create
+
+    - name: Configure Discovery ISO  # noqa: no-handler
+      ansible.builtin.include_tasks:
+        file: tasks/discovery-iso.yml
+        apply:
+          tags: assisted_installer
+      when: vm_create is defined and vm_create.changed
+      tags: assisted_installer
+
+    - name: Install Cluster  # noqa: no-handler
+      ansible.builtin.include_tasks:
+        file: tasks/install-cluster.yml
+        apply:
+          tags: assisted_installer
+      when: vm_create is defined and vm_create.changed
+      tags: assisted_installer
 
   handlers:
     - name: Reload BIND9  # noqa: run-once[task]
@@ -232,11 +250,3 @@
         state: reloaded
       delegate_to: dns.rh-lab.morey.tech
       run_once: true
-
-    - name: Configure Discovery ISO
-      ansible.builtin.include_tasks:
-        file: tasks/discovery-iso.yml
-
-    - name: Install Cluster
-      ansible.builtin.include_tasks:
-        file: tasks/install-cluster.yml
