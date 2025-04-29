@@ -16,9 +16,6 @@
           register: listclusters
           run_once: true
 
-        # - name: Delete Existing Assisted Installers (When Recreate)
-        #   rhpds.assisted_installer.:
-
         - name: Delete Existing Assisted Installers (When Recreate)
           rhpds.assisted_installer.delete_cluster:
             cluster_id: "{{ item.id }}"
