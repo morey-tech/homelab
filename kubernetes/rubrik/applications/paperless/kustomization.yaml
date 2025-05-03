@@ -52,7 +52,7 @@ helmCharts:
       consume:
         enabled: true
         type: nfs
-        server: "192.168.1.20"
+        server: "192.168.3.19"
         path: /storage-mass/rubrik/paperless/consume
         mountPath: /usr/src/paperless/consume
       data:
