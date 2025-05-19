@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: ingress-nginx-external-system
 resources:
   - ingress-nginx-metalb.yaml
+  - default-tls-cert.yaml
 
 helmCharts:
 - name: ingress-nginx
@@ -35,3 +36,6 @@ patches:
       - op: add
         path: /spec/template/spec/containers/0/args/-
         value: --enable-ssl-passthrough
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --default-ssl-certificate=ingress-nginx-external-system/default-tls
