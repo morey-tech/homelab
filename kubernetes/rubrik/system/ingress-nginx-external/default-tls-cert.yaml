@@ -5,6 +5,7 @@ metadata:
 spec:
   dnsNames:
     - '*.rubrik.lab.home.morey.tech'
+    - 'rubrik.lab.home.morey.tech'
   issuerRef:
     group: cert-manager.io
     kind: ClusterIssuer
