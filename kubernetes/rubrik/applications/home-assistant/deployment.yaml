@@ -20,7 +20,7 @@ spec:
       automountServiceAccountToken: true
       hostNetwork: true
       containers:
-        - image: 'ghcr.io/home-assistant/home-assistant:2024.7.3'
+        - image: 'ghcr.io/home-assistant/home-assistant:2025.5.3'
           imagePullPolicy: IfNotPresent
           name: home-assistant
           ports:
@@ -43,7 +43,7 @@ spec:
           resources:
             limits:
               cpu: 1000m
-        - image: ghcr.io/coder/code-server:4.19.0
+        - image: ghcr.io/coder/code-server:4.100.2
           imagePullPolicy: IfNotPresent
           name: codeserver
           args:
