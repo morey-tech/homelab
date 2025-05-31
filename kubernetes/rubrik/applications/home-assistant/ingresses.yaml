@@ -23,8 +23,8 @@ spec:
               name: http
   tls:
   - hosts:
-    - hass.burrell.tech
-    secretName: hass.burrell.tech-tls
+    - hass.rubrik.lab.home.morey.tech
+    secretName: hass.rubrik.lab.home.morey.tech-tls
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -51,5 +51,5 @@ spec:
               name: codeserver
   tls:
   - hosts:
-    - code.hass.burrell.tech
-    secretName: code.hass.burrell.tech-tls
+    - code.hass.rubrik.lab.home.morey.tech
+    secretName: code.hass.rubrik.lab.home.morey.tech-tls
