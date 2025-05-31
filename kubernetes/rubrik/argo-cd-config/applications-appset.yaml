@@ -37,13 +37,23 @@ spec:
         syncOptions:
         - allowEmpty=true
         - CreateNamespace=true
+  # templatePatch: |
+  #   {{- if eq .path.basename "immich" }}
+  #   spec:
+  #     ignoreDifferences:
+  #       # Ignore generated postgres-password
+  #       - kind: Secret
+  #         name: immich-postgresql
+  #         jsonPointers:
+  #         - /data/postgres-password
+  #   {{ end }}
   templatePatch: |
-    {{- if eq .path.basename "immich" }}
+    {{- if eq .path.basename "metallb" }}
     spec:
       ignoreDifferences:
-        # Ignore generated postgres-password
-        - kind: Secret
-          name: immich-postgresql
+        # Ignore generated caBundle on MetalLB 
+        - kind: CustomResourceDefinition
+          group: apiextensions.k8s.io
           jsonPointers:
-          - /data/postgres-password
-    {{ end }}
+          - /spec/conversion/webhook/clientConfig/caBundle
+    {{- end }}
