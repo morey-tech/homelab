@@ -8,6 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: 1024m
 spec:
+  ingressClassName: ingress-nginx-internal
   rules:
   - host: mqtt.rubrik.lab.home.morey.tech
     http:
