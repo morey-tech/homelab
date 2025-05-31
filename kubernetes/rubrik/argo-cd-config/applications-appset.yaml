@@ -57,3 +57,11 @@ spec:
           jsonPointers:
           - /spec/conversion/webhook/clientConfig/caBundle
     {{- end }}
+    {{- if eq .path.basename "k8s-gateway" }}
+    spec:
+      ignoreDifferences:
+        - kind: Deployment
+          group: apps
+          jsonPointers:
+          - /spec/template/metadata/annotations/checksum~1config
+    {{- end }}
