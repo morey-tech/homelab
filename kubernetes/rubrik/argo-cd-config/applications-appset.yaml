@@ -37,3 +37,12 @@ spec:
         syncOptions:
         - allowEmpty=true
         - CreateNamespace=true
+  templatePatch: |
+    {{- if eq .path.basename "immich" }}
+    spec:
+      ignoreDifferences:
+        # Ignore generated postgres-password
+        - kind: Secret
+          jsonPointers:
+          - /data/postgres-password
+    {{- end }}
