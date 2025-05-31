@@ -8,11 +8,6 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: 1024m
 spec:
-  ingressClassName: nginx
-  tls:
-  - hosts:
-    - mqtt.rubrik.lab.home.morey.tech
-    secretName: mqtt.rubrik.lab.home.morey.tech-tls
   rules:
   - host: mqtt.rubrik.lab.home.morey.tech
     http:
@@ -24,3 +19,7 @@ spec:
             name: mosquitto-ws
             port: 
               number: 9001
+  tls:
+  - hosts:
+    - mqtt.rubrik.lab.home.morey.tech
+    secretName: mqtt.rubrik.lab.home.morey.tech-tls
