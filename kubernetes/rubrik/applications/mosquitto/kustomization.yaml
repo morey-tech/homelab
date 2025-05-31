@@ -4,5 +4,5 @@ namespace: mosquitto
 resources:
   - configmap.yaml
   - deployment.yaml
-  - ingresses.yaml
+  - ingress.yaml
   - services.yaml
