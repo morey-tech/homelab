@@ -4,14 +4,14 @@ kind: Ingress
 metadata:
   name: home-assistant-ingress
   annotations:
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     cert-manager.io/cluster-issuer: letsencrypt
-    external-dns.alpha.kubernetes.io/target: 'burrell.tech'
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 1024m
 spec:
   ingressClassName: nginx
   rules:
-  - host: hass.burrell.tech
+  - host: hass.rubrik.lab.home.morey.tech
     http:
       paths:
       - path: /
@@ -32,15 +32,14 @@ metadata:
   name: home-assistant-codeserver-ingress
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
-    nginx.ingress.kubernetes.io/whitelist-source-range: "192.168.0.0/16,172.16.0.0/12"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: 1024m
-    external-dns.alpha.kubernetes.io/exclude: 'true'
+    # external-dns.alpha.kubernetes.io/exclude: 'true'
 spec:
   ingressClassName: nginx
   rules:
-  - host: code.hass.burrell.tech
+  - host: code.hass.rubrik.lab.home.morey.tech
     http:
       paths:
       - path: /

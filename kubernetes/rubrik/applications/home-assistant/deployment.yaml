@@ -27,12 +27,12 @@ spec:
             - containerPort: 8123
               name: http
               protocol: TCP
-            - containerPort: 5353
-              name: homekit-udp
-              protocol: UDP
-            - containerPort: 21063
-              name: homekit-tcp
-              protocol: TCP
+            # - containerPort: 5353
+            #   name: homekit-udp
+            #   protocol: UDP
+            # - containerPort: 21063
+            #   name: homekit-tcp
+            #   protocol: TCP
           envFrom:
             - configMapRef:
                 name: home-assistant-cm
