@@ -11,6 +11,7 @@ spec:
   # 10.8.0.2 - ingress-nginx-external
   # 10.8.0.3 - plex
   # 10.8.0.4 - unifi
+  # 10.8.0.5 - home-assistant-lb-tcp
   autoAssign: false
 ---
 apiVersion: metallb.io/v1beta1

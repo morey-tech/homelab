@@ -4,13 +4,13 @@ kind: Service
 metadata:
   name: home-assistant-lb-tcp
   annotations:
-    metallb.universe.tf/address-pool: bgp-pool
+    metallb.universe.tf/address-pool: rubrik-static-address-pool
     metallb.universe.tf/allow-shared-ip: hass
 spec:
   selector:
     app.kubernetes.io/instance: home-assistant
     app.kubernetes.io/name: home-assistant
-  loadBalancerIP: 172.19.0.3
+  loadBalancerIP: 10.8.0.5
   externalTrafficPolicy: Local
   type: LoadBalancer
   ports:
@@ -28,13 +28,13 @@ kind: Service
 metadata:
   name: home-assistant-lb-udp
   annotations:
-    metallb.universe.tf/address-pool: bgp-pool
+    metallb.universe.tf/address-pool: rubrik-static-address-pool
     metallb.universe.tf/allow-shared-ip: hass
 spec:
   selector:
     app.kubernetes.io/instance: home-assistant
     app.kubernetes.io/name: home-assistant
-  loadBalancerIP: 172.19.0.3
+  loadBalancerIP: 10.8.0.5
   externalTrafficPolicy: Local
   type: LoadBalancer
   ports:
