@@ -43,6 +43,7 @@ spec:
       ignoreDifferences:
         # Ignore generated postgres-password
         - kind: Secret
+          name: immich-postgresql
           jsonPointers:
           - /data/postgres-password
-    {{- end }}
+    {{ end }}
