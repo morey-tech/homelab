@@ -9,7 +9,6 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: 1024m
 spec:
-  ingressClassName: nginx
   rules:
   - host: hass.rubrik.lab.home.morey.tech
     http:
@@ -37,7 +36,6 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: 1024m
     # external-dns.alpha.kubernetes.io/exclude: 'true'
 spec:
-  ingressClassName: nginx
   rules:
   - host: code.hass.rubrik.lab.home.morey.tech
     http:
