@@ -3,6 +3,7 @@ kind: ApplicationSet
 metadata:
   name: applications-appset
 spec:
+  goTemplate: true
   syncPolicy:
     applicationsSync: create-update
   generators:
@@ -19,16 +20,16 @@ spec:
       - /spec/source/targetRevision
   template:
     metadata:
-      name: '{{path.basename}}'
+      name: '{{.path.basename}}'
     spec:
       project: default
       source:
         repoURL: https://github.com/morey-tech/homelab.git
         targetRevision: HEAD
-        path: '{{path}}'
+        path: '{{.pat.path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{path.basename}}'
+        namespace: '{{.path.basename}}'
       syncPolicy:
         automated:
           allowEmpty: true
@@ -37,31 +38,13 @@ spec:
         syncOptions:
         - allowEmpty=true
         - CreateNamespace=true
-  # templatePatch: |
-  #   {{- if eq .path.basename "immich" }}
-  #   spec:
-  #     ignoreDifferences:
-  #       # Ignore generated postgres-password
-  #       - kind: Secret
-  #         name: immich-postgresql
-  #         jsonPointers:
-  #         - /data/postgres-password
-  #   {{ end }}
   templatePatch: |
-    {{- if eq .path.basename "metallb" }}
+    {{- if eq .path.basename "immich" }}
     spec:
       ignoreDifferences:
-        # Ignore generated caBundle on MetalLB 
-        - kind: CustomResourceDefinition
-          group: apiextensions.k8s.io
+        # Ignore generated postgres-password
+        - kind: Secret
+          name: immich-postgresql
           jsonPointers:
-          - /spec/conversion/webhook/clientConfig/caBundle
-    {{- end }}
-    {{- if eq .path.basename "k8s-gateway" }}
-    spec:
-      ignoreDifferences:
-        - kind: Deployment
-          group: apps
-          jsonPointers:
-          - /spec/template/metadata/annotations/checksum~1config
-    {{- end }}
+          - /data/postgres-password
+    {{ end }}
