@@ -21,6 +21,10 @@ spec:
     port: 443
     protocol: TCP
     targetPort: https
+  - name: mqtts
+    port: 8883
+    protocol: TCP
+    targetPort: 8883
   selector:
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: ingress-nginx-internal

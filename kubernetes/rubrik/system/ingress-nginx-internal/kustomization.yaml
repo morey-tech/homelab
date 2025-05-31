@@ -4,6 +4,7 @@ namespace: ingress-nginx-internal-system
 
 resources:
   - ingress-nginx-metalb.yaml
+  - tcp-services-configmap.yaml
 
 helmCharts:
 - name: ingress-nginx
@@ -37,3 +38,7 @@ patches:
       - op: add
         path: /spec/template/spec/containers/0/args/-
         value: --enable-ssl-passthrough
+      # Enable tcp services from configmap.
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
