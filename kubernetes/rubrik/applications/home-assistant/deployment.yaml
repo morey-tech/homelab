@@ -27,6 +27,9 @@ spec:
             - containerPort: 8123
               name: http
               protocol: TCP
+            - containerPort: 5683
+              name: coiot-udp
+              protocol: UDP
             # - containerPort: 5353
             #   name: homekit-udp
             #   protocol: UDP

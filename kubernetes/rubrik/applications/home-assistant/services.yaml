@@ -41,7 +41,7 @@ spec:
   - name: coiot-udp
     port: 5683
     protocol: UDP
-    targetPort: homekit-udp
+    targetPort: coiot-udp
   # - name: homekit-udp
   #   port: 5353
   #   protocol: UDP
