@@ -33,7 +33,7 @@ spec:
             - containerPort: 5353
               name: homekit-udp
               protocol: UDP
-            - containerPort: 21063
+            - containerPort: 21064
               name: homekit-tcp
               protocol: TCP
           envFrom:

@@ -19,7 +19,7 @@ spec:
     protocol: TCP
     targetPort: http
   - name: homekit-tcp
-    port: 21063
+    port: 21064
     protocol: TCP
     targetPort: homekit-tcp
 ---
