@@ -18,10 +18,10 @@ spec:
     port: 8123
     protocol: TCP
     targetPort: http
-  # - name: homekit-tcp
-  #   port: 21063
-  #   protocol: TCP
-  #   targetPort: homekit-tcp
+  - name: homekit-tcp
+    port: 21063
+    protocol: TCP
+    targetPort: homekit-tcp
 ---
 apiVersion: v1
 kind: Service
@@ -42,10 +42,10 @@ spec:
     port: 5683
     protocol: UDP
     targetPort: coiot-udp
-  # - name: homekit-udp
-  #   port: 5353
-  #   protocol: UDP
-  #   targetPort: homekit-udp
+  - name: homekit-udp
+    port: 5353
+    protocol: UDP
+    targetPort: homekit-udp
 ---
 apiVersion: v1
 kind: Service

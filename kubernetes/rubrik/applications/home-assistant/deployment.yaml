@@ -30,12 +30,12 @@ spec:
             - containerPort: 5683
               name: coiot-udp
               protocol: UDP
-            # - containerPort: 5353
-            #   name: homekit-udp
-            #   protocol: UDP
-            # - containerPort: 21063
-            #   name: homekit-tcp
-            #   protocol: TCP
+            - containerPort: 5353
+              name: homekit-udp
+              protocol: UDP
+            - containerPort: 21063
+              name: homekit-tcp
+              protocol: TCP
           envFrom:
             - configMapRef:
                 name: home-assistant-cm
