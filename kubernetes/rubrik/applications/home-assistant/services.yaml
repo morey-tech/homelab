@@ -25,7 +25,7 @@ spec:
   - name: homekit-tcp
     port: 21064
     protocol: TCP
-    targetPort: homekit-tcp
+    targetPort: homekit-tcp-1
 ---
 apiVersion: v1
 kind: Service
