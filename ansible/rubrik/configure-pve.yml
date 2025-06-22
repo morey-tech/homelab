@@ -1,0 +1,17 @@
+---
+- name: Configure Rubrik nodes
+  hosts:
+    - rubrik-clusters
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Create new PVE pool
+      community.general.proxmox_pool:
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        poolid: "{{ cluster_name }}"
+        comment: "{{ cluster_name }} cluster"
+      delegate_to: localhost

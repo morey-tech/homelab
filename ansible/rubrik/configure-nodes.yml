@@ -1,7 +1,7 @@
 ---
 - name: Configure Rubrik nodes
   hosts:
-    - all
+    - rubrik-nodes
   become: true
 
   tasks:
