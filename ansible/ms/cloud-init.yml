@@ -31,6 +31,7 @@
         #   scsi0: 'local-nvme:32,iothread=on'
         net:
           net0: 'virtio,bridge=vmbr0,tag=3,firewall=1'
+        sshkeys: "{{ ssh_authorized_keys }}"
       register: createvm_result
       notify: Update Cloud-Init Disk
 

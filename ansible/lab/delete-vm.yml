@@ -1,0 +1,35 @@
+---
+- name: Delete Monitoring Host VM
+  hosts:
+    - monitoring.lab.morey.tech
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Stop VMs  # noqa: run-once[task]
+      community.general.proxmox_kvm:
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        node: "{{ pve_node }}"
+        vmid: "{{ vm_id }}"
+        name: "{{ inventory_hostname_short }}"
+        state: stopped
+        force: true
+        timeout: 15  # short graceful shutdown since will be destroyed.
+      delegate_to: localhost
+
+    - name: Destroy VMs  # noqa: run-once[task]
+      community.general.proxmox_kvm:
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        node: "{{ pve_node }}"
+        vmid: "{{ vm_id }}"
+        name: "{{ inventory_hostname_short }}"
+        state: absent
+        force: true
+        timeout: 300
+      delegate_to: localhost
