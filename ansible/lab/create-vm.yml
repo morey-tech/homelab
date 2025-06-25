@@ -16,10 +16,12 @@
     - name: Create new VM from cloud-init template
       community.general.proxmox_kvm:
         <<: *pve_api
+        node: "{{ hostvars[cloud_init_template].pve_node }}"
         newid: "{{ vm_id }}"
-        name: "{{ inventory_hostname_short }}-test"
-        clone: "{{ cloud_init_template }}"
+        name: "{{ inventory_hostname_short }}"
+        vmid: "{{ hostvars[cloud_init_template].vm_id }}"
         full: true
+        clone: true
       delegate_to: localhost
 
     - name: Migrate VM to node
