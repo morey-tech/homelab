@@ -1,0 +1,29 @@
+---
+- name: Install Grafana Alloy on Linux
+  hosts:
+    - monitoring.lab.morey.tech
+  tasks:
+    - name: Add Grafana GPG key
+      ansible.builtin.apt_key:
+        url: https://apt.grafana.com/gpg.key
+        state: present
+
+    - name: Add Grafana repository
+      ansible.builtin.apt_repository:
+        repo: "deb https://apt.grafana.com stable main"
+        state: present
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install Grafana Alloy
+      ansible.builtin.apt:
+        name: alloy
+        state: present
+
+    - name: Ensure Grafana Alloy service is enabled and started
+      ansible.builtin.systemd:
+        name: alloy
+        state: started
+        enabled: true
