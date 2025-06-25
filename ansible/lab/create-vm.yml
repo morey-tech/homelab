@@ -44,6 +44,19 @@
         update_unsafe: true
       delegate_to: localhost
 
+    - name: Grow existing disk
+      community.general.proxmox_disk:
+        api_user: "{{ pve_api_user }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
+        api_host: "{{ pve_api_host }}"
+        vmid: "{{ vm_id }}"
+        name: "{{ inventory_hostname_short }}"
+        disk: scsi0
+        size: "{{ disk_size }}"
+        state: resized
+      delegate_to: localhost
+
     - name: Start the VM
       community.general.proxmox_kvm:
         api_user: "{{ pve_api_user }}"
