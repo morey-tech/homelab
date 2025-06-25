@@ -39,8 +39,10 @@
         name:
           - docker-ce
           - docker-ce-cli
+          - docker-compose
           - containerd.io
         state: present
+        autoremove: true
 
     - name: Add current user to Docker group
       ansible.builtin.user:
@@ -53,3 +55,20 @@
         name: docker
         state: started
         enabled: true
+
+    # git clone https://github.com/grafana/alloy-scenarios.git
+    - name: Clone Alloy Scenarios repository
+      ansible.builtin.git:
+        repo: https://github.com/grafana/alloy-scenarios.git
+        dest: /opt/alloy-scenarios
+        version: main
+
+    # docker-compose up -d /opt/alloy-scenarios/linux
+    # docker_compose_v2_module
+    - name: Start Alloy Scenarios using Docker Compose
+      community.docker.docker_compose:
+        project_src: /opt/alloy-scenarios/linux
+        restarted: false
+        build: true
+        pull: true
+        state: present
