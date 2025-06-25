@@ -22,6 +22,14 @@
         full: true
       delegate_to: localhost
 
+    - name: Migrate VM to node
+      community.general.proxmox_kvm:
+        <<: *pve_api
+        vmid: "{{ vm_id }}"
+        node: "{{ pve_node }}"
+        migrate: true
+      delegate_to: localhost
+
     - name: Update configuration of cloned VM
       community.general.proxmox_kvm:
         <<: *pve_api
