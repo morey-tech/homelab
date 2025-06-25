@@ -6,15 +6,16 @@
   gather_facts: false
   vars:
     cloud_init_template: "debian-12-cloudinit-template"
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
 
   tasks:
     - name: Create new VM from cloud-init template
       community.general.proxmox_kvm:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
-        node: "{{ pve_node }}"
+        <<: *pve_api
         newid: "{{ vm_id }}"
         name: "{{ inventory_hostname_short }}-test"
         clone: "{{ cloud_init_template }}"
@@ -23,10 +24,7 @@
 
     - name: Update configuration of cloned VM
       community.general.proxmox_kvm:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
+        <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ vm_id }}"
         name: "{{ inventory_hostname_short }}"
@@ -46,10 +44,7 @@
 
     - name: Grow existing disk
       community.general.proxmox_disk:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
+        <<: *pve_api
         vmid: "{{ vm_id }}"
         name: "{{ inventory_hostname_short }}"
         disk: scsi0
@@ -59,10 +54,7 @@
 
     - name: Start the VM
       community.general.proxmox_kvm:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
+        <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ vm_id }}"
         state: started
