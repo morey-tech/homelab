@@ -41,6 +41,9 @@
         mode: '0644'
       notify:
         - Restart Alloy service
+      vars:
+        prom_host: monitoring.lab.morey.tech:9090
+        loki_host: monitoring.lab.morey.tech:3100
 
     - name: Ensure Grafana Alloy service is enabled and started
       ansible.builtin.systemd:
