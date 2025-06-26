@@ -1,4 +1,7 @@
-# Ansible: Rubrik
+# Ansible
+## Lab
+
+## Rubrik
 Run `ansible` commands from in the `ansible/ms` folder to ensure that the `ansible.cfg` is used.
 
 ```

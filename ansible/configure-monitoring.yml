@@ -66,9 +66,8 @@
     # docker-compose up -d /opt/alloy-scenarios/linux
     # docker_compose_v2_module
     - name: Start Alloy Scenarios using Docker Compose
-      community.docker.docker_compose:
+      community.docker.docker_compose_v2:
         project_src: /opt/alloy-scenarios/linux
-        restarted: false
-        build: true
-        pull: true
+        build: always
+        pull: missing
         state: present

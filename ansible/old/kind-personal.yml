@@ -1,8 +1,0 @@
----
-- name: Kind Personal
-  hosts:
-  - kind-personal.lab.home.morey.tech
-  become: true
-
-  roles:
-  - role: 'kind'

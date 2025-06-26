@@ -2,6 +2,7 @@
 - name: Install Grafana Alloy on Linux
   hosts:
     - debian-12.lab.morey.tech
+    - rubrik-nodes
   tasks:
     - name: Install prerequisites
       ansible.builtin.apt:
@@ -40,6 +41,9 @@
         mode: '0644'
       notify:
         - Restart Alloy service
+      vars:
+        prom_host: monitoring.lab.morey.tech:9090
+        loki_host: monitoring.lab.morey.tech:3100
 
     - name: Ensure Grafana Alloy service is enabled and started
       ansible.builtin.systemd:
