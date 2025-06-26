@@ -1,8 +1,19 @@
 ---
 - name: Install Grafana Alloy on Linux
   hosts:
-    - monitoring.lab.morey.tech
+    - debian-12.lab.morey.tech
   tasks:
+    - name: Install prerequisites
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+        update_cache: true
+
     - name: Add Grafana GPG key
       ansible.builtin.apt_key:
         url: https://apt.grafana.com/gpg.key
@@ -22,8 +33,22 @@
         name: alloy
         state: present
 
+    - name: Render Alloy configuration
+      ansible.builtin.template:
+        src: config.alloy.j2
+        dest: /etc/alloy/config.alloy
+        mode: '0644'
+      notify:
+        - Restart Alloy service
+
     - name: Ensure Grafana Alloy service is enabled and started
       ansible.builtin.systemd:
         name: alloy
         state: started
         enabled: true
+
+  handlers:
+    - name: Restart Alloy service
+      ansible.builtin.systemd:
+        name: alloy
+        state: restarted
