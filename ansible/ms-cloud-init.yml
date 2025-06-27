@@ -1,7 +1,6 @@
 ---
 - name: Set Up Debian Cloud-Init VM Template
   hosts:
-    - ms-01.home.morey.tech
     - pvems-nodes[0]  # Only run on one host from group.
   become: true
 
