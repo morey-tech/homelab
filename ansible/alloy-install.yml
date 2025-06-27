@@ -3,6 +3,7 @@
   hosts:
     - debian-12.lab.morey.tech
     - rubrik-nodes
+    - pvems-nodes
   tasks:
     - name: Install prerequisites
       ansible.builtin.apt:
