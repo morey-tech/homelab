@@ -14,6 +14,18 @@
       api_host: "{{ pve_api_host }}"
 
   tasks:
+    - name: Create DHCP static mapping
+      pfsensible.core.pfsense_dhcp_static:
+        netif: opt1  # lab
+        hostname: "{{ inventory_hostname_short }}"
+        macaddr: "{{ mac_address }}"
+        ipaddr: "{{ ansible_host }}"
+        ddnsdomainkeyalgorithm: "hmac-md5"  # fixes diff.
+        state: present
+      delegate_to: pfsense.home.morey.tech
+      throttle: 1
+      tags: dhcp
+
     - name: Create new VM from cloud-init template
       community.general.proxmox_kvm:
         <<: *pve_api
