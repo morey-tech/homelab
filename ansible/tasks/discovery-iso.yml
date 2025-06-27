@@ -15,7 +15,7 @@
     dest: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ cluster_id }}-discovery.iso"
     mode: '0777'
     force: true
-  delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
+  delegate_to: "{{ groups['pvems-nodes'][0] }}"  # Pick a host from the hypervisor group
   register: download_discovery_iso
   # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#run-tasks-concurrently-poll-0
 

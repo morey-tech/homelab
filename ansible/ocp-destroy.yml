@@ -123,7 +123,7 @@
       loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
       loop_control:
         label: "{{ item.name }}, {{ item.id }}"
-      delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
+      delegate_to: "{{ groups['pvems-nodes'][0] }}"  # Pick a host from the hypervisor group
 
   handlers:
     - name: Reload BIND9  # noqa: run-once[task]

@@ -34,7 +34,7 @@
           loop_control:
             label: "{{ item.name }}, {{ item.id }}"
           when: recreate
-          delegate_to: "{{ groups['pvems'][0] }}"  # Pick a host from the hypervisor group
+          delegate_to: "{{ groups['pvems-nodes'][0] }}"  # Pick a host from the hypervisor group
 
         - name: Set cluster_id to existing installer
           ansible.builtin.set_fact:
