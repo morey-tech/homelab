@@ -5,14 +5,17 @@
     - debian-12.lab.morey.tech
   become: true
   gather_facts: false
+  vars:
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
 
   tasks:
     - name: Stop VMs  # noqa: run-once[task]
       community.general.proxmox_kvm:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
+        <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ vm_id }}"
         name: "{{ inventory_hostname_short }}"
@@ -23,10 +26,7 @@
 
     - name: Destroy VMs  # noqa: run-once[task]
       community.general.proxmox_kvm:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
+        <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ vm_id }}"
         name: "{{ inventory_hostname_short }}"

@@ -8,14 +8,16 @@
     storage: "storage-pve"  # Adjust to your storage name
     template_name: "debian-11-standard_11.7-1_amd64.tar.zst"
     delete_lxc_os_template: false
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
 
   tasks:
     - name: Delete LXC OS template from Proxmox storage
       community.general.proxmox_template:
-        api_host: "{{ pve_api_host }}"
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
+        <<: *pve_api
         node: "{{ pve_node }}"
         storage: "{{ storage }}"
         content_type: "vztmpl"
@@ -27,10 +29,7 @@
 
     - name: Stop LXC container
       community.general.proxmox:
-        api_host: "{{ pve_api_host }}"
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
+        <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ pve_vm_id }}"
         state: stopped
@@ -39,10 +38,7 @@
 
     - name: Delete LXC container
       community.general.proxmox:
-        api_host: "{{ pve_api_host }}"
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
+        <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ pve_vm_id }}"
         state: absent

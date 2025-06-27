@@ -3,6 +3,13 @@
   hosts: ocp-clusters
   gather_facts: false  # Hosts may not be available, since this playbook destroys them.
 
+  vars:
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
+
   vars_prompt:
     - name: "destory_confirmation"
       prompt: "Do you want to destory the vms? (yes/no)?"
@@ -15,10 +22,7 @@
 
     - name: Check if VM exists  # noqa: run-once[task]
       community.general.proxmox_vm_info:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
+        <<: *pve_api
         vmid: "{{ hostvars[item].pve_vm_id }}"
         name: "{{ hostvars[item].inventory_hostname_short }}"
         node: "{{ hostvars[item].pve_node }}"
@@ -29,10 +33,7 @@
     # Stop with force first before destroy to speed up.
     - name: Stop VMs  # noqa: run-once[task]
       community.general.proxmox_kvm:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
+        <<: *pve_api
         vmid: "{{ hostvars[item.item].pve_vm_id }}"
         name: "{{ hostvars[item.item].inventory_hostname_short }}"
         node: "{{ hostvars[item.item].pve_node }}"
@@ -46,10 +47,7 @@
 
     - name: Destroy VMs  # noqa: run-once[task]
       community.general.proxmox_kvm:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
+        <<: *pve_api
         vmid: "{{ hostvars[item.item].pve_vm_id }}"
         name: "{{ hostvars[item.item].inventory_hostname_short }}"
         node: "{{ hostvars[item.item].pve_node }}"
@@ -63,10 +61,7 @@
 
     - name: Delete PVE pool  # noqa: run-once[task]
       community.general.proxmox_pool:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ pve_api_host }}"
+        <<: *pve_api
         poolid: "{{ cluster_name }}"
         state: absent
 

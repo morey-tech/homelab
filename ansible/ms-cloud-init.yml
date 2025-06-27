@@ -10,14 +10,16 @@
     image_name: 'debian-12-generic-amd64.qcow2'
     image_path: '/var/lib/vz/template/qcow/{{ image_name }}'
     vm_id: '6254'
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
 
   tasks:
     - name: Create VM template
       community.general.proxmox_kvm:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ ansible_host }}"
+        <<: *pve_api
         vmid: "{{ vm_id }}"
         name: debian-12-cloudinit-template
         node: "{{ ansible_hostname.split('.')[0] }}"
@@ -37,10 +39,7 @@
     # The VM must exist to convert it to a template. So separate task.
     - name: Convert VM to template
       community.general.proxmox_kvm:
-        api_user: "{{ pve_api_user }}"
-        api_token_id: "{{ pve_api_token_id }}"
-        api_token_secret: "{{ pve_api_token_secret }}"
-        api_host: "{{ ansible_host }}"
+        <<: *pve_api
         vmid: "{{ vm_id }}"
         name: debian-12-cloudinit-template
         node: "{{ ansible_hostname.split('.')[0] }}"

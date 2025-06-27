@@ -5,6 +5,11 @@
 
   vars:
     recreate: false
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
 
   tasks:
     - name: Assisted Installer
@@ -137,19 +142,13 @@
       block:
         - name: Create new PVE pool
           community.general.proxmox_pool:
-            api_user: "{{ pve_api_user }}"
-            api_token_id: "{{ pve_api_token_id }}"
-            api_token_secret: "{{ pve_api_token_secret }}"
-            api_host: "{{ pve_api_host }}"
+            <<: *pve_api
             poolid: "{{ cluster_name }}"
             comment: "{{ cluster_name }} cluster"
 
         - name: Check if VM exists
           community.general.proxmox_vm_info:
-            api_user: "{{ pve_api_user }}"
-            api_token_id: "{{ pve_api_token_id }}"
-            api_token_secret: "{{ pve_api_token_secret }}"
-            api_host: "{{ pve_api_host }}"
+            <<: *pve_api
             vmid: "{{ hostvars[item].pve_vm_id }}"
             name: "{{ hostvars[item].inventory_hostname_short }}"
             node: "{{ hostvars[item].pve_node }}"
@@ -167,10 +166,7 @@
         # Stop with force first before destroy to speed up.
         - name: Stop Existing VMs To Prepare for Deletion # noqa: run-once[task]
           community.general.proxmox_kvm:
-            api_user: "{{ pve_api_user }}"
-            api_token_id: "{{ pve_api_token_id }}"
-            api_token_secret: "{{ pve_api_token_secret }}"
-            api_host: "{{ pve_api_host }}"
+            <<: *pve_api
             vmid: "{{ item.vmid }}"
             name: "{{ item.name }}"
             node: "{{ item.node }}"
@@ -185,10 +181,7 @@
         # Stop with force first before destroy to speed up.
         - name: Delete Existing VMs
           community.general.proxmox_kvm:
-            api_user: "{{ pve_api_user }}"
-            api_token_id: "{{ pve_api_token_id }}"
-            api_token_secret: "{{ pve_api_token_secret }}"
-            api_host: "{{ pve_api_host }}"
+            <<: *pve_api
             vmid: "{{ item.vmid }}"
             name: "{{ item.name }}"
             node: "{{ item.node }}"
@@ -200,10 +193,7 @@
 
         - name: Create VMs
           community.general.proxmox_kvm:
-            api_user: "{{ pve_api_user }}"
-            api_token_id: "{{ pve_api_token_id }}"
-            api_token_secret: "{{ pve_api_token_secret }}"
-            api_host: "{{ pve_api_host }}"
+            <<: *pve_api
             vmid: "{{ hostvars[item].pve_vm_id }}"
             name: "{{ hostvars[item].inventory_hostname_short }}"
             node: "{{ hostvars[item].pve_node }}"
