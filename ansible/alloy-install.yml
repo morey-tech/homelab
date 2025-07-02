@@ -2,38 +2,79 @@
 - name: Install Grafana Alloy on Linux
   hosts:
     - debian-12.lab.morey.tech
+    - desktop-nick.home.morey.tech
     - rubrik-nodes
     - pvems-nodes
+  become: true
   tasks:
-    - name: Install prerequisites
-      ansible.builtin.apt:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - gnupg
-          - lsb-release
-        state: present
-        update_cache: true
+    - name: Install alloy on Debian
+      when: ansible_facts['os_family'] == "Debian"
+      block:
+        - name: Install prerequisites
+          ansible.builtin.apt:
+            name:
+              - apt-transport-https
+              - ca-certificates
+              - curl
+              - gnupg
+              - lsb-release
+            state: present
+            update_cache: true
 
-    - name: Add Grafana GPG key
-      ansible.builtin.apt_key:
-        url: https://apt.grafana.com/gpg.key
-        state: present
+        - name: Add Grafana GPG key
+          ansible.builtin.apt_key:
+            url: https://apt.grafana.com/gpg.key
+            state: present
 
-    - name: Add Grafana repository
-      ansible.builtin.apt_repository:
-        repo: "deb https://apt.grafana.com stable main"
-        state: present
+        - name: Add Grafana repository
+          ansible.builtin.apt_repository:
+            repo: "deb https://apt.grafana.com stable main"
+            state: present
 
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: true
+        - name: Update package cache
+          ansible.builtin.apt:
+            update_cache: true
 
-    - name: Install Grafana Alloy
-      ansible.builtin.apt:
-        name: alloy
-        state: present
+        - name: Install Grafana Alloy
+          ansible.builtin.apt:
+            name: alloy
+            state: present
+
+    - name: Install alloy on RedHat
+      when: ansible_facts['os_family'] == "RedHat"
+      block:
+        - name: Install prerequisites
+          ansible.builtin.dnf:
+            name:
+              - gpg
+            state: present
+            update_cache: true
+
+        - name: Add Grafana GPG key
+          ansible.builtin.rpm_key:
+            key: https://apt.grafana.com/gpg.key
+            state: present
+
+        - name: Add Grafana repository
+          ansible.builtin.yum_repository:
+            name: grafana
+            description: Grafana
+            baseurl: https://rpm.grafana.com
+            gpgcheck: true
+            repo_gpgcheck: true
+            enabled: true
+            gpgkey: https://rpm.grafana.com/gpg.key
+            sslverify: true
+            sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+
+        - name: Update package cache
+          ansible.builtin.dnf:
+            update_cache: true
+
+        - name: Install Grafana Alloy
+          ansible.builtin.dnf:
+            name: alloy
+            state: present
 
     - name: Render Alloy configuration
       ansible.builtin.template:
