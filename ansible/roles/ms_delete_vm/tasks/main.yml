@@ -1,0 +1,30 @@
+---
+- name: Set pve_api variable (and YAML alias)
+  ansible.builtin.set_fact:
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
+
+- name: Stop VMs  # noqa: run-once[task]
+  community.general.proxmox_kvm:
+    <<: *pve_api
+    node: "{{ pve_node }}"
+    vmid: "{{ pve_vm_id }}"
+    name: "{{ inventory_hostname_short }}"
+    state: stopped
+    force: true
+    timeout: 15  # short graceful shutdown since will be destroyed.
+  delegate_to: localhost
+
+- name: Destroy VMs  # noqa: run-once[task]
+  community.general.proxmox_kvm:
+    <<: *pve_api
+    node: "{{ pve_node }}"
+    vmid: "{{ pve_vm_id }}"
+    name: "{{ inventory_hostname_short }}"
+    state: absent
+    force: true
+    timeout: 300
+  delegate_to: localhost

@@ -1,5 +1,6 @@
 roles/*
 # But do NOT ignore this role
 !roles/nginx_openshift_lb/
+!roles/ms_delete_vm/
 
 vault-password.txt
