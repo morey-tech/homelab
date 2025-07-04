@@ -1,0 +1,28 @@
+- name: Set pve_api variable
+  ansible.builtin.set_fact:
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
+
+- name: Create VMs
+  community.general.proxmox_kvm:
+    <<: *pve_api
+    vmid: "{{ pve_vm_id }}"
+    name: "{{ inventory_hostname_short }}"
+    node: "{{ pve_node }}"
+    # pool: "{{ cluster_name }}"
+    cpu: x86-64-v2-AES
+    cores: "{{ cores }}"
+    memory: "{{ memory }}"
+    scsihw: virtio-scsi-single
+    scsi:
+      scsi0: 'local-nvme:128,iothread=1'
+    net:
+      net0: 'virtio={{ mac_address }},bridge=vmbr0,tag={{ vlan_tag }},firewall=1'
+    # update: true  # Doesn't work if VM already exists.
+  register: ms_create_vm_result
+  when: not ms_create_vm_state is defined or ms_create_vm_recreate
+  # "msg": "VM ocp-lab-01 with vmid 6101 updated",  == already exists, maybe updated
+  # "msg": "VM ocp-lab-01 with vmid 6101 deployed", == Create

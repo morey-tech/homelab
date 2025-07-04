@@ -1,0 +1,96 @@
+---
+- name: Create DHCP static mapping
+  pfsensible.core.pfsense_dhcp_static:
+    netif: "{{ pfsense_int }}"
+    hostname: "{{ inventory_hostname_short }}"
+    macaddr: "{{ mac_address }}"
+    ipaddr: "{{ ansible_host }}"
+    ddnsdomainkeyalgorithm: "hmac-md5"  # fixes diff.
+    # nameserver: "{{ hostvars['dns.rh-lab.morey.tech'].ip_address }}"
+    state: present
+  delegate_to: "{{ ms_create_vm_pfsense_host }}"
+  throttle: 1
+  tags: dhcp
+
+- name: Proxmox Configuration
+  tags: proxmox
+  delegate_to: localhost
+  block:
+    - name: Set pve_api variable
+      ansible.builtin.set_fact:
+        pve_api: &pve_api
+          api_user: "{{ pve_api_user }}"
+          api_token_id: "{{ pve_api_token_id }}"
+          api_token_secret: "{{ pve_api_token_secret }}"
+          api_host: "{{ pve_api_host }}"
+
+    - name: Create new PVE pool
+      community.general.proxmox_pool:
+        <<: *pve_api
+        poolid: "{{ pve_pool }}"
+
+    - name: Check if VM exists
+      community.general.proxmox_vm_info:
+        <<: *pve_api
+        vmid: "{{ pve_vm_id }}"
+        name: "{{ inventory_hostname_short }}"
+        node: "{{ pve_node }}"
+        config: current
+      register: check_ms_create_vm_state
+
+    # - name: Print VM state
+    #   ansible.builtin.debug:
+    #     msg: "VM state: {{ check_ms_create_vm_state }}"
+
+    # debug ms_create_vm_states
+    - name: Set ms_create_vm_state fact
+      ansible.builtin.set_fact:
+        ms_create_vm_state: "{{ check_ms_create_vm_state.proxmox_vms[0] }}"
+      when: check_ms_create_vm_state.proxmox_vms
+
+    # Stop with force first before destroy to speed up.
+    - name: Stop Existing VMs To Prepare for Deletion # noqa: run-once[task]
+      community.general.proxmox_kvm:
+        <<: *pve_api
+        vmid: "{{ pve_vm_id }}"
+        name: "{{ inventory_hostname_short }}"
+        node: "{{ pve_node }}"
+        state: stopped
+        force: true
+        timeout: 15  # short graceful shutdown since will be destroyed.
+      when: ms_create_vm_recreate and ms_create_vm_state is defined
+
+    # Stop with force first before destroy to speed up.
+    - name: Delete Existing VMs
+      community.general.proxmox_kvm:
+        <<: *pve_api
+        vmid: "{{ pve_vm_id }}"
+        name: "{{ inventory_hostname_short }}"
+        node: "{{ pve_node }}"
+        state: absent
+      when: ms_create_vm_recreate and ms_create_vm_state is defined
+
+    # - name: Include create VM from ISO tasks
+    #   ansible.builtin.include_tasks: vm_from_iso.yml
+    #   when: not ms_create_vm_state is defined or ms_create_vm_recreate
+
+    - name: Include create VM from Cloudinit Template tasks
+      ansible.builtin.include_tasks: vm_from_cloudinit_tpl.yml
+      when: (not ms_create_vm_state is defined or ms_create_vm_recreate) and
+            ms_create_vm_cloud_init_template is defined
+
+    - name: Start the VM
+      community.general.proxmox_kvm:
+        <<: *pve_api
+        node: "{{ pve_node }}"
+        vmid: "{{ pve_vm_id }}"
+        state: started
+      when: ms_create_vm_start
+
+    - name: Wait for VM to be reachable
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        timeout: 300
+        state: started
+      when: ms_create_vm_start

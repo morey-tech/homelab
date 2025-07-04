@@ -1,0 +1,55 @@
+- name: Set pve_api variable
+  ansible.builtin.set_fact:
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
+
+- name: Create new VM from cloud-init template
+  community.general.proxmox_kvm:
+    <<: *pve_api
+    node: "{{ hostvars[ms_create_vm_cloud_init_template].pve_node }}"
+    newid: "{{ pve_vm_id }}"
+    name: "{{ inventory_hostname_short }}"
+    vmid: "{{ hostvars[ms_create_vm_cloud_init_template].pve_vm_id }}"
+    full: true
+    clone: true
+  delegate_to: localhost
+
+- name: Migrate VM to node
+  community.general.proxmox_kvm:
+    <<: *pve_api
+    vmid: "{{ pve_vm_id }}"
+    node: "{{ pve_node }}"
+    migrate: true
+  delegate_to: localhost
+
+- name: Update configuration of cloned VM
+  community.general.proxmox_kvm:
+    <<: *pve_api
+    node: "{{ pve_node }}"
+    vmid: "{{ pve_vm_id }}"
+    cores: "{{ cores }}"
+    memory: "{{ memory }}"
+    ciuser: "root"
+    # cipassword: "testing123$"
+    ciupgrade: false
+    sshkeys: "{{ ssh_authorized_keys }}"
+    net:
+      net0: 'virtio={{ mac_address }},bridge=vmbr0,tag={{ vlan_tag }},firewall=1'
+    ipconfig:
+      ipconfig0: 'ip=dhcp'
+    update: true
+    update_unsafe: true
+  delegate_to: localhost
+
+- name: Grow existing disk
+  community.general.proxmox_disk:
+    <<: *pve_api
+    vmid: "{{ pve_vm_id }}"
+    name: "{{ inventory_hostname_short }}"
+    disk: scsi0
+    size: "{{ disk_size }}"
+    state: resized
+  delegate_to: localhost

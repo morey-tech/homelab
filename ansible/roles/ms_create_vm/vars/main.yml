@@ -1,0 +1,6 @@
+---
+# vars file for ms_create_vm
+ms_create_vm_pfsense_host: pfsense.home.morey.tech
+ms_create_vm_recreate: false
+ms_create_vm_start: true
+ms_create_vm_cloud_init_template:
