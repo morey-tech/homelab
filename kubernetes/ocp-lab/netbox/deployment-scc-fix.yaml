@@ -8,15 +8,11 @@
   path: /spec/template/spec/containers/0/securityContext/runAsUser
 - op: remove
   path: /spec/template/spec/containers/0/securityContext/runAsGroup
-- op: add
+- op: remove
   path: /spec/template/spec/containers/0/securityContext/seLinuxOptions
-  value:
-    level: "s0:c28,c17"
 - op: remove
   path: /spec/template/spec/initContainers/0/securityContext/runAsUser
 - op: remove
   path: /spec/template/spec/initContainers/0/securityContext/runAsGroup
-- op: add
+- op: remove
   path: /spec/template/spec/initContainers/0/securityContext/seLinuxOptions
-  value:
-    level: "s0:c28,c17"
