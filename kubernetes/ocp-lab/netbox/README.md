@@ -6,7 +6,7 @@ Configuration to deploy the upstream `netbox` Helm chart in a OpenShift-compatib
 
 ```
 oc new-project netbox
-oc kustomize . --enable-helm | oc apply -f
+oc kustomize . --enable-helm | oc apply -f -
 ```
 
 ### How to Clean Up
