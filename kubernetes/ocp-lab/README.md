@@ -1,20 +1,20 @@
 # morey-tech/homelab
-## kubernetes/ocp-lab-01
+## kubernetes/ocp-lab
 ### Login
 ```
-oc login -u admin --server=https://api.ocp-lab-01.rh-lab.morey.tech:6443
+oc login -u admin --server=https://api.ocp-lab.rh-lab.morey.tech:6443
 ```
 
 ### Set Up HTPasswd Auth
 Create HTPasswd file with `admin` user.
 ```
-htpasswd -B -c ocp-lab-01.htpasswd admin
+htpasswd -B -c ocp-lab.htpasswd admin
 # enter password
 ```
 
 Create secret with HTPasswd contents.
 ```
-oc create secret generic htpass-secret --from-file=htpasswd=ocp-lab-01.htpasswd -n openshift-config
+oc create secret generic htpass-secret --from-file=htpasswd=ocp-lab.htpasswd -n openshift-config
 ```
 
 Add htpasswd identity provider.

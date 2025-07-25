@@ -1,0 +1,22 @@
+## This patch is used to fix the security context for the NetBox StatefulSet in OpenShift.
+## It ensures that the StatefulSet runs with the correct security context settings.
+## By removing the fsGroup and runAsUser/runAsGroup settings, we allow OpenShift to manage
+## the security context automatically, while still applying the necessary SELinux options.
+- op: remove
+  path: /spec/template/spec/securityContext/fsGroup
+- op: remove
+  path: /spec/template/spec/containers/0/securityContext/runAsUser
+- op: remove
+  path: /spec/template/spec/containers/0/securityContext/runAsGroup
+- op: add
+  path: /spec/template/spec/containers/0/securityContext/seLinuxOptions
+  value:
+    level: "s0:c28,c17"
+- op: remove
+  path: /spec/template/spec/initContainers/0/securityContext/runAsUser
+- op: remove
+  path: /spec/template/spec/initContainers/0/securityContext/runAsGroup
+- op: add
+  path: /spec/template/spec/initContainers/0/securityContext/seLinuxOptions
+  value:
+    level: "s0:c28,c17"
