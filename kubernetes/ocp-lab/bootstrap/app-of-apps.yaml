@@ -14,7 +14,7 @@ spec:
     kind: Application
   project: default
   source:
-    path: kubernetes/ocp-lab/argo-cd-config
+    path: kubernetes/ocp-lab/openshift-gitops-config
     repoURL: https://github.com/morey-tech/homelab.git
     targetRevision: HEAD
   syncPolicy:
