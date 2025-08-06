@@ -28,6 +28,7 @@
           - tmux
           - python3-proxmoxer
           - libguestfs-tools
+          # - intel-microcode  # https://forum.proxmox.com/threads/what-is-correct-way-to-install-intel-microcode.75664/
 
     - name: Upgrade all existing packages to latest
       ansible.builtin.apt:
