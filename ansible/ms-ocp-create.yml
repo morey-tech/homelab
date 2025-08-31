@@ -1,6 +1,6 @@
 ---
 - name: Set Up cluster
-  hosts: ocp-clusters
+  hosts: ms-ocp-clusters
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
 
   vars:
