@@ -22,7 +22,28 @@ metadata:
   namespace: openshift-gitops-operator
 spec:
   channel: latest 
+  config:
+    env:
+      # Manage the default ArgoCD instance seperately.
+      - name: DISABLE_DEFAULT_ARGOCD_INSTANCE
+        value: "true"
   installPlanApproval: Automatic
   name: openshift-gitops-operator 
   source: redhat-operators 
   sourceNamespace: openshift-marketplace
+# ---
+# apiVersion: console.openshift.io/v1
+# kind: ConsolePlugin
+# metadata:
+#   name: gitops-plugin
+# spec:
+#   backend:
+#     service:
+#       basePath: /
+#       name: gitops-plugin
+#       namespace: openshift-gitops
+#       port: 9001
+#     type: Service
+#   displayName: GitOps Plugin
+#   i18n:
+#     loadType: Preload
