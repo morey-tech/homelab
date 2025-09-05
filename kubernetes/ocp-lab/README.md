@@ -9,7 +9,7 @@ oc login -u admin --server=https://api.ocp-lab.rh-lab.morey.tech:6443
 Create HTPasswd file with `admin` user.
 ```
 htpasswd -B -c ocp-lab.htpasswd admin
-# enter password
+# enter password from Bitwarden
 ```
 
 Create secret with HTPasswd contents.

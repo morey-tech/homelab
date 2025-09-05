@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: system-appset
+spec:
+  goTemplate: true
+  syncPolicy:
+    applicationsSync: create-update
+  generators:
+  - git:
+      repoURL: https://github.com/morey-tech/homelab.git
+      revision: HEAD
+      directories:
+      - path: kubernetes/ocp-mgmt/system/*
+  ignoreApplicationDifferences:
+    - jsonPointers:
+      # Allow automated sync policy to be disabled manually.
+      - /spec/syncPolicy/automated
+      # Allow target revision to be set manually for PR testing,
+      - /spec/source/targetRevision
+  template:
+    metadata:
+      name: '{{.path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/morey-tech/homelab.git
+        targetRevision: HEAD
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.path.basename}}-system'
+      syncPolicy:
+        automated:
+          allowEmpty: true
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - allowEmpty=true
+        - CreateNamespace=true
+  # templatePatch: |
+  #   {{- if eq .path.basename "metallb" }}
+  #   spec:
+  #     ignoreDifferences:
+  #       # Ignore generated caBundle on MetalLB 
+  #       - kind: CustomResourceDefinition
+  #         group: apiextensions.k8s.io
+  #         jsonPointers:
+  #         - /spec/conversion/webhook/clientConfig/caBundle
+  #   {{- end }}

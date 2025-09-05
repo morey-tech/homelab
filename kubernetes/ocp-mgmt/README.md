@@ -9,7 +9,7 @@ oc login -u admin --server=https://api.ocp-mgmt.rh-lab.morey.tech:6443
 Create HTPasswd file with `admin` user.
 ```
 htpasswd -B -c ocp-mgmt.htpasswd admin
-# enter password
+# Enter password from Bitwarden.
 ```
 
 Create secret with HTPasswd contents.
@@ -17,23 +17,7 @@ Create secret with HTPasswd contents.
 oc create secret generic htpass-secret --from-file=htpasswd=ocp-mgmt.htpasswd -n openshift-config
 ```
 
-Add htpasswd identity provider.
-```yaml
-apiVersion: config.openshift.io/v1
-kind: OAuth
-metadata:
-  name: cluster
-spec:
-  identityProviders:
-    - htpasswd:
-        fileData:
-          name: htpass-secret
-      mappingMethod: claim
-      name: htpasswd
-      type: HTPasswd
+Add htpasswd identity provider and cluster role binding for admin user.
 ```
-
-Assign admin permissions to user.
-```
-oc adm policy add-cluster-role-to-user cluster-admin admin
+oc create -f ./system/htpass-admin
 ```
