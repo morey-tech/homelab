@@ -34,7 +34,7 @@
           loop_control:
             label: "{{ item.name }}, {{ item.id }}"
           when: recreate
-          delegate_to: "{{ groups['pvems-nodes'][0] }}"  # Pick a host from the hypervisor group
+          delegate_to: "{{ groups['pvems-nodes'][1] }}"  # Pick a host from the hypervisor group
 
         - name: Set cluster_id to existing installer
           ansible.builtin.set_fact:
@@ -70,10 +70,6 @@
         - name: Print selected cluster_id
           ansible.builtin.debug:
             msg: "{{ cluster_id }}"
-
-        - name: Print link to assisted installer
-          ansible.builtin.debug:
-            msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ cluster_id }}"
 
     - name: Create DHCP static mapping
       pfsensible.core.pfsense_dhcp_static:
@@ -135,6 +131,10 @@
     # Flush dns handler
     - name: Flush handlers
       ansible.builtin.meta: flush_handlers
+
+    - name: Print link to assisted installer
+      ansible.builtin.debug:
+        msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ cluster_id }}"
 
     # Pause for user to boot host via USB. Press enter to continue.
     - name: Pause for USB boot
