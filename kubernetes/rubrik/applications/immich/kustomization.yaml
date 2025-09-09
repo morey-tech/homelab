@@ -22,7 +22,8 @@ helmCharts:
   namespace: immich
   valuesInline:
     image:
-      tag: v1.132.0 #1.137.0 then 1.141.1
+      # https://github.com/immich-app/immich/pkgs/container/immich-server
+      tag: v1.137.0 #1.141.1
       pullPolicy: IfNotPresent
 
     immich:
