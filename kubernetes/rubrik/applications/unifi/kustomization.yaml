@@ -12,7 +12,7 @@ helmCharts:
   valuesInline:
     image:
       pullPolicy: IfNotPresent
-      tag: v8.6.9
+      tag: v9.4.19
       repository: jacobalberty/unifi
 
     # # Fixed discovery on local network.
@@ -104,6 +104,7 @@ helmCharts:
         memory: 2048Mi
 
     mongodb:
+      # Need to update too
       enabled: true
       persistence:
         enabled: true
