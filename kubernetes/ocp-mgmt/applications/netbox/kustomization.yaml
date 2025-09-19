@@ -18,11 +18,11 @@ helmCharts:
 patches:
 # These patches use separate files to fix the security
 # context for the NetBox StatefulSet and Deployment in OpenShift.
-- path: statefulset-scc-fix.yaml
-  target:
-    group: apps
-    kind: StatefulSet
-    version: v1
+# - path: statefulset-scc-fix.yaml
+#   target:
+#     group: apps
+#     kind: StatefulSet
+#     version: v1
 - path: deployment-scc-fix.yaml
   target:
     group: apps
