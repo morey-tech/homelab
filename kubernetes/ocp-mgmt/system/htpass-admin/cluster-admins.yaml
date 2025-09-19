@@ -1,0 +1,47 @@
+# Argo CD cannot map users to specific roles if they have a direct ClusterRoleBinding role.
+# Therefore, we create a group called "cluster-admins" and bind the cluster-admin role to that group.
+# Then the "cluster-amins" group is mapped to the "admin" role in Argo CD's RBAC policy.
+#
+# https://docs.redhat.com/en/documentation/red_hat_openshift_gitops/1.14/html/access_control_and_user_management/configuring-sso-for-argo-cd-using-dex#gitops-dex-role-mappings_configuring-sso-for-argo-cd-using-dex
+
+# Create cluster-admins group and add the "admin" user to that group.
+apiVersion: user.openshift.io/v1
+kind: Group
+metadata:
+  name: cluster-admins
+users:
+- admin
+# ---
+## ClusterRole should already exist in the cluster.
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRole
+# metadata:
+#   name: cluster-admin
+# rules:
+# - apiGroups:
+#   - '*'
+#   resources:
+#   - '*'
+#   verbs:
+#   - '*'
+# - nonResourceURLs:
+#   - '*'
+#   verbs:
+#   - '*'
+---
+# Bind the cluster-admin role to the cluster-admins group.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-admin-0  # Name cannot be "cluster-admin" as it already exists.
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+# - apiGroup: rbac.authorization.k8s.io
+#   kind: User
+#   name: admin
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: cluster-admins
