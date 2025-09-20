@@ -4,6 +4,9 @@ metadata:
   name: cluster-argocd  # Can't be named "openshift-gitops".
   namespace: openshift-gitops
 spec:
+  # https://docs.redhat.com/en/documentation/red_hat_openshift_gitops/1.14/html/declarative_cluster_configuration/customizing-permissions-by-creating-aggregated-cluster-roles#aggregated-cluster-roles_customizing-permissions-by-creating-aggregated-cluster-roles
+  aggregatedClusterRoles: true
+  
   applicationSet:
     resources:
       limits:
