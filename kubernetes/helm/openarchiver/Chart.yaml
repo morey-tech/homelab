@@ -1,0 +1,35 @@
+---
+apiVersion: v2
+appVersion: 0.3.1
+description: openarchiver - A secure, sovereign, and open-source platform for email archiving and eDiscovery.
+name: openarchiver
+version: 0.1.0
+# kubeVersion: ">=1.16.0-0"
+keywords:
+  - openarchiver
+# home: https://github.com/k8s-at-home/charts/tree/master/charts/stable/openarchiver
+# icon: https://avatars.githubusercontent.com/u/47271576?s=200&v=4
+sources:
+  - https://github.com/LogicLabs-OU/OpenArchiver/
+# maintainers:
+#   - name: mr-onion-2
+#   - name: jonnobrow
+#     email: jonathan@jonnobrow.co.uk
+#   - name: morremeyer
+#     email: charts@mor.re
+dependencies:
+  - name: common
+    repository: https://library-charts.k8s-at-home.com
+    version: 4.5.2
+  - name: postgresql
+    version: 11.6.12
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: 16.13.1
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+# annotations:
+#   artifacthub.io/changes: |-
+#     - kind: changed
+#       description: Upgraded `common` chart dependency to version 4.5.2

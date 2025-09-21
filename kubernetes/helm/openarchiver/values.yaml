@@ -1,0 +1,128 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  # -- image repository
+  repository: logiclabshq/open-archiver
+  # -- image pull policy
+  pullPolicy: IfNotPresent
+  # -- image tag
+  # @default -- chart.appVersion
+  tag:
+
+# -- See the following files for additional environment variables:
+# https://github.com/LogicLabs-OU/OpenArchiver/blob/main/docker-compose.yml
+# https://github.com/LogicLabs-OU/OpenArchiver/blob/main/.env.example
+# @default -- See below
+env:
+  # --- Application Settings ---
+  # Set to 'production' for production environments
+  NODE_ENV: development
+  PORT_BACKEND: 4000
+  PORT_FRONTEND: 3000
+  # The frequency of continuous email syncing. Default is every minutes, but you can change it to another value based on your needs.
+  SYNC_FREQUENCY: '* * * * *' 
+
+  # --- Docker Compose Service Configuration ---
+  # These variables are used by docker-compose.yml to configure the services. Leave them unchanged if you use Docker services for Postgresql, Valkey (Redis) and Meilisearch. If you decide to use your own instances of these services, you can substitute them with your own connection credentials.
+
+  # PostgreSQL
+  POSTGRES_DB: open_archive
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: password
+  DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+
+  # Meilisearch
+  MEILI_MASTER_KEY: aSampleMasterKey
+  MEILI_HOST: http://meilisearch:7700
+
+  # Redis (We use Valkey, which is Redis-compatible and open source)
+  REDIS_HOST: valkey
+  REDIS_PORT: 6379
+  REDIS_PASSWORD: defaultredispassword
+  # If you run Valkey service from Docker Compose, set the REDIS_TLS_ENABLED variable to false.
+  REDIS_TLS_ENABLED: false
+
+
+  # --- Storage Settings ---
+  # Choose your storage backend. Valid options are 'local' or 's3'.
+  STORAGE_TYPE: local
+  # The maximum request body size to accept in bytes including while streaming. The body size can also be specified with a unit suffix for kilobytes (K), megabytes (M), or gigabytes (G). For example, 512K or 1M. Defaults to 512kb. Or the value of  Infinity if you don't want any upload limit.
+  BODY_SIZE_LIMIT: 100M
+
+  # --- Local Storage Settings ---
+  # The path inside the container where files will be stored.
+  # This is mapped to a Docker volume for persistence.
+  # This is only used if STORAGE_TYPE is 'local'.
+  STORAGE_LOCAL_ROOT_PATH: /var/data/open-archiver
+
+  # --- S3-Compatible Storage Settings ---
+  # These are only used if STORAGE_TYPE is 's3'.
+  STORAGE_S3_ENDPOINT: 
+  STORAGE_S3_BUCKET: 
+  STORAGE_S3_ACCESS_KEY_ID: 
+  STORAGE_S3_SECRET_ACCESS_KEY: 
+  STORAGE_S3_REGION: 
+  # Set to 'true' for MinIO and other non-AWS S3 services
+  STORAGE_S3_FORCE_PATH_STYLE: false
+
+  # --- Security & Authentication ---
+
+  # Rate Limiting
+  # The window in milliseconds for which API requests are checked. Defaults to 60000 (1 minute).
+  RATE_LIMIT_WINDOW_MS: 60000
+  # The maximum number of API requests allowed from an IP within the window. Defaults to 100.
+  RATE_LIMIT_MAX_REQUESTS: 100
+
+  # JWT
+  # IMPORTANT: Change this to a long, random, and secret string in your .env file
+  JWT_SECRET: a-very-secret-key-that-you-should-change
+  JWT_EXPIRES_IN: "7d"
+  
+# -- Configures service settings for the chart.
+# @default -- See values.yaml
+service:
+  main:
+    ports:
+      http:
+        port: 3000
+
+ingress:
+  # -- Enable and configure ingress settings for the chart under this key.
+  # @default -- See values.yaml
+  main:
+    enabled: false
+
+persistence:
+  # -- Configure persistence for data.
+  # @default -- See values.yaml
+  data:
+    enabled: false
+    mountPath: /var/data/open-archiver
+    accessMode: ReadWriteOnce
+    emptyDir:
+      enabled: false
+
+# -- Enable and configure postgresql database subchart under this key.
+#    For more options see [postgresql chart documentation](https://github.com/bitnami/charts/tree/master/bitnami/postgresql)
+# @default -- See values.yaml
+postgresql:
+  enabled: false
+  postgresqlUsername: openarchiver
+  postgresqlPassword: openarchiver
+  postgresqlDatabase: openarchiver
+  persistence:
+    enabled: false
+    # storageClass: ""
+
+# -- Enable and configure redis subchart under this key.
+#    For more options see [redis chart documentation](https://github.com/bitnami/charts/tree/master/bitnami/redis)
+# @default -- See values.yaml
+redis:
+  enabled: false
+  auth:
+    enabled: false

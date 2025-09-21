@@ -1,0 +1,95 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: openarchiver
+resources:
+  - secret.yaml
+
+patches:
+- path: deployment-patch.yaml
+
+helmCharts:
+- name: openarchiver
+  includeCRDs: true
+  version: 0.1.0
+  repo: file://../../../helm/openarchiver
+  releaseName: openarchiver
+  namespace: openarchiver
+  valuesInline:
+    image:
+      tag: 0.3.1
+      pullPolicy: IfNotPresent
+    
+    env:
+      NODE_ENV: production
+      # The frequency of continuous email syncing. Default is every minutes, but you can change it to another value based on your needs.
+      SYNC_FREQUENCY: '* * * * *'
+      # PostgreSQL
+      POSTGRES_DB: open_archive
+      POSTGRES_USER: openarchiver
+      POSTGRES_PASSWORD: openarchiver
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      # Meilisearch
+      MEILI_MASTER_KEY: aSampleMasterKey
+      MEILI_HOST: http://meilisearch:7700
+
+      # Redis (We use Valkey, which is Redis-compatible and open source)
+      REDIS_HOST: valkey
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: defaultredispassword
+      # If you run Valkey service from Docker Compose, set the REDIS_TLS_ENABLED variable to false.
+      REDIS_TLS_ENABLED: false
+
+      # JWT
+      # IMPORTANT: Change this to a long, random, and secret string in your .env file
+      JWT_SECRET: a-very-secret-key-that-you-should-change
+
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          kubernetes.io/ingress.class: ingress-nginx-internal
+          cert-manager.io/cluster-issuer: letsencrypt
+          nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+          nginx.ingress.kubernetes.io/ssl-redirect: "true"
+          # nginx.ingress.kubernetes.io/whitelist-source-range: "192.168.0.0/16,172.16.0.0/12"
+          nginx.ingress.kubernetes.io/proxy-body-size: 1024m
+          # # Set the target to the cluster apex domain.
+          # # Defaults to the LoadBalancer IP, which is local only.
+          # external-dns.alpha.kubernetes.io/target: rubrik.lab.home.morey.tech
+          # # Enable External DNS for this Ingress.
+          # external-dns.alpha.kubernetes.io/exclude: 'true'
+        hosts:
+          - host: openarchiver.rubrik.lab.home.morey.tech
+            paths:
+            - path: /
+              pathType: Prefix
+        tls:
+        - secretName: openarchiver.rubrik.lab.home.morey.tech
+          hosts:
+          - openarchiver.rubrik.lab.home.morey.tech
+    persistence:
+      data:
+        enabled: true
+        type: nfs
+        server: "192.168.3.19"
+        path: /storage-mass/rubrik/openarchiver/data
+        mountPath: /var/data/open-archiver
+
+    postgresql:
+      enabled: true
+      postgresqlUsername: openarchiver
+      postgresqlPassword: openarchiver
+      postgresqlDatabase: open_archive
+      persistence:
+        enabled: false
+
+    redis:
+      enabled: true
+      image:
+        pullPolicy: IfNotPresent
+      architecture: standalone
+      auth:
+        enabled: false
+      master:
+        persistence:
+          enabled: false
