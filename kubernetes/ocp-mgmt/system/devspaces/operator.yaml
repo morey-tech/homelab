@@ -1,0 +1,48 @@
+## Install OpenShift GitOps Operator, which will also create an instace of OpenShift GitOps (ArgoCD).
+## https://docs.redhat.com/en/documentation/red_hat_openshift_gitops/1.17/html/installing_gitops/installing-openshift-gitops#installing-gitops-operator-using-cli_installing-openshift-gitops
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-devspaces
+spec: {}
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  annotations:
+    olm.providedAPIs: CheCluster.v1.org.eclipse.che,CheCluster.v2.org.eclipse.che,DevWorkspace.v1alpha1.workspace.devfile.io,DevWorkspace.v1alpha2.workspace.devfile.io,DevWorkspaceOperatorConfig.v1alpha1.controller.devfile.io,DevWorkspaceRouting.v1alpha1.controller.devfile.io,DevWorkspaceTemplate.v1alpha1.workspace.devfile.io,DevWorkspaceTemplate.v1alpha2.workspace.devfile.io
+  name: openshift-devspaces
+  namespace: openshift-devspaces
+spec:
+  upgradeStrategy: Default
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/devspaces.openshift-devspaces: ""
+  name: devspaces
+  namespace: openshift-devspaces
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: devspaces
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: devspacesoperator.v3.22.0
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/devworkspace-operator.openshift-devspaces: ""
+  name: devworkspace
+  namespace: openshift-devspaces
+spec:
+  channel: fast
+  installPlanApproval: Automatic
+  name: devworkspace-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: devworkspace-operator.v0.36.0
