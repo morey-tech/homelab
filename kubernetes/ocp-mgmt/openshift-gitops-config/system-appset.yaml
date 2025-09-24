@@ -39,7 +39,7 @@ spec:
         - allowEmpty=true
         - CreateNamespace=true
   templatePatch: |
-    {{- if eq .path.basename "ansible-automation-platform-system" }}
+    {{- if eq .path.basename "ansible-automation-platform" }}
     spec:
       syncPolicy:
         syncOptions:
