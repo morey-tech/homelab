@@ -4,6 +4,8 @@ kind: AnsibleAutomationPlatform
 metadata:
   name: ansible-automation-platform
   namespace: ansible-automation-platform
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"  # After the namespace and operator are created.
 spec:
   # Platform
   image_pull_policy: IfNotPresent
@@ -17,6 +19,7 @@ spec:
     ## Modify to contain your RWM storage class name
     storage_type: file
     ## The storage class must normally support ReadWriteMany, but not on SNO.
+    ## LVM storage does not support ReadWriteMany, but is fine on SNO, since it's only one node.
     # file_storage_storage_class: <your-read-write-many-storage-class>
     file_storage_size: 50Gi
 
