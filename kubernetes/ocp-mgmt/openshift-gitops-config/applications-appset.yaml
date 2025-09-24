@@ -38,13 +38,10 @@ spec:
         syncOptions:
         - allowEmpty=true
         - CreateNamespace=true
-  # templatePatch: |
-  #   {{- if eq .path.basename "immich" }}
-  #   spec:
-  #     ignoreDifferences:
-  #       # Ignore generated postgres-password
-  #       - kind: Secret
-  #         name: immich-postgresql
-  #         jsonPointers:
-  #         - /data/postgres-password
-  #   {{ end }}
+  templatePatch: |
+    {{- if eq .path.basename "ansible-automation-platform-system" }}
+    spec:
+      syncPolicy:
+        syncOptions:
+          - SkipDryRunOnMissingResource=true
+    {{ end }}
