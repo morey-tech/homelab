@@ -38,10 +38,10 @@ spec:
         syncOptions:
         - allowEmpty=true
         - CreateNamespace=true
-  templatePatch: |
-    {{- if eq .path.basename "ansible-automation-platform-system" }}
-    spec:
-      syncPolicy:
-        syncOptions:
-          - SkipDryRunOnMissingResource=true
-    {{ end }}
+  # templatePatch: |
+  #   {{- if eq .path.basename "ansible-automation-platform-system" }}
+  #   spec:
+  #     syncPolicy:
+  #       syncOptions:
+  #         - SkipDryRunOnMissingResource=true
+  #   {{ end }}
