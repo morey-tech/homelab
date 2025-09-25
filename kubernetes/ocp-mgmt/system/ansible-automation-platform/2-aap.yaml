@@ -18,10 +18,23 @@ spec:
     disabled: false
     ## Modify to contain your RWM storage class name
     storage_type: file
-    ## The storage class must normally support ReadWriteMany, but not on SNO.
-    ## LVM storage does not support ReadWriteMany, but is fine on SNO, since it's only one node.
-    # file_storage_storage_class: <your-read-write-many-storage-class>
+    ## LVM storage does not support ReadWriteMany. Instead the PV is created manually below.
+    file_storage_storage_class: ""
     file_storage_size: 50Gi
 
   lightspeed:
     disabled: true
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ansible-automation-platform-hub-file-storage 
+spec:
+  capacity:
+    storage: 50Gi 
+  accessModes:
+  - ReadWriteMany
+  nfs: 
+    path: /storage-mass/ocp-mgmt/ansible-automation-platform/hub-file-storage
+    server: "192.168.3.19"
+  persistentVolumeReclaimPolicy: Retain
