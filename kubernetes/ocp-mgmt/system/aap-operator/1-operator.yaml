@@ -5,8 +5,9 @@ metadata:
   name: aap-operator
   namespace: aap-operator-system
 spec:
+  # List of namespaces to watch for operator-managed resources (i.e. AnsibleAutomationPlatform CRs).
   targetNamespaces:
-    - aap-operator-system
+    - ansible-automation-platform
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
