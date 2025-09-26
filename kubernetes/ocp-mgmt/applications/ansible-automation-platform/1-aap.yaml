@@ -7,13 +7,14 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"  # After the namespace and operator are created.
 spec:
+  no_log: false # for debugging purposes, set to true to hide sensitive info.
   # Platform
   image_pull_policy: IfNotPresent
   # Components
   controller:
     disabled: false
   eda:
-    disabled: false
+    disabled: true
   hub:
     disabled: false
     ## Modify to contain your RWM storage class name
