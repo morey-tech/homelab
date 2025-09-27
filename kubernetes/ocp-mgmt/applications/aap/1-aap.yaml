@@ -28,13 +28,13 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: ansible-automation-platform-hub-file-storage 
+  name: aap-hub-file-storage 
 spec:
   capacity:
     storage: 50Gi 
   accessModes:
   - ReadWriteMany
-  nfs: 
-    path: /storage-mass/ocp-mgmt/ansible-automation-platform/hub-file-storage
+  nfs:
+    path: /storage-mass/ocp-mgmt/aap/hub-file-storage
     server: "192.168.3.19"
   persistentVolumeReclaimPolicy: Retain
