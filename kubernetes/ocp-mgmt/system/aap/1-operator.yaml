@@ -1,8 +1,9 @@
 ---
+# https://docs.redhat.com/en/documentation/openshift_container_platform/4.8/html/operators/understanding-operators#olm-operatorgroups-membership_olm-understanding-operatorgroups
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
-  name: aap-operator
+  name: aap-operator-group
 spec:
   # List of namespaces to watch for operator-managed resources (i.e. AnsibleAutomationPlatform CRs).
   targetNamespaces:
@@ -11,7 +12,7 @@ spec:
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: aap-operator
+  name: aap-subscription
 spec:
   channel: 'stable-2.5'
   installPlanApproval: Automatic
