@@ -20,7 +20,7 @@ spec:
       - /spec/source/targetRevision
   template:
     metadata:
-      name: '{{.path.basename}}'
+      name: '{{.path.basename}}-system'
     spec:
       project: default
       source:
