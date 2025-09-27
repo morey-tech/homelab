@@ -14,7 +14,8 @@
 			"ms-vscode-remote.remote-ssh-edit",
 			"redhat.ansible",
 			"yzhang.markdown-all-in-one",
-			"ms-kubernetes-tools.vscode-kubernetes-tools"
+			"ms-kubernetes-tools.vscode-kubernetes-tools",
+			"GitHub.vscode-pull-request-github"
 		]
 	  }
 	},
