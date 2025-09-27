@@ -20,3 +20,14 @@ spec:
   name: ansible-automation-platform-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace
+---
+# Dummy secret to prevent harmless error events.
+# https://github.com/ansible/awx-operator/issues/922
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJkdW1teS5leGFtcGxlLmNvbSI6eyJ1c2VybmFtZSI6ImR1bW15IiwicGFzc3dvcmQiOiJkdW1teSIsImF1dGgiOiJaSFZ0YlhrNlpIVnRiWGs9In19fQ==
+kind: Secret
+metadata:
+  name: redhat-operators-pull-secret
+  namespace: aap-operator-system
+type: kubernetes.io/dockerconfigjson
