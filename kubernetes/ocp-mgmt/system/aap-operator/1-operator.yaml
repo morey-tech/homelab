@@ -3,7 +3,6 @@ apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   name: aap-operator
-  namespace: aap-operator-system
 spec:
   # List of namespaces to watch for operator-managed resources (i.e. AnsibleAutomationPlatform CRs).
   targetNamespaces:
@@ -13,7 +12,6 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: aap-operator
-  namespace: aap-operator-system
 spec:
   channel: 'stable-2.5'
   installPlanApproval: Automatic
@@ -29,5 +27,4 @@ data:
 kind: Secret
 metadata:
   name: redhat-operators-pull-secret
-  namespace: aap-operator-system
 type: kubernetes.io/dockerconfigjson

@@ -3,7 +3,6 @@ apiVersion: aap.ansible.com/v1alpha1
 kind: AnsibleAutomationPlatform
 metadata:
   name: aap
-  namespace: aap
   annotations:
     argocd.argoproj.io/sync-wave: "1"  # After the namespace and operator are created.
 spec:
