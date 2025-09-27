@@ -44,10 +44,10 @@ spec:
             pod-security.kubernetes.io/enforce: privileged
             pod-security.kubernetes.io/audit: privileged
             pod-security.kubernetes.io/warn: privileged
-  templatePatch: |
-    {{- if eq .path.basename "ansible-automation-platform" }}
-    spec:
-      syncPolicy:
-        syncOptions:
-          - SkipDryRunOnMissingResource=true
-    {{ end }}
+  # templatePatch: |
+  #   {{- if eq .path.basename "ansible-automation-platform" }}
+  #   spec:
+  #     syncPolicy:
+  #       syncOptions:
+  #         - SkipDryRunOnMissingResource=true
+  #   {{ end }}
