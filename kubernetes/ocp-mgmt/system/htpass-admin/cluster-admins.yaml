@@ -5,6 +5,7 @@
 # https://docs.redhat.com/en/documentation/red_hat_openshift_gitops/1.14/html/access_control_and_user_management/configuring-sso-for-argo-cd-using-dex#gitops-dex-role-mappings_configuring-sso-for-argo-cd-using-dex
 
 # Create cluster-admins group and add the "admin" user to that group.
+---
 apiVersion: user.openshift.io/v1
 kind: Group
 metadata:
