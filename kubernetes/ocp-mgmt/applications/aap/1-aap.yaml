@@ -13,7 +13,7 @@ spec:
   controller:
     disabled: false
   eda:
-    disabled: true
+    disabled: false
   hub:
     disabled: false
     ## Modify to contain your RWM storage class name
