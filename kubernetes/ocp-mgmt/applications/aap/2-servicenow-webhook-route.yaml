@@ -1,0 +1,17 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: servicenow-webhook
+spec:
+  path: /
+  to:
+    name: servicenow-webhook
+    weight: 100
+    kind: Service
+  host: 'servicenow-webhook-aap.apps.ocp-mgmt.rh-lab.morey.tech'
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  port:
+    targetPort: servicenow-webhook-5001
+  
