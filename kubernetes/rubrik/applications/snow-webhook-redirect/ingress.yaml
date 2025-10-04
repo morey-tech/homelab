@@ -30,7 +30,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
     nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
     nginx.ingress.kubernetes.io/ssl-passthrough: "false"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     # Enable External DNS for this Ingress.
     external-dns.alpha.kubernetes.io/include: 'true'
     # Set the target to the cluster apex domain.
@@ -48,6 +48,8 @@ spec:
         backend:
           service:
             name: snow-webhook
+            port:
+              number: 443
   tls:
   - hosts:
     - snow-webhook.morey.tech
