@@ -17,6 +17,8 @@ spec:
         backend:
           service:
             name: snow-webhook
+            port:
+              number: 443
   tls:
     - hosts:
         - snow-webhook.rubrik.lab.home.morey.tech
