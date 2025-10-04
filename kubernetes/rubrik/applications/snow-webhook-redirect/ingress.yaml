@@ -5,6 +5,8 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/upstream-vhost: "servicenow-webhook-aap.apps.ocp-mgmt.rh-lab.morey.tech"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     nginx.ingress.kubernetes.io/whitelist-source-range: "127.0.0.1/32,192.168.0.0/16,10.8.0.0/16" # Forbid access from external networks
 spec:
   ingressClassName: ingress-nginx-internal
@@ -33,6 +35,7 @@ metadata:
     nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
     nginx.ingress.kubernetes.io/ssl-passthrough: "false"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/upstream-vhost: "servicenow-webhook-aap.apps.ocp-mgmt.rh-lab.morey.tech"
     # Enable External DNS for this Ingress.
     external-dns.alpha.kubernetes.io/include: 'true'
     # Set the target to the cluster apex domain.
