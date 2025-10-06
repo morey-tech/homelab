@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: snow-webhook
-spec:
-  type: ExternalName
-  externalName: servicenow-webhook-aap.apps.ocp-mgmt.rh-lab.morey.tech

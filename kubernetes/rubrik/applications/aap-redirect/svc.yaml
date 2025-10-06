@@ -14,7 +14,7 @@ spec:
 apiVersion: v1
 kind: Endpoints
 metadata:
-  name: external-ip
+  name: aap-ocp-mgmt-morey-tech
 subsets:
 - addresses:
   - ip: 192.168.6.91
