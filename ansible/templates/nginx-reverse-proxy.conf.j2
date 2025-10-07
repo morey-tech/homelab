@@ -1,0 +1,30 @@
+# Template for rubrik cluster with SSL passthrough
+stream {
+    upstream rubrik_backend {
+        server 192.168.3.20:80;
+        server 192.168.3.21:80;
+        server 192.168.3.22:80;
+    }
+
+    server {
+        listen 80;
+        proxy_pass rubrik_backend;
+
+        # Enable SNI (Server Name Indication) for HTTP passthrough
+        proxy_ssl_server_name off;
+    }
+
+    upstream rubrik_backend_ssl {
+        server 192.168.3.20:443;
+        server 192.168.3.21:443;
+        server 192.168.3.22:443;
+    }
+
+    server {
+        listen 443;
+        proxy_pass rubrik_backend_ssl;
+
+        # Enable SNI (Server Name Indication) for SSL passthrough
+        proxy_ssl_server_name on;
+    }
+}

@@ -1,0 +1,106 @@
+---
+- name: Create dns LXC
+  hosts:
+    - reverse-proxy.lab.morey.tech
+  gather_facts: false  # Hosts aren't available, since this playbook creates them.
+  become: true
+  vars:
+    storage: "storage-pve"  # Adjust to your storage name
+    template_name: "debian-12-standard_12.12-1_amd64.tar.zst"
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
+
+  tasks:
+    - name: Download LXC OS template to Proxmox storage
+      community.general.proxmox_template:
+        <<: *pve_api
+        node: "{{ pve_node }}"
+        storage: "{{ storage }}"
+        content_type: "vztmpl"
+        template: "{{ template_name }}"
+        state: present
+      delegate_to: localhost
+
+    - name: Create LXC container
+      community.general.proxmox:
+        <<: *pve_api
+        node: "{{ pve_node }}"
+        vmid: "{{ pve_vm_id }}"
+        hostname: "{{ inventory_hostname_short }}"
+        ostemplate: "{{ storage }}:vztmpl/{{ template_name }}"
+        memory: 2048
+        cores: 2
+        disk_volume:
+          storage: local-nvme
+          size: 24
+        netif: '{"net0":"name=eth0,hwaddr={{ mac_address }},ip={{ ip_address }}/{{ net_prefix }},gw={{ gateway_ip }},bridge=vmbr0,tag={{ vlan_tag }}"}'
+        nameserver: "{{ gateway_ip }}"
+        searchdomain: "{{ cluster_dns_zone }}"
+        pubkey: "{{ ssh_authorized_keys }}"
+        features: # Fix slow login
+          - nesting=1
+        state: present
+      delegate_to: localhost
+
+    - name: Create DHCP static mapping
+      pfsensible.core.pfsense_dhcp_static:
+        netif: "{{ pfsense_int }}"
+        hostname: "{{ inventory_hostname_short }}"
+        macaddr: "{{ mac_address }}"
+        ipaddr: "{{ ip_address }}"
+        ddnsdomainkeyalgorithm: "hmac-md5"  # fixes diff.
+        state: present
+      # become: false
+      delegate_to: pfsense.home.morey.tech
+
+    - name: Start LXC container
+      community.general.proxmox:
+        <<: *pve_api
+        vmid: "{{ pve_vm_id }}"
+        state: started
+      delegate_to: localhost
+
+    - name: Add LXC container to inventory
+      ansible.builtin.add_host:
+        name: "{{ inventory_hostname_short }}.{{ cluster_dns_zone }}"
+        ansible_host: "{{ ip_address }}"
+        ansible_user: root
+      changed_when: false
+
+    # add ansible tasks to install and configure nginx as a reverse proxy
+    - name: Wait for SSH to come up
+      ansible.builtin.wait_for:
+        host: "{{ ip_address }}"
+        port: 22
+        timeout: 300
+
+    - name: Install Nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: true
+
+    - name: Configure Nginx as a reverse proxy using blockinfile
+      ansible.builtin.blockinfile:
+        path: /etc/nginx/nginx.conf
+        block: "{{ lookup('template', 'nginx-reverse-proxy.conf.j2') }}"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - Rubrik Reverse Proxy Configuration"
+      notify:
+        - Reload Nginx
+
+    - name: Ensure default site is disabled
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify:
+        - Reload Nginx
+
+  handlers:
+    - name: Reload Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+      become: true

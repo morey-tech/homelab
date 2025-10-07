@@ -14,7 +14,7 @@ spec:
 apiVersion: v1
 kind: Endpoints
 metadata:
-  name: aap-ocp-mgmt-morey-tech
+  name: aap-ocp-mgmt-morey-tech  # Must match Service name.
 subsets:
 - addresses:
   - ip: 192.168.6.91
