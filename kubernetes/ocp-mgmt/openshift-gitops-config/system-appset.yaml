@@ -50,4 +50,6 @@ spec:
       ignoreDifferences:
         - kind: Secret
           namespace: openshift-authentication
+          jsonPointers:
+            - /
     {{ end }}
