@@ -8,11 +8,3 @@ kind: Secret
 metadata:
   name: login-template
   namespace: openshift-config
-  # OpenShift copies this secret to openshift-authentication namespace.
-  # Resulting in the status: OutOfSync (This resource is not present 
-  #   in the application's source. It will be deleted from Kubernetes
-  #   if the prune option is enabled during sync.)
-  # Fix this by telling ArgoCD to ignore extraneous resources.
-  annotations:
-    argocd.argoproj.io/compare-options: IgnoreExtraneous
-    argocd.argoproj.io/sync-options: Prune=false
