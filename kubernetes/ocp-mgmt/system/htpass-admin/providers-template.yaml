@@ -15,3 +15,4 @@ metadata:
   # Fix this by telling ArgoCD to ignore extraneous resources.
   annotations:
     argocd.argoproj.io/compare-options: IgnoreExtraneous
+    argocd.argoproj.io/sync-options: Prune=false
