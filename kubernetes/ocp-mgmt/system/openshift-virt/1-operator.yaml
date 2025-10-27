@@ -1,0 +1,26 @@
+### https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/virtualization/installing#virt-subscribing-cli_installing-virt
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: openshift-cnv
+#   labels:
+#     openshift.io/cluster-monitoring: "true"
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: kubevirt-hyperconverged-group
+spec:
+  targetNamespaces:
+    - openshift-cnv
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: hco-operatorhub
+spec:
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  name: kubevirt-hyperconverged
+  startingCSV: kubevirt-hyperconverged-operator.v4.18.17
+  channel: "stable"
