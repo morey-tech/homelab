@@ -25,8 +25,8 @@ RUN pip3 install -r /tmp/requirements.txt
 
 # Install `oc` and `kubectl`
 ENV OC_VERSION=4.17.0-okd-scos.0
-RUN wget https://github.com/openshift/okd/releases/download/${OC_VERSION}/openshift-client-linux-arm64-${OC_VERSION}.tar.gz \
-    && tar -xvf openshift-client-linux-arm64-${OC_VERSION}.tar.gz \
+RUN wget https://github.com/openshift/okd/releases/download/${OC_VERSION}/openshift-client-linux-${OC_VERSION}.tar.gz \
+    && tar -xvf openshift-client-linux-${OC_VERSION}.tar.gz \
     && mv oc kubectl /usr/local/bin/
 
 ENV KUBECTX_VERSION=v0.9.5
