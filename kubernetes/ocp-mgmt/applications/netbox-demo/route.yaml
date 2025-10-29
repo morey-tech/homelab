@@ -1,0 +1,14 @@
+# Create a route pointing to the NetBox service.
+# This route allows external access to the NetBox application.
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: netbox
+spec:
+  host: netbox-netbox.apps.ocp-mgmt.rh-lab.morey.tech
+  path: /
+  to:
+    kind: Service
+    name: netbox
+  port:
+    targetPort: http
