@@ -3,12 +3,12 @@
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
-  name: netbox
+  name: netbox-demo
 spec:
-  host: netbox-netbox.apps.ocp-mgmt.rh-lab.morey.tech
+  host: netbox-demo.apps.ocp-mgmt.rh-lab.morey.tech
   path: /
   to:
     kind: Service
-    name: netbox
+    name: netbox-demo
   port:
     targetPort: http

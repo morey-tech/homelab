@@ -1,6 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: netbox
+namespace: netbox-demo
 
 # Add the route for NetBox.
 resources:
@@ -10,8 +10,8 @@ resources:
 helmCharts:
 - includeCRDs: true
   name: netbox
-  namespace: netbox
-  releaseName: netbox
+  namespace: netbox-demo
+  releaseName: netbox-demo
   repo: https://charts.netbox.oss.netboxlabs.com/
   version: 6.0.59
 
