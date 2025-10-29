@@ -1,0 +1,174 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/instance: netbox-demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: netbox
+    app.kubernetes.io/version: v4.3.4
+    helm.sh/chart: netbox-6.0.59
+  name: netbox-demo-worker
+  namespace: netbox-demo
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: worker
+      app.kubernetes.io/instance: netbox-demo
+      app.kubernetes.io/name: netbox
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: 91fb31f677ed9b45da897a4d6aad10f0a618f9efd15ea24882d76e8ef5faf252
+        checksum/secret: 74eed581cc4f14dc6cd9cbd845071dcd1b75e073164483cdbba11ec0b0e909dd
+      labels:
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/instance: netbox-demo
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: netbox
+        app.kubernetes.io/version: v4.3.4
+        helm.sh/chart: netbox-6.0.59
+    spec:
+      automountServiceAccountToken: true
+      containers:
+      - command:
+        - /opt/netbox/venv/bin/python
+        - /opt/netbox/netbox/manage.py
+        - rqworker
+        image: ghcr.io/netbox-community/netbox:v4.3.4
+        imagePullPolicy: IfNotPresent
+        name: netbox-worker
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+          seLinuxOptions: {}
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - mountPath: /etc/netbox/config/configuration.py
+          name: config
+          readOnly: true
+          subPath: configuration.py
+        - mountPath: /run/config/netbox
+          name: config
+          readOnly: true
+        - mountPath: /run/secrets/netbox
+          name: secrets
+          readOnly: true
+        - mountPath: /tmp
+          name: netbox-tmp
+        - mountPath: /opt/netbox/netbox/media
+          name: media
+          readOnly: false
+          subPath: ''
+      initContainers:
+      - args:
+        - 'deployment=${DEPLOYMENT_NAME:?deployment name is missing}
+
+          return_code=0
+
+
+          echo "Waiting for deployment \"${deployment}\" to be successfully rolled
+          out..."
+
+          kubectl rollout status deployment "$deployment" 2>&1 || return_code=$?
+
+          echo "Rollout exit code: ''${return_code}''"
+
+          exit $return_code
+
+          '
+        command:
+        - /bin/bash
+        - -ec
+        env:
+        - name: DEPLOYMENT_NAME
+          value: netbox-demo
+        image: docker.io/bitnami/kubectl:1.33.3-debian-12-r1
+        imagePullPolicy: IfNotPresent
+        name: wait-for-backend
+        resources:
+          limits:
+            cpu: 150m
+            ephemeral-storage: 2Gi
+            memory: 192Mi
+          requests:
+            cpu: 100m
+            ephemeral-storage: 50Mi
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1001
+          runAsNonRoot: true
+          runAsUser: 1001
+          seLinuxOptions: {}
+          seccompProfile:
+            type: RuntimeDefault
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      serviceAccountName: netbox-demo
+      volumes:
+      - configMap:
+          name: netbox-demo
+        name: config
+      - name: secrets
+        projected:
+          sources:
+          - secret:
+              items:
+              - key: secret_key
+                path: secret_key
+              name: netbox-demo-config
+          - secret:
+              items:
+              - key: email_password
+                path: email_password
+              name: netbox-demo-config
+          - secret:
+              items:
+              - key: password
+                path: superuser_password
+              - key: api_token
+                path: superuser_api_token
+              name: netbox-demo-superuser
+          - secret:
+              items:
+              - key: password
+                path: db_password
+              name: netbox-demo-postgresql
+          - secret:
+              items:
+              - key: valkey-password
+                path: tasks_password
+              name: netbox-demo-valkey
+          - secret:
+              items:
+              - key: valkey-password
+                path: cache_password
+              name: netbox-demo-valkey
+      - emptyDir:
+          medium: Memory
+        name: netbox-tmp
+      - name: media
+        persistentVolumeClaim:
+          claimName: netbox-demo-media
+          readOnly: false

@@ -1,0 +1,84 @@
+apiVersion: v1
+data:
+  configuration.py: "\n\"\"\"\nThis file serves as a base configuration for Netbox\n\
+    https://netboxlabs.com/docs/netbox/en/stable/configuration/\n\"\"\"\n\nimport\
+    \ os\nimport re\nfrom pathlib import Path\n\nimport yaml\n\n\ndef _deep_merge(source,\
+    \ destination):\n    \"\"\"Inspired by https://stackoverflow.com/a/20666342\"\"\
+    \"\n    for key, value in source.items():\n        dst_value = destination.get(key)\n\
+    \n        if isinstance(value, dict) and isinstance(dst_value, dict):\n      \
+    \      _deep_merge(value, dst_value)\n        else:\n            destination[key]\
+    \ = value\n\n    return destination\n\n\ndef _load_yaml() -> None:\n    \"\"\"\
+    Load YAML from files\"\"\"\n    extra_config_base = Path(\"/run/config/extra\"\
+    )\n    config_files = [Path(\"/run/config/netbox/netbox.yaml\")]\n\n    config_files.extend(sorted(extra_config_base.glob(\"\
+    */*.yaml\")))\n\n    for config_file in config_files:\n        with open(config_file,\
+    \ \"r\", encoding=\"utf-8\") as f:\n            config = yaml.safe_load(f)\n \
+    \       _deep_merge(config, globals())\n\n\ndef _read_secret(secret_name: str,\
+    \ secret_key: str, default: str | None = None) -> str | None:\n    \"\"\"Read\
+    \ secret from file\"\"\"\n    try:\n        secret = open(\n            f\"/run/secrets/{secret_name}/{secret_key}\"\
+    ,\n            \"r\",\n            encoding=\"utf-8\",\n        )\n    except\
+    \ EnvironmentError:\n        return default\n    with secret:\n        return\
+    \ secret.readline().strip()\n\n\nCORS_ORIGIN_REGEX_WHITELIST = []\nDATABASES =\
+    \ {}\nEMAIL = {}\nREDIS = {}\n\n_load_yaml()\n\nprovided_secret_name = os.getenv(\"\
+    SECRET_NAME\", \"netbox\")\n\nDATABASES[\"default\"][\"PASSWORD\"] = _read_secret(provided_secret_name,\
+    \ \"db_password\")\nEMAIL[\"PASSWORD\"] = _read_secret(provided_secret_name, \"\
+    email_password\")\nREDIS[\"tasks\"][\"PASSWORD\"] = _read_secret(provided_secret_name,\
+    \ \"tasks_password\")\nREDIS[\"caching\"][\"PASSWORD\"] = _read_secret(provided_secret_name,\
+    \ \"cache_password\")\nSECRET_KEY = _read_secret(provided_secret_name, \"secret_key\"\
+    )\n\n# Post-process certain values\nCORS_ORIGIN_REGEX_WHITELIST = [re.compile(r)\
+    \ for r in CORS_ORIGIN_REGEX_WHITELIST]\nif \"SENTINELS\" in REDIS[\"tasks\"]:\n\
+    \    REDIS[\"tasks\"][\"SENTINELS\"] = [tuple(x.split(r\":\")) for x in REDIS[\"\
+    tasks\"][\"SENTINELS\"]]\nif \"SENTINELS\" in REDIS[\"caching\"]:\n    REDIS[\"\
+    caching\"][\"SENTINELS\"] = [tuple(x.split(r\":\")) for x in REDIS[\"caching\"\
+    ][\"SENTINELS\"]]\nif ALLOWED_HOSTS_INCLUDES_POD_ID:\n    ALLOWED_HOSTS.append(os.getenv(\"\
+    POD_IP\"))"
+  netbox.yaml: "ALLOWED_HOSTS: [\"*\"]\nALLOWED_HOSTS_INCLUDES_POD_ID: true\n\nDATABASES:\n\
+    \  default:\n    HOST: \"netbox-demo-postgresql\"\n    USER: \"netbox\"\n    NAME:\
+    \ \"netbox\"\n    PORT: 5432\n    ENGINE: \"django.db.backends.postgresql\"\n\
+    \    OPTIONS:\n      sslmode: prefer\n      target_session_attrs: read-write\n\
+    \    CONN_MAX_AGE: 300\n    DISABLE_SERVER_SIDE_CURSORS: false\n\nADMINS: []\n\
+    ALLOW_TOKEN_RETRIEVAL: false\nAUTH_PASSWORD_VALIDATORS: []\nALLOWED_URL_SCHEMES:\
+    \ [\"file\",\"ftp\",\"ftps\",\"http\",\"https\",\"irc\",\"mailto\",\"sftp\",\"\
+    ssh\",\"tel\",\"telnet\",\"tftp\",\"vnc\",\"xmpp\"]\nBANNER_TOP: \"\"\nBANNER_BOTTOM:\
+    \ \"\"\nBANNER_LOGIN: \"\"\nBASE_PATH: \"\"\nCHANGELOG_RETENTION: 90\nCUSTOM_VALIDATORS:\
+    \ {}\nDEFAULT_USER_PREFERENCES: {}\nCORS_ORIGIN_ALLOW_ALL: false\nCORS_ORIGIN_WHITELIST:\
+    \ []\nCORS_ORIGIN_REGEX_WHITELIST: []\nCSRF_TRUSTED_ORIGINS: []\nDATA_UPLOAD_MAX_MEMORY_SIZE:\
+    \ 2621440\nDEBUG: false\nDEFAULT_LANGUAGE: \"en-us\"\n\nEMAIL:\n  SERVER: \"localhost\"\
+    \n  PORT: 25\n  USERNAME: \"\"\n  USE_SSL: false\n  USE_TLS: false\n  SSL_CERTFILE:\
+    \ \"\"\n  SSL_KEYFILE: \"\"\n  TIMEOUT: 10\n  FROM_EMAIL: \"\"\n\nENFORCE_GLOBAL_UNIQUE:\
+    \ true\nEXEMPT_VIEW_PERMISSIONS: []\nFIELD_CHOICES: {}\nFILE_UPLOAD_MAX_MEMORY_SIZE:\
+    \ 2621440\nGRAPHQL_ENABLED: true\nHTTP_PROXIES: {}\nINTERNAL_IPS: [\"127.0.0.1\"\
+    ,\"::1\"]\nJOB_RETENTION: 90\nLOGGING: {}\nLOGIN_PERSISTENCE: false\nLOGIN_REQUIRED:\
+    \ false\nLOGIN_TIMEOUT: 1209600\nLOGOUT_REDIRECT_URL: \"home\"\nMAINTENANCE_MODE:\
+    \ false\nMAPS_URL: \"https://maps.google.com/?q=\"\nMAX_PAGE_SIZE: 1000\nMEDIA_ROOT:\
+    \ /opt/netbox/netbox/media\nSTORAGES: {}\nMETRICS_ENABLED: false\nPAGINATE_COUNT:\
+    \ 50\nPLUGINS: []\nPLUGINS_CONFIG: {}\nPOWERFEED_DEFAULT_AMPERAGE: 15\nPOWERFEED_DEFAULT_MAX_UTILIZATION:\
+    \ 80\nPOWERFEED_DEFAULT_VOLTAGE: 120\nPREFER_IPV4: false\nRACK_ELEVATION_DEFAULT_UNIT_HEIGHT:\
+    \ 22\nRACK_ELEVATION_DEFAULT_UNIT_WIDTH: 220\nREMOTE_AUTH_ENABLED: false\nREMOTE_AUTH_BACKEND:\
+    \ [\"netbox.authentication.RemoteUserBackend\"]\nREMOTE_AUTH_HEADER: \"HTTP_REMOTE_USER\"\
+    \nREMOTE_AUTH_USER_FIRST_NAME: \"HTTP_REMOTE_USER_FIRST_NAME\"\nREMOTE_AUTH_USER_LAST_NAME:\
+    \ \"HTTP_REMOTE_USER_LAST_NAME\"\nREMOTE_AUTH_USER_EMAIL: \"HTTP_REMOTE_USER_EMAIL\"\
+    \nREMOTE_AUTH_AUTO_CREATE_USER: false\nREMOTE_AUTH_AUTO_CREATE_GROUPS: false\n\
+    REMOTE_AUTH_DEFAULT_GROUPS: []\nREMOTE_AUTH_DEFAULT_PERMISSIONS: {}\nREMOTE_AUTH_GROUP_SYNC_ENABLED:\
+    \ false\nREMOTE_AUTH_GROUP_HEADER: \"HTTP_REMOTE_USER_GROUP\"\nREMOTE_AUTH_SUPERUSER_GROUPS:\
+    \ []\nREMOTE_AUTH_SUPERUSERS: []\nREMOTE_AUTH_STAFF_GROUPS: []\nREMOTE_AUTH_STAFF_USERS:\
+    \ []\nREMOTE_AUTH_GROUP_SEPARATOR: \"|\"\nRELEASE_CHECK_URL: \"\"\n\nREDIS:\n\
+    \  tasks:\n    HOST: \"netbox-demo-valkey-primary\"\n    PORT: 6379\n    USERNAME:\
+    \ \"\"\n    DATABASE: 0\n    SSL: false\n    INSECURE_SKIP_TLS_VERIFY: false\n\
+    \    CA_CERT_PATH: \"\"\n  caching:\n    HOST: \"netbox-demo-valkey-primary\"\n\
+    \    PORT: 6379\n    USERNAME: \"\"\n    DATABASE: 1\n    SSL: false\n    INSECURE_SKIP_TLS_VERIFY:\
+    \ false\n    CA_CERT_PATH: \"\"\n\nREPORTS_ROOT: /opt/netbox/netbox/reports\n\
+    RQ_DEFAULT_TIMEOUT: 300\nSCRIPTS_ROOT: /opt/netbox/netbox/scripts\nCSRF_COOKIE_NAME:\
+    \ \"csrftoken\"\nSESSION_COOKIE_NAME: sessionid\nENABLE_LOCALIZATION: false\n\
+    TIME_ZONE: \"UTC\"\nDATE_FORMAT: \"N j, Y\"\nSHORT_DATE_FORMAT: \"Y-m-d\"\nTIME_FORMAT:\
+    \ \"g:i a\"\nSHORT_TIME_FORMAT: \"H:i:s\"\nDATETIME_FORMAT: \"N j, Y g:i a\"\n\
+    SHORT_DATETIME_FORMAT: \"Y-m-d H:i\""
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: netbox-demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: netbox
+    app.kubernetes.io/version: v4.3.4
+    helm.sh/chart: netbox-6.0.59
+  name: netbox-demo
+  namespace: netbox-demo

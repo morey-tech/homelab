@@ -1,0 +1,44 @@
+apiVersion: v1
+data:
+  start-primary.sh: "#!/bin/bash\n\n[[ -f $VALKEY_PASSWORD_FILE ]] && export VALKEY_PASSWORD=\"\
+    $(< \"${VALKEY_PASSWORD_FILE}\")\"\nif [[ -f /opt/bitnami/valkey/mounted-etc/primary.conf\
+    \ ]];then\n    cp /opt/bitnami/valkey/mounted-etc/primary.conf /opt/bitnami/valkey/etc/primary.conf\n\
+    fi\nif [[ -f /opt/bitnami/valkey/mounted-etc/valkey.conf ]];then\n    cp /opt/bitnami/valkey/mounted-etc/valkey.conf\
+    \ /opt/bitnami/valkey/etc/valkey.conf\nfi\nARGS=(\"--port\" \"${VALKEY_PORT}\"\
+    )\nARGS+=(\"--requirepass\" \"${VALKEY_PASSWORD}\")\nARGS+=(\"--primaryauth\"\
+    \ \"${VALKEY_PASSWORD}\")\nARGS+=(\"--include\" \"/opt/bitnami/valkey/etc/valkey.conf\"\
+    )\nARGS+=(\"--include\" \"/opt/bitnami/valkey/etc/primary.conf\")\nexec valkey-server\
+    \ \"${ARGS[@]}\"\n"
+  start-replica.sh: "#!/bin/bash\n\nget_port() {\n    hostname=\"$1\"\n    type=\"\
+    $2\"\n\n    port_var=$(echo \"${hostname^^}_SERVICE_PORT_$type\" | sed \"s/-/_/g\"\
+    )\n    port=${!port_var}\n\n    if [ -z \"$port\" ]; then\n        case $type\
+    \ in\n            \"SENTINEL\")\n                echo 26379\n                ;;\n\
+    \            \"VALKEY\")\n                echo 6379\n                ;;\n    \
+    \    esac\n    else\n        echo $port\n    fi\n}\n\nget_full_hostname() {\n\
+    \    hostname=\"$1\"\n    full_hostname=\"${hostname}.${HEADLESS_SERVICE}\"\n\
+    \    echo \"${full_hostname}\"\n}\n\nVALKEYPORT=$(get_port \"$HOSTNAME\" \"VALKEY\"\
+    )\nHEADLESS_SERVICE=\"netbox-demo-valkey-headless.netbox-demo.svc.cluster.local\"\
+    \n\n[[ -f $VALKEY_PASSWORD_FILE ]] && export VALKEY_PASSWORD=\"$(< \"${VALKEY_PASSWORD_FILE}\"\
+    )\"\n[[ -f $VALKEY_PRIMARY_PASSWORD_FILE ]] && export VALKEY_PRIMARY_PASSWORD=\"\
+    $(< \"${VALKEY_PRIMARY_PASSWORD_FILE}\")\"\nif [[ -f /opt/bitnami/valkey/mounted-etc/replica.conf\
+    \ ]];then\n    cp /opt/bitnami/valkey/mounted-etc/replica.conf /opt/bitnami/valkey/etc/replica.conf\n\
+    fi\nif [[ -f /opt/bitnami/valkey/mounted-etc/valkey.conf ]];then\n    cp /opt/bitnami/valkey/mounted-etc/valkey.conf\
+    \ /opt/bitnami/valkey/etc/valkey.conf\nfi\n\necho \"\" >> /opt/bitnami/valkey/etc/replica.conf\n\
+    echo \"replica-announce-port $VALKEYPORT\" >> /opt/bitnami/valkey/etc/replica.conf\n\
+    echo \"replica-announce-ip $(get_full_hostname \"$HOSTNAME\")\" >> /opt/bitnami/valkey/etc/replica.conf\n\
+    ARGS=(\"--port\" \"${VALKEY_PORT}\")\nARGS+=(\"--replicaof\" \"${VALKEY_PRIMARY_HOST}\"\
+    \ \"${VALKEY_PRIMARY_PORT_NUMBER}\")\nARGS+=(\"--requirepass\" \"${VALKEY_PASSWORD}\"\
+    )\nARGS+=(\"--primaryauth\" \"${VALKEY_PRIMARY_PASSWORD}\")\nARGS+=(\"--include\"\
+    \ \"/opt/bitnami/valkey/etc/valkey.conf\")\nARGS+=(\"--include\" \"/opt/bitnami/valkey/etc/replica.conf\"\
+    )\nexec valkey-server \"${ARGS[@]}\"\n"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: netbox-demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/part-of: valkey
+    app.kubernetes.io/version: 8.1.3
+    helm.sh/chart: valkey-3.0.22
+  name: netbox-demo-valkey-scripts
+  namespace: netbox-demo
