@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: demo
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+        app.kubernetes.io/name: demo
+    spec:
+      containers:
+      - env:
+        - name: SUPERUSER_NAME
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: demo-superuser
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        image: nginx:latest
+        imagePullPolicy: IfNotPresent
+        # livenessProbe:
+        #   failureThreshold: 3
+        #   httpGet:
+        #     path: /status/applications/netbox/processes/running
+        #     port: nginx-status
+        #   initialDelaySeconds: 0
+        #   periodSeconds: 10
+        #   successThreshold: 1
+        #   timeoutSeconds: 1
+        name: netbox
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        # readinessProbe:
+        #   failureThreshold: 3
+        #   httpGet:
+        #     path: /login/
+        #     port: http
+        #   initialDelaySeconds: 0
+        #   periodSeconds: 10
+        #   successThreshold: 1
+        #   timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 750m
+            ephemeral-storage: 2Gi
+            memory: 1536Mi
+          requests:
+            cpu: 500m
+            ephemeral-storage: 50Mi
+            memory: 1024Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+          seLinuxOptions: {}
+          seccompProfile:
+            type: RuntimeDefault
+        # startupProbe:
+        #   failureThreshold: 100
+        #   httpGet:
+        #     path: /login/
+        #     port: http
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 10
+        #   successThreshold: 1
+        #   timeoutSeconds: 1
+        volumeMounts:
+        - mountPath: /etc/netbox/config/configuration.py
+          name: config
+          readOnly: true
+          subPath: configuration.py
+        - mountPath: /opt/netbox/netbox/media
+          name: media
+          subPath: ''
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      serviceAccountName: demo
+      volumes:
+      - configMap:
+          name: demo
+        name: config
+      - name: media
+        persistentVolumeClaim:
+          claimName: demo-media
