@@ -41,11 +41,8 @@ spec:
             ephemeral-storage: 50Mi
             memory: 1024Mi
         securityContext:
-          readOnlyRootFilesystem: true
+          readOnlyRootFilesystem: false
           runAsNonRoot: true
-          runAsGroup: 1000
-          runAsUser: 1000
-          seLinuxOptions: {}
         startupProbe:
           httpGet:
             path: /
@@ -78,8 +75,6 @@ spec:
           subPath: configuration.py
         - mountPath: /opt/media
           name: media
-      securityContext:
-        fsGroup: 1000
       serviceAccountName: demo
       volumes:
       - configMap:
