@@ -24,7 +24,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: status.podIP
-        image: nginx:latest
+        image: nginxinc/nginx-unprivileged:trixie-perl
         imagePullPolicy: IfNotPresent
         name: demo
         ports:
