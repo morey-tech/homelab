@@ -11,3 +11,4 @@ spec:
   selector:
     matchLabels:
       name: nfs-batch-job-file-storage
+  storageClassName: ''
