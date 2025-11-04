@@ -14,15 +14,41 @@ oauthConfig:
   <head>
     <title>ocp-mgmt - Login</title>
     <style type="text/css">
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
       body {
         font-family: "Open Sans", Helvetica, Arial, sans-serif;
-        font-size: 14px;
-        margin: 15px;
+        font-size: 16px;
+        margin: 20px;
+        background-color: #f7f7f7;
+      }
+      
+      .container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        width: 300px;
       }
 
-      input {
-        margin-bottom: 10px;
-        width: 300px;
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
       }
 
       .error {
@@ -32,35 +58,32 @@ oauthConfig:
     </style>
   </head>
   <body>
-    <h1>Welcome to the ocp-mgmt Cluster</h1>
+    <div class="container">
+      <h1>Log into the ocp-mgmt Cluster</h1>
 
-    {{ if .Error }}
-      <div class="error">{{ .Error }}</div>
-      <!-- Error code: {{ .ErrorCode }} -->
-    {{ end }}
+      {{ if .Error }}
+        <div class="error">{{ .Error }}</div>
+        <!-- Error code: {{ .ErrorCode }} -->
+      {{ end }}
 
-    <!-- Identity provider name: {{ .ProviderName }} -->
-    <form action="{{ .Action }}" method="POST">
-      <input type="hidden" name="{{ .Names.Then }}" value="{{ .Values.Then }}">
-      <input type="hidden" name="{{ .Names.CSRF }}" value="{{ .Values.CSRF }}">
+      <form action="{{ .Action }}" method="POST">
+        <input type="hidden" name="{{ .Names.Then }}" value="{{ .Values.Then }}">
+        <input type="hidden" name="{{ .Names.CSRF }}" value="{{ .Values.CSRF }}">
+        
+        <div class="form-group">
+          <label for="inputUsername">Username</label>
+          <input type="text" id="inputUsername" autofocus="autofocus" type="text" name="{{ .Names.Username }}" value="{{ .Values.Username }}">
+        </div>
 
-      <div>
-        <label for="inputUsername">Username</label>
-      </div>
-      <div>
-        <input type="text" id="inputUsername" autofocus="autofocus" type="text" name="{{ .Names.Username }}" value="{{ .Values.Username }}">
-      </div>
+        <div class="form-group">
+          <label for="inputPassword">Password</label>
+          <input type="password" id="inputPassword" type="password" name="{{ .Names.Password }}" value="">
+        </div>
 
-      <div>
-        <label for="inputPassword">Password</label>
-      </div>
-      <div>
-        <input type="password" id="inputPassword" type="password" name="{{ .Names.Password }}" value="">
-      </div>
+        <button type="submit">Log In</button>
 
-      <button type="submit">Log In</button>
-
-    </form>
+      </form>
+    </div>
 
   </body>
 </html>
