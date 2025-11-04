@@ -59,7 +59,7 @@ spec:
        app: toolbox2
    spec:
      securityContext:
-       supplementalGroups: [1000620001]
+       supplementalGroups: [1000930001]
        seLinuxOptions:
            level: s0:c25,c10
      containers:
@@ -68,4 +68,4 @@ spec:
        ports:
        - containerPort: 2000
        securityContext:
-           runAsUser: 1000620001
+           runAsUser: 1000930001
