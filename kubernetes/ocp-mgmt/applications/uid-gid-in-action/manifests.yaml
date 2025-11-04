@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: myapp
+ labels:
+   app: myapp
+spec:
+ replicas: 3
+ selector:
+   matchLabels:
+     app: myapp
+ template:
+   metadata:
+     labels:
+       app: myapp
+   spec:
+     containers:
+     - name: podcool
+       image: quay.io/wcaban/podcool
+       ports:
+       - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: toolbox
+ labels:
+   app: toolbox
+spec:
+ replicas: 3
+ selector:
+   matchLabels:
+     app: toolbox
+ template:
+   metadata:
+     labels:
+       app: toolbox
+   spec:
+     containers:
+     - name: net-toolbox
+       image: quay.io/wcaban/net-toolbox
+       ports:
+       - containerPort: 2000
