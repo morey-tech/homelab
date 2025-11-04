@@ -41,3 +41,31 @@ spec:
        image: quay.io/wcaban/net-toolbox
        ports:
        - containerPort: 2000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: toolbox2
+ labels:
+   app: toolbox2
+spec:
+ replicas: 3
+ selector:
+   matchLabels:
+     app: toolbox2
+ template:
+   metadata:
+     labels:
+       app: toolbox2
+   spec:
+     securityContext:
+       supplementalGroups: [1000620001]
+       seLinuxOptions:
+           level: s0:c25,c10
+     containers:
+     - name: net-toolbox
+       image: quay.io/wcaban/net-toolbox
+       ports:
+       - containerPort: 2000
+       securityContext:
+           runAsUser: 1000620001
