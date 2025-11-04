@@ -61,7 +61,7 @@ spec:
      securityContext:
        supplementalGroups: [1000930001]
        seLinuxOptions:
-           level: s0:c25,c10
+        level: s0:c31,c0
      containers:
      - name: net-toolbox
        image: quay.io/wcaban/net-toolbox
