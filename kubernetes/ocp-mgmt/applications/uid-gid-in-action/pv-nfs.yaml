@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-batch-job-file-storage
+spec:
+  capacity:
+    storage: 2Gi 
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    path: /storage-mass/ocp-mgmt/uid-gid-in-action/batch-job-file-storage
+    server: "192.168.3.19"
+  persistentVolumeReclaimPolicy: Retain
