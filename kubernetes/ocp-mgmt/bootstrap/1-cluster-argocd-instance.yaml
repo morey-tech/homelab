@@ -9,6 +9,11 @@ spec:
 
   # https://docs.redhat.com/en/documentation/red_hat_openshift_gitops/1.14/html/declarative_cluster_configuration/customizing-permissions-by-creating-aggregated-cluster-roles#aggregated-cluster-roles_customizing-permissions-by-creating-aggregated-cluster-roles
   aggregatedClusterRoles: true
+
+  # Enable web-based terminal/exec feature for pods
+  extraConfig:
+    exec.enabled: "true"
+    exec.shells: "bash,sh"
   
   applicationSet:
     resources:
@@ -71,6 +76,7 @@ spec:
     defaultPolicy: ""
     policy: |
       g, cluster-admins, role:admin
+      p, role:admin, exec, create, */*, allow
     scopes: '[groups]'
   redis:
     resources:

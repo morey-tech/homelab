@@ -13,3 +13,10 @@ rules:
       - '*'
     resources:
       - '*'
+  # Allow Argo CD to exec into pods.
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+    verbs:
+      - create
