@@ -21,15 +21,16 @@
             state: present
             update_cache: true
 
-        - name: Add Grafana GPG key
-          ansible.builtin.apt_key:
-            url: https://apt.grafana.com/gpg.key
-            state: present
-
         - name: Add Grafana repository
-          ansible.builtin.apt_repository:
-            repo: "deb https://apt.grafana.com stable main"
+          ansible.builtin.deb822_repository:
+            name: grafana
+            types: [deb]
+            uris: "https://apt.grafana.com"
+            suites: [stable]
+            components: [main]
+            signed_by: https://apt.grafana.com/gpg.key
             state: present
+            enabled: true
 
         - name: Update package cache
           ansible.builtin.apt:
