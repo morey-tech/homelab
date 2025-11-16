@@ -116,3 +116,7 @@ RUN echo 'source /etc/profile.d/bash_completion.sh' >> /etc/bash.bashrc \
 USER $USERNAME
 
 COPY .bash_aliases /home/$USERNAME/.bash_aliases
+
+# Install Ansible collections as non-root user
+WORKDIR /workspaces/homelab/ansible
+RUN ansible-galaxy collection install -r requirements.yml
