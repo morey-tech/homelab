@@ -24,5 +24,6 @@
 		]
 	  }
 	},
-	"remoteUser": "tecno"
+	"remoteUser": "tecno",
+	"postCreateCommand": "/workspaces/homelab/.devcontainer/postCreate.sh"
 }
