@@ -144,7 +144,7 @@
         static_network_config: "{{ static_network_config }}"
       register: newinfraenv
 
-    - name: Download Discovery ISO to ms-02
+    - name: Download Discovery ISO to ms-04
       ansible.builtin.get_url:
         url: "{{ newinfraenv.result.download_url }}"
         dest: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ cluster_id }}-discovery.iso"
@@ -160,7 +160,7 @@
     # Pause for user to boot host via USB. Press enter to continue.
     - name: Pause for USB boot
       ansible.builtin.pause:
-        prompt: "Write to ISO USB via ms-02, and boot each node. Press Enter to continue when all nodes are booted"
+        prompt: "Write to ISO USB via ms-04, and boot each node. Press Enter to continue when all nodes are booted"
 
     - name: Wait for the hosts to be ready
       rhpds.assisted_installer.wait_for_hosts:
