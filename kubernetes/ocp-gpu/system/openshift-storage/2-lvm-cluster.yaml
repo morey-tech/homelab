@@ -1,0 +1,20 @@
+apiVersion: lvm.topolvm.io/v1alpha1
+kind: LVMCluster
+metadata:
+  name: lvm-nvme0n1
+spec:
+  storage:
+    deviceClasses:
+      - deviceSelector:
+          paths:
+            - /dev/nvme0n1
+          forceWipeDevicesAndDestroyAllData: true
+        fstype: xfs
+        thinPoolConfig:
+          chunkSizeCalculationPolicy: Static
+          metadataSizeCalculationPolicy: Host
+          sizePercent: 90
+          name: thin-pool
+          overprovisionRatio: 10
+        name: lvm-nvme0n1-vg
+        default: true
