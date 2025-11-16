@@ -39,11 +39,11 @@ spec:
           args:
             - '--port=8000'
             - '--model=/model'
-            - '--served-model-name='
+            - '--served-model-name=Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf'
             - '--tensor-parallel-size=1'
-            - '--max-model-len=50000'
-            - '--dtype=auto'
-            - '--gpu-memory-utilization=0.90'
+            # - '--max-model-len=50000'
+            # - '--dtype=auto'
+            # - '--gpu-memory-utilization=0.90'
           resources:
             limits:
               cpu: '10'
