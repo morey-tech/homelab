@@ -55,3 +55,9 @@ spec:
       destination:
         namespace: nvidia-gpu-operator
     {{ end }}
+    {{- if eq .path.basename "openshift-pipelines" }}
+    spec:
+      destination:
+        namespace: openshift-operators
+    {{ end }}
+
