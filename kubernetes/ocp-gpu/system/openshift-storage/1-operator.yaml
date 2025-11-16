@@ -1,0 +1,23 @@
+# https://docs.redhat.com/en/documentation/openshift_container_platform/4.8/html/operators/understanding-operators#olm-operatorgroups-membership_olm-understanding-operatorgroups
+# If the CSV for the operator exists in the same namespace
+# as the OperatorGroup, then it will be included.
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-storage-operatorgroup
+spec:
+  # List of namespaces to watch for operator-managed resources (i.e. CRs, LVMCluster).
+  targetNamespaces:
+  - openshift-storage
+---
+# A subscription creates CSVs in it's namespace
+# and keeps them up to date by tracking a channel.
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: lvms-subscription
+spec:
+  installPlanApproval: Automatic
+  name: lvms-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace

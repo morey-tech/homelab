@@ -1,0 +1,19 @@
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+    - htpasswd:
+        fileData:
+          name: htpass-secret
+      mappingMethod: claim
+      name: htpasswd
+      type: HTPasswd
+  templates:
+    # error:  ## Not applicable to HTPasswd provider.
+    #     name: error-template
+    login:
+        name: login-template
+    providerSelection:
+        name: providers-template

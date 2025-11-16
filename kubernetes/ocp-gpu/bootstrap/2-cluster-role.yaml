@@ -1,0 +1,22 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-argocd-application-controller
+  labels: 
+    app.kubernetes.io/managed-by: cluster-argocd
+    argocd/aggregate-to-admin: 'true'
+rules:
+  # Allow Argo CD to manage all resources in the cluster.
+  - verbs:
+      - '*'
+    apiGroups:
+      - '*'
+    resources:
+      - '*'
+  # Allow Argo CD to exec into pods.
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+    verbs:
+      - create
