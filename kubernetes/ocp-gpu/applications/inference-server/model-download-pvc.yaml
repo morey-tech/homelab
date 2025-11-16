@@ -9,3 +9,5 @@ spec:
     requests:
       storage: 100Gi
   volumeMode: Filesystem
+  waitForFirstConsumer: false
+  
