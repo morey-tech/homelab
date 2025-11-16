@@ -1,0 +1,28 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: download-model
+spec:
+  params:
+    - description: Model to download.
+      name: MODEL
+      type: string
+  tasks:
+    - name: download-model
+      params:
+        - name: MODEL
+          value: $(params.MODEL)
+      taskRef:
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: download-model-hf
+          - name: namespace
+            value: inference-demo
+        resolver: cluster
+      workspaces:
+        - name: model
+          workspace: model
+  workspaces:
+    - name: model

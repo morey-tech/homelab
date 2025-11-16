@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inference-server
+  labels:
+    app: inference-server
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inference-server
+  template:
+    metadata:
+      labels:
+        app: inference-server
+    spec:
+      volumes:
+        - name: model-volume
+          persistentVolumeClaim:
+            claimName: models
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "2Gi"
+      serviceAccountName: default
+      containers:
+        - name: inference-server
+          image: 'registry.redhat.io/rhaiis/vllm-cuda-rhel9:latest'
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: VLLM_SERVER_DEV_MODE
+              value: '1'
+          command:
+            - python
+            - '-m'
+            - vllm.entrypoints.openai.api_server
+          args:
+            - '--port=8000'
+            - '--model=/model'
+            - '--served-model-name='
+            - '--tensor-parallel-size=1'
+            - '--max-model-len=50000'
+            - '--dtype=auto'
+            - '--gpu-memory-utilization=0.90'
+          resources:
+            limits:
+              cpu: '10'
+              nvidia.com/gpu: '1'
+              memory: 16Gi
+            requests:
+              cpu: '1'
+              memory: 6Gi
+              nvidia.com/gpu: '1'
+          volumeMounts:
+            - name: model-volume
+              mountPath: /model
+            - name: shm
+              mountPath: /dev/shm 
+      restartPolicy: Always
