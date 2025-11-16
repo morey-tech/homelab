@@ -1,0 +1,35 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: download-model-hf
+spec:
+  params:
+    - description: Model to download.
+      name: MODEL
+      type: string
+  steps:
+    - args:
+        - |-
+          echo "Clean models dir."
+          rm -rf $(workspaces.model.path)/*
+
+          echo "Create and sourc venv"
+          python -m venv my_env
+
+          source my_env/bin/activate
+          pip install -U "huggingface_hub==0.36.0"
+
+          echo Downloading Model
+
+          hf download $(params.MODEL) --local-dir=$(workspaces.model.path)
+
+          echo -----------------------------------
+      command:
+        - /bin/bash
+        - '-c'
+      computeResources: {}
+      image: 'registry.redhat.io/ubi8/python-312:latest'
+      name: download
+      workingDir: /workspace/model
+  workspaces:
+    - name: model
