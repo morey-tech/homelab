@@ -2,5 +2,7 @@
 kubeconfig.yml
 # Output from building kustomized helm charts.
 **/*/*/charts/*
+!kubernetes/helm
+kubernetes/helm/*/charts
 kubernetes/rubrik/system/external-secrets/bitwarden-secret.yaml
 **/*.htpasswd

@@ -15,7 +15,8 @@
 			"redhat.ansible",
 			"yzhang.markdown-all-in-one",
 			"ms-kubernetes-tools.vscode-kubernetes-tools",
-			"GitHub.vscode-pull-request-github"
+			"GitHub.vscode-pull-request-github",
+			"Anthropic.claude-code"
 		]
 	  }
 	},
