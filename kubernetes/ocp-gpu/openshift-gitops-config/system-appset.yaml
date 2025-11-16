@@ -50,3 +50,8 @@ spec:
       destination:
         namespace: openshift-nfd
     {{ end }}
+    {{- if eq .path.basename "nvidia-gpu-operator" }}
+    spec:
+      destination:
+        namespace: nvidia-gpu-operator
+    {{ end }}
