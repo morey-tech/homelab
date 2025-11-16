@@ -1,7 +1,7 @@
 resources:
-  - model-storage.yaml
-  - model-download-task.yaml
-  - model-download-pipeline.yaml
   # - inference-server-deploy.yaml
   # - inference-server-route.yaml
-  # - inference-server-service.yaml
+  # - inference-server-svc.yaml
+  - model-download-pipeline.yaml
+  - model-download-pvc.yaml
+  - model-download-task.yaml
