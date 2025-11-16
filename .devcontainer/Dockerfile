@@ -10,9 +10,15 @@ RUN groupmod -n $USERNAME vscode \
     && usermod -l $USERNAME vscode \
     && usermod -d /home/tecno -m tecno
 
+# Add GitHub CLI repository
+RUN mkdir -p -m 755 /etc/apt/keyrings \
+    && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+
 # Install packages, and clean  up apt.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y sudo libssl-dev libffi-dev python3-dev python3-pip iputils-ping dnsutils bash-completion apache2-utils tmux \
+    && apt-get install -y sudo libssl-dev libffi-dev python3-dev python3-pip iputils-ping dnsutils bash-completion apache2-utils tmux gh \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Add user to suders file.
