@@ -19,7 +19,7 @@ spec:
           source my_env/bin/activate
           pip install -U "huggingface_hub==0.36.0"
 
-          echo Downloading Model
+          echo Downloading Model: $(params.MODEL)
 
           hf download $(params.MODEL) --local-dir=$(workspaces.model.path)
 
