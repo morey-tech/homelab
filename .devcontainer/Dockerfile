@@ -92,6 +92,12 @@ RUN curl -L -o vcluster "https://github.com/loft-sh/vcluster/releases/download/$
     && install -c -m 0755 vcluster /usr/local/bin \
     && rm -f vcluster
 
+ENV OCM_VERSION=latest
+RUN curl -LO "https://developers.redhat.com/content-gateway/rest/browse/pub/cgw/ocm/${OCM_VERSION}/ocm_linux_amd64.zip" \
+    && unzip ocm_linux_amd64.zip \
+    && mv ocm /usr/local/bin/ \
+    && rm -rf ocm_linux_amd64.zip
+
 # Add aliases and such
 RUN echo 'source /etc/profile.d/bash_completion.sh' >> /etc/bash.bashrc \
     && echo 'alias k="kubectl"' >> /etc/bash.bashrc \
