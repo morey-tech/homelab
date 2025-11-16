@@ -4,6 +4,10 @@
 	"build": {
 		"dockerfile": "Dockerfile"
 	},
+	"runArgs": [
+		"--cap-add=NET_RAW",
+		"--network=host"
+	],
 	"customizations": {
 	  "vscode": {
 		"extensions": [
