@@ -19,5 +19,5 @@ oc create secret generic htpass-secret --from-file=htpasswd=ocp-mgmt.htpasswd -n
 
 Add htpasswd identity provider and cluster role binding for admin user.
 ```
-oc create -f ./system/htpass-admin
+oc apply -f ./system/htpass-admin
 ```
