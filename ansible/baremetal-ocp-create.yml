@@ -28,13 +28,13 @@
 
         - name: Delete Existing Discovery ISOs
           ansible.builtin.file:
-            path: "/mnt/pve/storage-pve/template/iso/{{ cluster_name }}-{{ item.id }}-discovery.iso"
+            path: "/tmp/{{ cluster_name }}-{{ item.id }}-discovery.iso"
             state: absent
           loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
           loop_control:
             label: "{{ item.name }}, {{ item.id }}"
           when: recreate
-          delegate_to: "{{ groups['pvems-nodes'][1] }}"  # Pick a host from the hypervisor group
+          delegate_to: "desktop-nick.home.morey.tech"  # Pick a host from the hypervisor group
 
         - name: Set cluster_id to existing installer
           ansible.builtin.set_fact:
@@ -132,6 +132,27 @@
     - name: Flush handlers
       ansible.builtin.meta: flush_handlers
 
+    - name: Create Discovery ISO
+      rhpds.assisted_installer.create_infra_env:
+        name: "{{ cluster_name }}-infra-env"
+        image_type: "{{ image_type }}"
+        cluster_id: "{{ cluster_id }}"
+        ssh_authorized_key: "{{ ssh_authorized_keys }}"
+        offline_token: "{{ rh_console_offline_token }}"
+        pull_secret: "{{ rh_console_pull_secret | to_json }}"
+        openshift_version: "{{ cluster_version }}"
+        static_network_config: "{{ static_network_config }}"
+      register: newinfraenv
+
+    - name: Download Discovery ISO to desktop-nick
+      ansible.builtin.get_url:
+        url: "{{ newinfraenv.result.download_url }}"
+        dest: "/tmp/{{ cluster_name }}-{{ cluster_id }}-discovery.iso"
+        mode: '0777'
+        force: true
+      delegate_to: "desktop-nick.home.morey.tech"  # Pick a host from the hypervisor group
+      register: download_discovery_iso
+
     - name: Print link to assisted installer
       ansible.builtin.debug:
         msg: "https://console.redhat.com/openshift/assisted-installer/clusters/{{ cluster_id }}"
@@ -139,7 +160,7 @@
     # Pause for user to boot host via USB. Press enter to continue.
     - name: Pause for USB boot
       ansible.builtin.pause:
-        prompt: "Download ISO, write to USB, and boot each node. Press Enter to continue when all nodes are booted"
+        prompt: "Write to ISO USB via desktop-nick, and boot each node. Press Enter to continue when all nodes are booted"
 
     - name: Wait for the hosts to be ready
       rhpds.assisted_installer.wait_for_hosts:

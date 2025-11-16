@@ -4,6 +4,10 @@
 	"build": {
 		"dockerfile": "Dockerfile"
 	},
+	"runArgs": [
+		"--cap-add=NET_RAW",
+		"--network=host"
+	],
 	"customizations": {
 	  "vscode": {
 		"extensions": [
@@ -15,9 +19,11 @@
 			"redhat.ansible",
 			"yzhang.markdown-all-in-one",
 			"ms-kubernetes-tools.vscode-kubernetes-tools",
-			"GitHub.vscode-pull-request-github"
+			"GitHub.vscode-pull-request-github",
+			"Anthropic.claude-code"
 		]
 	  }
 	},
-	"remoteUser": "tecno"
+	"remoteUser": "tecno",
+	"postCreateCommand": "/workspaces/homelab/.devcontainer/postCreate.sh"
 }
