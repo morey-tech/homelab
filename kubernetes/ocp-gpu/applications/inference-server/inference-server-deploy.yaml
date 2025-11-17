@@ -43,7 +43,7 @@ spec:
             - '--tensor-parallel-size=1'
             - '--max-model-len=25990' # Max context length for 2.38GB of remaining VRAM after model is loaded.
             - '--dtype=auto'
-            - '--gpu-memory-utilization=0.97'
+            - '--gpu-memory-utilization=0.90'
           resources:
             limits:
               cpu: '10'
