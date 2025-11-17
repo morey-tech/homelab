@@ -38,8 +38,8 @@ spec:
             - vllm.entrypoints.openai.api_server
           args:
             - '--port=8000'
-            - '--model=/model'
-            - '--served-model-name=Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf'
+            - '--model=/model/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf'
+            - '--served-model-name=Qwen3-Coder-30B-A3B-Instruct-Q4_K_M'
             - '--tensor-parallel-size=1'
             # - '--max-model-len=50000'
             # - '--dtype=auto'
