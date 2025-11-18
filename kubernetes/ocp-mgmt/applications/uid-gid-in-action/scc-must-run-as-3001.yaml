@@ -21,7 +21,7 @@ defaultAddCapabilities: null
 fsGroup:
   type: RunAsAny
 groups: []
-priority: null
+priority: 10
 readOnlyRootFilesystem: false
 requiredDropCapabilities:
   - KILL
