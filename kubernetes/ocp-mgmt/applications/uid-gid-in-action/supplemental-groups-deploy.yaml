@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: display-results
+  name: supplemental-groups-deploy
   labels:
     app: display-results
 spec:
