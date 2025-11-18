@@ -3,6 +3,24 @@ kind: ConfigMap
 metadata:
   name: model-download-config
 data:
+  # HuggingFace repository (required)
   MODEL_REPO: "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF"
+
+  # Specific file to download from repo (optional)
+  # If empty, downloads entire repo and uses repo name as model file
+  # If set, downloads only this file
   MODEL_FILE: "Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf"
+
+  # Generic served model name for API
   SERVED_MODEL_NAME: "local-llm"
+
+  # Examples:
+  # 1. Download entire repo:
+  #    MODEL_REPO: "RedHatAI/granite-3.1-8b-instruct-quantized.w4a16"
+  #    MODEL_FILE: ""
+  #    Result: Downloads whole repo, vLLM uses "granite-3.1-8b-instruct-quantized.w4a16"
+  #
+  # 2. Download specific file from repo:
+  #    MODEL_REPO: "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF"
+  #    MODEL_FILE: "Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf"
+  #    Result: Downloads specific file, vLLM uses "Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf"

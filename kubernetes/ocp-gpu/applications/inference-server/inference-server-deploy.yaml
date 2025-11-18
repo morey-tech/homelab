@@ -37,8 +37,22 @@ spec:
               pip install -U "huggingface_hub==1.1.4"
               echo -----------------------------------
 
-              echo "Downloading Model: $MODEL_REPO / $MODEL_FILE"
-              hf download $MODEL_REPO $MODEL_FILE --local-dir=/models
+              if [ -z "$MODEL_FILE" ]; then
+                # Download entire repo - extract model name from repo (part after /)
+                echo "Downloading entire repo: $MODEL_REPO"
+                hf download $MODEL_REPO --local-dir=/models
+                ACTUAL_MODEL_FILE=$(echo $MODEL_REPO | cut -d'/' -f2)
+                echo "Model file will be: $ACTUAL_MODEL_FILE"
+              else
+                # Download specific file from repo
+                echo "Downloading specific file: $MODEL_REPO / $MODEL_FILE"
+                hf download $MODEL_REPO $MODEL_FILE --local-dir=/models
+                ACTUAL_MODEL_FILE=$MODEL_FILE
+                echo "Model file will be: $ACTUAL_MODEL_FILE"
+              fi
+
+              # Write the actual model file name for main container to use
+              echo $ACTUAL_MODEL_FILE > /models/.model_file_name
               echo -----------------------------------
           env:
             - name: MODEL_REPO
@@ -62,11 +76,6 @@ spec:
           env:
             - name: VLLM_SERVER_DEV_MODE
               value: '1'
-            - name: MODEL_FILE
-              valueFrom:
-                configMapKeyRef:
-                  name: model-download-config
-                  key: MODEL_FILE
             - name: SERVED_MODEL_NAME
               valueFrom:
                 configMapKeyRef:
@@ -77,6 +86,10 @@ spec:
             - '-c'
           args:
             - |-
+              # Read the actual model file name written by init container
+              MODEL_FILE=$(cat /model/.model_file_name)
+              echo "Using model file: $MODEL_FILE"
+
               python -m vllm.entrypoints.openai.api_server \
                 --port=8000 \
                 --model=/model/$MODEL_FILE \
