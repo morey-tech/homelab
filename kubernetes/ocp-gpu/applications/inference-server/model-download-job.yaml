@@ -14,9 +14,7 @@ spec:
             - '-c'
           args:
             - |-
-              echo "Install `hg` CLI with PIP"
-              python -m venv hg_env
-              source hg_env/bin/activate
+              echo "Install hf CLI with PIP"
               pip install -U "huggingface_hub==1.1.4"
               echo -----------------------------------
 
