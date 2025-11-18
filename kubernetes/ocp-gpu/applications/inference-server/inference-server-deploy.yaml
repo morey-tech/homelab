@@ -65,6 +65,7 @@ spec:
                 configMapKeyRef:
                   name: model-download-config
                   key: MODEL_FILE
+                  optional: true
           volumeMounts:
             - name: model-volume
               mountPath: /models
