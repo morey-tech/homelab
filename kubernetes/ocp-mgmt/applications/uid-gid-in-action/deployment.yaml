@@ -1,28 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- name: myapp
- labels:
-   app: myapp
+  name: display-results
+  labels:
+    app: display-results
 spec:
- replicas: 3
- selector:
-   matchLabels:
-     app: myapp
- template:
-   metadata:
-     labels:
-       app: myapp
-   spec:
-     volumes:
-     - name: nfs-batch-job-file-storage
-       persistentVolumeClaim:
-         claimName: nfs-batch-job-file-storage
-     containers:
-     - name: podcool
-       image: quay.io/wcaban/podcool
-       ports:
-       - containerPort: 8080
-       volumeMounts:
-       - name: nfs-batch-job-file-storage
-         mountPath: "/mnt/nfs/batch-job-file-storage"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: display-results
+  template:
+    metadata:
+      labels:
+        app: display-results
+    spec:
+      volumes:
+        - name: nfs-batch-job-file-storage
+          persistentVolumeClaim:
+            claimName: nfs-batch-job-file-storage
+      containers:
+        - name: podcool
+          image: quay.io/wcaban/podcool
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: nfs-batch-job-file-storage
+              mountPath: "/mnt/nfs/share"
+          resources: {}
