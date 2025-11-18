@@ -1,9 +1,11 @@
 ---
-- name: Create NFS LXC
+- name: Create Lab LXC Containers
   hosts:
     - nfs.lab.morey.tech
+    - batch-job.lab.morey.tech
   gather_facts: false  # Hosts aren't available, since this playbook creates them.
   become: true
+  serial: 1  # Create containers one at a time to maintain order
   vars:
     storage: "storage-pve"  # Adjust to your storage name
     template_name: "debian-12-standard_12.12-1_amd64.tar.zst"
@@ -36,7 +38,7 @@
         unprivileged: false  # Required for NFS server
         disk_volume:
           storage: local-nvme
-          size: 50
+          size: "{{ lxc_disk_size }}"
         netif: '{"net0":"name=eth0,hwaddr={{ mac_address }},ip={{ ip_address }}/{{ net_prefix }},gw={{ gateway_ip }},bridge=vmbr0,tag={{ vlan_tag }}"}'
         nameserver: "{{ gateway_ip }}"
         searchdomain: "{{ cluster_dns_zone }}"
@@ -44,11 +46,11 @@
         state: present
       delegate_to: localhost
 
-    - name: Configure LXC features for NFS server
+    - name: Configure LXC features
       ansible.builtin.lineinfile:
         path: "/etc/pve/lxc/{{ pve_vm_id }}.conf"
         regexp: '^features:'
-        line: 'features: nesting=1,mount=nfs'
+        line: "features: {{ lxc_features }}"
         state: present
       delegate_to: "{{ pve_node }}.home.morey.tech"
       become: true
@@ -82,6 +84,14 @@
   hosts: nfs.lab.morey.tech
   gather_facts: false
   become: true
+  vars:
+    users:
+      - name: labuser
+        uid: 2001
+        gid: 2001
+      - name: serviceaccount
+        uid: 3001
+        gid: 3001
 
   tasks:
     - name: Wait for SSH to come up
@@ -101,21 +111,30 @@
         name: nfs-kernel-server
         state: present
 
-    - name: Create labuser
+    - name: Create user groups
+      ansible.builtin.group:
+        name: "{{ item.name }}"
+        gid: "{{ item.gid }}"
+        state: present
+      loop: "{{ users }}"
+
+    - name: Create users
       ansible.builtin.user:
-        name: labuser
-        uid: 2001
-        group: labuser
+        name: "{{ item.name }}"
+        uid: "{{ item.uid }}"
+        group: "{{ item.name }}"
         shell: /bin/bash
-        home: /home/labuser
+        home: "/home/{{ item.name }}"
         createhome: true
         state: present
+      loop: "{{ users }}"
 
-    - name: Add SSH authorized keys for labuser
-      ansible.builtin.authorized_key:
-        user: labuser
+    - name: Add SSH authorized keys for users
+      ansible.posix.authorized_key:
+        user: "{{ item.name }}"
         key: "{{ ssh_authorized_keys }}"
         state: present
+      loop: "{{ users }}"
 
     - name: Create NFS export directory
       ansible.builtin.file:
@@ -153,89 +172,18 @@
         name: nfs-kernel-server
         state: restarted
 
-- name: Create Batch Job LXC
-  hosts:
-    - batch-job.lab.morey.tech
-  gather_facts: false  # Hosts aren't available, since this playbook creates them.
-  become: true
-  vars:
-    storage: "storage-pve"  # Adjust to your storage name
-    template_name: "debian-12-standard_12.12-1_amd64.tar.zst"
-    pve_api: &pve_api_batch
-      api_user: "{{ pve_api_user }}"
-      api_token_id: "{{ pve_api_token_id }}"
-      api_token_secret: "{{ pve_api_token_secret }}"
-      api_host: "{{ pve_api_host }}"
-
-  tasks:
-    - name: Download LXC OS template to Proxmox storage
-      community.general.proxmox_template:
-        <<: *pve_api_batch
-        node: "{{ pve_node }}"
-        storage: "{{ storage }}"
-        content_type: "vztmpl"
-        template: "{{ template_name }}"
-        state: present
-      delegate_to: localhost
-
-    - name: Create LXC container
-      community.general.proxmox:
-        <<: *pve_api_batch
-        node: "{{ pve_node }}"
-        vmid: "{{ pve_vm_id }}"
-        hostname: "{{ inventory_hostname_short }}"
-        ostemplate: "{{ storage }}:vztmpl/{{ template_name }}"
-        memory: 2048
-        cores: 2
-        unprivileged: false  # Required for NFS server
-        disk_volume:
-          storage: local-nvme
-          size: 24
-        netif: '{"net0":"name=eth0,hwaddr={{ mac_address }},ip={{ ip_address }}/{{ net_prefix }},gw={{ gateway_ip }},bridge=vmbr0,tag={{ vlan_tag }}"}'
-        nameserver: "{{ gateway_ip }}"
-        searchdomain: "{{ cluster_dns_zone }}"
-        pubkey: "{{ ssh_authorized_keys }}"
-        state: present
-      delegate_to: localhost
-
-    - name: Configure LXC features for batch job
-      ansible.builtin.lineinfile:
-        path: "/etc/pve/lxc/{{ pve_vm_id }}.conf"
-        regexp: '^features:'
-        line: 'features: nesting=1'
-        state: present
-      delegate_to: "{{ pve_node }}.home.morey.tech"
-      become: true
-
-    - name: Create DHCP static mapping
-      pfsensible.core.pfsense_dhcp_static:
-        netif: opt1
-        hostname: "{{ inventory_hostname_short }}"
-        macaddr: "{{ mac_address }}"
-        ipaddr: "{{ ip_address }}"
-        ddnsdomainkeyalgorithm: "hmac-md5"  # fixes diff.
-        state: present
-      # become: false
-      delegate_to: pfsense.home.morey.tech
-
-    - name: Start LXC container
-      community.general.proxmox:
-        <<: *pve_api_batch
-        vmid: "{{ pve_vm_id }}"
-        state: started
-      delegate_to: localhost
-
-    - name: Add LXC container to inventory
-      ansible.builtin.add_host:
-        name: "{{ inventory_hostname_short }}.{{ cluster_dns_zone }}"
-        ansible_host: "{{ ip_address }}"
-        ansible_user: root
-      changed_when: false
-
 - name: Configure Batch Job as NFS Client
   hosts: batch-job.lab.morey.tech
   gather_facts: false
   become: true
+  vars:
+    users:
+      - name: labuser
+        uid: 2001
+        gid: 2001
+      - name: serviceaccount
+        uid: 3001
+        gid: 3001
 
   tasks:
     - name: Wait for SSH to come up
@@ -255,21 +203,30 @@
         name: nfs-common
         state: present
 
-    - name: Create labuser
+    - name: Create user groups
+      ansible.builtin.group:
+        name: "{{ item.name }}"
+        gid: "{{ item.gid }}"
+        state: present
+      loop: "{{ users }}"
+
+    - name: Create users
       ansible.builtin.user:
-        name: labuser
-        uid: 2001
-        group: labuser
+        name: "{{ item.name }}"
+        uid: "{{ item.uid }}"
+        group: "{{ item.name }}"
         shell: /bin/bash
-        home: /home/labuser
+        home: "/home/{{ item.name }}"
         createhome: true
         state: present
+      loop: "{{ users }}"
 
-    - name: Add SSH authorized keys for labuser
-      ansible.builtin.authorized_key:
-        user: labuser
+    - name: Add SSH authorized keys for users
+      ansible.posix.authorized_key:
+        user: "{{ item.name }}"
         key: "{{ ssh_authorized_keys }}"
         state: present
+      loop: "{{ users }}"
 
     - name: Create NFS mount point
       ansible.builtin.file:
@@ -297,3 +254,42 @@
       ansible.builtin.debug:
         msg: "NFS share successfully mounted at /mnt/nfs/share"
       when: mount_check.rc == 0
+
+- name: Configure NFS Test Data
+  hosts: nfs.lab.morey.tech
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Create results directory
+      ansible.builtin.file:
+        path: /srv/nfs/share/results
+        state: directory
+        mode: '0750'
+        owner: labuser
+        group: labuser
+
+    - name: Create test files with random content
+      ansible.builtin.copy:
+        content: |
+          Batch Job Test Data File {{ item }}
+          =================================
+          Generated by Ansible for NFS permissions testing
+
+          This file is owned by labuser (UID 2001, GID 2001) to demonstrate:
+          - Root user (mapped to nobody via root_squash) cannot access
+          - labuser can read and write
+          - serviceaccount (UID 3001) cannot access
+
+          Random test data:
+          {{ lookup('password', '/dev/null length=800 chars=ascii_letters,digits') }}
+        dest: /srv/nfs/share/results/batch-job-{{ item }}.txt
+        mode: '0640'
+        owner: labuser
+        group: labuser
+      loop:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
