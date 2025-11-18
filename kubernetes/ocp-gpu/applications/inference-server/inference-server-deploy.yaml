@@ -37,15 +37,20 @@ spec:
               pip install -U "huggingface_hub==1.1.4"
               echo -----------------------------------
 
-              echo "Downloading Model: $MODEL"
-              hf download $MODEL --local-dir=/models
+              echo "Downloading Model: $MODEL_REPO / $MODEL_FILE"
+              hf download $MODEL_REPO $MODEL_FILE --local-dir=/models
               echo -----------------------------------
           env:
-            - name: MODEL
+            - name: MODEL_REPO
               valueFrom:
                 configMapKeyRef:
                   name: model-download-config
-                  key: MODEL
+                  key: MODEL_REPO
+            - name: MODEL_FILE
+              valueFrom:
+                configMapKeyRef:
+                  name: model-download-config
+                  key: MODEL_FILE
           volumeMounts:
             - name: model-volume
               mountPath: /models
@@ -57,18 +62,29 @@ spec:
           env:
             - name: VLLM_SERVER_DEV_MODE
               value: '1'
+            - name: MODEL_FILE
+              valueFrom:
+                configMapKeyRef:
+                  name: model-download-config
+                  key: MODEL_FILE
+            - name: SERVED_MODEL_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: model-download-config
+                  key: SERVED_MODEL_NAME
           command:
-            - python
-            - '-m'
-            - vllm.entrypoints.openai.api_server
+            - /bin/bash
+            - '-c'
           args:
-            - '--port=8000'
-            - '--model=/model/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf'
-            - '--served-model-name=Qwen3-Coder-30B-A3B-Instruct-Q4_K_M'
-            - '--tensor-parallel-size=1'
-            - '--max-model-len=25990' # Max context length for 2.38GB of remaining VRAM after model is loaded.
-            - '--dtype=auto'
-            - '--gpu-memory-utilization=0.90'
+            - |-
+              python -m vllm.entrypoints.openai.api_server \
+                --port=8000 \
+                --model=/model/$MODEL_FILE \
+                --served-model-name=$SERVED_MODEL_NAME \
+                --tensor-parallel-size=1 \
+                --max-model-len=25990 \
+                --dtype=auto \
+                --gpu-memory-utilization=0.90
           resources:
             limits:
               cpu: '10'

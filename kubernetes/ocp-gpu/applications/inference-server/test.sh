@@ -8,7 +8,7 @@
 
 # Default values
 DEFAULT_MESSAGE="What is the capital of France?"
-DEFAULT_MODEL="Qwen3-Coder-30B-A3B-Instruct-Q4_K_M"
+DEFAULT_MODEL="local-llm"
 DEFAULT_URL="https://interence-server-inference-server.apps.ocp-gpu.rh-lab.morey.tech/v1/chat/completions"
 
 # Use input arguments or defaults
