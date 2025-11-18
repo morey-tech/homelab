@@ -17,7 +17,7 @@ MODEL="${2:-$DEFAULT_MODEL}"
 URL="${3:-$DEFAULT_URL}"
 
 # Call the server using curl
-curl -s --insecure -X POST "$URL" \
+RESPONSE=$(curl -s --insecure -w "\n%{http_code}" -X POST "$URL" \
 	-H "Content-Type: application/json" \
 	--data '{
 		"model": "'"$MODEL"'",
@@ -27,4 +27,18 @@ curl -s --insecure -X POST "$URL" \
 				"content": "'"$MESSAGE"'"
 			}
 		]
-	}' | jq .choices[0].message.content
+	}')
+
+# Extract HTTP status code (last line) and body (everything else)
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+# Check if curl failed or returned non-2xx status
+if [ -z "$HTTP_CODE" ] || [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+	echo "Error: Request failed with HTTP status code: $HTTP_CODE" >&2
+	echo "Response: $BODY" >&2
+	exit 1
+fi
+
+# Success - pipe to jq
+echo "$BODY" | jq .choices[0].message.content
