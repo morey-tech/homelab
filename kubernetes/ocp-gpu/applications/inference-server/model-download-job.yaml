@@ -17,7 +17,7 @@ spec:
               echo "Install `hg` CLI with PIP"
               python -m venv hg_env
               source hg_env/bin/activate
-              pip install -U "huggingface_hub==0.36.0"
+              pip install -U "huggingface_hub==1.1.4"
               echo -----------------------------------
 
               echo "Downloading Model: $MODEL"
