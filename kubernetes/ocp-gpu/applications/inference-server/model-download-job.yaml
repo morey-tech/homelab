@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-model-hf
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: download
+          image: registry.redhat.io/ubi8/python-312:latest
+          command:
+            - /bin/bash
+            - '-c'
+          args:
+            - |-
+              echo "Install `hg` CLI with PIP"
+              python -m venv hg_env
+              source hg_env/bin/activate
+              pip install -U "huggingface_hub==0.36.0"
+              echo -----------------------------------
+
+              echo "Downloading Model: $MODEL"
+              hf download $MODEL --local-dir=/models
+              echo -----------------------------------
+          env:
+            - name: MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: model-download-config
+                  key: MODEL
+          volumeMounts:
+            - name: model-volume
+              mountPath: /models
+          workingDir: /workspace/model
+      volumes:
+        - name: model-volume
+          persistentVolumeClaim:
+            claimName: models
