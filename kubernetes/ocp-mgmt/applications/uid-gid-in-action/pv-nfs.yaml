@@ -11,6 +11,6 @@ spec:
   accessModes:
   - ReadWriteMany
   nfs:
-    path: /storage-mass/ocp-mgmt/uid-gid-in-action/batch-job-file-storage
-    server: "192.168.3.19"
+    path: /srv/nfs/share
+    server: nfs.lab.morey.tech
   persistentVolumeReclaimPolicy: Retain
