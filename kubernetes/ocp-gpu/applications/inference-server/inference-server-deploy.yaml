@@ -25,6 +25,31 @@ spec:
             medium: Memory
             sizeLimit: "2Gi"
       serviceAccountName: default
+      initContainers:
+        - name: download-model
+          image: registry.redhat.io/ubi8/python-312:latest
+          command:
+            - /bin/bash
+            - '-c'
+          args:
+            - |-
+              echo "Install hf CLI with PIP"
+              pip install -U "huggingface_hub==1.1.4"
+              echo -----------------------------------
+
+              echo "Downloading Model: $MODEL"
+              hf download $MODEL --local-dir=/models
+              echo -----------------------------------
+          env:
+            - name: MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: model-download-config
+                  key: MODEL
+          volumeMounts:
+            - name: model-volume
+              mountPath: /models
+          workingDir: /workspace/model
       containers:
         - name: inference-server
           image: 'registry.redhat.io/rhaiis/vllm-cuda-rhel9:latest'
