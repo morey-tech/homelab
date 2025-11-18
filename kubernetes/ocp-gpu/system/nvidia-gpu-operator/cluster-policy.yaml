@@ -2,6 +2,9 @@ apiVersion: nvidia.com/v1
 kind: ClusterPolicy
 metadata:
   name: gpu-cluster-policy
+  annotations:
+    # CRD might not be installed yet during initial Argo CD sync.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   vgpuDeviceManager:
     config:

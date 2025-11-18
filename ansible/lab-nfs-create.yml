@@ -101,6 +101,22 @@
         name: nfs-kernel-server
         state: present
 
+    - name: Create labuser
+      ansible.builtin.user:
+        name: labuser
+        uid: 2001
+        group: labuser
+        shell: /bin/bash
+        home: /home/labuser
+        createhome: true
+        state: present
+
+    - name: Add SSH authorized keys for labuser
+      ansible.builtin.authorized_key:
+        user: labuser
+        key: "{{ ssh_authorized_keys }}"
+        state: present
+
     - name: Create NFS export directory
       ansible.builtin.file:
         path: /srv/nfs/share
@@ -237,6 +253,22 @@
     - name: Install NFS client
       ansible.builtin.apt:
         name: nfs-common
+        state: present
+
+    - name: Create labuser
+      ansible.builtin.user:
+        name: labuser
+        uid: 2001
+        group: labuser
+        shell: /bin/bash
+        home: /home/labuser
+        createhome: true
+        state: present
+
+    - name: Add SSH authorized keys for labuser
+      ansible.builtin.authorized_key:
+        user: labuser
+        key: "{{ ssh_authorized_keys }}"
         state: present
 
     - name: Create NFS mount point
