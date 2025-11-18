@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: display-results
+  name: auto-uid-deploy
   labels:
     app: display-results
 spec:
