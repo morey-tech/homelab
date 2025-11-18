@@ -6,4 +6,4 @@ resources:
   - model-download-pvc.yaml
   # - model-download-task.yaml
   - model-download-config.yaml
-  - model-download-job.yaml
+  # - model-download-job.yaml

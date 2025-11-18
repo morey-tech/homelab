@@ -1,0 +1,21 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: anythingllm
+  labels:
+    app: anythingllm
+    app.kubernetes.io/component: anythingllm
+    app.kubernetes.io/instance: anythingllm
+    app.kubernetes.io/name: anythingllm
+    app.kubernetes.io/part-of: anythingllm
+spec:
+  to:
+    kind: Service
+    name: anythingllm
+    weight: 100
+  port:
+    targetPort: 8888-tcp
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
