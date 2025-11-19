@@ -19,8 +19,6 @@ spec:
       securityContext:
         runAsUser: 2001
         runAsGroup: 2001
-        supplementalGroups:
-          - 2001
       volumes:
         - name: nfs-batch-job-file-storage
           persistentVolumeClaim:
