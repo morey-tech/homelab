@@ -2,13 +2,13 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: must-run-as-3001-binding
+  name: allowed-uid-3001-binding
   namespace: uid-gid-in-action
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: system:openshift:scc:must-run-as-3001
+  name: system:openshift:scc:allowed-uid-3001
 subjects:
   - kind: ServiceAccount
-    name: must-run-as-3001-sa
+    name: allowed-uid-3001-sa
     namespace: uid-gid-in-action

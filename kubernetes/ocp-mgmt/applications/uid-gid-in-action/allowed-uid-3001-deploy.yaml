@@ -2,21 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: must-run-as-3001-deploy
+  name: allowed-uid-3001-deploy
   labels:
-    app: must-run-as-3001-test
+    app: allowed-uid-3001-test
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: must-run-as-3001-test
+      app: allowed-uid-3001-test
   template:
     metadata:
       labels:
-        app: must-run-as-3001-test
+        app: allowed-uid-3001-test
     spec:
-      serviceAccountName: must-run-as-3001-sa
+      serviceAccountName: allowed-uid-3001-sa
       securityContext:
+        runAsUser: 3001
+        runAsGroup: 3001
         supplementalGroups:
           - 2001
       volumes:
