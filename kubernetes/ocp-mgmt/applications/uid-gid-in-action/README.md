@@ -1,281 +1,406 @@
-# NFS Permissions Testing Scenario
+# NFS Permissions and OpenShift Security Context Constraints Demo
 
 ## Overview
 
-This scenario demonstrates NFS share access patterns and permissions by comparing behavior between a simulated batch job system (LXC container) and OpenShift pods. The setup includes:
+This demonstration shows how OpenShift pods can access NFS shares that contain batch job results, exploring different Security Context Constraint (SCC) configurations and their impact on file access permissions.
 
-- **NFS Server**: `nfs.lab.morey.tech` (192.168.3.54) serving `/srv/nfs/share`
-- **Batch Job System**: `batch-job.lab.morey.tech` (192.168.3.55) - LXC container simulating a traditional batch processing environment
-- **OpenShift Cluster**: `ocp-mgmt` cluster with pods consuming the same NFS share
+**User Story**: A batch job system writes result files to an NFS share. OpenShift pods need to read these results to display them to users. The challenge is configuring the pods with appropriate UID/GID settings to access the NFS share while maintaining security best practices.
 
-The scenario simulates a real-world use case where:
-1. A batch job runs and generates results to an NFS share
-2. An OpenShift pod needs to consume those results from the same NFS share
-3. The pod requires read-only access via supplemental groups
+## Architecture
 
-## User Types and Configurations
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      NFS Server                             │
+│               nfs.lab.morey.tech (192.168.3.54)            │
+│                                                             │
+│  /srv/nfs/share/results/                                   │
+│    ├── batch-job-1.txt  (2001:2001, mode 0640)           │
+│    ├── batch-job-2.txt  (2001:2001, mode 0640)           │
+│    └── ...                                                 │
+│                                                             │
+│  NFS Export: root_squash enabled                          │
+└─────────────────────────────────────────────────────────────┘
+         ▲                                    ▲
+         │ Writes                             │ Reads
+         │ (as UID 2001)                      │ (various UIDs)
+         │                                    │
+┌────────┴───────────┐              ┌────────┴────────────┐
+│   Batch Job        │              │   OpenShift Cluster │
+│   batch-job.lab    │              │     ocp-mgmt        │
+│                    │              │                     │
+│  Runs as:          │              │  4 Scenarios:       │
+│  labuser (2001)    │              │  1. Default UID     │
+│                    │              │  2. Suppl. Groups   │
+│                    │              │  3. anyuid SCC      │
+│                    │              │  4. Custom SCC      │
+└────────────────────┘              └─────────────────────┘
+```
 
-### 1. labuser (UID: 2001, GID: 2001)
+## Infrastructure Components
 
-**Purpose**: Primary user running the batch job and owning result files.
+### NFS Server Users
+
+| Username | UID | Primary GID | Supplemental Groups | Purpose |
+|----------|-----|-------------|---------------------|---------|
+| labuser | 2001 | 2001 | - | Batch job executor, file owner |
+| serviceaccount | 3001 | 3001 | 2001 (labuser) | Demo user for supplemental group access |
+
+### Batch Job Server
+
+- **Host**: `batch-job.lab.morey.tech` (192.168.3.55)
+- **Runs as**: labuser (UID 2001, GID 2001)
+- **Function**: Writes batch job results to `/mnt/nfs/share/results/`
+
+### OpenShift Cluster
+
+- **Cluster**: `ocp-mgmt`
+- **Namespace**: `uid-gid-in-action`
+- **Function**: Read batch job results from NFS share via various pod configurations
+
+## NFS Share File Permissions
+
+### Directory Structure
+
+```
+/srv/nfs/share/
+└── results/                    (owned by 2001:2001, mode 0750)
+    ├── batch-job-1.txt         (owned by 2001:2001, mode 0640)
+    ├── batch-job-2.txt         (owned by 2001:2001, mode 0640)
+    ├── batch-job-3.txt         (owned by 2001:2001, mode 0640)
+    ├── batch-job-4.txt         (owned by 2001:2001, mode 0640)
+    └── batch-job-5.txt         (owned by 2001:2001, mode 0640)
+```
+
+### Permission Breakdown
+
+**Directory: `/srv/nfs/share/results`**
+- **Ownership**: labuser:labuser (2001:2001)
+- **Mode**: `0750` (rwxr-x---)
+  - Owner (labuser): read, write, execute
+  - Group (labuser/2001): read, execute
+  - Other: no permissions
+
+**Files: `batch-job-*.txt`**
+- **Ownership**: labuser:labuser (2001:2001)
+- **Mode**: `0640` (rw-r-----)
+  - Owner (labuser): read, write
+  - Group (labuser/2001): read only
+  - Other: no permissions
+
+**Access Requirements**:
+- Users with UID 2001 have full read/write access (owner)
+- Users with supplemental group 2001 can read directory and files but **cannot write**
+- All other users have no access
+
+## OpenShift Scenarios
+
+### Scenario 1: Default Arbitrary UID ❌
+
+**File**: [supplemental-groups-deploy.yaml](supplemental-groups-deploy.yaml)
 
 **Configuration**:
-- UID: 2001
-- Primary GID: 2001
-- Supplemental groups: None
-- Exists on: Both NFS server and batch job system
+```yaml
+spec:
+  # No serviceAccountName specified (uses default)
+  securityContext:
+    supplementalGroups:
+      - 2001
+```
 
-**NFS Share Access**:
-- Full read/write access to `/srv/nfs/share/results` (owner permissions)
-- Owns all batch job result files (mode 0640)
-- Directory `/srv/nfs/share/results` owned by labuser:labuser (mode 0750)
+**What Happens**:
+- OpenShift assigns an arbitrary UID from the namespace range (e.g., 1000660000)
+- Pod runs with primary GID 0 (root)
+- Supplemental group 2001 is set
 
-**OpenShift Equivalent**: N/A - this represents the batch job executor
+**Result**: ❌ **Access DENIED**
 
-### 2. serviceaccount (UID: 3001, GID: 3001)
+**Why it Fails**:
+1. The arbitrary UID (e.g., 1000660000) doesn't exist on the NFS server
+2. NFS has `root_squash` enabled, which maps unknown UIDs to `nobody` or `nfsnobody`
+3. The `nobody` user has no permissions on the directory (mode 0750, other=---)
+4. Even though supplemental group 2001 is set in the pod, the NFS server doesn't trust it because the UID is unmapped
 
-**Purpose**: Demonstrates a user with supplemental group access that CAN access the NFS share when properly configured in OpenShift.
+**Key Lesson**: NFS with `root_squash` requires the UID to exist on the server for permission checks to work correctly.
 
-**Configuration**:
-- UID: 3001
-- Primary GID: 3001
-- Supplemental groups: `labuser` (GID 2001)
-- Exists on: Both NFS server and batch job system
+---
 
-**NFS Share Access**:
-- **Can access** `/srv/nfs/share/results` directory via supplemental group membership
-- Primary GID 3001 doesn't match directory GID 2001, but supplemental GID 2001 does
-- Requires explicit UID/GID configuration in OpenShift pod spec
-- **Demonstrates**: Supplemental groups work when the UID exists on the NFS server and is explicitly set
+### Scenario 2: Supplemental Groups Only ❌
 
-**OpenShift Equivalent**: Pod with `runAsUser: 3001`, `runAsGroup: 3001`, and `supplementalGroups: [2001]`
-
-**Important**: This only works in OpenShift because:
-1. The `serviceaccount` user exists on the NFS server
-2. Both `runAsUser` and `runAsGroup` are explicitly set (requires anyuid SCC)
-3. The supplemental group 2001 is configured on the NFS server for this user
-
-### 3. poduser (UID: 4001, Primary GID: 0, Supplemental: 2001)
-
-**Purpose**: Simulates OpenShift pod behavior where the primary GID is 0 (root) but supplemental groups are added.
+**File**: [supplemental-groups-deploy.yaml](supplemental-groups-deploy.yaml) (same file, demonstrates same failure mode)
 
 **Configuration**:
-- UID: 4001
-- Primary GID: 0 (root)
-- Supplemental groups: `labuser` (GID 2001)
-- Exists on: Batch job system only (not on NFS server)
+```yaml
+spec:
+  # No serviceAccountName specified
+  securityContext:
+    supplementalGroups:
+      - 2001
+```
 
-**NFS Share Access**:
-- **Cannot access** `/srv/nfs/share/results` directory (mode 0750)
-- Primary GID 0 doesn't match directory GID 2001
-- Supplemental GID 2001 is ignored for permission checks
-- UID 4001 doesn't exist on NFS server (maps to `nobody` with root_squash)
-- **Demonstrates**: Exactly matches OpenShift pod behavior with supplementalGroups when UID/GID are not explicitly set
+**What Happens**:
+- Pod gets arbitrary UID from namespace range
+- Supplemental group 2001 is configured
+- Pod attempts to access NFS share using supplemental group permissions
 
-**OpenShift Equivalent**: Default OpenShift pod with `supplementalGroups: [2001]` but no explicit runAsUser/runAsGroup
+**Result**: ❌ **Access DENIED**
 
-### 4. Arbitrary OpenShift UID (No specific configuration)
+**Why it Fails**:
+1. The UID is unmapped on the NFS server (doesn't exist in `/etc/passwd` or LDAP)
+2. **NFS uses "managed GIDs"** by default - it looks up the user locally/via LDAP to determine supplemental groups
+3. Since the UID doesn't exist on the NFS server, the server cannot determine what supplemental groups the user should have
+4. The supplemental groups passed by the client are **ignored** by the NFS server
+5. Access falls to "other" permissions (none)
 
-**Purpose**: Demonstrates default OpenShift pod behavior without any security context constraints.
+**Key Lesson**: Supplemental groups alone don't work with NFS if the UID doesn't exist on the server. The NFS server must be able to look up the user to trust supplemental group membership.
+
+---
+
+### Scenario 3: anyuid SCC with Explicit UID/GID ✅
+
+**Files**:
+- [serviceaccount-deploy-sa.yaml](serviceaccount-deploy-sa.yaml)
+- [serviceaccount-deploy-anyuid-binding.yaml](serviceaccount-deploy-anyuid-binding.yaml)
+- [serviceaccount-deploy.yaml](serviceaccount-deploy.yaml)
 
 **Configuration**:
-- UID: Random (assigned by OpenShift, typically in range 1000660000-1000669999)
-- Primary GID: 0 (root)
-- Supplemental groups: None (unless explicitly configured)
-
-**NFS Share Access**:
-- **Cannot access** `/srv/nfs/share/results` directory
-- UID doesn't exist on NFS server
-- Primary GID 0 doesn't match directory GID 2001
-- **Demonstrates**: Default OpenShift pods cannot access restrictive NFS shares
-
-**OpenShift Configuration**: `supplemental-groups-deploy.yaml`
-
-## Comparison of Access Patterns
-
-| User Type | UID | Primary GID | Supplemental GID | Can Access NFS? | Reason |
-|-----------|-----|-------------|------------------|----------------|--------|
-| labuser | 2001 | 2001 | - | Yes | Owner of directory and files |
-| serviceaccount | 3001 | 3001 | 2001 | **Yes** (with explicit UID/GID) | User exists on NFS server, supplemental group 2001 grants access |
-| poduser | 4001 | 0 | 2001 | **No** | Primary GID ≠ 2001, UID unmapped on NFS server |
-| Arbitrary UID | ~1000660000 | 0 | - | **No** | UID unmapped, Primary GID ≠ 2001 |
-
-## Key Findings
-
-### When Supplemental Groups Work vs. Don't Work
-
-**Supplemental groups work when**:
-- The UID running the process exists on the NFS server
-- The UID/GID are explicitly set to match the server-side user
-- The user on the NFS server has the supplemental group configured
-- Example: `serviceaccount` (UID 3001) with supplemental GID 2001
-
-**Supplemental groups DON'T work when**:
-- The UID doesn't exist on the NFS server (unmapped UID)
-- The process runs as an arbitrary UID assigned by OpenShift
-- Example: `poduser` (UID 4001) which doesn't exist on the NFS server
-
-### Linux Permission Check Order
-
-Linux permission checks follow this order:
-1. **UID check**: If the UID matches the file/directory owner
-2. **Primary GID check**: If the primary GID matches the file/directory group
-3. **Supplemental groups check**: If any supplemental GID matches the file/directory group
-4. **"Other" permissions**: If none of the above match
-
-**Critical insight**: Supplemental groups ARE checked, but only after the primary GID check. For supplemental groups to work with NFS:
-- The UID must exist on the NFS server (not be unmapped)
-- The user must have the supplemental group configured on the NFS server
-- Both UID and GID must be explicitly set in the pod security context
-
-### fsGroup Limitations
-
-Setting `fsGroup: 2001` in OpenShift:
-- Changes the group ownership of **volumes** to GID 2001
-- Does NOT change the primary GID of the running process
-- Only affects the volume mount point, not the NFS server's permission checks
-- **Does not solve** the NFS access issue for files owned on the NFS server side
-
-## Solution: ServiceAccount with anyuid SCC
-
-The best practice for achieving the same experience as the batch job user is to use a ServiceAccount with access to the `anyuid` Security Context Constraint.
-
-### Components
-
-1. **ServiceAccount** ([serviceaccount-deploy-sa.yaml](serviceaccount-deploy-sa.yaml))
-   ```yaml
-   apiVersion: v1
-   kind: ServiceAccount
-   metadata:
-     name: serviceaccount-deploy-sa
-   ```
-
-2. **ClusterRoleBinding** ([serviceaccount-deploy-anyuid-binding.yaml](serviceaccount-deploy-anyuid-binding.yaml))
-   ```yaml
-   apiVersion: rbac.authorization.k8s.io/v1
-   kind: ClusterRoleBinding
-   metadata:
-     name: serviceaccount-deploy-anyuid-binding
-   roleRef:
-     apiGroup: rbac.authorization.k8s.io
-     kind: ClusterRole
-     name: system:openshift:scc:anyuid
-   subjects:
-     - kind: ServiceAccount
-       name: serviceaccount-deploy-sa
-       namespace: uid-gid-in-action
-   ```
-
-3. **Deployment** ([serviceaccount-deploy.yaml](serviceaccount-deploy.yaml))
-   ```yaml
-   spec:
-     serviceAccountName: serviceaccount-deploy-sa
-     securityContext:
-       runAsUser: 3001
-       runAsGroup: 3001
-       supplementalGroups:
-         - 2001
-   ```
-
-### Why This Works
-
-The `anyuid` SCC allows explicitly setting `runAsUser` and `runAsGroup`:
-- Setting `runAsUser: 3001` runs the pod process as UID 3001 (serviceaccount user)
-- Setting `runAsGroup: 3001` sets the primary GID to 3001 (serviceaccount group)
-- The `serviceaccount` user exists on the NFS server with supplemental group 2001
-- NFS permission checks see the mapped UID 3001 with supplemental GID 2001
-- Access is granted via the supplemental group membership to labuser (GID 2001)
-
-**Key requirement**: The UID must exist on the NFS server for supplemental groups to work. This is why:
-- `serviceaccount` (UID 3001) works - user exists on NFS server
-- `poduser` (UID 4001) doesn't work - user doesn't exist on NFS server
-- Arbitrary OpenShift UIDs don't work - unmapped on NFS server
-
-### Alternative: Match the Batch Job User Exactly
-
-For direct file ownership access (not relying on supplemental groups):
 ```yaml
 spec:
   serviceAccountName: serviceaccount-deploy-sa
   securityContext:
-    runAsUser: 2001
-    runAsGroup: 2001
+    runAsUser: 3001
+    runAsGroup: 3001
+    supplementalGroups:
+      - 2001
 ```
 
-This provides owner-level access since the pod runs as the exact same UID/GID as the batch job.
+**What Happens**:
+- Pod uses ServiceAccount bound to `anyuid` SCC
+- Explicitly sets UID 3001 and primary GID 3001
+- Adds supplemental group 2001
+- UID 3001 exists on the NFS server (serviceaccount user)
 
-## Testing the Scenario
+**Result**: ✅ **Access GRANTED (Read-Only)**
 
-### Deploy the Infrastructure
+**Why it Works**:
+1. `anyuid` SCC allows setting any UID/GID values
+2. UID 3001 (serviceaccount) exists on the NFS server
+3. The NFS server can look up UID 3001 and find supplemental group 2001
+4. Supplemental group 2001 grants read access to files (mode 0640, group=r--)
+5. Write access is denied (correct - files are 0640, group has read-only)
 
-1. Create the LXC containers and NFS server:
+**Drawback**: `anyuid` SCC is very permissive - it allows ANY UID to be specified, which may be a security concern.
+
+**Key Lesson**: Explicitly setting UID/GID to match a server-side user enables supplemental group permissions to work correctly with NFS.
+
+---
+
+### Scenario 4: Custom SCC with Allowed UID Range ✅ (Best Practice)
+
+**Files**:
+- [scc-allowed-uid-3001.yaml](scc-allowed-uid-3001.yaml) - Custom SCC definition
+- [allowed-uid-3001-clusterrole.yaml](allowed-uid-3001-clusterrole.yaml) - ClusterRole for SCC access
+- [allowed-uid-3001-sa.yaml](allowed-uid-3001-sa.yaml) - ServiceAccount
+- [allowed-uid-3001-binding.yaml](allowed-uid-3001-binding.yaml) - RoleBinding
+- [allowed-uid-3001-deploy.yaml](allowed-uid-3001-deploy.yaml) - Working deployment (UID 3001)
+- [blocked-uid-2001-deploy.yaml](blocked-uid-2001-deploy.yaml) - Blocked deployment (UID 2001)
+
+**SCC Configuration**:
+```yaml
+runAsUser:
+  type: MustRunAsRange
+  uidRangeMin: 3001
+  uidRangeMax: 3001
+supplementalGroups:
+  type: RunAsAny
+priority: 10
+```
+
+**Deployment Configuration**:
+```yaml
+spec:
+  serviceAccountName: allowed-uid-3001-sa
+  securityContext:
+    runAsUser: 3001
+    runAsGroup: 3001
+    supplementalGroups:
+      - 2001
+```
+
+**What Happens**:
+- Custom SCC restricts `runAsUser` to exactly UID 3001
+- ServiceAccount is bound to this SCC via RoleBinding → ClusterRole
+- Deployment sets UID 3001, primary GID 3001, supplemental group 2001
+- SCC admission controller validates and allows UID 3001
+- Attempting UID 2001 is **blocked** by admission controller
+
+**Result**: ✅ **Access GRANTED (Read-Only)** for UID 3001, ❌ **Blocked** for UID 2001
+
+**Why it's Best Practice**:
+1. **Least Privilege**: Unlike `anyuid` which allows ANY UID, this SCC only allows UID 3001
+2. **Explicit Control**: You define exactly which UIDs are permitted
+3. **Namespace-Scoped**: RoleBinding limits access to specific namespace
+4. **Admission Control**: Invalid UIDs are rejected before pod creation
+5. **Security**: Prevents privilege escalation to other UIDs
+
+**Comparison to anyuid**:
+
+| Feature | anyuid SCC | Custom SCC (allowed-uid-3001) |
+|---------|------------|-------------------------------|
+| Allowed UIDs | Any UID | Only 3001 |
+| Security Risk | High - any UID can be used | Low - specific UID only |
+| Use Case | Development, flexibility | Production, specific workload |
+| Cluster-wide? | Yes (via ClusterRoleBinding) | No (via RoleBinding) |
+
+**Key Lesson**: Custom SCCs provide fine-grained control over which UIDs can be used, reducing security risk while still enabling necessary NFS access.
+
+## Key Concepts
+
+### root_squash
+
+**What it is**: NFS server setting that maps root (UID 0) and unknown UIDs to `nobody`/`nfsnobody` for security.
+
+**Impact**:
+- Prevents arbitrary UIDs from accessing NFS shares
+- Requires UIDs to exist on the NFS server
+- Default behavior on most NFS servers
+
+### Managed GIDs
+
+**What it is**: NFS server behavior where it looks up the user (by UID) on the server to determine supplemental groups, rather than trusting the client.
+
+**Impact**:
+- Client-specified supplemental groups are ignored for unmapped UIDs
+- UID must exist in `/etc/passwd` or LDAP for supplemental groups to work
+- Prevents clients from falsely claiming group membership
+
+### UID Mapping
+
+**What it is**: Process of matching a numeric UID to a user account on the NFS server.
+
+**Mapped UID** (exists on server):
+- NFS can determine permissions correctly
+- Supplemental groups work
+- Example: UID 3001 → serviceaccount user
+
+**Unmapped UID** (doesn't exist on server):
+- NFS maps to `nobody`
+- Supplemental groups ignored
+- Example: UID 1000660000 → nobody
+
+### Custom SCC vs anyuid SCC
+
+**anyuid SCC**:
+- ✅ Allows any UID to be specified
+- ❌ Very permissive, security risk
+- ✅ Quick solution for development
+- ✅ Pre-existing, no custom resources needed
+
+**Custom SCC** (like allowed-uid-3001):
+- ✅ Restricts to specific UIDs only
+- ✅ Least privilege approach
+- ✅ Better for production
+- ❌ Requires creating ClusterRole + RoleBinding
+- ✅ Namespace-scoped via RoleBinding
+
+## Deployment Order
+
+### Infrastructure Setup
+
+1. Deploy NFS server and batch job system:
    ```bash
    ansible-playbook -i ansible/inventory/hosts.yml ansible/lab-nfs-create.yml
    ```
 
-2. Verify NFS mount on batch job system:
-   ```bash
-   ssh root@batch-job.lab.morey.tech "mountpoint /mnt/nfs/share"
-   ```
-
-3. Check test files exist:
+2. Verify NFS is working:
    ```bash
    ssh root@nfs.lab.morey.tech "ls -la /srv/nfs/share/results/"
    ```
 
-### Deploy OpenShift Resources
+### OpenShift Setup
 
-1. Apply the namespace and PV/PVC:
+1. Create namespace and PV/PVC:
    ```bash
-   oc apply -f kubernetes/ocp-mgmt/applications/uid-gid-in-action/namespace.yaml
-   oc apply -f kubernetes/ocp-mgmt/applications/uid-gid-in-action/pv-nfs.yaml
-   oc apply -f kubernetes/ocp-mgmt/applications/uid-gid-in-action/pvc-nfs.yaml
+   oc apply -f namespace.yaml
+   oc apply -f pv-nfs.yaml
+   oc apply -f pvc-nfs.yaml
    ```
 
-2. Test with supplemental groups only (will fail - arbitrary UID):
+2. **Scenario 1 & 2**: Default/Supplemental Groups (will fail):
    ```bash
-   oc apply -f kubernetes/ocp-mgmt/applications/uid-gid-in-action/supplemental-groups-deploy.yaml
+   oc apply -f supplemental-groups-deploy.yaml
    ```
 
-3. Test with serviceaccount and anyuid SCC (will succeed - mapped UID with supplemental groups):
+3. **Scenario 3**: anyuid SCC (will succeed):
    ```bash
-   oc apply -f kubernetes/ocp-mgmt/applications/uid-gid-in-action/serviceaccount-deploy-sa.yaml
-   oc apply -f kubernetes/ocp-mgmt/applications/uid-gid-in-action/serviceaccount-deploy-anyuid-binding.yaml
-   oc apply -f kubernetes/ocp-mgmt/applications/uid-gid-in-action/serviceaccount-deploy.yaml
+   oc apply -f serviceaccount-deploy-sa.yaml
+   oc apply -f serviceaccount-deploy-anyuid-binding.yaml
+   oc apply -f serviceaccount-deploy.yaml
    ```
 
-### Verify Access
+4. **Scenario 4**: Custom SCC (will succeed for 3001, block 2001):
+   ```bash
+   # Requires cluster-admin
+   oc apply -f scc-allowed-uid-3001.yaml
+   oc apply -f allowed-uid-3001-clusterrole.yaml
 
-Test from within the pods:
+   # Can be applied by namespace admin
+   oc apply -f allowed-uid-3001-sa.yaml
+   oc apply -f allowed-uid-3001-binding.yaml
+   oc apply -f allowed-uid-3001-deploy.yaml
+
+   # This will be blocked by admission controller
+   oc apply -f blocked-uid-2001-deploy.yaml
+   ```
+
+## Verification
+
+### Check Pod UID/GID
+
 ```bash
-# Get pod name
-POD=$(oc get pod -n uid-gid-in-action -l app=serviceaccount-test -o name | head -1)
-
-# Check user/group
+POD=$(oc get pod -n uid-gid-in-action -l app=allowed-uid-3001-test -o jsonpath='{.items[0].metadata.name}')
 oc exec -n uid-gid-in-action $POD -- id
+```
 
-# List NFS files
+Expected output:
+```
+uid=3001(serviceaccount) gid=3001(serviceaccount) groups=2001(labuser),3001(serviceaccount)
+```
+
+### Check NFS Access
+
+```bash
+# List files
 oc exec -n uid-gid-in-action $POD -- ls -la /mnt/nfs/share/results/
 
-# Read a test file
+# Read file (should work)
 oc exec -n uid-gid-in-action $POD -- cat /mnt/nfs/share/results/batch-job-1.txt
+
+# Try to write (should fail - read-only access)
+oc exec -n uid-gid-in-action $POD -- touch /mnt/nfs/share/results/test.txt
 ```
 
-## Cleanup
+### Check Which SCC is Used
 
-Destroy the test environment:
 ```bash
-ansible-playbook -i ansible/inventory/hosts.yml ansible/lab-nfs-destroy.yml
+oc get pod -n uid-gid-in-action $POD -o yaml | grep 'openshift.io/scc'
 ```
+
+Expected: `openshift.io/scc: allowed-uid-3001`
 
 ## Summary
 
-This scenario demonstrates that:
+This demonstration shows that accessing NFS shares from OpenShift requires careful UID/GID configuration:
 
-1. **Supplemental groups work with NFS when the UID exists on the NFS server** - you must explicitly set both runAsUser and runAsGroup to match a server-side user
-2. **Arbitrary UIDs cannot use supplemental groups** - unmapped UIDs prevent supplemental group permissions from working
-3. **fsGroup does not change the process GID**, only the volume mount point ownership
-4. **The anyuid SCC is required** to explicitly set UID/GID in OpenShift
-5. **Best practice**: Create matching users on the NFS server, use anyuid SCC to set explicit UID/GID, and leverage supplemental groups for access control
+1. **Default arbitrary UIDs fail** due to `root_squash` and unmapped UIDs
+2. **Supplemental groups alone don't work** because NFS uses managed GIDs and ignores client-provided groups for unmapped UIDs
+3. **Explicit UID mapping is required** - the UID must exist on the NFS server
+4. **anyuid SCC works but is overly permissive** - allows any UID to be specified
+5. **Custom SCCs provide the best balance** of functionality and security by restricting to specific allowed UIDs
 
-The proper configuration allows OpenShift pods to achieve the same NFS access experience as traditional batch job systems while maintaining security through RBAC and SCC controls.
+**Best Practice**: Create custom SCCs that explicitly list allowed UIDs, create matching users on the NFS server, and use RoleBindings to limit scope to specific namespaces.
+
+## Cleanup
+
+```bash
+ansible-playbook -i ansible/inventory/hosts.yml ansible/lab-nfs-destroy.yml
+```
