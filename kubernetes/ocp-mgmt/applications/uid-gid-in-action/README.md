@@ -97,31 +97,33 @@ This demonstration shows how OpenShift pods can access NFS shares that contain b
 
 ### Scenario 1: Default Arbitrary UID ❌
 
-**File**: [supplemental-groups-deploy.yaml](supplemental-groups-deploy.yaml)
+**File**: [auto-uid-deploy.yaml](auto-uid-deploy.yaml)
 
 **Configuration**:
 ```yaml
 spec:
   # No serviceAccountName specified (uses default)
-  securityContext:
-    supplementalGroups:
-      - 2001
+  # No securityContext specified
+  # Nothing special configured - completely default deployment
 ```
 
 **What Happens**:
-- OpenShift assigns an arbitrary UID from the namespace range (e.g., 1000660000)
+- Uses the default service account
+- OpenShift's restricted SCC assigns an arbitrary UID from the namespace's UID range annotation (e.g., 1000660000)
 - Pod runs with primary GID 0 (root)
-- Supplemental group 2001 is set
+- No supplemental groups are set
 
 **Result**: ❌ **Access DENIED**
 
 **Why it Fails**:
-1. The arbitrary UID (e.g., 1000660000) doesn't exist on the NFS server
-2. NFS has `root_squash` enabled, which maps unknown UIDs to `nobody` or `nfsnobody`
-3. The `nobody` user has no permissions on the directory (mode 0750, other=---)
-4. Even though supplemental group 2001 is set in the pod, the NFS server doesn't trust it because the UID is unmapped
+1. The arbitrary UID (e.g., 1000660000) comes from OpenShift's project-specific UID range
+2. This arbitrary UID is very unlikely to exist as a user on the NFS server
+3. The arbitrary UID doesn't match the file owner (2001) or group (2001)
+4. Note: `root_squash` only maps UID 0 (root), not arbitrary UIDs
+5. The arbitrary UID simply tries to access files as itself and gets permission denied
+6. Files are owned by 2001:2001 with permissions 0640 (rw-r-----), so the arbitrary UID has no read/write access
 
-**Key Lesson**: NFS with `root_squash` requires the UID to exist on the server for permission checks to work correctly.
+**Key Lesson**: Arbitrary UIDs from OpenShift's restricted SCC don't work with NFS because the UID range is specific to OpenShift and doesn't align with NFS server users. Without matching UIDs or proper group membership, access is denied.
 
 ---
 
