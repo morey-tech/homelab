@@ -2,13 +2,14 @@
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: must-run-as-3001
+  name: allowed-uid-3001
   annotations:
     kubernetes.io/description: |
-      This SCC enforces that pods must run as UID 3001 (serviceaccount user).
-      Supplemental groups can be set to any value. This is useful for scenarios
-      where you need to ensure consistent UID mapping to NFS servers while
-      allowing flexible group membership.
+      This SCC allows pods to run as UID 3001 only (serviceaccount user).
+      Unlike anyuid SCC which allows ANY UID, this restricts to exactly UID 3001.
+      If runAsUser is not specified, default restricted SCC applies (arbitrary UID).
+      If runAsUser is specified, only 3001 is allowed - other UIDs will be blocked.
+      Supplemental groups can be set to any value.
 allowHostDirVolumePlugin: false
 allowHostIPC: false
 allowHostNetwork: false
@@ -29,8 +30,9 @@ requiredDropCapabilities:
   - SETUID
   - SETGID
 runAsUser:
-  type: MustRunAs
-  uid: 3001
+  type: MustRunAsRange
+  uidRangeMin: 3001
+  uidRangeMax: 3001
 seLinuxContext:
   type: MustRunAs
 supplementalGroups:
