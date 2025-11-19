@@ -11,19 +11,19 @@ This demonstration shows how OpenShift pods can access NFS shares that contain b
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      NFS Server                             │
-│               nfs.lab.morey.tech (192.168.3.54)            │
+│               nfs.lab.morey.tech (192.168.3.54)             │
 │                                                             │
-│  /srv/nfs/share/results/                                   │
-│    ├── batch-job-1.txt  (2001:2001, mode 0640)           │
-│    ├── batch-job-2.txt  (2001:2001, mode 0640)           │
-│    └── ...                                                 │
+│  /srv/nfs/share/results/                                    │
+│    ├── batch-job-1.txt  (2001:2001, mode 0640)              │
+│    ├── batch-job-2.txt  (2001:2001, mode 0640)              │
+│    └── ...                                                  │
 │                                                             │
-│  NFS Export: root_squash enabled                          │
+│  NFS Export: root_squash enabled                            │
 └─────────────────────────────────────────────────────────────┘
-         ▲                                    ▲
-         │ Writes                             │ Reads
-         │ (as UID 2001)                      │ (various UIDs)
-         │                                    │
+         ▲                                   ▲
+         │ Writes                            │ Reads
+         │ (as UID 2001)                     │ (various UIDs)
+         │                                   │
 ┌────────┴───────────┐              ┌────────┴────────────┐
 │   Batch Job        │              │   OpenShift Cluster │
 │   batch-job.lab    │              │     ocp-mgmt        │
@@ -44,6 +44,7 @@ This demonstration shows how OpenShift pods can access NFS shares that contain b
 |----------|-----|-------------|---------------------|---------|
 | labuser | 2001 | 2001 | - | Batch job executor, file owner |
 | serviceaccount | 3001 | 3001 | 2001 (labuser) | Demo user for supplemental group access |
+| poduser | 4001 | 0 | - | Demo of UID/GID similar to a Pod in OpenShift |
 
 ### Batch Job Server
 
