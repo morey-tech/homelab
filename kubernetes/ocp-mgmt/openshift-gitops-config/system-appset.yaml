@@ -50,8 +50,13 @@ spec:
       destination:
         namespace: openshift-cnv
     {{ end }}
-    {{- if eq .path.basename "openshift-devspaces" }}
+    {{- if eq .path.basename "openshift-operators" }}
     spec:
       destination:
         namespace: openshift-operators
+    {{ end }}
+    {{- if eq .path.basename "openshift-devspaces" }}
+    spec:
+      destination:
+        namespace: openshift-devspaces
     {{ end }}
