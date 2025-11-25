@@ -7,4 +7,3 @@ data:
 kind: Secret
 metadata:
   name: login-template
-  namespace: openshift-config

@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: system-appset
+  name: openshift-appset
 spec:
   goTemplate: true
   syncPolicy:
@@ -11,7 +11,7 @@ spec:
       repoURL: https://github.com/morey-tech/homelab.git
       revision: HEAD
       directories:
-      - path: kubernetes/ocp-mgmt/system/*
+      - path: kubernetes/ocp-mgmt/openshift/*
   ignoreApplicationDifferences:
     - jsonPointers:
       # Allow automated sync policy to be disabled manually.
@@ -20,7 +20,7 @@ spec:
       - /spec/source/targetRevision
   template:
     metadata:
-      name: '{{.path.basename}}-system'
+      name: '{{.path.basename}}'
     spec:
       project: default
       source:
@@ -29,7 +29,7 @@ spec:
         path: '{{.path.path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{.path.basename}}-system'
+        namespace: 'openshift-{{.path.basename}}'
       syncPolicy:
         automated:
           allowEmpty: true
@@ -44,19 +44,10 @@ spec:
             pod-security.kubernetes.io/enforce: privileged
             pod-security.kubernetes.io/audit: privileged
             pod-security.kubernetes.io/warn: privileged
-  templatePatch: |
-    # {{- if eq .path.basename "openshift-cnv" }}
-    # spec:
-    #   destination:
-    #     namespace: openshift-cnv
-    # {{ end }}
-    {{- if eq .path.basename "openshift-operators" }}
-    spec:
-      destination:
-        namespace: openshift-operators
-    {{ end }}
-    # {{- if eq .path.basename "openshift-devspaces" }}
-    # spec:
-    #   destination:
-    #     namespace: openshift-devspaces
-    # {{ end }}
+  # templatePatch: |
+  #   {{- if eq .path.basename "netbox-demo" }}
+  #   spec:
+  #     source:
+  #       directory:
+  #         recurse: true
+  #   {{ end }}
