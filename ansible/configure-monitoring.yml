@@ -56,18 +56,28 @@
         state: started
         enabled: true
 
-    # git clone https://github.com/grafana/alloy-scenarios.git
-    - name: Clone Alloy Scenarios repository
-      ansible.builtin.git:
-        repo: https://github.com/grafana/alloy-scenarios.git
-        dest: /opt/alloy-scenarios
-        version: main
+    - name: Create monitoring directory
+      ansible.builtin.file:
+        path: /opt/monitoring
+        state: directory
+        mode: '0755'
 
-    # docker-compose up -d /opt/alloy-scenarios/linux
-    # docker_compose_v2_module
-    - name: Start Alloy Scenarios using Docker Compose
+    - name: Copy monitoring stack configuration files
+      ansible.builtin.copy:
+        src: files/monitoring/
+        dest: /opt/monitoring/
+        mode: '0644'
+      register: monitoring_files
+
+    - name: Start monitoring stack using Docker Compose
       community.docker.docker_compose_v2:
-        project_src: /opt/alloy-scenarios/linux
+        project_src: /opt/monitoring
         build: always
         pull: missing
         state: present
+
+    - name: Restart monitoring stack when config changes
+      community.docker.docker_compose_v2:
+        project_src: /opt/monitoring
+        state: restarted
+      when: monitoring_files.changed

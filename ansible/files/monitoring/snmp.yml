@@ -1,0 +1,209 @@
+# SNMP Exporter configuration for Mikrotik SwOS
+# This configuration is optimized for Mikrotik switches running SwOS
+# Format: Alloy-compatible runtime snmp.yml (not generator.yml)
+
+auths:
+  public_v2:
+    community: public
+    security_level: noAuthNoPriv
+    version: 2
+
+modules:
+  # Mikrotik SwOS module - focuses on standard interface metrics
+  # SwOS has limited MIB support compared to RouterOS
+  mikrotik_swos:
+    walk:
+      - 1.3.6.1.2.1.1        # System group
+      - 1.3.6.1.2.1.2        # Interfaces group
+      - 1.3.6.1.2.1.31.1.1   # ifXTable
+    metrics:
+      # System metrics
+      - name: sysUpTime
+        oid: 1.3.6.1.2.1.1.3
+        type: gauge
+        help: Time since network management portion of system was last re-initialized
+      - name: sysDescr
+        oid: 1.3.6.1.2.1.1.1
+        type: DisplayString
+        help: Textual description of the entity
+      - name: sysName
+        oid: 1.3.6.1.2.1.1.5
+        type: DisplayString
+        help: Administratively-assigned name for this managed node
+
+      # Interface table metrics
+      - name: ifIndex
+        oid: 1.3.6.1.2.1.2.2.1.1
+        type: gauge
+        help: A unique value for each interface
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifDescr
+        oid: 1.3.6.1.2.1.2.2.1.2
+        type: DisplayString
+        help: Interface description
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifType
+        oid: 1.3.6.1.2.1.2.2.1.3
+        type: gauge
+        help: The type of interface
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifMtu
+        oid: 1.3.6.1.2.1.2.2.1.4
+        type: gauge
+        help: The size of the largest packet which can be sent/received
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifSpeed
+        oid: 1.3.6.1.2.1.2.2.1.5
+        type: gauge
+        help: An estimate of the interface's current bandwidth in bits per second
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifPhysAddress
+        oid: 1.3.6.1.2.1.2.2.1.6
+        type: PhysAddress48
+        help: The interface's MAC address
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifAdminStatus
+        oid: 1.3.6.1.2.1.2.2.1.7
+        type: gauge
+        help: The desired state of the interface
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+        enum_values:
+          1: up
+          2: down
+          3: testing
+      - name: ifOperStatus
+        oid: 1.3.6.1.2.1.2.2.1.8
+        type: gauge
+        help: The current operational state of the interface
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+        enum_values:
+          1: up
+          2: down
+          3: testing
+          4: unknown
+          5: dormant
+          6: notPresent
+          7: lowerLayerDown
+      - name: ifLastChange
+        oid: 1.3.6.1.2.1.2.2.1.9
+        type: gauge
+        help: Time when interface entered its current operational state
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifInOctets
+        oid: 1.3.6.1.2.1.2.2.1.10
+        type: counter
+        help: Total octets received on the interface
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifInUcastPkts
+        oid: 1.3.6.1.2.1.2.2.1.11
+        type: counter
+        help: Number of unicast packets delivered to a higher-layer protocol
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifInDiscards
+        oid: 1.3.6.1.2.1.2.2.1.13
+        type: counter
+        help: Number of inbound packets discarded even though no errors detected
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifInErrors
+        oid: 1.3.6.1.2.1.2.2.1.14
+        type: counter
+        help: Number of inbound packets that contained errors
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifOutOctets
+        oid: 1.3.6.1.2.1.2.2.1.16
+        type: counter
+        help: Total octets transmitted out of the interface
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifOutUcastPkts
+        oid: 1.3.6.1.2.1.2.2.1.17
+        type: counter
+        help: Total packets that higher-level protocols requested be transmitted
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifOutDiscards
+        oid: 1.3.6.1.2.1.2.2.1.19
+        type: counter
+        help: Number of outbound packets discarded even though no errors detected
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifOutErrors
+        oid: 1.3.6.1.2.1.2.2.1.20
+        type: counter
+        help: Number of outbound packets that could not be transmitted because of errors
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+
+      # High-capacity counters from ifXTable
+      - name: ifName
+        oid: 1.3.6.1.2.1.31.1.1.1.1
+        type: DisplayString
+        help: The textual name of the interface
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifHCInOctets
+        oid: 1.3.6.1.2.1.31.1.1.1.6
+        type: counter
+        help: Total octets received on the interface (64-bit counter)
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifHCOutOctets
+        oid: 1.3.6.1.2.1.31.1.1.1.10
+        type: counter
+        help: Total octets transmitted out of the interface (64-bit counter)
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifHighSpeed
+        oid: 1.3.6.1.2.1.31.1.1.1.15
+        type: gauge
+        help: An estimate of the interface's current bandwidth in Mbps
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifAlias
+        oid: 1.3.6.1.2.1.31.1.1.1.18
+        type: DisplayString
+        help: Alias name for the interface as specified by a network manager
+        indexes:
+        - labelname: ifIndex
+          type: gauge
+      - name: ifConnectorPresent
+        oid: 1.3.6.1.2.1.31.1.1.1.17
+        type: gauge
+        help: Physical connector present on interface
+        indexes:
+        - labelname: ifIndex
+          type: gauge
