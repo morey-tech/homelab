@@ -8,10 +8,11 @@ spec:
   components: {}
   containerRegistry: {}
   devEnvironments:
-    pvcStrategy: per-workspace
-    perWorkspaceStrategyPvcConfig:
-      claimSize: 5Gi
     # https://docs.redhat.com/en/documentation/red_hat_openshift_dev_spaces/3.24/html/administration_guide/configuring-devspaces#limiting-the-number-of-workspaces-that-all-users-can-run-simultaneously
     maxNumberOfRunningWorkspacesPerCluster: -1  # Unlimited.
+    storage:
+      pvcStrategy: per-workspace
+      perWorkspaceStrategyPvcConfig:
+        claimSize: 5Gi
   gitServices: {}
   networking: {}
