@@ -3,7 +3,7 @@ apiVersion: route.openshift.io/v1
 metadata:
   name: interence-server
   annotations:
-    haproxy.router.openshift.io/timeout=10m
+    haproxy.router.openshift.io/timeout: 10m
 spec:
   to:
     kind: Service
