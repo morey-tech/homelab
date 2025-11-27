@@ -13,12 +13,13 @@ NC='\033[0m' # No Color
 
 EXPECTED_CLUSTER="https://api.ocp-gpu.rh-lab.morey.tech:6443"
 HTPASSWD_FILE="../ocp-gpu.htpasswd"
+BITWARDEN_SECRET_FILE="../system/external-secrets/bitwarden-secret.yaml"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo -e "${GREEN}=== OCP GPU Cluster Bootstrap ===${NC}\n"
 
 # Step 1: Check if oc command is authenticated
-echo -e "${YELLOW}[1/6] Checking oc authentication...${NC}"
+echo -e "${YELLOW}[1/9] Checking oc authentication...${NC}"
 if ! oc whoami &> /dev/null; then
     echo -e "${RED}ERROR: oc command is not authenticated.${NC}"
     echo "Please log in to the OpenShift cluster using:"
@@ -29,7 +30,7 @@ CURRENT_USER=$(oc whoami)
 echo -e "${GREEN}✓ Authenticated as: ${CURRENT_USER}${NC}\n"
 
 # Step 2: Check if authenticated to the correct cluster
-echo -e "${YELLOW}[2/6] Verifying cluster connection...${NC}"
+echo -e "${YELLOW}[2/9] Verifying cluster connection...${NC}"
 CURRENT_CLUSTER=$(oc whoami --show-server)
 if [ "$CURRENT_CLUSTER" != "$EXPECTED_CLUSTER" ]; then
     echo -e "${RED}ERROR: Connected to wrong cluster.${NC}"
@@ -41,8 +42,42 @@ if [ "$CURRENT_CLUSTER" != "$EXPECTED_CLUSTER" ]; then
 fi
 echo -e "${GREEN}✓ Connected to correct cluster: ${EXPECTED_CLUSTER}${NC}\n"
 
-# Step 3: Check if htpasswd file exists
-echo -e "${YELLOW}[3/6] Checking for htpasswd file...${NC}"
+# Step 3: Check if bitwarden secret file exists
+echo -e "${YELLOW}[3/9] Checking for bitwarden secret file...${NC}"
+if [ ! -f "${SCRIPT_DIR}/${BITWARDEN_SECRET_FILE}" ]; then
+    echo -e "${RED}ERROR: bitwarden secret file not found at: ${SCRIPT_DIR}/${BITWARDEN_SECRET_FILE}${NC}"
+    echo ""
+    echo "To create the bitwarden secret file:"
+    echo "  1. Copy the contents of the Notes section from 'ocp-gpu.rh-lab.morey.tech external-secrets bitwarden' entry in Bitwarden"
+    echo "  2. Create ${SCRIPT_DIR}/${BITWARDEN_SECRET_FILE} with those contents"
+    exit 1
+fi
+echo -e "${GREEN}✓ bitwarden secret file found${NC}\n"
+
+# Step 4: Create external-secrets-system namespace
+echo -e "${YELLOW}[4/9] Creating external-secrets-system namespace...${NC}"
+if oc get namespace external-secrets-system &> /dev/null; then
+    echo -e "${YELLOW}⚠ Namespace external-secrets-system already exists, skipping creation${NC}\n"
+else
+    oc create namespace external-secrets-system
+    echo -e "${GREEN}✓ external-secrets-system namespace created${NC}\n"
+fi
+
+# Step 5: Deploy external secrets
+echo -e "${YELLOW}[5/9] Deploying external secrets...${NC}"
+
+echo "  → Applying bitwarden-secret.yaml"
+oc apply -n external-secrets-system -f "${SCRIPT_DIR}/${BITWARDEN_SECRET_FILE}"
+echo -e "${GREEN}  ✓ bitwarden secret applied${NC}\n"
+
+echo "  → Building and applying external-secrets kustomization"
+oc kustomize "${SCRIPT_DIR}/../system/external-secrets/" --enable-helm | oc apply -f -
+echo "  Waiting for external-secrets operator to initialize..."
+sleep 30  # TODO: Replace with proper wait condition
+echo -e "${GREEN}  ✓ external secrets deployed${NC}\n"
+
+# Step 6: Check if htpasswd file exists
+echo -e "${YELLOW}[6/9] Checking for htpasswd file...${NC}"
 if [ ! -f "${SCRIPT_DIR}/${HTPASSWD_FILE}" ]; then
     echo -e "${RED}ERROR: htpasswd file not found at: ${SCRIPT_DIR}/${HTPASSWD_FILE}${NC}"
     echo ""
@@ -54,8 +89,8 @@ if [ ! -f "${SCRIPT_DIR}/${HTPASSWD_FILE}" ]; then
 fi
 echo -e "${GREEN}✓ htpasswd file found${NC}\n"
 
-# Step 4: Create htpasswd secret
-echo -e "${YELLOW}[4/6] Creating htpasswd secret...${NC}"
+# Step 7: Create htpasswd secret
+echo -e "${YELLOW}[7/9] Creating htpasswd secret...${NC}"
 if oc get secret htpass-secret -n openshift-config &> /dev/null; then
     echo -e "${YELLOW}⚠ Secret htpass-secret already exists, skipping creation${NC}\n"
 else
@@ -65,8 +100,8 @@ else
     echo -e "${GREEN}✓ htpasswd secret created${NC}\n"
 fi
 
-# Step 5: Deploy bootstrap files in order
-echo -e "${YELLOW}[5/6] Deploying bootstrap files...${NC}\n"
+# Step 8: Deploy bootstrap files in order
+echo -e "${YELLOW}[8/9] Deploying bootstrap files...${NC}\n"
 
 echo "  → Applying 0-gitops-operator.yaml (GitOps Operator)"
 oc apply -f "${SCRIPT_DIR}/0-gitops-operator.yaml"
@@ -92,7 +127,7 @@ echo "  Waiting for application to sync..."
 sleep 15  # TODO: Replace with: oc wait --for=jsonpath='{.status.sync.status}'=Synced application/cluster-config -n openshift-gitops --timeout=300s
 echo -e "${GREEN}  ✓ App of Apps deployed${NC}\n"
 
-# Step 6: Done
+# Step 9: Done
 echo -e "${GREEN}=== Bootstrap Complete ===${NC}\n"
 echo "The cluster has been bootstrapped successfully!"
 echo ""
