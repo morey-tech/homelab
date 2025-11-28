@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cert-manager-system
+resources:
+  - cloudflare-api-token-secret.yaml
+  - letsencrypt-cluster-issuer.yaml
+
+helmCharts:
+- name: cert-manager
+  includeCRDs: true
+  releaseName: cert-manager
+  namespace: cert-manager-system
+  version: 1.18.2
+  repo: https://charts.jetstack.io
+  valuesInline:
+    installCRDs: true
+    extraArgs:
+      - '--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53'
+      # - '--feature-gates=ExperimentalGatewayAPISupport=true'
+    global:
+      leaderElection:
+        # Override the namespace used for the leader election lease
+        namespace: "cert-manager-system"
