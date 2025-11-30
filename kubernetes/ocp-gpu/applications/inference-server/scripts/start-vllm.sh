@@ -18,6 +18,7 @@ while true; do
   echo "Attempting vLLM with max-model-len=$MAX_LEN, gpu-memory-utilization=$GPU_UTIL"
 
   # Run vLLM, output to file AND stdout via tee (so we can see live output)
+  # Use process substitution to get python's PID (not tee's)
   python -m vllm.entrypoints.openai.api_server \
     --port=8000 \
     --model=$MODEL_PATH \
@@ -25,7 +26,7 @@ while true; do
     --tensor-parallel-size=1 \
     --max-model-len=$MAX_LEN \
     --dtype=auto \
-    --gpu-memory-utilization=$GPU_UTIL 2>&1 | tee $OUTPUT_FILE &
+    --gpu-memory-utilization=$GPU_UTIL > >(tee $OUTPUT_FILE) 2>&1 &
 
   VLLM_PID=$!
   sleep 30
