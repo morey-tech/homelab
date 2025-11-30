@@ -31,7 +31,7 @@ while true; do
     --served-model-name=$SERVED_MODEL_NAME \
     --tensor-parallel-size=1 \
     --max-model-len=$MAX_LEN \
-    --dtype=fp16 \
+    --dtype=float16 \
     --gpu-memory-utilization=$GPU_UTIL > >(tee $OUTPUT_FILE) 2>&1 &
 
   VLLM_PID=$!
