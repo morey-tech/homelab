@@ -1,5 +1,6 @@
 # Build stage
 FROM registry.access.redhat.com/ubi9/python-312 AS build
+USER 0
 
 WORKDIR /app
 COPY requirements.txt .
