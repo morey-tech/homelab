@@ -31,7 +31,7 @@ spec:
       serviceAccountName: default
       initContainers:
         - name: download-model
-          image: registry.redhat.io/ubi8/python-312:latest
+          image: ghcr.io/morey-tech/homelab/hf-cli:sha-b0db1cf
           command: ["/scripts/download-model.sh"]
           env:
             - name: MODEL_REPO

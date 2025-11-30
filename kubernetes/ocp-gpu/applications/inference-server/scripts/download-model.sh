@@ -2,10 +2,6 @@
 # Download model from HuggingFace Hub
 # Supports both full repo downloads and specific file downloads
 
-echo "Install hf CLI with PIP"
-pip install -U "huggingface_hub==1.1.4"
-echo -----------------------------------
-
 # Create workspace directory based on sanitized repo name (org_repo)
 WORKSPACE_DIR=$(echo "$MODEL_REPO" | tr '/' '_')
 mkdir -p /models/$WORKSPACE_DIR
