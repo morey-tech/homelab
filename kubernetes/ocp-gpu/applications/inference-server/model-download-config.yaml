@@ -4,12 +4,12 @@ metadata:
   name: model-download-config
 data:
   # HuggingFace repository (required)
-  MODEL_REPO: "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF"
+  MODEL_REPO: "RedHatAI/Qwen3-30B-A3B-quantized.w4a16"
 
   # Specific file to download from repo (optional)
   # If empty, downloads entire repo and uses repo name as model file
   # If set, downloads only this file
-  MODEL_FILE: "Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf"
+  MODEL_FILE: ""
 
   # Generic served model name for API
   SERVED_MODEL_NAME: "local-llm"
