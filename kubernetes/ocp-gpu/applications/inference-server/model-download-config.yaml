@@ -16,9 +16,9 @@ data:
 
   # vLLM memory settings
   # Fraction of GPU VRAM to use (auto-reduces by 1% on OOM, higher = more context)
-  GPU_MEMORY_UTILIZATION: "0.94"
+  GPU_MEMORY_UTILIZATION: "0.92"
   # Starting value for auto-detection (set high to trigger error and discover actual limit)
-  MAX_MODEL_LEN_START: "999999"
+  MAX_MODEL_LEN_START: "40960"
 
   # Examples:
   # 1. Download entire repo:
