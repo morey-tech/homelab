@@ -31,11 +31,11 @@ while true; do
   VLLM_PID=$!
 
   # Poll for success or failure (up to 5 minutes)
-  # Success = "Uvicorn running on" in output
+  # Success = "Application startup complete" in output
   # Failure = process died
   for i in $(seq 1 300); do
     # Check for success message (vLLM is ready to serve)
-    if grep -q "Uvicorn running on" $OUTPUT_FILE 2>/dev/null; then
+    if grep -q "Application startup complete" $OUTPUT_FILE 2>/dev/null; then
       echo "vLLM started successfully with max-model-len=$MAX_LEN, gpu-memory-utilization=$GPU_UTIL"
       wait $VLLM_PID
       exit $?
