@@ -7,3 +7,9 @@ resources:
   # - model-download-task.yaml
   - model-download-config.yaml
   # - model-download-job.yaml
+
+configMapGenerator:
+  - name: vllm-scripts
+    files:
+      - scripts/start-vllm.sh
+      - scripts/download-model.sh

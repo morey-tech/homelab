@@ -24,41 +24,15 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: "2Gi"
+        - name: scripts
+          configMap:
+            name: vllm-scripts
+            defaultMode: 0755
       serviceAccountName: default
       initContainers:
         - name: download-model
           image: registry.redhat.io/ubi8/python-312:latest
-          command:
-            - /bin/bash
-            - '-c'
-          args:
-            - |-
-              echo "Install hf CLI with PIP"
-              pip install -U "huggingface_hub==1.1.4"
-              echo -----------------------------------
-
-              # Create workspace directory based on sanitized repo name (org_repo)
-              WORKSPACE_DIR=$(echo "$MODEL_REPO" | tr '/' '_')
-              mkdir -p /models/$WORKSPACE_DIR
-
-              if [ -z "$MODEL_FILE" ]; then
-                # Download entire repo - vLLM needs the directory path
-                echo "Downloading entire repo: $MODEL_REPO"
-                hf download $MODEL_REPO --local-dir=/models/$WORKSPACE_DIR
-                # For full repos, vLLM uses the directory (where .cache and model files live)
-                ACTUAL_MODEL_PATH="/model/$WORKSPACE_DIR"
-              else
-                # Download specific file from repo
-                echo "Downloading specific file: $MODEL_REPO / $MODEL_FILE"
-                hf download $MODEL_REPO $MODEL_FILE --local-dir=/models/$WORKSPACE_DIR
-                # For single files, vLLM uses the full file path
-                ACTUAL_MODEL_PATH="/model/$WORKSPACE_DIR/$MODEL_FILE"
-              fi
-
-              echo "Model path will be: $ACTUAL_MODEL_PATH"
-              # Write the full path for main container to use
-              echo $ACTUAL_MODEL_PATH > /models/.model_path
-              echo -----------------------------------
+          command: ["/scripts/download-model.sh"]
           env:
             - name: MODEL_REPO
               valueFrom:
@@ -74,6 +48,8 @@ spec:
           volumeMounts:
             - name: model-volume
               mountPath: /models
+            - name: scripts
+              mountPath: /scripts
           workingDir: /workspace/model
       containers:
         - name: inference-server
@@ -97,69 +73,7 @@ spec:
                 configMapKeyRef:
                   name: model-download-config
                   key: MAX_MODEL_LEN_START
-          command:
-            - /bin/bash
-            - '-c'
-          args:
-            - |-
-              # Read the full model path written by init container
-              MODEL_PATH=$(cat /model/.model_path)
-              echo "Using model path: $MODEL_PATH"
-
-              # Use env vars with defaults
-              GPU_UTIL=${GPU_MEMORY_UTILIZATION:-0.95}
-              MAX_LEN=${MAX_MODEL_LEN_START:-999999}
-
-              # Auto-detect optimal max-model-len by parsing vLLM errors
-              while true; do
-                echo "Attempting vLLM with max-model-len=$MAX_LEN"
-
-                OUTPUT=$(python -m vllm.entrypoints.openai.api_server \
-                  --port=8000 \
-                  --model=$MODEL_PATH \
-                  --served-model-name=$SERVED_MODEL_NAME \
-                  --tensor-parallel-size=1 \
-                  --max-model-len=$MAX_LEN \
-                  --dtype=auto \
-                  --gpu-memory-utilization=$GPU_UTIL 2>&1) &
-
-                VLLM_PID=$!
-                sleep 30
-
-                # Check if process is still running (successful start)
-                if kill -0 $VLLM_PID 2>/dev/null; then
-                  echo "vLLM started successfully with max-model-len=$MAX_LEN"
-                  wait $VLLM_PID
-                  exit $?
-                fi
-
-                wait $VLLM_PID
-                EXIT_CODE=$?
-
-                # Error 1: KV cache capacity exceeded
-                if echo "$OUTPUT" | grep -q "larger than the maximum number of tokens that can be stored in KV cache"; then
-                  ACTUAL_CAPACITY=$(echo "$OUTPUT" | grep -oP 'KV cache \(\K[0-9]+')
-                  if [ -n "$ACTUAL_CAPACITY" ]; then
-                    echo "Detected KV cache capacity: $ACTUAL_CAPACITY tokens"
-                    MAX_LEN=$ACTUAL_CAPACITY
-                    continue
-                  fi
-                fi
-
-                # Error 2: Model max_position_embeddings exceeded
-                if echo "$OUTPUT" | grep -q "max_position_embeddings"; then
-                  MODEL_MAX=$(echo "$OUTPUT" | grep -oP 'max_position_embeddings=\K[0-9]+')
-                  if [ -n "$MODEL_MAX" ]; then
-                    echo "Detected model max position embeddings: $MODEL_MAX tokens"
-                    MAX_LEN=$MODEL_MAX
-                    continue
-                  fi
-                fi
-
-                # Failed for another reason
-                echo "$OUTPUT"
-                exit $EXIT_CODE
-              done
+          command: ["/scripts/start-vllm.sh"]
           resources:
             limits:
               cpu: '10'
@@ -173,5 +87,7 @@ spec:
             - name: model-volume
               mountPath: /model
             - name: shm
-              mountPath: /dev/shm 
+              mountPath: /dev/shm
+            - name: scripts
+              mountPath: /scripts 
       restartPolicy: Always
