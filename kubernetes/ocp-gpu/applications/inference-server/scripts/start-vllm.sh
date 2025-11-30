@@ -29,16 +29,32 @@ while true; do
     --gpu-memory-utilization=$GPU_UTIL > >(tee $OUTPUT_FILE) 2>&1 &
 
   VLLM_PID=$!
-  sleep 30
 
-  # Check if process is still running (successful start)
+  # Poll for success or failure (up to 5 minutes)
+  # Success = "Uvicorn running on" in output
+  # Failure = process died
+  for i in $(seq 1 300); do
+    # Check for success message (vLLM is ready to serve)
+    if grep -q "Uvicorn running on" $OUTPUT_FILE 2>/dev/null; then
+      echo "vLLM started successfully with max-model-len=$MAX_LEN, gpu-memory-utilization=$GPU_UTIL"
+      wait $VLLM_PID
+      exit $?
+    fi
+
+    # Check if process died
+    if ! kill -0 $VLLM_PID 2>/dev/null; then
+      break
+    fi
+
+    sleep 1
+  done
+
+  # Process died or timed out - get exit code and parse errors
   if kill -0 $VLLM_PID 2>/dev/null; then
-    echo "vLLM started successfully with max-model-len=$MAX_LEN"
-    wait $VLLM_PID
-    exit $?
+    echo "Timeout waiting for vLLM to start (5 minutes). Killing process."
+    kill $VLLM_PID 2>/dev/null
   fi
-
-  wait $VLLM_PID
+  wait $VLLM_PID 2>/dev/null
   EXIT_CODE=$?
 
   # Read output from file for error parsing
