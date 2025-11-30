@@ -19,7 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "${GREEN}=== OCP GPU Cluster Bootstrap ===${NC}\n"
 
 # Step 1: Check if oc command is authenticated
-echo -e "${YELLOW}[1/9] Checking oc authentication...${NC}"
+echo -e "${YELLOW}[1/11] Checking oc authentication...${NC}"
 if ! oc whoami &> /dev/null; then
     echo -e "${RED}ERROR: oc command is not authenticated.${NC}"
     echo "Please log in to the OpenShift cluster using:"
@@ -30,7 +30,7 @@ CURRENT_USER=$(oc whoami)
 echo -e "${GREEN}✓ Authenticated as: ${CURRENT_USER}${NC}\n"
 
 # Step 2: Check if authenticated to the correct cluster
-echo -e "${YELLOW}[2/9] Verifying cluster connection...${NC}"
+echo -e "${YELLOW}[2/11] Verifying cluster connection...${NC}"
 CURRENT_CLUSTER=$(oc whoami --show-server)
 if [ "$CURRENT_CLUSTER" != "$EXPECTED_CLUSTER" ]; then
     echo -e "${RED}ERROR: Connected to wrong cluster.${NC}"
@@ -43,7 +43,7 @@ fi
 echo -e "${GREEN}✓ Connected to correct cluster: ${EXPECTED_CLUSTER}${NC}\n"
 
 # Step 3: Check if bitwarden secret file exists
-echo -e "${YELLOW}[3/9] Checking for bitwarden secret file...${NC}"
+echo -e "${YELLOW}[3/11] Checking for bitwarden secret file...${NC}"
 if [ ! -f "${SCRIPT_DIR}/${BITWARDEN_SECRET_FILE}" ]; then
     echo -e "${RED}ERROR: bitwarden secret file not found at: ${SCRIPT_DIR}/${BITWARDEN_SECRET_FILE}${NC}"
     echo ""
@@ -55,7 +55,7 @@ fi
 echo -e "${GREEN}✓ bitwarden secret file found${NC}\n"
 
 # Step 4: Create external-secrets-system namespace
-echo -e "${YELLOW}[4/9] Creating external-secrets-system namespace...${NC}"
+echo -e "${YELLOW}[4/11] Creating external-secrets-system namespace...${NC}"
 if oc get namespace external-secrets-system &> /dev/null; then
     echo -e "${YELLOW}⚠ Namespace external-secrets-system already exists, skipping creation${NC}\n"
 else
@@ -64,7 +64,7 @@ else
 fi
 
 # Step 5: Deploy external secrets
-echo -e "${YELLOW}[5/9] Deploying external secrets...${NC}"
+echo -e "${YELLOW}[5/11] Deploying external secrets...${NC}"
 
 echo "  → Applying bitwarden-secret.yaml"
 oc apply -n external-secrets-system -f "${SCRIPT_DIR}/${BITWARDEN_SECRET_FILE}"
@@ -77,7 +77,7 @@ sleep 30  # TODO: Replace with proper wait condition
 echo -e "${GREEN}  ✓ external secrets deployed${NC}\n"
 
 # Step 6: Check if htpasswd file exists
-echo -e "${YELLOW}[6/9] Checking for htpasswd file...${NC}"
+echo -e "${YELLOW}[6/11] Checking for htpasswd file...${NC}"
 if [ ! -f "${SCRIPT_DIR}/${HTPASSWD_FILE}" ]; then
     echo -e "${RED}ERROR: htpasswd file not found at: ${SCRIPT_DIR}/${HTPASSWD_FILE}${NC}"
     echo ""
@@ -90,7 +90,7 @@ fi
 echo -e "${GREEN}✓ htpasswd file found${NC}\n"
 
 # Step 7: Create htpasswd secret
-echo -e "${YELLOW}[7/9] Creating htpasswd secret...${NC}"
+echo -e "${YELLOW}[7/11] Creating htpasswd secret...${NC}"
 if oc get secret htpass-secret -n openshift-config &> /dev/null; then
     echo -e "${YELLOW}⚠ Secret htpass-secret already exists, skipping creation${NC}\n"
 else
@@ -100,8 +100,21 @@ else
     echo -e "${GREEN}✓ htpasswd secret created${NC}\n"
 fi
 
-# Step 8: Deploy bootstrap files in order
-echo -e "${YELLOW}[8/9] Deploying bootstrap files...${NC}\n"
+# Step 8: Apply htpasswd OAuth configuration
+echo -e "${YELLOW}[8/11] Applying htpasswd OAuth configuration...${NC}"
+
+echo "  → Applying htpass-admin configuration files"
+oc apply -f "${SCRIPT_DIR}/../system/htpass-admin/"
+echo -e "${GREEN}  ✓ htpasswd OAuth configuration applied${NC}\n"
+
+echo "  → Restarting oauth-openshift deployment"
+oc rollout restart deploy oauth-openshift -n openshift-authentication
+echo "  Waiting for OAuth rollout to complete..."
+oc rollout status deploy oauth-openshift -n openshift-authentication --timeout=120s
+echo -e "${GREEN}  ✓ OAuth deployment restarted${NC}\n"
+
+# Step 9: Deploy bootstrap files in order
+echo -e "${YELLOW}[9/11] Deploying bootstrap files...${NC}\n"
 
 echo "  → Applying 0-gitops-operator.yaml (GitOps Operator)"
 oc apply -f "${SCRIPT_DIR}/0-gitops-operator.yaml"
@@ -127,12 +140,20 @@ echo "  Waiting for application to sync..."
 sleep 15  # TODO: Replace with: oc wait --for=jsonpath='{.status.sync.status}'=Synced application/cluster-config -n openshift-gitops --timeout=300s
 echo -e "${GREEN}  ✓ App of Apps deployed${NC}\n"
 
-# Step 9: Done
+# Step 10: Delete default kubeadmin user
+echo -e "${YELLOW}[10/11] Deleting default kubeadmin user...${NC}"
+if oc get secret kubeadmin -n kube-system &> /dev/null; then
+    oc delete secret kubeadmin -n kube-system
+    echo -e "${GREEN}✓ kubeadmin user deleted${NC}\n"
+else
+    echo -e "${YELLOW}⚠ kubeadmin secret already removed, skipping${NC}\n"
+fi
+
+# Step 11: Done
 echo -e "${GREEN}=== Bootstrap Complete ===${NC}\n"
 echo "The cluster has been bootstrapped successfully!"
 echo ""
 echo "Next steps:"
 echo "  1. Monitor ArgoCD applications: oc get applications -n openshift-gitops"
 echo "  2. Access ArgoCD UI: oc get route cluster-argocd-server -n openshift-gitops"
-echo "  3. The htpasswd authentication will be configured automatically via ArgoCD"
 echo ""
