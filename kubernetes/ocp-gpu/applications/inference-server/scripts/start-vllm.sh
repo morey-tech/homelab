@@ -19,13 +19,19 @@ while true; do
 
   # Run vLLM, output to file AND stdout via tee (so we can see live output)
   # Use process substitution to get python's PID (not tee's)
+  #
+  # Use fp16 explicitly instead of auto. The auto setting uses whatever dtype
+  # the model config specifies, but this instance is deployed on a GTX 3090
+  # (SM86, pre-SM90). On pre-SM90 GPUs, the Marlin quantization kernel's bf16
+  # atomic ops must be emulated in software, while fp16 atomics have native
+  # hardware support. Using fp16 avoids this performance penalty.
   python -m vllm.entrypoints.openai.api_server \
     --port=8000 \
     --model=$MODEL_PATH \
     --served-model-name=$SERVED_MODEL_NAME \
     --tensor-parallel-size=1 \
     --max-model-len=$MAX_LEN \
-    --dtype=auto \
+    --dtype=fp16 \
     --gpu-memory-utilization=$GPU_UTIL > >(tee $OUTPUT_FILE) 2>&1 &
 
   VLLM_PID=$!
