@@ -72,9 +72,15 @@ echo -e "${GREEN}  ✓ bitwarden secret applied${NC}\n"
 
 echo "  → Building and applying external-secrets kustomization"
 oc kustomize "${SCRIPT_DIR}/../system/external-secrets/" --enable-helm | oc apply -f -
-echo "  Waiting for external-secrets operator to initialize..."
-sleep 30  # TODO: Replace with proper wait condition
-echo -e "${GREEN}  ✓ external secrets deployed${NC}\n"
+echo -e "${GREEN}  ✓ external secrets base resources applied${NC}\n"
+
+echo "  → Waiting for external-secrets webhook to be ready..."
+oc rollout status deploy/external-secrets-webhook -n external-secrets-system --timeout=120s
+echo -e "${GREEN}  ✓ external-secrets webhook ready${NC}\n"
+
+echo "  → Applying ClusterSecretStore resources"
+oc apply -f "${SCRIPT_DIR}/../system/external-secrets/secret-stores.yaml"
+echo -e "${GREEN}  ✓ ClusterSecretStore resources applied${NC}\n"
 
 # Step 6: Check if htpasswd file exists
 echo -e "${YELLOW}[6/11] Checking for htpasswd file...${NC}"
