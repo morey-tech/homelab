@@ -37,22 +37,27 @@ spec:
               pip install -U "huggingface_hub==1.1.4"
               echo -----------------------------------
 
+              # Create workspace directory based on sanitized repo name (org_repo)
+              WORKSPACE_DIR=$(echo "$MODEL_REPO" | tr '/' '_')
+              mkdir -p /models/$WORKSPACE_DIR
+
               if [ -z "$MODEL_FILE" ]; then
-                # Download entire repo - extract model name from repo (part after /)
+                # Download entire repo - vLLM needs the directory path
                 echo "Downloading entire repo: $MODEL_REPO"
-                hf download $MODEL_REPO --local-dir=/models
-                ACTUAL_MODEL_FILE=$(echo $MODEL_REPO | cut -d'/' -f2)
-                echo "Model file will be: $ACTUAL_MODEL_FILE"
+                hf download $MODEL_REPO --local-dir=/models/$WORKSPACE_DIR
+                # For full repos, vLLM uses the directory (where .cache and model files live)
+                ACTUAL_MODEL_PATH="/model/$WORKSPACE_DIR"
               else
                 # Download specific file from repo
                 echo "Downloading specific file: $MODEL_REPO / $MODEL_FILE"
-                hf download $MODEL_REPO $MODEL_FILE --local-dir=/models
-                ACTUAL_MODEL_FILE=$MODEL_FILE
-                echo "Model file will be: $ACTUAL_MODEL_FILE"
+                hf download $MODEL_REPO $MODEL_FILE --local-dir=/models/$WORKSPACE_DIR
+                # For single files, vLLM uses the full file path
+                ACTUAL_MODEL_PATH="/model/$WORKSPACE_DIR/$MODEL_FILE"
               fi
 
-              # Write the actual model file name for main container to use
-              echo $ACTUAL_MODEL_FILE > /models/.model_file_name
+              echo "Model path will be: $ACTUAL_MODEL_PATH"
+              # Write the full path for main container to use
+              echo $ACTUAL_MODEL_PATH > /models/.model_path
               echo -----------------------------------
           env:
             - name: MODEL_REPO
@@ -87,13 +92,13 @@ spec:
             - '-c'
           args:
             - |-
-              # Read the actual model file name written by init container
-              MODEL_FILE=$(cat /model/.model_file_name)
-              echo "Using model file: $MODEL_FILE"
+              # Read the full model path written by init container
+              MODEL_PATH=$(cat /model/.model_path)
+              echo "Using model path: $MODEL_PATH"
 
               python -m vllm.entrypoints.openai.api_server \
                 --port=8000 \
-                --model=/model/$MODEL_FILE \
+                --model=$MODEL_PATH \
                 --served-model-name=$SERVED_MODEL_NAME \
                 --tensor-parallel-size=1 \
                 --max-model-len=59200 \
