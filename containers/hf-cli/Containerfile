@@ -16,10 +16,10 @@ LABEL org.opencontainers.image.source="https://github.com/morey-tech/homelab"
 # Copy installed packages from build stage
 COPY --from=build /install /usr/local
 
-# Create user in root group for OpenShift arbitrary UID compatibility
-# OpenShift runs containers with arbitrary UIDs that are members of GID 0
-RUN useradd -u 1001 -g 0 -m hfuser && \
-    mkdir -p /model-files-cache && \
+# Create cache directory with OpenShift arbitrary UID compatibility
+# UBI9 Python image already runs as UID 1001, no need to create user
+USER 0
+RUN mkdir -p /model-files-cache && \
     chown -R 1001:0 /model-files-cache && \
     chmod -R g=u /model-files-cache
 
