@@ -1,0 +1,29 @@
+# Build stage
+FROM registry.access.redhat.com/ubi9/python-312 AS build
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
+
+# Final stage
+FROM registry.access.redhat.com/ubi9/python-312
+
+LABEL org.opencontainers.image.title="hf-cli"
+LABEL org.opencontainers.image.description="Hugging Face CLI for model downloading"
+LABEL org.opencontainers.image.source="https://github.com/morey-tech/homelab"
+
+# Copy installed packages from build stage
+COPY --from=build /install /usr/local
+
+# Create user in root group for OpenShift arbitrary UID compatibility
+# OpenShift runs containers with arbitrary UIDs that are members of GID 0
+RUN useradd -u 1001 -g 0 -m hfuser && \
+    mkdir -p /model-files-cache && \
+    chown -R 1001:0 /model-files-cache && \
+    chmod -R g=u /model-files-cache
+
+ENV HF_HOME=/model-files-cache
+
+USER 1001
+
+CMD ["huggingface-cli"]
