@@ -1,20 +1,21 @@
 #!/bin/bash
 # Auto-detect optimal max-model-len for vLLM
-# This script handles two error cases:
+# This script handles three error cases:
 # 1. KV cache capacity exceeded
 # 2. Model max_position_embeddings exceeded
+# 3. CUDA out of memory (reduces GPU utilization)
 
 # Read the full model path written by init container
 MODEL_PATH=$(cat /model/.model_path)
 echo "Using model path: $MODEL_PATH"
 
 # Use env vars with defaults
-GPU_UTIL=${GPU_MEMORY_UTILIZATION:-0.95}
+GPU_UTIL=${GPU_MEMORY_UTILIZATION:-0.94}
 MAX_LEN=${MAX_MODEL_LEN_START:-999999}
 OUTPUT_FILE=/tmp/vllm_output.log
 
 while true; do
-  echo "Attempting vLLM with max-model-len=$MAX_LEN"
+  echo "Attempting vLLM with max-model-len=$MAX_LEN, gpu-memory-utilization=$GPU_UTIL"
 
   # Run vLLM, output to file AND stdout via tee (so we can see live output)
   python -m vllm.entrypoints.openai.api_server \
@@ -60,6 +61,13 @@ while true; do
       MAX_LEN=$MODEL_MAX
       continue
     fi
+  fi
+
+  # Error 3: CUDA out of memory - reduce GPU utilization by 1%
+  if echo "$OUTPUT" | grep -q "CUDA out of memory"; then
+    GPU_UTIL=$(echo "$GPU_UTIL - 0.01" | bc)
+    echo "CUDA OOM detected. Reducing GPU utilization to $GPU_UTIL"
+    continue
   fi
 
   # Failed for another reason - output already visible via tee
