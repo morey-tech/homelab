@@ -14,6 +14,12 @@ data:
   # Generic served model name for API
   SERVED_MODEL_NAME: "local-llm"
 
+  # vLLM memory settings
+  # Fraction of GPU VRAM to use (0.90-0.95 recommended, higher = more context)
+  GPU_MEMORY_UTILIZATION: "0.95"
+  # Starting value for auto-detection (set high to trigger error and discover actual limit)
+  MAX_MODEL_LEN_START: "999999"
+
   # Examples:
   # 1. Download entire repo:
   #    MODEL_REPO: "RedHatAI/granite-3.1-8b-instruct-quantized.w4a16"
