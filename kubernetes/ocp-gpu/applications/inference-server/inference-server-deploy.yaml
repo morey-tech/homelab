@@ -31,7 +31,7 @@ spec:
       serviceAccountName: default
       initContainers:
         - name: download-model
-          image: ghcr.io/morey-tech/homelab/hf-cli:sha-b0db1cf
+          image: ghcr.io/morey-tech/homelab/hf-cli:sha-87b6eb9
           command: ["/scripts/download-model.sh"]
           env:
             - name: MODEL_REPO
