@@ -1,0 +1,119 @@
+name: Container Build
+
+on:
+  push:
+    paths:
+      - 'containers/**'
+      - '.github/workflows/container-build.yml'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Custom tag for the container image (optional)'
+        required: false
+        type: string
+      container:
+        description: 'Specific container to build (leave empty for all)'
+        required: false
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      containers: ${{ steps.set-containers.outputs.containers }}
+      has_containers: ${{ steps.set-containers.outputs.has_containers }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed containers
+        id: set-containers
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ -n "${{ inputs.container }}" ]]; then
+              # Specific container requested
+              if [[ -d "containers/${{ inputs.container }}" ]]; then
+                echo "containers=[\"${{ inputs.container }}\"]" >> $GITHUB_OUTPUT
+                echo "has_containers=true" >> $GITHUB_OUTPUT
+              else
+                echo "Container '${{ inputs.container }}' not found"
+                echo "containers=[]" >> $GITHUB_OUTPUT
+                echo "has_containers=false" >> $GITHUB_OUTPUT
+              fi
+            else
+              # Build all containers
+              containers=$(find containers -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R -s -c 'split("\n") | map(select(length > 0))')
+              echo "containers=$containers" >> $GITHUB_OUTPUT
+              if [[ "$containers" != "[]" ]]; then
+                echo "has_containers=true" >> $GITHUB_OUTPUT
+              else
+                echo "has_containers=false" >> $GITHUB_OUTPUT
+              fi
+            fi
+          else
+            # Detect changed containers from git diff
+            changed=$(git diff --name-only HEAD~1 HEAD -- containers/ | cut -d'/' -f2 | sort -u | grep -v '^$' || true)
+            if [[ -n "$changed" ]]; then
+              containers=$(echo "$changed" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+              echo "containers=$containers" >> $GITHUB_OUTPUT
+              echo "has_containers=true" >> $GITHUB_OUTPUT
+            else
+              echo "containers=[]" >> $GITHUB_OUTPUT
+              echo "has_containers=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Print detected containers
+        run: |
+          echo "Containers to build: ${{ steps.set-containers.outputs.containers }}"
+
+  build-and-push:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_containers == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        container: ${{ fromJson(needs.detect-changes.outputs.containers) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./containers/${{ matrix.container }}
+          file: ./containers/${{ matrix.container }}/Containerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
