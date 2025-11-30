@@ -82,7 +82,7 @@ while true; do
 
   # Error 3: CUDA out of memory - reduce GPU utilization by 1%
   if echo "$OUTPUT" | grep -q "CUDA out of memory"; then
-    GPU_UTIL=$(echo "$GPU_UTIL - 0.01" | bc)
+    GPU_UTIL=$(awk "BEGIN {print $GPU_UTIL - 0.01}")
     echo "CUDA OOM detected. Reducing GPU utilization to $GPU_UTIL"
     continue
   fi
