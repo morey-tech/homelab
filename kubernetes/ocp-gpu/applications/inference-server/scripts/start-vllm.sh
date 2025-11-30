@@ -11,18 +11,20 @@ echo "Using model path: $MODEL_PATH"
 # Use env vars with defaults
 GPU_UTIL=${GPU_MEMORY_UTILIZATION:-0.95}
 MAX_LEN=${MAX_MODEL_LEN_START:-999999}
+OUTPUT_FILE=/tmp/vllm_output.log
 
 while true; do
   echo "Attempting vLLM with max-model-len=$MAX_LEN"
 
-  OUTPUT=$(python -m vllm.entrypoints.openai.api_server \
+  # Run vLLM, output to file AND stdout via tee (so we can see live output)
+  python -m vllm.entrypoints.openai.api_server \
     --port=8000 \
     --model=$MODEL_PATH \
     --served-model-name=$SERVED_MODEL_NAME \
     --tensor-parallel-size=1 \
     --max-model-len=$MAX_LEN \
     --dtype=auto \
-    --gpu-memory-utilization=$GPU_UTIL 2>&1) &
+    --gpu-memory-utilization=$GPU_UTIL 2>&1 | tee $OUTPUT_FILE &
 
   VLLM_PID=$!
   sleep 30
@@ -36,6 +38,9 @@ while true; do
 
   wait $VLLM_PID
   EXIT_CODE=$?
+
+  # Read output from file for error parsing
+  OUTPUT=$(cat $OUTPUT_FILE)
 
   # Error 1: KV cache capacity exceeded
   if echo "$OUTPUT" | grep -q "larger than the maximum number of tokens that can be stored in KV cache"; then
@@ -57,7 +62,7 @@ while true; do
     fi
   fi
 
-  # Failed for another reason
-  echo "$OUTPUT"
+  # Failed for another reason - output already visible via tee
+  echo "vLLM failed with exit code $EXIT_CODE"
   exit $EXIT_CODE
 done
