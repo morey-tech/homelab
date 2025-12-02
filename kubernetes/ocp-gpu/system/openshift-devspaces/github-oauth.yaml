@@ -1,0 +1,37 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: github-oauth-config
+spec:
+  target:
+    name: github-oauth-config
+    deletionPolicy: Delete
+    template:
+      type: Opaque
+      metadata:
+        annotations:
+          app.kubernetes.io/part-of: che.eclipse.org
+          app.kubernetes.io/component: oauth-scm-configuration
+          che.eclipse.org/oauth-scm-server: github
+      data:
+        id: |-
+          {{ .username }}
+        secret: |-
+          {{ .password }}
+  data:
+    - secretKey: username
+      sourceRef:
+        storeRef:
+          name: bitwarden-login
+          kind: ClusterSecretStore
+      remoteRef:
+        key: 4afc34a2-53be-4b9b-b46c-b3a70008d238
+        property: username
+    - secretKey: password
+      sourceRef:
+        storeRef:
+          name: bitwarden-login
+          kind: ClusterSecretStore
+      remoteRef:
+        key: 4afc34a2-53be-4b9b-b46c-b3a70008d238
+        property: password
