@@ -9,9 +9,12 @@ spec:
     template:
       type: Opaque
       metadata:
-        annotations:
+        labels:
           app.kubernetes.io/part-of: che.eclipse.org
           app.kubernetes.io/component: oauth-scm-configuration
+        annotations:
+          # app.kubernetes.io/part-of: che.eclipse.org
+          # app.kubernetes.io/component: oauth-scm-configuration
           che.eclipse.org/oauth-scm-server: github
       data:
         id: |-
