@@ -2,3 +2,10 @@ schemaVersion: 2.3.0
 metadata:
   generateName: morey-tech-homelab
   version: 0.1.0
+components:
+  - name: devcontainer
+    container:
+      image: ghcr.io/morey-tech/homelab/devcontainer:latest
+      memoryRequest: 2Gi
+      memoryLimit: 4Gi
+      cpuRequest: 2000m
