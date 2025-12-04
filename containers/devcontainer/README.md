@@ -40,4 +40,4 @@ Instead of:
 
 ## User
 
-Runs as `tecno` user (UID 1001) with sudo privileges.
+Runs as `morey-tech` user (UID 1001) with sudo privileges.

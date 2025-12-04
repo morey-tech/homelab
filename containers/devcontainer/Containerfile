@@ -5,14 +5,14 @@ LABEL org.opencontainers.image.title="devcontainer"
 LABEL org.opencontainers.image.description="Development container for homelab infrastructure"
 LABEL org.opencontainers.image.source="https://github.com/morey-tech/homelab"
 
-ARG USERNAME=tecno
+ARG USERNAME=morey-tech
 ARG USER_UID=1001
 ARG USER_GID=$USER_UID
 
 # Add non-root user.
 RUN groupmod -n $USERNAME vscode \
     && usermod -l $USERNAME vscode \
-    && usermod -d /home/tecno -m tecno
+    && usermod -d /home/morey-tech -m morey-tech
 
 # Add GitHub CLI repository
 RUN mkdir -p -m 755 /etc/apt/keyrings \
