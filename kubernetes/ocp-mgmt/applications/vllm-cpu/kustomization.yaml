@@ -11,3 +11,6 @@ resources:
 # wave 1
 - deployment.yaml
 - service.yaml
+# wave 2
+- service.yaml
+- route.yaml
