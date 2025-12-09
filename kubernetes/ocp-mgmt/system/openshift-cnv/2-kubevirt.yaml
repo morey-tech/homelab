@@ -3,4 +3,7 @@ kind: HyperConverged
 metadata:
   name: kubevirt-hyperconverged
   namespace: openshift-cnv
+  annotations:
+    # CRD might not be installed yet during initial Argo CD sync.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec: {}
