@@ -1,0 +1,22 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: anythingllm
+  labels:
+    app: anythingllm
+    app.kubernetes.io/component: anythingllm
+    app.kubernetes.io/instance: anythingllm
+    app.kubernetes.io/name: anythingllm
+    app.kubernetes.io/part-of: anythingllm
+spec:
+  ports:
+    - name: 8888-tcp
+      protocol: TCP
+      port: 8888
+      targetPort: 8888
+  internalTrafficPolicy: Cluster
+  type: ClusterIP
+  sessionAffinity: None
+  selector:
+    app: anythingllm
+    deployment: anythingllm

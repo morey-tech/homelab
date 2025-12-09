@@ -11,19 +11,15 @@ spec:
       app: vllm
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: vllm
     spec:
       restartPolicy: Always
-      schedulerName: default-scheduler
-      affinity: {}
       terminationGracePeriodSeconds: 120
-      securityContext: {}
       containers:
         - resources:
             limits:
-              cpu: '2'
+              # cpu: '2'
               memory: 8Gi
             requests:
               cpu: '1'
@@ -56,7 +52,8 @@ spec:
             "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
             "--download-dir",
             "/models-cache",
-            "--max-model-len", "2048" ]
+            "--max-model-len", "2048",
+            "--served-model-name=local-llm" ]
           securityContext:
             capabilities:
               drop:
