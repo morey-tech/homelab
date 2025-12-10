@@ -1,0 +1,16 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: wingspan-scoring
+spec:
+  host: wingspan-scoring.apps.ocp-home.rh-lab.morey.tech
+  path: /
+  to:
+    kind: Service
+    name: wingspan-scoring
+    weight: 100
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

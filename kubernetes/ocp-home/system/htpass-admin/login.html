@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--
+
+This template can be modified and used to customize the login page. To replace
+the login page, set master configuration option oauthConfig.templates.login to
+the path of the template file. Don't remove parameters in curly braces below.
+
+oauthConfig:
+  templates:
+    login: templates/login-template.html
+
+-->
+<html>
+  <head>
+    <title>ocp-home - Login</title>
+    <style type="text/css">
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Open Sans", Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        margin: 20px;
+        background-color: #f7f7f7;
+      }
+      
+      .container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        width: 300px;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+
+      .error {
+        color: red;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Log into the ocp-home Cluster</h1>
+
+      {{ if .Error }}
+        <div class="error">{{ .Error }}</div>
+        <!-- Error code: {{ .ErrorCode }} -->
+      {{ end }}
+
+      <form action="{{ .Action }}" method="POST">
+        <input type="hidden" name="{{ .Names.Then }}" value="{{ .Values.Then }}">
+        <input type="hidden" name="{{ .Names.CSRF }}" value="{{ .Values.CSRF }}">
+        
+        <div class="form-group">
+          <label for="inputUsername">Username</label>
+          <input type="text" id="inputUsername" autofocus="autofocus" type="text" name="{{ .Names.Username }}" value="{{ .Values.Username }}">
+        </div>
+
+        <div class="form-group">
+          <label for="inputPassword">Password</label>
+          <input type="password" id="inputPassword" type="password" name="{{ .Names.Password }}" value="">
+        </div>
+
+        <button type="submit">Log In</button>
+
+      </form>
+    </div>
+
+  </body>
+</html>

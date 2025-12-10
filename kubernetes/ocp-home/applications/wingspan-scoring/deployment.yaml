@@ -1,0 +1,63 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: wingspan-scoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wingspan-scoring
+  template:
+    metadata:
+      labels:
+        app: wingspan-scoring
+    spec:
+      volumes:
+        - name: wingspan-scoring-db
+          persistentVolumeClaim:
+            claimName: wingspan-scoring-db
+      containers:
+        - resources:
+            limits:
+              memory: 250Mi
+            requests:
+              cpu: 10m
+              memory: 50Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: wingspan-scoring
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          imagePullPolicy: Always
+          startupProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          volumeMounts:
+            - name: wingspan-scoring-db
+              mountPath: /app/data/
+          image: 'ghcr.io/morey-tech/wingspan-scoring:latest'
+      restartPolicy: Always
