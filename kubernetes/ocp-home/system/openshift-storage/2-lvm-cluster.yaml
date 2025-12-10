@@ -1,7 +1,7 @@
 apiVersion: lvm.topolvm.io/v1alpha1
 kind: LVMCluster
 metadata:
-  name: lvm-nvme0n1
+  name: lvm-nvme1n1
   annotations:
     # CRD might not be installed yet during initial Argo CD sync.
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
@@ -10,7 +10,7 @@ spec:
     deviceClasses:
       - deviceSelector:
           paths:
-            - /dev/nvme0n1
+            - /dev/nvme1n1
           forceWipeDevicesAndDestroyAllData: true
         fstype: xfs
         thinPoolConfig:
@@ -19,5 +19,5 @@ spec:
           sizePercent: 90
           name: thin-pool
           overprovisionRatio: 10
-        name: lvm-nvme0n1-vg
+        name: lvm-nvme1n1-vg
         default: true
