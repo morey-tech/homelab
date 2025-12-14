@@ -20,7 +20,7 @@ spec:
               key: password
         volumeMounts:
         - name: storage-mass
-          mountPath: /storage-mass
+          mountPath: /storage-mass/rubrik/paperless
       volumes:
       - name: storage-mass
         persistentVolumeClaim:
