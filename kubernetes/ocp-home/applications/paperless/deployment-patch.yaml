@@ -18,6 +18,9 @@ spec:
             secretKeyRef:
               name: paperless-secret
               key: password
+        # s6-overlay fix for OpenShift restricted SCC
+        - name: S6_READ_ONLY_ROOT
+          value: "1"
         volumeMounts:
         - name: storage-mass
           mountPath: /usr/src/paperless/consume
@@ -31,7 +34,12 @@ spec:
         - name: storage-mass
           mountPath: /usr/src/paperless/media
           subPath: media
+        # emptyDir for s6-overlay /run directory
+        - name: run
+          mountPath: /run
       volumes:
       - name: storage-mass
         persistentVolumeClaim:
           claimName: paperless-storage-mass
+      - name: run
+        emptyDir: {}
