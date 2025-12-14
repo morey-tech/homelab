@@ -57,7 +57,7 @@ jobs:
             fi
           else
             # Detect changed containers from git diff
-            changed=$(git diff --name-only HEAD~1 HEAD -- containers/ | cut -d'/' -f2 | sort -u | grep -v '^$' || true)
+            changed=$(git diff --name-only HEAD~1 HEAD -- containers/ | cut -d'/' -f2 | sort -u | grep -v '^$' | while read name; do [ -d "containers/$name" ] && echo "$name"; done || true)
             if [[ -n "$changed" ]]; then
               containers=$(echo "$changed" | jq -R -s -c 'split("\n") | map(select(length > 0))')
               echo "containers=$containers" >> $GITHUB_OUTPUT
