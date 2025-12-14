@@ -1,0 +1,7 @@
+apiVersion: metallb.io/v1beta1
+kind: MetalLB
+metadata:
+  name: metallb
+  annotations:
+    # CRD might not be installed yet during initial Argo CD sync.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
