@@ -54,26 +54,22 @@ helmCharts:
     persistence:
       consume:
         enabled: true
-        type: nfs
-        server: "192.168.3.19"
-        path: /storage-mass/rubrik/paperless/consume
+        existingClaim: paperless-storage-mass
+        subPath: consume
         mountPath: /usr/src/paperless/consume
       data:
         enabled: true
-        # nameOverride: paperless-data
-        storageClass: longhorn
-        size: 25Gi
+        existingClaim: paperless-storage-mass
+        subPath: data
       media:
         enabled: true
-        # nameOverride: paperless-media
-        storageClass: longhorn
-        size: 25Gi
+        existingClaim: paperless-storage-mass
+        subPath: media
         mountPath: /usr/src/paperless/media
       export:
         enabled: true
-        # nameOverride: paperless-export
-        storageClass: longhorn
-        size: 25Gi
+        existingClaim: paperless-storage-mass
+        subPath: export
         mountPath: /usr/src/paperless/export
     redis:
       enabled: true

@@ -18,10 +18,3 @@ spec:
             secretKeyRef:
               name: paperless-secret
               key: password
-        volumeMounts:
-        - name: storage-mass
-          mountPath: /storage-mass/rubrik/paperless
-      volumes:
-      - name: storage-mass
-        persistentVolumeClaim:
-          claimName: paperless-storage-mass
