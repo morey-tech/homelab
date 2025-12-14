@@ -51,26 +51,19 @@ helmCharts:
         - secretName: paperless.rubrik.lab.home.morey.tech
           hosts:
           - paperless.rubrik.lab.home.morey.tech
+    # Persistence is disabled here because the helm chart creates separate volume
+    # definitions for each persistence entry, which causes mount issues when they
+    # all reference the same PVC. Instead, deployment-patch.yaml defines a single
+    # volume with multiple subPath mounts.
     persistence:
       consume:
-        enabled: true
-        existingClaim: paperless-storage-mass
-        subPath: consume
-        mountPath: /usr/src/paperless/consume
+        enabled: false
       data:
-        enabled: true
-        existingClaim: paperless-storage-mass
-        subPath: data
+        enabled: false
       media:
-        enabled: true
-        existingClaim: paperless-storage-mass
-        subPath: media
-        mountPath: /usr/src/paperless/media
+        enabled: false
       export:
-        enabled: true
-        existingClaim: paperless-storage-mass
-        subPath: export
-        mountPath: /usr/src/paperless/export
+        enabled: false
     redis:
       enabled: true
       image:
