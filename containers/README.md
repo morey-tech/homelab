@@ -36,3 +36,6 @@ docker build -f Containerfile -t <container-name>:latest .
 - Include a `README.md` describing the container's purpose
 - Include a `.containerignore` to minimize build context
 - Use meaningful labels in the Containerfile
+- **All containers must support both arm64 and x86_64 (amd64) architectures**
+  - Use `ARG TARGETARCH` for architecture detection during multi-platform builds
+  - Download architecture-specific binaries using conditional logic based on `$TARGETARCH`
