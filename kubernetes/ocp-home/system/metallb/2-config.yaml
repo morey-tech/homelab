@@ -1,0 +1,37 @@
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: ocp-home-static-address-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 10.10.0.0/16
+  autoAssign: false
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: ocp-home-dynamic-address-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 10.11.0.0/16
+---
+apiVersion: metallb.io/v1beta1
+kind: BGPAdvertisement
+metadata:
+  name: bgp-advertisement
+spec:
+  ipAddressPools:
+  - ocp-home-static-address-pool
+  - ocp-home-dynamic-address-pool
+  aggregationLength: 32
+---
+apiVersion: metallb.io/v1beta2
+kind: BGPPeer
+metadata:
+  name: pfsense-peer
+spec:
+  myASN: 64502
+  peerASN: 64500
+  peerAddress: 192.168.6.1
