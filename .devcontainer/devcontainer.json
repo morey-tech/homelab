@@ -1,9 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json.
 {
 	"name": "morey-tech/homelab",
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
+	"image": "ghcr.io/morey-tech/homelab/devcontainer:latest",
 	"runArgs": [
 		"--cap-add=NET_RAW",
 		"--network=host"
@@ -24,6 +22,6 @@
 		]
 	  }
 	},
-	"remoteUser": "tecno",
+	"remoteUser": "morey-tech",
 	"postCreateCommand": "/workspaces/homelab/.devcontainer/postCreate.sh"
 }
