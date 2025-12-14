@@ -11,6 +11,10 @@ spec:
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
+  mountOptions:
+    - nfsvers=4
+    - hard
+    - intr
   nfs:
     server: 192.168.3.19
-    path: /storage-mass/rubrik/paperless/
+    path: /storage-mass/rubrik/paperless
