@@ -33,14 +33,14 @@ helmCharts:
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-prod
         hosts:
-          - host: paperless.apps.ocp-home.rh-lab.morey.tech/
+          - host: paperless.apps.ocp-home.rh-lab.morey.tech
             paths:
             - path: /
               pathType: Prefix
         tls:
-        - secretName: paperless.apps.ocp-home.rh-lab.morey.tech/
+        - secretName: paperless.apps.ocp-home.rh-lab.morey.tech
           hosts:
-          - paperless.apps.ocp-home.rh-lab.morey.tech/
+          - paperless.apps.ocp-home.rh-lab.morey.tech
     # Persistence is disabled here because the helm chart creates separate volume
     # definitions for each persistence entry, which causes mount issues when they
     # all reference the same PVC. Instead, deployment-patch.yaml defines a single
