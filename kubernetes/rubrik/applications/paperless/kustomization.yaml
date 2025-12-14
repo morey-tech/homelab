@@ -3,6 +3,8 @@ kind: Kustomization
 namespace: paperless
 resources:
   - secret.yaml
+  - pv.yaml
+  - pvc.yaml
 
 patches:
 - path: deployment-patch.yaml
