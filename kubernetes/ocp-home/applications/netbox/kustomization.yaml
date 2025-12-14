@@ -2,29 +2,29 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: netbox
 
-# Add the route for NetBox.
-resources:
-  - route.yaml
+# # Add the route for NetBox.
+# resources:
+#   - route.yaml
 
-# Use the NetBox Helm chart for deployment.
-helmCharts:
-- includeCRDs: true
-  name: netbox
-  namespace: netbox
-  releaseName: netbox
-  repo: https://charts.netbox.oss.netboxlabs.com/
-  version: 6.0.59
+# # Use the NetBox Helm chart for deployment.
+# helmCharts:
+# - includeCRDs: true
+#   name: netbox
+#   namespace: netbox
+#   releaseName: netbox
+#   repo: https://charts.netbox.oss.netboxlabs.com/
+#   version: 6.0.59
 
-patches:
-# These patches use separate files to fix the security
-# context for the NetBox StatefulSet and Deployment in OpenShift.
-# - path: statefulset-scc-fix.yaml
+# patches:
+# # These patches use separate files to fix the security
+# # context for the NetBox StatefulSet and Deployment in OpenShift.
+# # - path: statefulset-scc-fix.yaml
+# #   target:
+# #     group: apps
+# #     kind: StatefulSet
+# #     version: v1
+# - path: deployment-scc-fix.yaml
 #   target:
 #     group: apps
-#     kind: StatefulSet
+#     kind: Deployment
 #     version: v1
-- path: deployment-scc-fix.yaml
-  target:
-    group: apps
-    kind: Deployment
-    version: v1
