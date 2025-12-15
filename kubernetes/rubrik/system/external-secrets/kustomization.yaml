@@ -21,4 +21,4 @@ helmCharts:
 
 images:
   - name: ghcr.io/morey-tech/bitwarden-cli
-    newTag: 2025.10.0-3
+    newTag: 2025.12.0

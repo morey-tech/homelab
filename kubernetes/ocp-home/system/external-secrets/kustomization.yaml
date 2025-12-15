@@ -21,7 +21,7 @@ helmCharts:
 
 images:
   - name: ghcr.io/morey-tech/bitwarden-cli
-    newTag: 2025.11.0-2
+    newTag: 2025.12.0
 
 patches:
 # Fix security context for OpenShift (removes runAsUser from all external-secrets Deployments)
