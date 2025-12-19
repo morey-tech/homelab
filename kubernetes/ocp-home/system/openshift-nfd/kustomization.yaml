@@ -45,3 +45,15 @@ patches:
       - op: add
         path: /spec/template/spec/serviceAccountName
         value: intel-gpu-plugin
+
+  # Configure GPU sharing - allow 5 containers per GPU (only 1 GPU in cluster)
+  - target:
+      kind: DaemonSet
+      name: intel-gpu-plugin
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: -shared-dev-num
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: "5"
