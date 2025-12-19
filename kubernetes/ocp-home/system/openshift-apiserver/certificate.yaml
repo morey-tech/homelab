@@ -1,0 +1,16 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  name: api-server-cert
+  namespace: openshift-config
+spec:
+  isCA: false
+  commonName: "api.ocp-home.rh-lab.morey.tech"
+  secretName: api-server-cert
+  dnsNames:
+  - "api.ocp-home.rh-lab.morey.tech"
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
