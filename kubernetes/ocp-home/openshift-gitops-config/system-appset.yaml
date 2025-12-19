@@ -60,3 +60,8 @@ spec:
       destination:
         namespace: openshift-devspaces
     {{ end }}
+    {{- if eq .path.basename "openshift-nfd" }}
+    spec:
+      destination:
+        namespace: openshift-nfd
+    {{ end }}
