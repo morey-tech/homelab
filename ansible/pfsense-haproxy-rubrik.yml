@@ -1,0 +1,138 @@
+---
+# Ansible Playbook: HAProxy SNI-Based Routing
+# Configures HAProxy on pfSense for TCP mode SNI-based routing with SSL passthrough
+
+- name: Configure HAProxy SNI routing
+  hosts: pfsense.home.morey.tech
+  gather_facts: false
+
+  vars:
+    # Frontend configuration
+    frontend_name: "wan-ingress"
+    frontend_bind_addr: "wan_ipv4"
+    frontend_port: 443
+
+    # Backend configuration
+    backend_name: "rubrik-backend"
+    backend_server_ip: "10.8.0.2"  # MetalLB external ingress
+    backend_server_port: 443
+
+    # ACL configuration for SNI-based routing
+    acl_name: "overseerr_sni"
+    sni_hostname: "overseerr.morey.tech"
+
+  tasks:
+    # 1. Create HTTPS backend pool
+    - name: Create HAProxy backend for HTTPS
+      pfsensible.haproxy.pfsense_haproxy_backend:
+        name: "{{ backend_name }}"
+        balance: roundrobin
+        check_type: SSL
+        check_frequency: 2000
+        connection_timeout: 30000
+        server_timeout: 30000
+        retries: 3
+        state: present
+      throttle: 1
+      tags:
+        - haproxy
+        - backend
+
+    # 2. Add backend server
+    - name: Add backend server
+      pfsensible.haproxy.pfsense_haproxy_backend_server:
+        backend: "{{ backend_name }}"
+        name: "overseerr-server"
+        address: "{{ backend_server_ip }}"
+        port: "{{ backend_server_port }}"
+        mode: active
+        state: present
+      throttle: 1
+      tags:
+        - haproxy
+        - backend
+
+    # 3. Create frontend in TCP/SNI mode
+    - name: Create HAProxy frontend
+      pfsensible.haproxy.pfsense_haproxy_frontend:
+        name: "{{ frontend_name }}"
+        desc: "SNI-based routing"
+        status: active
+        type: https  # TCP mode with SNI inspection
+        backend_serverpool: "{{ backend_name }}"
+        max_connections: 2000
+        state: present
+      throttle: 1
+      tags:
+        - haproxy
+        - frontend
+
+    # 4. Bind frontend to port 443
+    - name: Bind frontend to WAN port 443
+      pfsensible.haproxy.pfsense_haproxy_frontend_server:
+        frontend: "{{ frontend_name }}"
+        extaddr: "{{ frontend_bind_addr }}"
+        extaddr_port: "{{ frontend_port }}"
+        extaddr_ssl: "no"  # SSL passthrough, no offloading
+        state: present
+      throttle: 1
+      tags:
+        - haproxy
+        - frontend
+        - bind
+
+    # 5. Create SNI ACL
+    - name: Create ACL for SNI hostname
+      pfsensible.haproxy.pfsense_haproxy_frontend_acl:
+        frontend: "{{ frontend_name }}"
+        name: "{{ acl_name }}"
+        expression: ssl_sni_matches
+        value: "{{ sni_hostname }}"
+        casesensitive: false
+        state: present
+      throttle: 1
+      tags:
+        - haproxy
+        - frontend
+        - acl
+
+    # 6. Create routing action
+    - name: Route traffic to backend
+      pfsensible.haproxy.pfsense_haproxy_frontend_action:
+        frontend: "{{ frontend_name }}"
+        action: use_backend
+        backend: "{{ backend_name }}"
+        acl: "{{ acl_name }}"
+        state: present
+      throttle: 1
+      tags:
+        - haproxy
+        - frontend
+        - action
+
+# =============================================================================
+# OPTIONAL: Add more services by duplicating ACL/action tasks below
+# =============================================================================
+#
+# Example: Add routing for another service
+#
+# - name: Create SNI ACL for service2
+#   pfsensible.haproxy.pfsense_haproxy_frontend_acl:
+#     frontend: "{{ frontend_name }}"
+#     name: "service2_sni"
+#     expression: ssl_sni_matches
+#     value: "service2.morey.tech"
+#     casesensitive: false
+#     state: present
+#   throttle: 1
+#   tags: [haproxy, frontend, acl]
+#
+# - name: Route service2 traffic to backend
+#   pfsensible.haproxy.pfsense_haproxy_frontend_action:
+#     frontend: "{{ frontend_name }}"
+#     action: use_backend
+#     backend: "service2-backend"
+#     acl: "service2_sni"
+#     state: present
+#   throttle: 1
+#   tags: [haproxy, frontend, action]

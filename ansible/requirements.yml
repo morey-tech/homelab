@@ -7,3 +7,6 @@ collections:
     version: v0.0.2
   - name: pfsensible.core
     version: "0.6.2"
+  # pfsensible.haproxy fork with TCP/SNI support
+  - name: git+https://github.com/morey-tech/pfsensible-haproxy.git
+    version: main
