@@ -13,6 +13,9 @@ resources:
   # Create GPU plugin daemonset
   - https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin/overlays/nfd_labeled_nodes?ref=v0.31.1
 
+  # RBAC for Intel GPU plugin to use hostaccess SCC
+  - intel-gpu-plugin-rbac.yaml
+
 namespace: openshift-nfd
 
 # Exclude the node-feature-discovery Namespace from Intel resources
@@ -33,3 +36,12 @@ patches:
       - op: replace
         path: /apiVersion
         value: nfd.openshift.io/v1alpha1
+
+  # Add ServiceAccount to Intel GPU plugin DaemonSet for SCC permissions
+  - target:
+      kind: DaemonSet
+      name: intel-gpu-plugin
+    patch: |-
+      - op: add
+        path: /spec/template/spec/serviceAccountName
+        value: intel-gpu-plugin
