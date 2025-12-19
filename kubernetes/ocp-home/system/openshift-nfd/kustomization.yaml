@@ -3,3 +3,12 @@ kind: Kustomization
 resources:
   - https://github.com/redhat-cop/gitops-catalog/nfd/operator/overlays/stable?ref=main
   - nfd-instance.yaml
+
+  # Deploy intel device plugins for kubernetes
+  - https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=v0.31.1
+
+  # Create NodeFeatureRules for detecting GPUs on nodes
+  - https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd/overlays/node-feature-rules?ref=v0.31.1
+
+  # Create GPU plugin daemonset
+  - https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin/overlays/nfd_labeled_nodes?ref=v0.31.1
