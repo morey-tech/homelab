@@ -24,3 +24,12 @@ namespace: openshift-nfd
 #       metadata:
 #         name: node-feature-discovery
 #       $patch: delete
+
+# Patch NodeFeatureRule to use OpenShift API group
+patches:
+  - target:
+      kind: NodeFeatureRule
+    patch: |-
+      - op: replace
+        path: /apiVersion
+        value: nfd.openshift.io/v1alpha1
