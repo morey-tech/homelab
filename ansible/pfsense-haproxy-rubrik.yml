@@ -42,7 +42,7 @@
     - name: Add backend server
       pfsensible.haproxy.pfsense_haproxy_backend_server:
         backend: "{{ backend_name }}"
-        name: "overseerr-server"
+        name: "{{ backend_name }}-server"
         address: "{{ backend_server_ip }}"
         port: "{{ backend_server_port }}"
         mode: active
