@@ -14,3 +14,13 @@ resources:
   - https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin/overlays/nfd_labeled_nodes?ref=v0.31.1
 
 namespace: openshift-nfd
+
+# Exclude the node-feature-discovery Namespace from Intel resources
+# to avoid conflict with openshift-nfd Namespace from redhat-cop
+patches:
+  - patch: |-
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: node-feature-discovery
+      $patch: delete
