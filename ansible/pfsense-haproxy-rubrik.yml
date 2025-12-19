@@ -59,7 +59,6 @@
         desc: "SNI-based routing"
         status: active
         type: https  # TCP mode with SNI inspection
-        backend_serverpool: "{{ backend_name }}"
         max_connections: 2000
         state: present
       throttle: 1
