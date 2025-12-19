@@ -1,0 +1,24 @@
+apiVersion: nfd.openshift.io/v1
+kind: NodeFeatureDiscovery
+metadata:
+  name: nfd-instance
+  annotations:
+    # CRD might not be installed yet during initial Argo CD sync.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec: {}
+# spec:
+#   workerConfig:
+#     configData: |
+#       core:
+#         sleepInterval: 60s
+#       sources:
+#         pci:
+#           deviceClassWhitelist:
+#             - "0200"
+#             - "03"
+#             - "12"
+#           deviceLabelFields:
+#             - "vendor"
+#   operand:
+#     imagePullPolicy: IfNotPresent
+#     servicePort: 12000
