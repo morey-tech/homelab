@@ -5,7 +5,7 @@ resources:
   - nfd-instance.yaml
 
   # Deploy intel device plugins for kubernetes
-  - https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=v0.31.1
+  # - https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=v0.31.1
 
   # Create NodeFeatureRules for detecting GPUs on nodes
   - https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd/overlays/node-feature-rules?ref=v0.31.1
