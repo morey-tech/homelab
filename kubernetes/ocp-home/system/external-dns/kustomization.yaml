@@ -17,7 +17,7 @@ patches:
 helmCharts:
 - name: external-dns
   includeCRDs: true
-  version: 1.13.0
+  version: 1.19.0
   repo: https://kubernetes-sigs.github.io/external-dns
   releaseName: external-dns
   valuesInline:
