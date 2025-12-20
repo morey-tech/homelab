@@ -24,7 +24,8 @@ helmCharts:
     policy: upsert-only
     sources:
       - ingress
-    provider: cloudflare
+    provider:
+      name: cloudflare
     registry: noop
     extraArgs:
       annotation-filter: "external-dns.alpha.kubernetes.io/include in (true)"
