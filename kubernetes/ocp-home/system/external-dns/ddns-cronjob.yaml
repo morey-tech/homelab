@@ -56,7 +56,7 @@ spec:
               apiVersion: networking.k8s.io/v1
               kind: Ingress
               metadata:
-                name: rubrik-lab-home-morey-tech-ip
+                name: home-morey-tech-ip
                 annotations:
                   external-dns.alpha.kubernetes.io/hostname: '$IP_HOSTNAME_PROXIED'
                   external-dns.alpha.kubernetes.io/target: '$PUBLIC_IP'
@@ -76,7 +76,7 @@ spec:
               apiVersion: networking.k8s.io/v1
               kind: Ingress
               metadata:
-                name: unproxied-rubrik-lab-home-morey-tech-ip
+                name: home-unproxied-morey-tech-ip
                 annotations:
                   external-dns.alpha.kubernetes.io/hostname: '$IP_HOSTNAME_UNPROXIED'
                   external-dns.alpha.kubernetes.io/target: '$PUBLIC_IP'
