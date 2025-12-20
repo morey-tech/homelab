@@ -22,8 +22,8 @@ helmCharts:
   valuesInline:
     policy: upsert-only
     sources:
-      - crd       # For DDNS CronJob DNSEndpoint resources
-      - ingress   # For application ingresses (overseerr, etc.)
+      - crd
+      - ingress
     provider: cloudflare
     registry: noop
     extraArgs:
