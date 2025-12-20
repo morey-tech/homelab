@@ -65,3 +65,8 @@ spec:
       destination:
         namespace: openshift-nfd
     {{ end }}
+    {{- if eq .path.basename "cloudnative-pg" }}
+    spec:
+      destination:
+        namespace: openshift-operators
+    {{ end }}
