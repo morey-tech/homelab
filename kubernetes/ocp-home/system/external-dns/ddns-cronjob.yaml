@@ -70,7 +70,6 @@ spec:
                     name: ddns
                     uid: $CRONJOB_UID
               spec:
-                ingressClassName: ingress-nginx-external
                 rules:
                 - host: '$IP_HOSTNAME_PROXIED'
               ---
@@ -91,14 +90,13 @@ spec:
                     name: ddns
                     uid: $CRONJOB_UID
               spec:
-                ingressClassName: ingress-nginx-external
                 rules:
                 - host: '$IP_HOSTNAME_UNPROXIED'
               EOF
             env:
             - name: IP_HOSTNAME_PROXIED
-              value: rubrik.lab.home.morey.tech
+              value: home.morey.tech
             - name: IP_HOSTNAME_UNPROXIED
-              value: unproxied.rubrik.lab.home.morey.tech
+              value: home-unproxied.morey.tech
           restartPolicy: OnFailure
   successfulJobsHistoryLimit: 1
