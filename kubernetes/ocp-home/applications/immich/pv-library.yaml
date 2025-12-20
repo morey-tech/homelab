@@ -17,4 +17,4 @@ spec:
     - intr
   nfs:
     server: 192.168.6.20
-    path: /storage-mass/rubrik/immich/library
+    path: /storage-mass/ocp-home/immich/library
