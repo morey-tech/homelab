@@ -46,17 +46,10 @@ helmCharts:
         main:
           enabled: true
           annotations:
-            # cert-manager.io/cluster-issuer: letsencrypt-prod
-            nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-            nginx.ingress.kubernetes.io/ssl-redirect: "true"
-            nginx.ingress.kubernetes.io/proxy-body-size: 2048m
+            route.openshift.io/termination: edge  # use default router certificate for TLS termination.
           hosts:
             - host: immich.apps.ocp-home.rh-lab.morey.tech
               paths:
                 - path: /
                   service:
                     identifier: main
-          # tls:
-          #   - secretName: immich.apps.ocp-home.rh-lab.morey.tech
-          #     hosts:
-          #       - immich.apps.ocp-home.rh-lab.morey.tech
