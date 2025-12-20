@@ -72,6 +72,15 @@ spec:
               spec:
                 rules:
                 - host: '$IP_HOSTNAME_PROXIED'
+                  http:
+                    paths:
+                    - path: /
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: ddns-placeholder
+                          port:
+                            number: 80
               ---
               apiVersion: networking.k8s.io/v1
               kind: Ingress
@@ -92,6 +101,15 @@ spec:
               spec:
                 rules:
                 - host: '$IP_HOSTNAME_UNPROXIED'
+                  http:
+                    paths:
+                    - path: /
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: ddns-placeholder
+                          port:
+                            number: 80
               EOF
             env:
             - name: IP_HOSTNAME_PROXIED
