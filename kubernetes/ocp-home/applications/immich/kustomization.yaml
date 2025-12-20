@@ -1,0 +1,62 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: immich
+
+resources:
+  - pv-library.yaml
+  - pvc-library.yaml
+  - postgresql-credentials-secret.yaml
+  - postgresql-cluster.yaml
+
+helmCharts:
+- name: immich
+  includeCRDs: true
+  version: 0.10.3
+  repo: https://immich-app.github.io/immich-charts
+  releaseName: immich
+  namespace: immich
+  valuesInline:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # https://github.com/immich-app/immich/pkgs/container/immich-server
+              tag: v1.141.1
+            env:
+              DB_HOSTNAME: immich-postgresql-rw
+              DB_USERNAME: immich
+              DB_DATABASE_NAME: immich
+              DB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-postgres-credentials
+                    key: password
+
+    immich:
+      persistence:
+        library:
+          existingClaim: immich-storage-mass-library
+
+    valkey:
+      enabled: true
+
+    server:
+      ingress:
+        main:
+          enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+            nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+            nginx.ingress.kubernetes.io/ssl-redirect: "true"
+            nginx.ingress.kubernetes.io/proxy-body-size: 2048m
+          hosts:
+            - host: immich.apps.ocp-home.rh-lab.morey.tech
+              paths:
+                - path: /
+                  service:
+                    identifier: main
+          tls:
+            - secretName: immich.apps.ocp-home.rh-lab.morey.tech
+              hosts:
+                - immich.apps.ocp-home.rh-lab.morey.tech

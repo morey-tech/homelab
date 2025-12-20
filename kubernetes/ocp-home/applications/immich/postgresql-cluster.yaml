@@ -1,0 +1,38 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: immich-postgresql
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  imageName: ghcr.io/tensorchord/cloudnative-vectorchord:16.9-0.4.3
+  instances: 1
+
+  postgresql:
+    shared_preload_libraries:
+      - "vchord.so"
+
+  enableSuperuserAccess: true
+
+  managed:
+    roles:
+      - name: immich
+        superuser: true
+        login: true
+        passwordSecret:
+          name: immich-postgres-credentials
+
+  bootstrap:
+    initdb:
+      database: immich
+      owner: immich
+      secret:
+        name: immich-postgres-credentials
+      postInitSQL:
+        - CREATE EXTENSION IF NOT EXISTS "vector";
+        - CREATE EXTENSION IF NOT EXISTS "vchord" CASCADE;
+        - CREATE EXTENSION IF NOT EXISTS "cube" CASCADE;
+        - CREATE EXTENSION IF NOT EXISTS "earthdistance" CASCADE;
+
+  storage:
+    size: 10Gi
