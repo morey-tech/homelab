@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: external-dns-system
 resources:
   - ddns-cronjob.yaml
-  - ddns-placeholder-service.yaml
   - cloudflare-auth-secret.yaml
 
 patches:
@@ -17,13 +16,14 @@ patches:
 helmCharts:
 - name: external-dns
   includeCRDs: true
-  version: 1.13.0
+  version: 1.19.0
   repo: https://kubernetes-sigs.github.io/external-dns
   releaseName: external-dns
   valuesInline:
     policy: upsert-only
     sources:
-      - ingress
+      - crd       # For DDNS CronJob DNSEndpoint resources
+      - ingress   # For application ingresses (overseerr, etc.)
     provider: cloudflare
     registry: noop
     extraArgs:
