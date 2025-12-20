@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: external-dns-system
 resources:
   - ddns-cronjob.yaml
+  - ddns-placeholder-service.yaml
   - cloudflare-auth-secret.yaml
 
 patches:
