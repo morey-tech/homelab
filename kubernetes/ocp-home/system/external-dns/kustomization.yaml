@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: external-dns-system
+resources:
+  - ddns-cronjob.yaml
+  - cloudflare-auth-secret.yaml
+
+patches:
+- path: deployment-scc-fix.yaml
+  target:
+    group: apps
+    kind: Deployment
+    version: v1
+    name: external-dns
+
+helmCharts:
+- name: external-dns
+  includeCRDs: true
+  version: 1.13.0
+  repo: https://kubernetes-sigs.github.io/external-dns
+  releaseName: external-dns
+  valuesInline:
+    policy: upsert-only
+    sources:
+      - ingress
+    provider: cloudflare
+    registry: noop
+    extraArgs:
+      - --annotation-filter=external-dns.alpha.kubernetes.io/include in (true)
+      - --cloudflare-dns-records-per-page=5000
+    env:
+    - name: CF_API_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: cloudflare-auth
+          key: CF_API_TOKEN
+          optional: false

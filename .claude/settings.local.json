@@ -4,7 +4,8 @@
       "Bash(git stash:*)",
       "Bash(git add:*)",
       "Bash(git push:*)",
-      "Bash(kustomize build:*)"
+      "Bash(kustomize build:*)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []
