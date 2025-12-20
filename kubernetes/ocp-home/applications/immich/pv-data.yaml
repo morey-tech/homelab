@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: immich-storage-mass-library
+  name: immich-data-storage-mass
   labels:
     type: nfs
     app: immich
@@ -17,4 +17,4 @@ spec:
     - intr
   nfs:
     server: 192.168.6.20
-    path: /storage-mass/ocp-home/immich/library
+    path: /storage-mass/ocp-home/immich

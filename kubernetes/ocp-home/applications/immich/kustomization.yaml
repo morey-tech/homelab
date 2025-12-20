@@ -3,8 +3,8 @@ kind: Kustomization
 namespace: immich
 
 resources:
-  - pv-library.yaml
-  - pvc-library.yaml
+  - pv-data.yaml
+  - pvc-data.yaml
   - postgresql-credentials-secret.yaml
   - postgresql-cluster.yaml
 
@@ -36,7 +36,7 @@ helmCharts:
     immich:
       persistence:
         library:
-          existingClaim: immich-storage-mass-library
+          existingClaim: immich-data-storage-mass
 
     valkey:
       enabled: true
