@@ -26,6 +26,7 @@ spec:
           echo "Setting immich role password to match secret..."
           psql -h immich-postgresql-rw -U postgres -d postgres -c "ALTER ROLE immich WITH PASSWORD '$IMMICH_PASSWORD';"
           echo "Creating empty vector tables with correct pgvector schema..."
+          echo "Note: Indexes are NOT created here - Immich will create them with correct VectorChord config"
           psql -h immich-postgresql-rw -U postgres -d immich <<EOF
           CREATE TABLE IF NOT EXISTS smart_search (
               "assetId" uuid PRIMARY KEY REFERENCES asset(id) ON DELETE CASCADE,
@@ -35,8 +36,6 @@ spec:
               "faceId" uuid PRIMARY KEY REFERENCES asset_face(id) ON DELETE CASCADE,
               embedding vector(512) NOT NULL
           );
-          CREATE INDEX IF NOT EXISTS clip_index ON smart_search USING vchordrq (embedding vector_cosine_ops);
-          CREATE INDEX IF NOT EXISTS face_index ON face_search USING vchordrq (embedding vector_cosine_ops);
           EOF
           echo "Verifying restore..."
           psql -h immich-postgresql-rw -U postgres -d immich -c "SELECT (SELECT count(*) FROM asset) as assets, (SELECT count(*) FROM \"user\") as users, (SELECT count(*) FROM album) as albums;"
