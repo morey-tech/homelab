@@ -54,6 +54,9 @@ spec:
           volumeMounts:
           - mountPath: /config
             name: config
+          # Bluetooth USB adapter for habluetooth.scanner
+          - mountPath: /dev/bus/usb
+            name: usb
           resources:
             limits:
               cpu: 1000m
@@ -80,6 +83,9 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: home-assistant-config
+      - name: usb
+        hostPath:
+          path: /dev/bus/usb
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
