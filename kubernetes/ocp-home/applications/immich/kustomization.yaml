@@ -8,6 +8,7 @@ resources:
   - postgresql-credentials-secret.yaml
   - postgresql-cluster.yaml
   - ml-gpu-rbac.yaml
+  - pvc-ml-cache.yaml
 
 helmCharts:
 - name: immich
@@ -56,6 +57,9 @@ helmCharts:
                     identifier: main
 
     machine-learning:
+      persistence:
+        cache:
+          existingClaim: immich-ml-cache
       controllers:
         main:
           serviceAccount:
