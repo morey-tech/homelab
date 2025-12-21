@@ -7,7 +7,6 @@ resources:
   - pvc-data.yaml
   - postgresql-credentials-secret.yaml
   - postgresql-cluster.yaml
-  - ml-gpu-rbac.yaml
   - pvc-ml-cache.yaml
 
 helmCharts:
@@ -72,8 +71,6 @@ helmCharts:
           existingClaim: immich-ml-cache
       controllers:
         main:
-          serviceAccount:
-            name: immich-machine-learning
           containers:
             main:
               image:
