@@ -23,6 +23,7 @@ spec:
         - name: valkey
           image: docker.io/valkey/valkey:8-alpine
           imagePullPolicy: IfNotPresent
+          args: ["--save", ""]
           ports:
             - name: redis
               containerPort: 6379
