@@ -44,6 +44,17 @@ helmCharts:
       enabled: true
 
     server:
+      controllers:
+        main:
+          serviceAccount:
+            name: immich-server
+          containers:
+            main:
+              resources:
+                requests:
+                  gpu.intel.com/i915: "1"
+                limits:
+                  gpu.intel.com/i915: "1"
       ingress:
         main:
           enabled: true
