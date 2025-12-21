@@ -23,12 +23,14 @@ spec:
       containers:
         # TODO: Remove securityContext.runAsUser when base image updates to s6-overlay >= v3.2.0
         # Current base image uses s6-overlay v3.1.6.2 which lacks Kubernetes non-root support
+        # privileged: true needed for DHCP watcher (CAP_NET_RAW)
         # PR: https://github.com/home-assistant/docker-base/pull/342
         - image: 'ghcr.io/home-assistant/home-assistant:2025.9.1'
           imagePullPolicy: IfNotPresent
           name: home-assistant
           securityContext:
             runAsUser: 0
+            privileged: true
           ports:
             - containerPort: 8123
               name: http

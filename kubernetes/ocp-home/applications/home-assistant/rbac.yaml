@@ -1,6 +1,7 @@
 # Home Assistant requires privileged SCC for:
 #   - hostNetwork: mDNS discovery (HomeKit, Shelly CoIoT)
 #   - runAsUser: 0: s6-overlay v3.1.6.2 needs root to chown /run at startup
+#   - privileged: true: DHCP watcher needs CAP_NET_RAW for packet sniffing
 #
 # TODO: Switch to hostnetwork SCC only when docker-base updates to s6-overlay >= v3.2.0
 # The v3.2.0 release adds S6_YES_I_WANT_A_WORLD_WRITABLE_RUN_BECAUSE_KUBERNETES support
