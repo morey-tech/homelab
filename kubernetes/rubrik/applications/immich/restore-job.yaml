@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: immich-db-restore
+  namespace: immich
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: restore
+        image: postgres:16
+        command:
+        - /bin/bash
+        - -c
+        - |
+          BACKUP_FILE=$(ls -t /backup/immich-db-backup-clean-*.sql.gz 2>/dev/null | head -1)
+          if [ -z "$BACKUP_FILE" ]; then
+            echo "ERROR: No clean backup found"
+            exit 1
+          fi
+          echo "Restoring database from: ${BACKUP_FILE}"
+          gunzip -c "${BACKUP_FILE}" | \
+            sed "s/SELECT pg_catalog.set_config('search_path', '', false);/SELECT pg_catalog.set_config('search_path', 'public, pg_catalog', true);/g" | \
+            psql -h immich-postgresql-rw -U postgres -d immich
+          echo "Setting immich role password to match secret..."
+          psql -h immich-postgresql-rw -U postgres -d postgres -c "ALTER ROLE immich WITH PASSWORD '$IMMICH_PASSWORD';"
+          echo "Creating empty vector tables with correct pgvector schema..."
+          psql -h immich-postgresql-rw -U postgres -d immich <<EOF
+          CREATE TABLE IF NOT EXISTS smart_search (
+              "assetId" uuid PRIMARY KEY REFERENCES asset(id) ON DELETE CASCADE,
+              embedding vector(512) NOT NULL
+          );
+          CREATE TABLE IF NOT EXISTS face_search (
+              "faceId" uuid PRIMARY KEY REFERENCES asset_face(id) ON DELETE CASCADE,
+              embedding vector(512) NOT NULL
+          );
+          CREATE INDEX IF NOT EXISTS clip_index ON smart_search USING vchordrq (embedding vector_cosine_ops);
+          CREATE INDEX IF NOT EXISTS face_index ON face_search USING vchordrq (embedding vector_cosine_ops);
+          EOF
+          echo "Verifying restore..."
+          psql -h immich-postgresql-rw -U postgres -d immich -c "SELECT (SELECT count(*) FROM asset) as assets, (SELECT count(*) FROM \"user\") as users, (SELECT count(*) FROM album) as albums;"
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: immich-postgresql-superuser
+              key: password
+        - name: IMMICH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: immich-postgres-credentials
+              key: password
+        volumeMounts:
+        - name: backup
+          mountPath: /backup
+          subPath: backups
+      volumes:
+      - name: backup
+        persistentVolumeClaim:
+          claimName: immich-data-storage-mass

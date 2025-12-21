@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: immich-db-backup
+  namespace: immich
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: backup
+        image: postgres:14
+        command:
+        - /bin/bash
+        - -c
+        - |
+          TIMESTAMP=$(date +%Y%m%dT%H%M%S)
+          BACKUP_FILE="/backup/immich-db-backup-clean-${TIMESTAMP}.sql"
+          echo "Creating backup (excluding vector tables): ${BACKUP_FILE}"
+          pg_dump --clean --if-exists -h immich-postgresql -U immich -d immich \
+            --exclude-table=face_search \
+            --exclude-table=smart_search \
+            | gzip > "${BACKUP_FILE}.gz"
+          echo "Backup complete: ${BACKUP_FILE}.gz"
+          ls -la /backup/
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: immich-postgresql
+              key: password
+        volumeMounts:
+        - name: backup
+          mountPath: /backup
+      volumes:
+      - name: backup
+        nfs:
+          server: 192.168.3.19
+          path: /storage-mass/ocp-home/immich/backups
