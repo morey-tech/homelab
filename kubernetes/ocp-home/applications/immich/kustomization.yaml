@@ -7,6 +7,7 @@ resources:
   - pvc-data.yaml
   - postgresql-credentials-secret.yaml
   - postgresql-cluster.yaml
+  - ml-gpu-rbac.yaml
 
 helmCharts:
 - name: immich
@@ -53,3 +54,18 @@ helmCharts:
                 - path: /
                   service:
                     identifier: main
+
+    machine-learning:
+      controllers:
+        main:
+          serviceAccount:
+            name: immich-machine-learning
+          containers:
+            main:
+              image:
+                tag: v2.4.1-openvino
+              resources:
+                requests:
+                  gpu.intel.com/i915: "1"
+                limits:
+                  gpu.intel.com/i915: "1"
