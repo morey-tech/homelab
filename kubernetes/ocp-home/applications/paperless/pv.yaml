@@ -16,5 +16,5 @@ spec:
     - hard
     - intr
   nfs:
-    server: 192.168.3.19
+    server: 192.168.6.20
     path: /storage-mass/ocp-home/paperless
