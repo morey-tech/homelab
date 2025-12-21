@@ -80,6 +80,11 @@ helmCharts:
             main:
               image:
                 tag: v2.4.1-openvino
+              probes:
+                liveness:
+                  spec:
+                    periodSeconds: 30
+                    timeoutSeconds: 30
               resources:
                 requests:
                   gpu.intel.com/i915: "1"
