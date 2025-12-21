@@ -20,6 +20,14 @@ spec:
       automountServiceAccountToken: true
       serviceAccountName: home-assistant
       hostNetwork: true
+      # Set proper permissions on /run for s6-overlay before container starts
+      initContainers:
+        - name: init-run-permissions
+          image: busybox:latest
+          command: ['sh', '-c', 'chmod 1777 /run']
+          volumeMounts:
+            - mountPath: /run
+              name: run
       containers:
         - image: 'ghcr.io/home-assistant/home-assistant:2025.9.1'
           imagePullPolicy: IfNotPresent
