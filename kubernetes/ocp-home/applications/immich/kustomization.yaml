@@ -46,8 +46,6 @@ helmCharts:
     server:
       controllers:
         main:
-          serviceAccount:
-            name: immich-server
           containers:
             main:
               resources:
