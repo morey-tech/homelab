@@ -24,6 +24,12 @@ spec:
         - image: 'ghcr.io/home-assistant/home-assistant:2025.9.1'
           imagePullPolicy: IfNotPresent
           name: home-assistant
+          env:
+            # s6-overlay fix for OpenShift restricted SCC
+            - name: S6_READ_ONLY_ROOT
+              value: "1"
+            - name: S6_YES_I_WANT_A_WORLD_WRITABLE_RUN_BECAUSE_KUBERNETES
+              value: "1"
           ports:
             - containerPort: 8123
               name: http
@@ -47,6 +53,9 @@ spec:
           volumeMounts:
           - mountPath: /config
             name: config
+          # emptyDir for s6-overlay /run directory (can't chown as non-root)
+          - mountPath: /run
+            name: run
           resources:
             limits:
               cpu: 1000m
@@ -73,6 +82,8 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: home-assistant-config
+      - name: run
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
