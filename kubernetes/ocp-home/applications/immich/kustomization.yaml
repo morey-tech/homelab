@@ -59,6 +59,7 @@ helmCharts:
     machine-learning:
       persistence:
         cache:
+          type: persistentVolumeClaim
           existingClaim: immich-ml-cache
       controllers:
         main:
