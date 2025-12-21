@@ -28,10 +28,12 @@ helmCharts:
       PAPERLESS_CONSUMER_POLLING: 60
       PAPERLESS_REDIS: redis://paperless-valkey:6379
       PAPERLESS_OCR_USER_ARGS: '{"invalidate_digital_signatures": true}'  # https://github.com/paperless-ngx/paperless-ngx/discussions/4047#discussion-5544405
+      PAPERLESS_URL: https://paperless.apps.ocp-home.rh-lab.morey.tech  # Set https explicitly, defaults to http due to no TLS on ingress config.
     ingress:
       main:
         enabled: true
         annotations:
+          # Use default openshift router *.apps certificate.
           route.openshift.io/termination: edge
         hosts:
           - host: paperless.apps.ocp-home.rh-lab.morey.tech
