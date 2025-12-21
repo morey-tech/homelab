@@ -23,7 +23,7 @@ spec:
       containers:
         # TODO: Remove securityContext.runAsUser when base image updates to s6-overlay >= v3.2.0
         # Current base image uses s6-overlay v3.1.6.2 which lacks Kubernetes non-root support
-        # Track: https://github.com/home-assistant/docker-base/blob/master/alpine/build.yaml
+        # PR: https://github.com/home-assistant/docker-base/pull/342
         - image: 'ghcr.io/home-assistant/home-assistant:2025.9.1'
           imagePullPolicy: IfNotPresent
           name: home-assistant

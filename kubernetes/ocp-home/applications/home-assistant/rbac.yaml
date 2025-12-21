@@ -1,10 +1,10 @@
-# Home Assistant requires:
+# Home Assistant requires privileged SCC for:
 #   - hostNetwork: mDNS discovery (HomeKit, Shelly CoIoT)
-#   - anyuid: s6-overlay v3.1.6.2 needs root to chown /run at startup
+#   - runAsUser: 0: s6-overlay v3.1.6.2 needs root to chown /run at startup
 #
 # TODO: Switch to hostnetwork SCC only when docker-base updates to s6-overlay >= v3.2.0
 # The v3.2.0 release adds S6_YES_I_WANT_A_WORLD_WRITABLE_RUN_BECAUSE_KUBERNETES support
-# Track: https://github.com/home-assistant/docker-base/blob/master/alpine/build.yaml
+# PR: https://github.com/home-assistant/docker-base/pull/342
 # Issue: https://github.com/just-containers/s6-overlay/issues/427
 apiVersion: v1
 kind: ServiceAccount
@@ -15,26 +15,12 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: home-assistant-anyuid
+  name: home-assistant-privileged
   namespace: home-assistant
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: system:openshift:scc:anyuid
-subjects:
-- kind: ServiceAccount
-  name: home-assistant
-  namespace: home-assistant
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: home-assistant-hostnetwork
-  namespace: home-assistant
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:openshift:scc:hostnetwork
+  name: system:openshift:scc:privileged
 subjects:
 - kind: ServiceAccount
   name: home-assistant
