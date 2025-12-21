@@ -7,7 +7,6 @@ metadata:
     # Use default openshift router *.apps certificate.
     route.openshift.io/termination: edge
 spec:
-  ingressClassName: ingress-nginx-internal
   rules:
   - host: hass.apps.ocp-home.rh-lab.morey.tech
     http:
@@ -28,7 +27,6 @@ metadata:
     # Use default openshift router *.apps certificate.
     route.openshift.io/termination: edge
 spec:
-  ingressClassName: ingress-nginx-internal
   rules:
   - host: code-hass.apps.ocp-home.rh-lab.morey.tech
     http:
