@@ -1,0 +1,42 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: home-assistant-ingress
+  annotations:
+    # Use default openshift router *.apps certificate.
+    route.openshift.io/termination: edge
+spec:
+  ingressClassName: ingress-nginx-internal
+  rules:
+  - host: hass.apps.ocp-home.rh-lab.morey.tech
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: home-assistant-lb-tcp
+            port:
+              name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: home-assistant-codeserver-ingress
+  annotations:
+    # Use default openshift router *.apps certificate.
+    route.openshift.io/termination: edge
+spec:
+  ingressClassName: ingress-nginx-internal
+  rules:
+  - host: code-hass.apps.ocp-home.rh-lab.morey.tech
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: codeserver
+            port:
+              name: codeserver

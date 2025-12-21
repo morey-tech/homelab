@@ -1,0 +1,38 @@
+# One-time backup job for migrating Home Assistant config to ocp-home cluster
+# Run this AFTER scaling down home-assistant deployment to 0 replicas
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: home-assistant-backup
+  namespace: home-assistant
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: backup
+        image: alpine:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          TIMESTAMP=$(date +%Y%m%dT%H%M%S)
+          BACKUP_FILE="/backup/home-assistant-${TIMESTAMP}.tar.gz"
+          echo "Creating backup: ${BACKUP_FILE}"
+          tar -czvf "${BACKUP_FILE}" -C /config .
+          echo "Backup complete"
+          ls -la /backup/
+        volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
+        - name: backup
+          mountPath: /backup
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: home-assistant-config
+      - name: backup
+        nfs:
+          server: 192.168.3.19
+          path: /storage-media/rubrik

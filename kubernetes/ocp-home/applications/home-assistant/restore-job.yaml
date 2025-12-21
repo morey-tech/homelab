@@ -1,0 +1,43 @@
+# One-time restore job for migrating Home Assistant config from rubrik cluster
+# Run this AFTER:
+#   1. ArgoCD syncs deployment.yaml (creates the PVC)
+#   2. Scaling down home-assistant deployment to 0 replicas
+#   3. Running backup job on rubrik cluster
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: home-assistant-restore
+  namespace: home-assistant
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: restore
+        image: alpine:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          BACKUP_FILE=$(ls -t /backup/home-assistant-*.tar.gz 2>/dev/null | head -1)
+          if [ -z "$BACKUP_FILE" ]; then
+            echo "ERROR: No backup found"
+            exit 1
+          fi
+          echo "Restoring from: ${BACKUP_FILE}"
+          tar -xzvf "${BACKUP_FILE}" -C /config
+          echo "Restore complete"
+          ls -la /config/
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: backup
+          mountPath: /backup
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: home-assistant-config
+      - name: backup
+        nfs:
+          server: 192.168.3.19
+          path: /storage-media/rubrik
