@@ -20,24 +20,15 @@ spec:
       automountServiceAccountToken: true
       serviceAccountName: home-assistant
       hostNetwork: true
-      # Set proper permissions on /run for s6-overlay before container starts
-      initContainers:
-        - name: init-run-permissions
-          image: busybox:latest
-          command: ['sh', '-c', 'chmod 1777 /run']
-          volumeMounts:
-            - mountPath: /run
-              name: run
       containers:
+        # TODO: Remove securityContext.runAsUser when base image updates to s6-overlay >= v3.2.0
+        # Current base image uses s6-overlay v3.1.6.2 which lacks Kubernetes non-root support
+        # Track: https://github.com/home-assistant/docker-base/blob/master/alpine/build.yaml
         - image: 'ghcr.io/home-assistant/home-assistant:2025.9.1'
           imagePullPolicy: IfNotPresent
           name: home-assistant
-          env:
-            # s6-overlay fix for OpenShift restricted SCC
-            - name: S6_READ_ONLY_ROOT
-              value: "1"
-            - name: S6_YES_I_WANT_A_WORLD_WRITABLE_RUN_BECAUSE_KUBERNETES
-              value: "1"
+          securityContext:
+            runAsUser: 0
           ports:
             - containerPort: 8123
               name: http
@@ -61,9 +52,6 @@ spec:
           volumeMounts:
           - mountPath: /config
             name: config
-          # emptyDir for s6-overlay /run directory (can't chown as non-root)
-          - mountPath: /run
-            name: run
           resources:
             limits:
               cpu: 1000m
@@ -90,8 +78,6 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: home-assistant-config
-      - name: run
-        emptyDir: {}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
