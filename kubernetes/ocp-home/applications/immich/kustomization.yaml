@@ -55,6 +55,7 @@ helmCharts:
       ingress:
         main:
           enabled: true
+          className: openshift-default
           annotations:
             route.openshift.io/termination: edge  # use default router certificate for TLS termination.
           hosts:

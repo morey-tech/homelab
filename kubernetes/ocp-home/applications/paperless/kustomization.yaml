@@ -32,6 +32,7 @@ helmCharts:
     ingress:
       main:
         enabled: true
+        ingressClassName: openshift-default
         annotations:
           # Use default openshift router *.apps certificate.
           route.openshift.io/termination: edge
