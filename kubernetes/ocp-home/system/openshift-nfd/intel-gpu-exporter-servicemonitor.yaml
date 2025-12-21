@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: intel-gpu-exporter
+  namespace: openshift-nfd
+  labels:
+    app: intel-gpu-exporter
+spec:
+  selector:
+    matchLabels:
+      app: intel-gpu-exporter
+  namespaceSelector:
+    matchNames:
+      - openshift-nfd
+  endpoints:
+    - port: metrics
+      interval: 30s
+      scrapeTimeout: 25s

@@ -16,6 +16,10 @@ resources:
   # RBAC for Intel GPU plugin to use hostaccess SCC
   - intel-gpu-plugin-rbac.yaml
 
+  # Intel GPU metrics exporter for Prometheus
+  - intel-gpu-exporter.yaml
+  - intel-gpu-exporter-servicemonitor.yaml
+
 namespace: openshift-nfd
 
 # Exclude the node-feature-discovery Namespace from Intel resources

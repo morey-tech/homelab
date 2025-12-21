@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: intel-gpu-exporter
+  namespace: openshift-nfd
+---
+# Privileged SCC required for:
+#   - hostPID: access to GPU process metrics via intel_gpu_top
+#   - privileged: true: direct GPU device access for perf counters
+#   - hostPath /dev/dri: GPU render device access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: intel-gpu-exporter-privileged
+  namespace: openshift-nfd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:privileged
+subjects:
+  - kind: ServiceAccount
+    name: intel-gpu-exporter
+    namespace: openshift-nfd
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: intel-gpu-exporter
+  namespace: openshift-nfd
+  labels:
+    app: intel-gpu-exporter
+spec:
+  selector:
+    matchLabels:
+      app: intel-gpu-exporter
+  template:
+    metadata:
+      labels:
+        app: intel-gpu-exporter
+    spec:
+      serviceAccountName: intel-gpu-exporter
+      nodeSelector:
+        intel.feature.node.kubernetes.io/gpu: "true"
+      hostPID: true
+      containers:
+        - name: exporter
+          image: ghcr.io/onedr0p/intel-gpu-exporter:rolling@sha256:90a95483bf5d3752f4db2ab2e1663f19bba307fd832bf53557cbdc38c3701f84
+          securityContext:
+            privileged: true
+          ports:
+            - name: metrics
+              containerPort: 8080
+          resources:
+            requests:
+              gpu.intel.com/i915_monitoring: "1"
+            limits:
+              gpu.intel.com/i915_monitoring: "1"
+          volumeMounts:
+            - name: dev-dri
+              mountPath: /dev/dri
+              readOnly: true
+      volumes:
+        - name: dev-dri
+          hostPath:
+            path: /dev/dri
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: intel-gpu-exporter
+  namespace: openshift-nfd
+  labels:
+    app: intel-gpu-exporter
+spec:
+  selector:
+    app: intel-gpu-exporter
+  ports:
+    - name: metrics
+      port: 8080
+      targetPort: metrics
+  clusterIP: None
