@@ -1,19 +1,8 @@
+# ServiceAccounts for Immich pods using Intel GPU
+# Note: Privileged SCC is NOT required - the Intel device plugin
+# handles GPU access via gpu.intel.com/i915 resource allocation
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: immich-machine-learning
   namespace: immich
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: immich-ml-privileged
-  namespace: immich
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:openshift:scc:privileged
-subjects:
-  - kind: ServiceAccount
-    name: immich-machine-learning
-    namespace: immich
