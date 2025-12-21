@@ -22,7 +22,7 @@ helmCharts:
           main:
             image:
               # https://github.com/immich-app/immich/pkgs/container/immich-server
-              tag: v1.141.1
+              tag: v2.4.1
             env:
               DB_HOSTNAME: immich-postgresql-rw
               DB_USERNAME: immich
