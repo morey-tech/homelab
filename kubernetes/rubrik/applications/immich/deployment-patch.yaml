@@ -1,7 +1,0 @@
-- op: replace
-  path: "/spec/template/spec/volumes"
-  value:
-    - name: library
-      nfs:
-        path: /storage-mass/rubrik/immich/library
-        server: 192.168.3.19
