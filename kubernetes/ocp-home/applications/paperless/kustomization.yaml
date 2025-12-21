@@ -5,6 +5,7 @@ resources:
   - secret.yaml
   - pv.yaml
   - pvc.yaml
+  - valkey.yaml
 
 patches:
 - path: deployment-patch.yaml
@@ -25,7 +26,7 @@ helmCharts:
       PAPERLESS_TIME_ZONE: America/New_York
       PAPERLESS_OCR_LANGUAGE: eng
       PAPERLESS_CONSUMER_POLLING: 60
-      PAPERLESS_REDIS: redis://paperless-redis-headless:6379
+      PAPERLESS_REDIS: redis://paperless-valkey:6379
       PAPERLESS_OCR_USER_ARGS: '{"invalidate_digital_signatures": true}'  # https://github.com/paperless-ngx/paperless-ngx/discussions/4047#discussion-5544405
     ingress:
       main:
@@ -55,12 +56,4 @@ helmCharts:
       export:
         enabled: false
     redis:
-      enabled: true
-      image:
-        pullPolicy: IfNotPresent
-      architecture: standalone
-      auth:
-        enabled: false
-      master:
-        persistence:
-          enabled: false
+      enabled: false
