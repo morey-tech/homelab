@@ -23,6 +23,7 @@ spec:
         - name: valkey
           image: docker.io/valkey/valkey:8-alpine
           imagePullPolicy: IfNotPresent
+          # Disable RDB persistence - not needed for cache and avoids permission errors on /data
           args: ["--save", ""]
           ports:
             - name: redis
