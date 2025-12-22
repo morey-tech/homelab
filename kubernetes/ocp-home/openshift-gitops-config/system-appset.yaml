@@ -70,3 +70,8 @@ spec:
       destination:
         namespace: openshift-operators
     {{ end }}
+    {{- if eq .path.basename "mongodb-operator" }}
+    spec:
+      destination:
+        namespace: openshift-operators
+    {{ end }}
