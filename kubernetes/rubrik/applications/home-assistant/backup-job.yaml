@@ -35,4 +35,4 @@ spec:
       - name: backup
         nfs:
           server: 192.168.3.19
-          path: /storage-media/rubrik
+          path: /storage-mass/rubrik

@@ -3,6 +3,35 @@
 #   1. ArgoCD syncs deployment.yaml (creates the PVC)
 #   2. Scaling down home-assistant deployment to 0 replicas
 #   3. Running backup job on rubrik cluster
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: home-assistant-backup-nfs
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadOnlyMany
+  nfs:
+    server: 192.168.6.20
+    path: /storage-mass/rubrik
+  storageClassName: ""
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: home-assistant-backup
+  namespace: home-assistant
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 10Gi
+  volumeName: home-assistant-backup-nfs
+  storageClassName: ""
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -38,6 +67,5 @@ spec:
         persistentVolumeClaim:
           claimName: home-assistant-config
       - name: backup
-        nfs:
-          server: 192.168.3.19
-          path: /storage-media/rubrik
+        persistentVolumeClaim:
+          claimName: home-assistant-backup
