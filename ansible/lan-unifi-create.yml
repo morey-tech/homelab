@@ -1,0 +1,191 @@
+---
+- name: Create UniFi LXC
+  hosts:
+    - unifi.home.morey.tech
+  gather_facts: false  # Hosts aren't available, since this playbook creates them.
+  become: true
+  vars:
+    # LAN-specific variables (no existing group for LAN)
+    cluster_dns_zone: "home.morey.tech"
+    gateway_ip: "192.168.1.1"
+    net_prefix: "24"
+    storage: "storage-pve"
+    template_name: "debian-12-standard_12.12-1_amd64.tar.zst"
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
+
+  tasks:
+    - name: Download LXC OS template to Proxmox storage
+      community.general.proxmox_template:
+        <<: *pve_api
+        node: "{{ pve_node }}"
+        storage: "{{ storage }}"
+        content_type: "vztmpl"
+        template: "{{ template_name }}"
+        state: present
+      delegate_to: localhost
+
+    - name: Create LXC container
+      community.general.proxmox:
+        <<: *pve_api
+        node: "{{ pve_node }}"
+        vmid: "{{ pve_vm_id }}"
+        hostname: "{{ inventory_hostname_short }}"
+        ostemplate: "{{ storage }}:vztmpl/{{ template_name }}"
+        memory: 2048
+        cores: 2
+        disk_volume:
+          storage: local-nvme
+          size: 24
+        netif: '{"net0":"name=eth0,hwaddr={{ mac_address }},ip={{ ip_address }}/{{ net_prefix }},gw={{ gateway_ip }},bridge=vmbr0"}'
+        nameserver: "{{ gateway_ip }}"
+        searchdomain: "{{ cluster_dns_zone }}"
+        pubkey: "{{ ssh_authorized_keys }}"
+        features:
+          - nesting=1
+        state: present
+      delegate_to: localhost
+
+    - name: Create DHCP static mapping
+      pfsensible.core.pfsense_dhcp_static:
+        netif: lan
+        hostname: "{{ inventory_hostname_short }}"
+        macaddr: "{{ mac_address }}"
+        ipaddr: "{{ ip_address }}"
+        ddnsdomainkeyalgorithm: "hmac-md5"  # fixes diff.
+        state: present
+      delegate_to: pfsense.home.morey.tech
+
+    - name: Start LXC container
+      community.general.proxmox:
+        <<: *pve_api
+        vmid: "{{ pve_vm_id }}"
+        state: started
+      delegate_to: localhost
+
+    - name: Add LXC container to inventory
+      ansible.builtin.add_host:
+        name: "{{ inventory_hostname_short }}.{{ cluster_dns_zone }}"
+        ansible_host: "{{ ip_address }}"
+        ansible_user: root
+      changed_when: false
+
+- name: Install UniFi Network Controller
+  hosts:
+    - unifi.home.morey.tech
+  gather_facts: false
+  become: true
+
+  handlers:
+    - name: Restart UniFi
+      ansible.builtin.service:
+        name: unifi
+        state: restarted
+
+  tasks:
+    - name: Wait for SSH to become available
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host | default(inventory_hostname) }}"
+        port: 22
+        delay: 5
+        timeout: 120
+      delegate_to: localhost
+
+    - name: Wait for system to be ready
+      ansible.builtin.wait_for_connection:
+        delay: 5
+        timeout: 120
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install prerequisites
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - apt-transport-https
+          - wget
+          - gnupg
+        state: present
+
+    - name: Add UniFi GPG key
+      ansible.builtin.get_url:
+        url: https://dl.ui.com/unifi/unifi-repo.gpg
+        dest: /etc/apt/trusted.gpg.d/unifi-repo.gpg
+        mode: '0644'
+
+    - name: Add UniFi APT repository
+      ansible.builtin.copy:
+        content: "deb [ arch=amd64,arm64 ] https://www.ui.com/downloads/unifi/debian stable ubiquiti\n"
+        dest: /etc/apt/sources.list.d/100-ubnt-unifi.list
+        mode: '0644'
+
+    - name: Add MongoDB GPG key
+      ansible.builtin.get_url:
+        url: https://www.mongodb.org/static/pgp/server-7.0.asc
+        dest: /etc/apt/trusted.gpg.d/mongodb-server-7.0.asc
+        mode: '0644'
+
+    - name: Add MongoDB 7.0 repository for Debian 12
+      ansible.builtin.copy:
+        content: "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/7.0 main\n"
+        dest: /etc/apt/sources.list.d/mongodb-org-7.0.list
+        mode: '0644'
+
+    - name: Update apt cache after adding repositories
+      ansible.builtin.apt:
+        update_cache: true
+
+    # Option 1: Install specific version via direct .deb download
+    - name: Download UniFi Network Controller v8.6.9 deb package
+      ansible.builtin.get_url:
+        url: https://dl.ui.com/unifi/8.6.9/unifi_sysvinit_all.deb
+        dest: /tmp/unifi_8.6.9.deb
+        mode: '0644'
+
+    - name: Install UniFi Network Controller v8.6.9
+      ansible.builtin.apt:
+        deb: /tmp/unifi_8.6.9.deb
+        state: present
+
+    # Option 2: Install latest version from apt repo (uncomment to use)
+    # - name: Install UniFi Network Controller (latest)
+    #   ansible.builtin.apt:
+    #     name: unifi
+    #     state: present
+
+    - name: Enable UniFi service
+      ansible.builtin.systemd:
+        name: unifi
+        enabled: true
+        daemon_reload: true
+
+    - name: Start UniFi service
+      ansible.builtin.service:
+        name: unifi
+        state: started
+
+    - name: Wait for UniFi to be ready
+      ansible.builtin.wait_for:
+        port: 8443
+        delay: 10
+        timeout: 120
+
+    - name: Display UniFi access information
+      ansible.builtin.debug:
+        msg:
+          - "UniFi Network Controller is ready!"
+          - ""
+          - "Web UI: https://{{ ip_address }}:8443"
+          - "Inform URL: http://{{ ip_address }}:8080/inform"
+          - ""
+          - "To adopt devices, SSH into each device and run:"
+          - "  set-inform http://{{ ip_address }}:8080/inform"

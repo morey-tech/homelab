@@ -46,3 +46,28 @@ Create an API token with the Token ID `ansible`.
 ```
 ansible-playbook upgrade.yml
 ```
+
+## UniFi Network Controller
+
+The UniFi Network Controller runs on an LXC container on the LAN network.
+
+- **Web UI**: https://192.168.1.13:8443
+- **Inform URL**: http://192.168.1.13:8080/inform
+
+### Create/Destroy
+```bash
+ansible-playbook lan-unifi-create.yml
+ansible-playbook lan-unifi-destroy.yml
+```
+
+### Adopting Devices
+
+To connect a device to the controller, SSH into it and run the `set-inform` command (credentials for provisioned devices are `root` / `server` in Bitwarden):
+
+```bash
+ssh root@<device-ip>
+
+set-inform http://192.168.1.13:8080/inform
+```
+
+Note: It may take 2-3 tries before the device is picked up.

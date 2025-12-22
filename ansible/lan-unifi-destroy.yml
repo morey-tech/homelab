@@ -1,0 +1,62 @@
+---
+- name: Destroy UniFi LXC Container
+  hosts:
+    - unifi.home.morey.tech
+  gather_facts: false
+  become: true
+  vars:
+    pve_api: &pve_api
+      api_user: "{{ pve_api_user }}"
+      api_token_id: "{{ pve_api_token_id }}"
+      api_token_secret: "{{ pve_api_token_secret }}"
+      api_host: "{{ pve_api_host }}"
+    template_name: "debian-12-standard_12.12-1_amd64.tar.zst"
+    delete_lxc_os_template: false
+
+  vars_prompt:
+    - name: "destroy_confirmation"
+      prompt: "Do you want to destroy the UniFi container (unifi.home.morey.tech)? (yes/no)"
+      private: false
+
+  tasks:
+    - name: Fail if not confirmed
+      ansible.builtin.fail:
+        msg: "Destruction cancelled - confirmation not received"
+      when: "destroy_confirmation != 'yes'"
+
+    - name: Stop LXC container
+      community.general.proxmox:
+        <<: *pve_api
+        node: "{{ pve_node }}"
+        vmid: "{{ pve_vm_id }}"
+        state: stopped
+        force: true
+        timeout: 15
+      delegate_to: localhost
+      ignore_errors: true
+
+    - name: Delete LXC container
+      community.general.proxmox:
+        <<: *pve_api
+        node: "{{ pve_node }}"
+        vmid: "{{ pve_vm_id }}"
+        state: absent
+      delegate_to: localhost
+
+    - name: Delete DHCP static mapping
+      pfsensible.core.pfsense_dhcp_static:
+        netif: lan
+        macaddr: "{{ mac_address }}"
+        state: absent
+      delegate_to: pfsense.home.morey.tech
+
+    - name: Delete LXC OS template
+      community.general.proxmox_template:
+        <<: *pve_api
+        node: "{{ pve_node }}"
+        storage: storage-pve
+        content_type: vztmpl
+        template: "{{ template_name }}"
+        state: absent
+      delegate_to: localhost
+      when: delete_lxc_os_template | default(false) | bool
