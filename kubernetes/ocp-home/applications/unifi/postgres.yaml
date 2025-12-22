@@ -1,0 +1,31 @@
+# CloudNativePG Cluster for UniFi with DocumentDB extension
+# Required by FerretDB v2.x to provide MongoDB wire protocol
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: unifi-postgres
+  namespace: unifi
+spec:
+  instances: 1
+  # FerretDB's PostgreSQL image with DocumentDB extension
+  imageName: 'ghcr.io/ferretdb/postgres-documentdb:17-0.102.0-ferretdb-2.1.0'
+  postgresUID: 999
+  postgresGID: 999
+  enableSuperuserAccess: true
+  storage:
+    size: 8Gi
+  postgresql:
+    shared_preload_libraries:
+      - pg_cron
+      - pg_documentdb_core
+      - pg_documentdb
+    parameters:
+      cron.database_name: 'postgres'
+  bootstrap:
+    initdb:
+      database: unifi
+      owner: unifi
+      secret:
+        name: unifi-postgres-password
+      postInitSQL:
+        - 'CREATE EXTENSION IF NOT EXISTS documentdb CASCADE;'
