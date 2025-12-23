@@ -1,7 +1,7 @@
 ---
-- name: Test creating vm on ms-01
+- name: Test creating vm on ms-04
   hosts:
-    - ms-01.home.morey.tech
+    - ms-04.home.morey.tech
   become: true
 
   tasks:
@@ -23,7 +23,7 @@
         api_host: "{{ ansible_host }}"
         vmid: 6254
         name: test
-        node: ms-01
+        node: ms-04
         cpu: host
         cores: 1
         memory: 2048

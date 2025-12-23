@@ -1,4 +1,4 @@
-pve_api_host: ms-03.home.morey.tech
+pve_api_host: ms-04.home.morey.tech
 pve_api_user: ansible@pve
 pve_api_token_id: ansible
 pve_api_token_secret: !vault |

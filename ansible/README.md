@@ -34,13 +34,13 @@ ms-<nn>.home.morey.tech | SUCCESS => {
 
 ## Setting Up Proxmox API Permisssions
 Create a new user named `ansible` with the Realm `Proxmox VE` on the Proxmox datacenter.
-- https://ms-03.home.morey.tech:8006/#v1:0:18:4:31::::::14
+- https://ms-04.home.morey.tech:8006/#v1:0:18:4:31::::::14
 
 Assign `PVEAdmin` role and path `/` to the `ansible@pve` user and the `ansible@pve!ansible` token.
-- https://ms-03.home.morey.tech:8006/#v1:0:18:4:31::::::6
+- https://ms-04.home.morey.tech:8006/#v1:0:18:4:31::::::6
 
 Create an API token with the Token ID `ansible`.
-- https://ms-03.home.morey.tech:8006/#v1:0:18:4:31::::::=apitokens
+- https://ms-04.home.morey.tech:8006/#v1:0:18:4:31::::::=apitokens
 
 ## Upgrading Nodes
 ```
