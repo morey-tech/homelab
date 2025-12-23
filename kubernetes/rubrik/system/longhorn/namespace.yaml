@@ -1,7 +1,0 @@
-# namespace.yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: longhorn-system
-  annotations:
-    argocd.argoproj.io/sync-wave: "-2"
