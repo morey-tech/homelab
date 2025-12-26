@@ -15,27 +15,166 @@ the example below.  The Name matches the name of an identity provider in the mas
 <html>
   <head>
     <title>ocp-home - Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style type="text/css">
+      :root {
+        --bg-primary: #1a1a1a;
+        --bg-card: #2d2d2d;
+        --bg-provider: #333;
+        --border-color: #444;
+        --text-primary: #e0e0e0;
+        --text-secondary: #888;
+        --accent: #00bcd4;
+        --accent-hover: #00a0b4;
+        --radius-card: 12px;
+        --radius-button: 6px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
       body {
-        font-family: "Open Sans", Helvetica, Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-size: 16px;
+        background-color: var(--bg-primary);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background-color: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        width: 100%;
+        max-width: 400px;
+        overflow: hidden;
+      }
+
+      .accent-bar {
+        height: 4px;
+        background: linear-gradient(90deg, var(--accent), #26c6da);
+      }
+
+      .header {
+        padding: 32px 32px 24px;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .header h1 {
+        color: var(--text-primary);
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .header .subtitle {
+        color: var(--text-secondary);
         font-size: 14px;
-        margin: 15px;
+      }
+
+      .providers {
+        padding: 32px;
+      }
+
+      .providers-label {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-bottom: 16px;
+        text-align: center;
+      }
+
+      .provider-link {
+        display: block;
+        width: 100%;
+        padding: 14px 20px;
+        background-color: var(--bg-provider);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-button);
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 500;
+        text-align: center;
+        transition: border-color 0.2s, background-color 0.2s, transform 0.1s;
+        margin-bottom: 12px;
+      }
+
+      .provider-link:last-child {
+        margin-bottom: 0;
+      }
+
+      .provider-link:hover {
+        border-color: var(--accent);
+        background-color: rgba(0, 188, 212, 0.1);
+      }
+
+      .provider-link:active {
+        transform: scale(0.98);
+      }
+
+      .provider-link.anypassword {
+        background-color: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      .provider-link.anypassword:hover {
+        background-color: var(--accent-hover);
+        border-color: var(--accent-hover);
+      }
+
+      .provider-description {
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 400;
+        margin-top: 4px;
+      }
+
+      @media (max-width: 480px) {
+        .header {
+          padding: 24px 24px 20px;
+        }
+
+        .header h1 {
+          font-size: 24px;
+        }
+
+        .providers {
+          padding: 24px;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Welcome to the ocp-home Cluster</h1>
+    <div class="container">
+      <div class="accent-bar"></div>
 
-    {{ range $provider := .Providers }}
-      <div>
-        <!-- This is an example of customizing display for a particular provider based on its Name -->
-        {{ if eq $provider.Name "anypassword" }}
-          <a href="{{$provider.URL}}">Log in</a> with any username and password
-        {{ else }}
-          <a href="{{$provider.URL}}">{{$provider.Name}}</a>
+      <div class="header">
+        <h1>ocp-home</h1>
+        <p class="subtitle">Home Lab Cluster</p>
+      </div>
+
+      <div class="providers">
+        <p class="providers-label">Select a login method</p>
+
+        {{ range $provider := .Providers }}
+          <!-- This is an example of customizing display for a particular provider based on its Name -->
+          {{ if eq $provider.Name "anypassword" }}
+            <a href="{{$provider.URL}}" class="provider-link anypassword">
+              Log in with any username and password
+            </a>
+          {{ else }}
+            <a href="{{$provider.URL}}" class="provider-link">{{$provider.Name}}</a>
+          {{ end }}
         {{ end }}
       </div>
-    {{ end }}
-
+    </div>
   </body>
 </html>
