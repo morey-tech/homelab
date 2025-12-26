@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: login-template-sync
+  namespace: openshift-config
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: login-template-sync
+  namespace: openshift-config
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: login-template-sync
+  namespace: openshift-config
+subjects:
+- kind: ServiceAccount
+  name: login-template-sync
+  namespace: openshift-config
+roleRef:
+  kind: Role
+  name: login-template-sync
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: login-template-sync
+  namespace: openshift-config
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      serviceAccountName: login-template-sync
+      restartPolicy: OnFailure
+      containers:
+      - name: sync
+        image: registry.redhat.io/openshift4/ose-cli:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+
+          # Find the login-templates ConfigMap using label selector
+          # Sort by creation timestamp to get the newest one if multiple exist
+          CM_NAME=$(kubectl get cm -n openshift-config \
+            -l app.kubernetes.io/component=login-templates \
+            --sort-by=.metadata.creationTimestamp \
+            -o jsonpath='{.items[-1].metadata.name}')
+
+          if [ -z "$CM_NAME" ]; then
+            echo "ERROR: No ConfigMap found with label app.kubernetes.io/component=login-templates"
+            exit 1
+          fi
+
+          echo "Using ConfigMap: $CM_NAME"
+
+          # Extract and create login-template secret
+          kubectl get cm "$CM_NAME" -n openshift-config -o jsonpath='{.data.login\.html}' | \
+            kubectl create secret generic login-template \
+              --from-file=login.html=/dev/stdin \
+              --dry-run=client -o yaml -n openshift-config | \
+            kubectl apply -f -
+
+          # Extract and create providers-template secret
+          kubectl get cm "$CM_NAME" -n openshift-config -o jsonpath='{.data.providers\.html}' | \
+            kubectl create secret generic providers-template \
+              --from-file=providers.html=/dev/stdin \
+              --dry-run=client -o yaml -n openshift-config | \
+            kubectl apply -f -
+
+          echo "Login templates synced successfully from ConfigMap: $CM_NAME"

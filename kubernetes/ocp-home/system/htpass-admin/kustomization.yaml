@@ -1,0 +1,14 @@
+resources:
+  - cluster-admins.yaml
+  - htpass-cluster.yaml
+  - login-template-sync.yaml
+
+configMapGenerator:
+  - name: login-templates
+    namespace: openshift-config
+    options:
+      labels:
+        app.kubernetes.io/component: login-templates
+    files:
+      - login.html
+      - providers.html
