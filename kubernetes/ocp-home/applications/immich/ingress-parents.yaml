@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: immich-parents
+  namespace: immich
+  annotations:
+    route.openshift.io/termination: edge
+    # cert-manager annotation to auto-generate certificate from TLS config
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # external-dns annotations to create DNS record
+    external-dns.alpha.kubernetes.io/include: "true"
+    external-dns.alpha.kubernetes.io/target: "192.168.0.20"
+spec:
+  ingressClassName: openshift-default
+  tls:
+    - hosts:
+        - immich.parents.morey.tech
+      secretName: immich-parents-tls
+  rules:
+    - host: immich.parents.morey.tech
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: immich-server
+                port:
+                  name: http

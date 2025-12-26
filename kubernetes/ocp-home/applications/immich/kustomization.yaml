@@ -8,6 +8,7 @@ resources:
   - postgresql-credentials-secret.yaml
   - postgresql-cluster.yaml
   - pvc-ml-cache.yaml
+  - ingress-parents.yaml
 
 helmCharts:
 - name: immich
