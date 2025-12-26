@@ -13,8 +13,8 @@
     frontend_port: 443
 
     # Backend configuration
-    backend_name: "rubrik-backend"
-    backend_server_ip: "10.8.0.2"  # MetalLB external ingress
+    backend_name: "ocp-home-backend"
+    backend_server_ip: "192.168.6.71"  # MetalLB external ingress
     backend_server_port: 443
 
     # ACL configuration for SNI-based routing
