@@ -5,7 +5,10 @@
       "Bash(git add:*)",
       "Bash(git push:*)",
       "Bash(kustomize build:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(oc get:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
