@@ -2,6 +2,7 @@ resources:
   - cluster-admins.yaml
   - htpass-cluster.yaml
   - login-template-sync.yaml
+  - console-banner.yaml
 
 configMapGenerator:
   - name: login-templates

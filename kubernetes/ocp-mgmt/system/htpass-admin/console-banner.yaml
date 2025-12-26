@@ -1,0 +1,9 @@
+apiVersion: console.openshift.io/v1
+kind: ConsoleNotification
+metadata:
+  name: cluster-banner
+spec:
+  text: "ocp-mgmt"
+  location: BannerTop
+  color: "#fff"
+  backgroundColor: "#2196f3"
