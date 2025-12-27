@@ -1,0 +1,6 @@
+#!/bin/bash
+# Certbot deploy hook for UniFi certificate renewal
+# This script is called by certbot after successful renewal
+# This file is managed by Ansible
+
+/usr/local/bin/unifi-cert-import.sh

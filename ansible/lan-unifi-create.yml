@@ -184,3 +184,108 @@
           - ""
           - "To adopt devices, SSH into each device and run:"
           - "  set-inform http://{{ ip_address }}:8080/inform"
+
+- name: Configure Let's Encrypt Certificate for UniFi
+  hosts:
+    - unifi.home.morey.tech
+  gather_facts: true
+  become: true
+  vars:
+    unifi_domain: "unifi.home.morey.tech"
+    certbot_email: "info+unifi.home@morey.tech"
+
+  handlers:
+    - name: Restart UniFi for certificate
+      ansible.builtin.service:
+        name: unifi
+        state: restarted
+
+  tasks:
+    - name: Install certbot and Cloudflare DNS plugin
+      ansible.builtin.apt:
+        name:
+          - certbot
+          - python3-certbot-dns-cloudflare
+        state: present
+        update_cache: true
+
+    - name: Create letsencrypt directory
+      ansible.builtin.file:
+        path: /etc/letsencrypt
+        state: directory
+        mode: '0755'
+
+    - name: Deploy Cloudflare credentials file
+      ansible.builtin.template:
+        src: cloudflare-credentials.ini.j2
+        dest: /etc/letsencrypt/cloudflare-credentials.ini
+        mode: '0600'
+        owner: root
+        group: root
+
+    - name: Deploy certificate import script
+      ansible.builtin.template:
+        src: unifi-cert-import.sh.j2
+        dest: /usr/local/bin/unifi-cert-import.sh
+        mode: '0700'
+        owner: root
+        group: root
+
+    - name: Create certbot renewal hooks directory
+      ansible.builtin.file:
+        path: /etc/letsencrypt/renewal-hooks/deploy
+        state: directory
+        mode: '0755'
+        recurse: true
+
+    - name: Deploy certbot renewal hook
+      ansible.builtin.template:
+        src: unifi-certbot-deploy-hook.sh.j2
+        dest: /etc/letsencrypt/renewal-hooks/deploy/unifi-cert-import.sh
+        mode: '0700'
+        owner: root
+        group: root
+
+    - name: Check if certificate already exists
+      ansible.builtin.stat:
+        path: "/etc/letsencrypt/live/{{ unifi_domain }}/fullchain.pem"
+      register: cert_exists
+
+    - name: Obtain Let's Encrypt certificate
+      ansible.builtin.command:
+        cmd: >
+          certbot certonly
+          --dns-cloudflare
+          --dns-cloudflare-credentials /etc/letsencrypt/cloudflare-credentials.ini
+          --dns-cloudflare-propagation-seconds 60
+          --email {{ certbot_email }}
+          --agree-tos
+          --non-interactive
+          --domain {{ unifi_domain }}
+      when: not cert_exists.stat.exists
+      register: certbot_result
+      changed_when: "'Successfully received certificate' in certbot_result.stdout"
+
+    - name: Import certificate into UniFi keystore
+      ansible.builtin.command:
+        cmd: /usr/local/bin/unifi-cert-import.sh
+      when: certbot_result.changed or not cert_exists.stat.exists
+      register: import_result
+      changed_when: "'Certificate import complete' in import_result.stdout"
+
+    - name: Enable certbot renewal timer
+      ansible.builtin.systemd:
+        name: certbot.timer
+        enabled: true
+        state: started
+
+    - name: Display certificate information
+      ansible.builtin.debug:
+        msg:
+          - "Let's Encrypt certificate configured!"
+          - ""
+          - "Domain: {{ unifi_domain }}"
+          - "Certificate path: /etc/letsencrypt/live/{{ unifi_domain }}/"
+          - "Renewal: Automatic via certbot.timer (twice daily)"
+          - ""
+          - "Web UI: https://{{ unifi_domain }}:8443"

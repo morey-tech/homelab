@@ -1,0 +1,77 @@
+#!/bin/bash
+# UniFi Certificate Import Script
+# Converts Let's Encrypt PEM certificates to Java keystore format
+# This file is managed by Ansible
+set -e
+
+# UniFi keystore configuration
+UNIFI_DIR="/var/lib/unifi"
+KEYSTORE="${UNIFI_DIR}/keystore"
+KEYSTORE_PASS="aircontrolenterprise"  # UniFi default keystore password
+ALIAS="unifi"
+
+# Let's Encrypt certificate paths
+CERT_DIR="/etc/letsencrypt/live/{{ unifi_domain }}"
+FULLCHAIN="${CERT_DIR}/fullchain.pem"
+PRIVKEY="${CERT_DIR}/privkey.pem"
+
+# Temporary PKCS12 file
+P12_FILE="${UNIFI_DIR}/unifi.p12"
+
+echo "Converting Let's Encrypt certificates to PKCS12..."
+
+# Step 1: Create PKCS12 bundle from PEM files
+# - fullchain.pem contains the certificate + intermediate CA chain
+# - privkey.pem contains the private key
+openssl pkcs12 -export \
+    -in "${FULLCHAIN}" \
+    -inkey "${PRIVKEY}" \
+    -out "${P12_FILE}" \
+    -name "${ALIAS}" \
+    -password "pass:${KEYSTORE_PASS}"
+
+echo "Backing up existing keystore..."
+
+# Step 2: Backup existing keystore (if exists)
+if [ -f "${KEYSTORE}" ]; then
+    BACKUP="${KEYSTORE}.backup.$(date +%Y%m%d%H%M%S)"
+    cp "${KEYSTORE}" "${BACKUP}"
+    echo "Backup created: ${BACKUP}"
+fi
+
+echo "Removing old certificate from keystore..."
+
+# Step 3: Remove existing 'unifi' alias from keystore (ignore if not present)
+keytool -delete \
+    -alias "${ALIAS}" \
+    -keystore "${KEYSTORE}" \
+    -storepass "${KEYSTORE_PASS}" 2>/dev/null || true
+
+echo "Importing new certificate into keystore..."
+
+# Step 4: Import PKCS12 into Java keystore
+# - srcstoretype PKCS12: source is PKCS12 format
+# - deststoretype jks: destination is Java KeyStore format
+# - destkeypass: password for the private key entry
+keytool -importkeystore \
+    -srckeystore "${P12_FILE}" \
+    -srcstoretype PKCS12 \
+    -srcstorepass "${KEYSTORE_PASS}" \
+    -destkeystore "${KEYSTORE}" \
+    -deststoretype jks \
+    -deststorepass "${KEYSTORE_PASS}" \
+    -destkeypass "${KEYSTORE_PASS}" \
+    -alias "${ALIAS}"
+
+# Step 5: Clean up temporary PKCS12 file
+rm -f "${P12_FILE}"
+
+# Step 6: Set correct ownership (unifi user)
+chown unifi:unifi "${KEYSTORE}"
+
+echo "Restarting UniFi service..."
+
+# Step 7: Restart UniFi to load new certificate
+systemctl restart unifi
+
+echo "Certificate import complete for {{ unifi_domain }}"
