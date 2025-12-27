@@ -7,7 +7,6 @@ spec:
   addresses:
   - 10.10.0.0/16
   # 10.10.0.3 - plex
-  # 10.10.0.3 - unifi
   # 10.10.0.5 - home-assistant
   autoAssign: false
 ---
