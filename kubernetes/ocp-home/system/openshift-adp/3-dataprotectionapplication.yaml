@@ -7,28 +7,11 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   backupImages: false
-  backupLocations:
-    - name: velero-nfs
-      velero:
-        provider: replicated.com/nfs
-        default: true
-        # Empty credential required for OADP reconciliation (see 2-credentials-secret.yaml)
-        credential:
-          name: cloud-credentials
-          key: cloud
-        objectStorage:
-          # For local-volume-provider, bucket creates a subdirectory structure
-          # on the NFS share for storing backup data and Kopia repositories
-          # Result: /storage-mass/ocp-home/velero/backups
-          bucket: backups
-        config:
-          path: /storage-mass/ocp-home/velero
-          server: qnap-01.rh-lab.morey.tech
-  snapshotLocations:
-    - velero:
-        provider: csi
+  # Use noDefaultBackupLocation since we're using a custom provider (local-volume-provider)
+  # that OADP doesn't recognize during DPA validation. The BSL is created separately.
   configuration:
     velero:
+      noDefaultBackupLocation: true
       defaultPlugins:
         - openshift
         - csi

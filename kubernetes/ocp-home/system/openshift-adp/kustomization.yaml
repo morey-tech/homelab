@@ -7,5 +7,6 @@ resources:
   - 2-nfs-pv.yaml
   - 2-nfs-pvc.yaml
   - 3-dataprotectionapplication.yaml
+  - 4-backupstoragelocation.yaml
   - 5-schedule-hourly.yaml
   - 5-schedule-daily.yaml
