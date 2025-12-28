@@ -6,8 +6,10 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  backupImages: false
   backupLocations:
-    - velero:
+    - name: velero-nfs
+      velero:
         provider: replicated.com/nfs
         default: true
         objectStorage:
