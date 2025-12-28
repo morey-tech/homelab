@@ -8,7 +8,9 @@
       "Bash(tee:*)",
       "Bash(oc get:*)",
       "Bash(cat:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(gh issue view:*)",
+      "WebFetch(domain:docs.redhat.com)"
     ],
     "deny": [],
     "ask": []
