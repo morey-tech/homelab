@@ -12,6 +12,10 @@ spec:
       velero:
         provider: replicated.com/nfs
         default: true
+        # Empty credential required for OADP reconciliation (see 2-credentials-secret.yaml)
+        credential:
+          name: cloud-credentials
+          key: cloud
         objectStorage:
           # For local-volume-provider, bucket creates a subdirectory structure
           # on the NFS share for storing backup data and Kopia repositories
