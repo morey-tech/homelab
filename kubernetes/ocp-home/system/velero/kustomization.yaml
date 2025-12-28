@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: velero-system
+
+helmCharts:
+  - name: velero
+    repo: https://vmware-tanzu.github.io/helm-charts
+    version: 8.0.0
+    releaseName: velero
+    namespace: velero-system
+    valuesFile: helm-values.yaml
+
+resources:
+  - scc-rbac.yaml
+  - nfs-pv.yaml
+  - nfs-pvc.yaml
+  - backupstoragelocation.yaml
+  - schedule-hourly.yaml
+  - schedule-daily.yaml

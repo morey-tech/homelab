@@ -1,0 +1,16 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: hourly-backup
+  namespace: velero-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  schedule: "0 * * * *"
+  template:
+    ttl: 168h0m0s
+    storageLocation: nfs
+    includedNamespaces:
+      - backup-test
+    defaultVolumesToFsBackup: true

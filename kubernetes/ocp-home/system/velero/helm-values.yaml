@@ -1,0 +1,49 @@
+# Velero Helm values for OpenShift with local-volume-provider + Kopia
+
+# Plugins via initContainers
+initContainers:
+  - name: velero-plugin-for-csi
+    image: velero/velero-plugin-for-csi:v0.8.0
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+  - name: velero-plugin-for-openshift
+    image: quay.io/konveyor/openshift-velero-plugin:latest
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+  - name: velero-plugin-local-volume
+    image: replicated/local-volume-provider:v0.5.3
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+# No default BSL - we create it separately for local-volume-provider
+configuration:
+  backupStorageLocation: []
+  volumeSnapshotLocation: []
+  features: EnableCSI
+
+# Node-Agent for filesystem backup with Kopia
+deployNodeAgent: true
+nodeAgent:
+  podVolumePath: /var/lib/kubelet/pods
+  privileged: true
+
+# Credentials not needed for NFS
+credentials:
+  useSecret: false
+
+# Resources
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi

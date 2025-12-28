@@ -1,0 +1,16 @@
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: nfs
+  namespace: velero-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  provider: replicated.com/nfs
+  default: true
+  objectStorage:
+    bucket: backups
+  config:
+    path: /storage-mass/ocp-home/velero
+    server: qnap-01.rh-lab.morey.tech
