@@ -70,8 +70,3 @@ spec:
       destination:
         namespace: openshift-operators
     {{ end }}
-    {{- if eq .path.basename "openshift-adp" }}
-    spec:
-      destination:
-        namespace: openshift-adp
-    {{ end }}
