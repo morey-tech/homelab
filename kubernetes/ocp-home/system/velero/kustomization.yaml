@@ -6,7 +6,7 @@ namespace: velero-system
 helmCharts:
   - name: velero
     repo: https://vmware-tanzu.github.io/helm-charts
-    version: 8.0.0
+    version: 11.2.0
     releaseName: velero
     namespace: velero-system
     valuesFile: helm-values.yaml

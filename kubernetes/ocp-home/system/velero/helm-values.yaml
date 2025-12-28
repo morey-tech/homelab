@@ -3,7 +3,7 @@
 # Plugins via initContainers
 initContainers:
   - name: velero-plugin-for-csi
-    image: velero/velero-plugin-for-csi:v0.8.0
+    image: velero/velero-plugin-for-csi:v0.8.1
     imagePullPolicy: IfNotPresent
     volumeMounts:
       - mountPath: /target
@@ -33,7 +33,8 @@ configuration:
 deployNodeAgent: true
 nodeAgent:
   podVolumePath: /var/lib/kubelet/pods
-  privileged: true
+  containerSecurityContext:
+    privileged: true
 
 # Credentials not needed for NFS
 credentials:
