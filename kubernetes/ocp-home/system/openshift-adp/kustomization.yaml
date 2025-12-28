@@ -3,3 +3,8 @@ kind: Kustomization
 
 resources:
   - 1-operator.yaml
+  - 2-nfs-pv.yaml
+  - 2-nfs-pvc.yaml
+  - 3-dataprotectionapplication.yaml
+  - 5-schedule-hourly.yaml
+  - 5-schedule-daily.yaml

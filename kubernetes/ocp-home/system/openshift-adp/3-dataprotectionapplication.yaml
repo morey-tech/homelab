@@ -1,0 +1,39 @@
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: velero
+  namespace: openshift-adp
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  backupLocations:
+    - velero:
+        provider: replicated.com/nfs
+        default: true
+        objectStorage:
+          # For local-volume-provider, bucket creates a subdirectory structure
+          # on the NFS share for storing backup data and Kopia repositories
+          # Result: /storage-mass/ocp-home/velero/backups
+          bucket: backups
+        config:
+          path: /storage-mass/ocp-home/velero
+          server: qnap-01.rh-lab.morey.tech
+  snapshotLocations:
+    - velero:
+        provider: csi
+  configuration:
+    velero:
+      defaultPlugins:
+        - openshift
+        - csi
+      customPlugins:
+        - name: local-volume-provider
+          image: replicated/local-volume-provider:v0.3.3
+      featureFlags:
+        - EnableCSI
+    nodeAgent:
+      enable: true
+      uploaderType: kopia
+      podConfig:
+        nodeSelector:
+          kubernetes.io/os: linux
