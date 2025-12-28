@@ -4,6 +4,7 @@ metadata:
   name: oadp-backup-storage
   namespace: openshift-adp
 spec:
+  storageClassName: ""
   accessModes:
     - ReadWriteMany
   resources:
