@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-test-data
+  namespace: backup-test
+  labels:
+    backup.velero.io/schedule: hourly
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: lvms-lvm-nvme1n1-vg

@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backup-test
+  namespace: backup-test
+  labels:
+    app: backup-test
+    backup.velero.io/schedule: hourly
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backup-test
+  template:
+    metadata:
+      labels:
+        app: backup-test
+        backup.velero.io/schedule: hourly
+    spec:
+      containers:
+        - name: writer
+          image: busybox:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Starting backup test writer..."
+              while true; do
+                TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+                echo "Backup test entry - ${TIMESTAMP}" >> /data/test-$(date +%Y%m%d).txt
+                echo "Written at ${TIMESTAMP}"
+                sleep 60
+              done
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "50m"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: backup-test-data
