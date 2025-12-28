@@ -1,14 +1,8 @@
 # Velero Helm values for OpenShift with local-volume-provider + Kopia
 
 # Plugins via initContainers
+# Note: CSI plugin is built into Velero v1.14+, no need for separate plugin
 initContainers:
-  - name: velero-plugin-for-csi
-    image: velero/velero-plugin-for-csi:v0.8.1
-    imagePullPolicy: IfNotPresent
-    volumeMounts:
-      - mountPath: /target
-        name: plugins
-
   - name: velero-plugin-for-openshift
     image: quay.io/konveyor/openshift-velero-plugin:latest
     imagePullPolicy: IfNotPresent
