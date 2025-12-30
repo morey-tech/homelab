@@ -1,0 +1,11 @@
+# Add Velero label to LVMS VolumeSnapshotClasses for CSI snapshot support
+# These VSCs are created by LVMS - we redeclare them with the Velero label added
+# The driver and deletionPolicy must match the LVMS-created VSCs
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: lvms-lvm-nvme1n1-vg
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
+driver: topolvm.io
+deletionPolicy: Delete

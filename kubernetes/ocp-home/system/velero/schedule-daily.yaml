@@ -15,4 +15,4 @@ spec:
     labelSelector:
       matchLabels:
         backup.velero.io/schedule: daily
-    defaultVolumesToFsBackup: true
+    snapshotVolumes: true

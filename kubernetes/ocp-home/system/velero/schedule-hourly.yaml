@@ -13,4 +13,4 @@ spec:
     storageLocation: nfs
     includedNamespaces:
       - backup-test
-    defaultVolumesToFsBackup: true
+    snapshotVolumes: true
