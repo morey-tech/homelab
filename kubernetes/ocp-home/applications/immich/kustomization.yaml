@@ -10,15 +10,6 @@ resources:
   - pvc-ml-cache.yaml
   - ingress-parents.yaml
 
-patches:
-  - target:
-      kind: PersistentVolumeClaim
-      name: immich-postgresql-1
-    patch: |-
-      - op: add
-        path: /metadata/labels/backup.velero.io~1schedule
-        value: hourly
-
 helmCharts:
 - name: immich
   includeCRDs: true

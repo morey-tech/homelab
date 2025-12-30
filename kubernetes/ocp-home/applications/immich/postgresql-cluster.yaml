@@ -5,6 +5,9 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  inheritedMetadata:
+    labels:
+      backup.velero.io/schedule: hourly
   imageName: ghcr.io/tensorchord/cloudnative-vectorchord:16.9-0.4.3
   instances: 1
 
