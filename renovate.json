@@ -1,0 +1,116 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Renovate configuration for homelab - manages Helm charts, container images, and dependencies",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":dependencyDashboard"
+  ],
+  "timezone": "America/New_York",
+  "schedule": ["after 9am and before 5pm every weekday"],
+  "labels": ["renovate", "dependencies"],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 2,
+  "ignorePaths": [
+    "**/charts/**"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update image tags in kustomization.yaml valuesInline when repository is also specified",
+      "fileMatch": [
+        "^kubernetes/.+/kustomization\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+tag:\\s*[\"']?(?<currentValue>[^\"'\\s@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\"']?"
+      ],
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update full container image references in plain Kubernetes YAML files",
+      "fileMatch": [
+        "^kubernetes/.+/deployment\\.ya?ml$",
+        "^kubernetes/.+/.+\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "image:\\s*[\"']?(?<depName>[^:\"'\\s]+):(?<currentValue>[^@\"'\\s]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\"']?"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    }
+  ],
+  "kubernetes": {
+    "fileMatch": [
+      "^kubernetes/.+/kustomization\\.ya?ml$"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Group Immich server and ML images together",
+      "matchDatasources": ["docker"],
+      "matchPackagePatterns": ["immich-server", "immich-machine-learning"],
+      "groupName": "Immich container images",
+      "labels": ["renovate", "container-image", "immich"]
+    },
+    {
+      "description": "Group Home Assistant and code-server sidecar",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "ghcr.io/home-assistant/home-assistant",
+        "ghcr.io/coder/code-server"
+      ],
+      "groupName": "Home Assistant",
+      "labels": ["renovate", "container-image", "home-assistant"]
+    },
+    {
+      "description": "Group Paperless container images",
+      "matchDatasources": ["docker"],
+      "matchPackagePatterns": ["paperless"],
+      "groupName": "Paperless",
+      "labels": ["renovate", "container-image", "paperless"]
+    },
+    {
+      "description": "Label Helm chart updates",
+      "matchDatasources": ["helm"],
+      "labels": ["renovate", "helm-chart"]
+    },
+    {
+      "description": "Label container image updates from custom managers",
+      "matchManagers": ["regex"],
+      "matchDatasources": ["docker"],
+      "labels": ["renovate", "container-image"]
+    },
+    {
+      "description": "Enable digest pinning for production cluster (ocp-home) only",
+      "matchFileNames": ["kubernetes/ocp-home/**"],
+      "matchDatasources": ["docker"],
+      "pinDigests": true
+    },
+    {
+      "description": "Disable digest pinning for non-production clusters",
+      "matchFileNames": [
+        "kubernetes/ocp-gpu/**",
+        "kubernetes/ocp-lab/**",
+        "kubernetes/ocp-mgmt/**",
+        "kubernetes/kind-personal/**",
+        "kubernetes/rubrik/**"
+      ],
+      "matchDatasources": ["docker"],
+      "pinDigests": false
+    },
+    {
+      "description": "Security vulnerability updates with priority label",
+      "matchUpdateTypes": ["patch"],
+      "matchCurrentVersion": "!/^0/",
+      "vulnerabilityAlerts": {
+        "enabled": true
+      },
+      "labels": ["renovate", "security"]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["renovate", "security"]
+  }
+}

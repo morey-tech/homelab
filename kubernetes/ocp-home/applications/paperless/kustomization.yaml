@@ -20,6 +20,7 @@ helmCharts:
   valuesInline:
     image:
       # https://github.com/paperless-ngx/paperless-ngx/pkgs/container/paperless-ngx/versions?filters%5Bversion_type%5D=tagged
+      # renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
       tag: 2.18.4
       pullPolicy: IfNotPresent
     env:
