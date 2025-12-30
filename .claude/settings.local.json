@@ -1,6 +1,10 @@
 {
   "permissions": {
     "allow": [
+      "Bash(find:*)",
+      "Bash(wc:*)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
       "Bash(git stash:*)",
       "Bash(git add:*)",
       "Bash(git push:*)",
@@ -11,7 +15,20 @@
       "Bash(grep:*)",
       "Bash(gh issue view:*)",
       "WebFetch(domain:docs.redhat.com)",
-      "Bash(git log:*)"
+      "Bash(helm search repo:*)",
+      "Bash(helm repo add:*)",
+      "Bash(helm show values:*)",
+      "Bash(oc describe:*)",
+      "Bash(git -C /workspaces/homelab log --oneline -20)",
+      "Bash(git -C /workspaces/homelab diff HEAD)",
+      "Bash(git log:*)",
+      "Bash(git -C /workspaces/homelab log --all --oneline --grep=\"storage\\\\|lvms\\\\|snapshot\" -20)",
+      "Bash(gh pr list:*)",
+      "Bash(git -C /workspaces/homelab status --short)",
+      "Bash(gh label list:*)",
+      "Bash(git -C /workspaces/homelab log --oneline --all)",
+      "Bash(git -C /workspaces/homelab show --stat 20965e2)",
+      "Bash(git -C /workspaces/homelab show eb8c39a:kubernetes/ocp-home/system/openshift-storage/volumesnapshotclass-labels.yaml)"
     ],
     "deny": [],
     "ask": []
