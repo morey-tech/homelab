@@ -29,7 +29,7 @@ Pygments==2.16.1
 pyparsing==3.0.9
 PyYAML==6.0.2
 referencing==0.36.2
-requests==2.31.0
+requests==2.32.4
 resolvelib==0.8.1
 rich==13.6.0
 rpds-py==0.10.6
