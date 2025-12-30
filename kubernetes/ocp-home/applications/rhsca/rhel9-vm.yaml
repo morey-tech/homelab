@@ -29,6 +29,8 @@ spec:
     metadata:
       creationTimestamp: null
       name: rhel9
+      labels:
+        backup.velero.io/schedule: daily
     spec:
       sourceRef:
         kind: DataSource

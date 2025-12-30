@@ -2,6 +2,22 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: netbox
 
+patches:
+  - target:
+      kind: PersistentVolumeClaim
+      name: valkey-data-netbox-valkey-primary-0
+    patch: |-
+      - op: add
+        path: /metadata/labels/backup.velero.io~1schedule
+        value: hourly
+  - target:
+      kind: PersistentVolumeClaim
+      name: valkey-data-netbox-valkey-replicas-0
+    patch: |-
+      - op: add
+        path: /metadata/labels/backup.velero.io~1schedule
+        value: hourly
+
 # # Add the route for NetBox.
 # resources:
 #   - route.yaml

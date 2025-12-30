@@ -11,6 +11,7 @@ spec:
   template:
     ttl: 168h0m0s
     storageLocation: nfs
-    includedNamespaces:
-      - backup-test
+    labelSelector:
+      matchLabels:
+        backup.velero.io/schedule: hourly
     snapshotVolumes: true
