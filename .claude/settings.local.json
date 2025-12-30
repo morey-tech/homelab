@@ -28,7 +28,8 @@
       "Bash(gh label list:*)",
       "Bash(git -C /workspaces/homelab log --oneline --all)",
       "Bash(git -C /workspaces/homelab show --stat 20965e2)",
-      "Bash(git -C /workspaces/homelab show eb8c39a:kubernetes/ocp-home/system/openshift-storage/volumesnapshotclass-labels.yaml)"
+      "Bash(git -C /workspaces/homelab show eb8c39a:kubernetes/ocp-home/system/openshift-storage/volumesnapshotclass-labels.yaml)",
+      "Bash(oc logs:*)"
     ],
     "deny": [],
     "ask": []
