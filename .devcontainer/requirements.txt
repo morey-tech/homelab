@@ -34,7 +34,7 @@ resolvelib==0.8.1
 rich==13.6.0
 rpds-py==0.10.6
 ruamel.yaml==0.18.10
-ruamel.yaml.clib==0.2.8
+ruamel.yaml.clib==0.2.15
 subprocess-tee==0.4.1
 tomli==2.0.1
 typing_extensions==4.13.1
