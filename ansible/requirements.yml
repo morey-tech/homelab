@@ -1,7 +1,7 @@
 ---
 collections:
   - name: community.general
-    version: "10.5.0"
+    version: "10.7.7"
   # rhpds.assisted_installer
   - name: git+https://github.com/rhpds/assisted_installer
     version: v0.0.2
