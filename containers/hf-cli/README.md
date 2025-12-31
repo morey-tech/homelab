@@ -4,7 +4,7 @@ A container image with the Hugging Face CLI pre-installed for model downloading.
 
 ## Purpose
 
-This image provides the `huggingface-cli` command for downloading models from Hugging Face Hub. Using a pre-built image with the CLI installed enables container layer caching, avoiding pip installs at runtime.
+This image provides the `hf` command for downloading models from Hugging Face Hub. Using a pre-built image with the CLI installed enables container layer caching, avoiding pip installs at runtime.
 
 ## Build
 
@@ -18,14 +18,14 @@ Download a model:
 
 ```bash
 podman run --rm -v ./models:/models:Z hf-cli:latest \
-    huggingface-cli download <model-repo> --local-dir=/models/<model-name>
+    hf download <model-repo> --local-dir=/models/<model-name>
 ```
 
 Example:
 
 ```bash
 podman run --rm -v ./models:/models:Z hf-cli:latest \
-    huggingface-cli download RedHatAI/Qwen3-30B --local-dir=/models/Qwen3-30B
+    hf download RedHatAI/Qwen3-30B --local-dir=/models/Qwen3-30B
 ```
 
 ## OpenShift Compatibility

@@ -1,1 +1,1 @@
-huggingface_hub[cli]
+huggingface_hub==1.1.6

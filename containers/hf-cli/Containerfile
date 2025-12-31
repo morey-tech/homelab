@@ -25,4 +25,4 @@ ENV HF_HOME=/model-files-cache
 
 USER 1001
 
-CMD ["huggingface-cli"]
+CMD ["hf"]
