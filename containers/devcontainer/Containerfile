@@ -1,5 +1,5 @@
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/ubuntu/.devcontainer/base.Dockerfile
-FROM mcr.microsoft.com/vscode/devcontainers/base:0-ubuntu-22.04
+FROM mcr.microsoft.com/vscode/devcontainers/base:2-ubuntu-22.04
 
 LABEL org.opencontainers.image.title="devcontainer"
 LABEL org.opencontainers.image.description="Development container for homelab infrastructure"
