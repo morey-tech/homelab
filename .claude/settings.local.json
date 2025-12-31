@@ -32,8 +32,8 @@
       "Bash(oc logs:*)",
       "Bash(gh pr view:*)",
       "Bash(git -C /workspaces/homelab log --oneline -5)",
-      "Bash(echo:*)",
-      "Bash(oc explain:*)"
+      "Bash(pip3 show:*)",
+      "Bash(paste:*)"
     ],
     "deny": [],
     "ask": []
