@@ -17,7 +17,7 @@ Jinja2==3.1.6
 jsonschema==4.19.1
 jsonschema-specifications==2023.7.1
 markdown-it-py==3.0.0
-MarkupSafe==2.1.1
+MarkupSafe==2.1.5
 mdurl==0.1.2
 mypy-extensions==1.0.0
 packaging==24.2
