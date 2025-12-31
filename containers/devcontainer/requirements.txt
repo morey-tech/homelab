@@ -2,5 +2,5 @@ ansible==12.2.0
 ansible-lint==25.2.1
 black==25.1.0
 proxmoxer==2.2.0
-requests==2.31.0
+requests==2.32.4
 yamllint==1.37.0
