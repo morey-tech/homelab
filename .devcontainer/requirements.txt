@@ -27,7 +27,7 @@ proxmoxer==2.2.0
 pycparser==2.21
 Pygments==2.16.1
 pyparsing==3.0.9
-PyYAML==6.0.2
+PyYAML==6.0.3
 referencing==0.36.2
 requests==2.31.0
 resolvelib==0.8.1
