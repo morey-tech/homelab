@@ -1,4 +1,4 @@
-ansible==10.7.0
+ansible==12.2.0
 ansible-lint==25.2.1
 black==25.1.0
 proxmoxer==2.2.0
