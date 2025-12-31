@@ -1,5 +1,5 @@
-# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/ubuntu/.devcontainer/base.Dockerfile
-FROM mcr.microsoft.com/vscode/devcontainers/base:0-ubuntu-22.04
+# See here for image contents: https://github.com/devcontainers/images/tree/main/src/base-ubuntu
+FROM mcr.microsoft.com/devcontainers/base:ubuntu24.04
 
 LABEL org.opencontainers.image.title="devcontainer"
 LABEL org.opencontainers.image.description="Development container for homelab infrastructure"
@@ -32,7 +32,7 @@ RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
 
 # Install Python packages
 COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install -r /tmp/requirements.txt
+RUN pip3 install --break-system-packages -r /tmp/requirements.txt
 
 # Install `oc` and `kubectl`
 ENV OC_VERSION=4.17.0-okd-scos.0
