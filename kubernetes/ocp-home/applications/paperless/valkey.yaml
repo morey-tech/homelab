@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: valkey
-          image: docker.io/valkey/valkey:8-alpine
+          image: docker.io/valkey/valkey:9-alpine
           imagePullPolicy: IfNotPresent
           # Disable RDB persistence - not needed for cache and avoids permission errors on /data
           args: ["--save", ""]
