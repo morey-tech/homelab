@@ -25,7 +25,7 @@ spec:
         # Current base image uses s6-overlay v3.1.6.2 which lacks Kubernetes non-root support
         # privileged: true needed for DHCP watcher (CAP_NET_RAW)
         # PR: https://github.com/home-assistant/docker-base/pull/342
-        - image: 'ghcr.io/home-assistant/home-assistant:2025.9.1'
+        - image: 'ghcr.io/home-assistant/home-assistant:2025.12.5'
           imagePullPolicy: IfNotPresent
           name: home-assistant
           securityContext:
@@ -57,7 +57,7 @@ spec:
           resources:
             limits:
               cpu: 1000m
-        - image: ghcr.io/coder/code-server:4.100.2
+        - image: ghcr.io/coder/code-server:4.107.0
           imagePullPolicy: IfNotPresent
           name: codeserver
           args:
