@@ -9,11 +9,16 @@ resources:
 helmCharts:
 - name: external-secrets
   includeCRDs: true
-  version: 0.9.0
+  version: 0.20.4
   repo: https://charts.external-secrets.io
   releaseName: external-secrets
   namespace: external-secrets-system
   valuesInline:
+    global:
+      compatibility:
+        openshift:
+          # Use built-in OpenShift support instead of patch to remove runAsUser
+          adaptSecurityContext: force
     resources:
       requests:
         cpu: 100m
@@ -23,11 +28,3 @@ images:
   - name: ghcr.io/morey-tech/bitwarden-cli
     newTag: 2025.12.0
 
-patches:
-# Fix security context for OpenShift (removes runAsUser from all external-secrets Deployments)
-- path: deployment-scc-fix.yaml
-  target:
-    group: apps
-    kind: Deployment
-    version: v1
-    name: external-secrets.*
