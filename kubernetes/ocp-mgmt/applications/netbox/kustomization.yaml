@@ -13,7 +13,7 @@ helmCharts:
   namespace: netbox
   releaseName: netbox
   repo: https://charts.netbox.oss.netboxlabs.com/
-  version: 6.0.59
+  version: 7.2.26
 
 patches:
 # These patches use separate files to fix the security
