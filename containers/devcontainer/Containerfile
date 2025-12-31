@@ -32,7 +32,7 @@ RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
 
 # Install Python packages
 COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install -r /tmp/requirements.txt
+RUN pip3 install --break-system-packages -r /tmp/requirements.txt
 
 # Install `oc` and `kubectl`
 ENV OC_VERSION=4.17.0-okd-scos.0
