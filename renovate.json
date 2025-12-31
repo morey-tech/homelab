@@ -47,6 +47,13 @@
   },
   "packageRules": [
     {
+      "description": "Group all devcontainer Python dependencies together",
+      "matchManagers": ["pip_requirements"],
+      "matchFileNames": ["containers/devcontainer/requirements.txt"],
+      "groupName": "Devcontainer Python dependencies",
+      "labels": ["renovate", "devcontainer", "python"]
+    },
+    {
       "description": "Group Immich server and ML images together",
       "matchDatasources": ["docker"],
       "matchPackagePatterns": ["immich-server", "immich-machine-learning"],
