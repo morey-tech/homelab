@@ -31,7 +31,9 @@
       "Bash(git -C /workspaces/homelab show eb8c39a:kubernetes/ocp-home/system/openshift-storage/volumesnapshotclass-labels.yaml)",
       "Bash(oc logs:*)",
       "Bash(gh pr view:*)",
-      "Bash(git -C /workspaces/homelab log --oneline -5)"
+      "Bash(git -C /workspaces/homelab log --oneline -5)",
+      "Bash(echo:*)",
+      "Bash(oc explain:*)"
     ],
     "deny": [],
     "ask": []
