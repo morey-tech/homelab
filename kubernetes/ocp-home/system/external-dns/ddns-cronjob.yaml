@@ -43,7 +43,7 @@ spec:
           serviceAccountName: ddns
           containers:
           - name: ddns
-            image: alpine/k8s:1.26.0
+            image: alpine/k8s:1.35.0
             imagePullPolicy: IfNotPresent
             command:
             - /bin/sh
