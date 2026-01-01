@@ -15,7 +15,7 @@
 
   tasks:
     - name: Download LXC OS template to Proxmox storage
-      community.general.proxmox_template:
+      community.proxmox.proxmox_template:
         <<: *pve_api
         node: "{{ pve_node }}"
         storage: "{{ storage }}"
@@ -25,7 +25,7 @@
       delegate_to: localhost
 
     - name: Create LXC container
-      community.general.proxmox:
+      community.proxmox.proxmox:
         <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ pve_vm_id }}"
@@ -57,7 +57,7 @@
       delegate_to: pfsense.home.morey.tech
 
     - name: Start LXC container
-      community.general.proxmox:
+      community.proxmox.proxmox:
         <<: *pve_api
         vmid: "{{ pve_vm_id }}"
         state: started

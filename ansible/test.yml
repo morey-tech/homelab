@@ -16,7 +16,7 @@
         msg: "{{ pve_api_token_secret }}"
 
     - name: Create new VM with minimal options
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         api_user: "{{ pve_api_user }}"
         api_token_id: "{{ pve_api_token_id }}"
         api_token_secret: "{{ pve_api_token_secret }}"

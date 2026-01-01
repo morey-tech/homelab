@@ -21,7 +21,7 @@
       when: "destory_confirmation != 'yes'"
 
     - name: Check if VM exists  # noqa: run-once[task]
-      community.general.proxmox_vm_info:
+      community.proxmox.proxmox_vm_info:
         <<: *pve_api
         vmid: "{{ hostvars[item].pve_vm_id }}"
         name: "{{ hostvars[item].inventory_hostname_short }}"
@@ -32,7 +32,7 @@
 
     # Stop with force first before destroy to speed up.
     - name: Stop VMs  # noqa: run-once[task]
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         <<: *pve_api
         vmid: "{{ hostvars[item.item].pve_vm_id }}"
         name: "{{ hostvars[item.item].inventory_hostname_short }}"
@@ -46,7 +46,7 @@
       when: "item.proxmox_vms != []"
 
     - name: Destroy VMs  # noqa: run-once[task]
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         <<: *pve_api
         vmid: "{{ hostvars[item.item].pve_vm_id }}"
         name: "{{ hostvars[item.item].inventory_hostname_short }}"
@@ -60,7 +60,7 @@
       when: "item.proxmox_vms != []"
 
     - name: Delete PVE pool  # noqa: run-once[task]
-      community.general.proxmox_pool:
+      community.proxmox.proxmox_pool:
         <<: *pve_api
         poolid: "{{ cluster_name }}"
         state: absent

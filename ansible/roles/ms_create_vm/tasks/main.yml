@@ -25,12 +25,12 @@
           api_host: "{{ pve_api_host }}"
 
     - name: Create new PVE pool
-      community.general.proxmox_pool:
+      community.proxmox.proxmox_pool:
         <<: *pve_api
         poolid: "{{ pve_pool }}"
 
     - name: Check if VM exists
-      community.general.proxmox_vm_info:
+      community.proxmox.proxmox_vm_info:
         <<: *pve_api
         vmid: "{{ pve_vm_id }}"
         name: "{{ inventory_hostname_short }}"
@@ -50,7 +50,7 @@
 
     # Stop with force first before destroy to speed up.
     - name: Stop Existing VMs To Prepare for Deletion # noqa: run-once[task]
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         <<: *pve_api
         vmid: "{{ pve_vm_id }}"
         name: "{{ inventory_hostname_short }}"
@@ -62,7 +62,7 @@
 
     # Stop with force first before destroy to speed up.
     - name: Delete Existing VMs
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         <<: *pve_api
         vmid: "{{ pve_vm_id }}"
         name: "{{ inventory_hostname_short }}"
@@ -80,7 +80,7 @@
             ms_create_vm_cloud_init_template is defined
 
     - name: Start the VM
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ pve_vm_id }}"

@@ -16,7 +16,7 @@
 
   tasks:
     - name: Delete LXC OS template from Proxmox storage
-      community.general.proxmox_template:
+      community.proxmox.proxmox_template:
         <<: *pve_api
         node: "{{ pve_node }}"
         storage: "{{ storage }}"
@@ -28,7 +28,7 @@
       when: delete_lxc_os_template
 
     - name: Stop LXC container
-      community.general.proxmox:
+      community.proxmox.proxmox:
         <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ pve_vm_id }}"
@@ -37,7 +37,7 @@
       delegate_to: localhost
 
     - name: Delete LXC container
-      community.general.proxmox:
+      community.proxmox.proxmox:
         <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ pve_vm_id }}"

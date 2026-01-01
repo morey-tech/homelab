@@ -18,7 +18,7 @@
 
   tasks:
     - name: Create VM template
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         <<: *pve_api
         vmid: "{{ vm_id }}"
         name: debian-12-cloudinit-template
@@ -38,7 +38,7 @@
 
     # The VM must exist to convert it to a template. So separate task.
     - name: Convert VM to template
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         <<: *pve_api
         vmid: "{{ vm_id }}"
         name: debian-12-cloudinit-template

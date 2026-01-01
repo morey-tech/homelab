@@ -2,6 +2,9 @@
 collections:
   - name: community.general
     version: "12.2.0"
+  # Proxmox modules moved from community.general in v11.0.0
+  - name: community.proxmox
+    version: "1.1.0"
   # rhpds.assisted_installer
   - name: git+https://github.com/rhpds/assisted_installer
     version: v0.0.2

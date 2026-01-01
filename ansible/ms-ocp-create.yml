@@ -141,13 +141,13 @@
       tags: proxmox
       block:
         - name: Create new PVE pool
-          community.general.proxmox_pool:
+          community.proxmox.proxmox_pool:
             <<: *pve_api
             poolid: "{{ cluster_name }}"
             comment: "{{ cluster_name }} cluster"
 
         - name: Check if VM exists
-          community.general.proxmox_vm_info:
+          community.proxmox.proxmox_vm_info:
             <<: *pve_api
             vmid: "{{ hostvars[item].pve_vm_id }}"
             name: "{{ hostvars[item].inventory_hostname_short }}"
@@ -165,7 +165,7 @@
 
         # Stop with force first before destroy to speed up.
         - name: Stop Existing VMs To Prepare for Deletion # noqa: run-once[task]
-          community.general.proxmox_kvm:
+          community.proxmox.proxmox_kvm:
             <<: *pve_api
             vmid: "{{ item.vmid }}"
             name: "{{ item.name }}"
@@ -180,7 +180,7 @@
 
         # Stop with force first before destroy to speed up.
         - name: Delete Existing VMs
-          community.general.proxmox_kvm:
+          community.proxmox.proxmox_kvm:
             <<: *pve_api
             vmid: "{{ item.vmid }}"
             name: "{{ item.name }}"
@@ -192,7 +192,7 @@
           when: recreate
 
         - name: Create VMs
-          community.general.proxmox_kvm:
+          community.proxmox.proxmox_kvm:
             <<: *pve_api
             vmid: "{{ hostvars[item].pve_vm_id }}"
             name: "{{ hostvars[item].inventory_hostname_short }}"
