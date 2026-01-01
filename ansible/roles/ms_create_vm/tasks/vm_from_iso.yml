@@ -7,7 +7,7 @@
       api_host: "{{ pve_api_host }}"
 
 - name: Create VMs
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     <<: *pve_api
     vmid: "{{ pve_vm_id }}"
     name: "{{ inventory_hostname_short }}"

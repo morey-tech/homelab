@@ -20,7 +20,7 @@
   # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#run-tasks-concurrently-poll-0
 
 - name: Add IDE2 to VMs
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     api_user: "{{ pve_api_user }}"
     api_token_id: "{{ pve_api_token_id }}"
     api_token_secret: "{{ pve_api_token_secret }}"
@@ -35,7 +35,7 @@
   loop: "{{ groups[nodes_group] }}"
 
 - name: Add boot order to VMs
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     api_user: "{{ pve_api_user }}"
     api_token_id: "{{ pve_api_token_id }}"
     api_token_secret: "{{ pve_api_token_secret }}"

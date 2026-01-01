@@ -13,7 +13,7 @@
 
   tasks:
     - name: Create new PVE pool
-      community.general.proxmox_pool:
+      community.proxmox.proxmox_pool:
         <<: *pve_api
         poolid: "{{ cluster_name }}"
         comment: "{{ cluster_name }} cluster"

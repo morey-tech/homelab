@@ -14,7 +14,7 @@
 
   tasks:
     - name: Stop VMs  # noqa: run-once[task]
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ vm_id }}"
@@ -25,7 +25,7 @@
       delegate_to: localhost
 
     - name: Destroy VMs  # noqa: run-once[task]
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ vm_id }}"

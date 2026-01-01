@@ -9,7 +9,7 @@
     imported_disk: "{{ importdisk_result.stdout_lines[-1] | regex_search('[a-zA-Z0-9-]+:vm-\\d+-disk-\\d+') }}"
 
 - name: Use imported disk
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     api_user: "{{ pve_api_user }}"
     api_token_id: "{{ pve_api_token_id }}"
     api_token_secret: "{{ pve_api_token_secret }}"
@@ -26,7 +26,7 @@
     update_unsafe: true  # Required for scsi update.
 
 - name: Check VM state
-  community.general.proxmox_vm_info:
+  community.proxmox.proxmox_vm_info:
     api_user: "{{ pve_api_user }}"
     api_token_id: "{{ pve_api_token_id }}"
     api_token_secret: "{{ pve_api_token_secret }}"
@@ -43,7 +43,7 @@
     unused_disks: "{{ vm_state.proxmox_vms.0.config | dict2items | selectattr('key', 'search', '^unused') | map(attribute='key') | list }}"
 
 - name: Remove unused disk(s)
-  community.general.proxmox_disk:
+  community.proxmox.proxmox_disk:
     api_user: "{{ pve_api_user }}"
     api_token_id: "{{ pve_api_token_id }}"
     api_token_secret: "{{ pve_api_token_secret }}"

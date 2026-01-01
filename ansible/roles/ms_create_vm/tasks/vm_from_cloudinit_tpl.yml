@@ -7,7 +7,7 @@
       api_host: "{{ pve_api_host }}"
 
 - name: Create new VM from cloud-init template
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     <<: *pve_api
     node: "{{ hostvars[ms_create_vm_cloud_init_template].pve_node }}"
     newid: "{{ pve_vm_id }}"
@@ -18,7 +18,7 @@
   delegate_to: localhost
 
 - name: Migrate VM to node
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     <<: *pve_api
     vmid: "{{ pve_vm_id }}"
     node: "{{ pve_node }}"
@@ -26,7 +26,7 @@
   delegate_to: localhost
 
 - name: Update configuration of cloned VM
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     <<: *pve_api
     node: "{{ pve_node }}"
     vmid: "{{ pve_vm_id }}"
@@ -45,7 +45,7 @@
   delegate_to: localhost
 
 - name: Grow existing disk
-  community.general.proxmox_disk:
+  community.proxmox.proxmox_disk:
     <<: *pve_api
     vmid: "{{ pve_vm_id }}"
     name: "{{ inventory_hostname_short }}"
