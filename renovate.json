@@ -43,6 +43,17 @@
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update git-based Ansible collections with renovate comment hints",
+      "managerFilePatterns": [
+        "/(^|/)requirements\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\n\\s*-\\s*name:\\s*\\S+\\n\\s*version:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
+      ],
+      "versioningTemplate": "semver"
     }
   ],
   "kubernetes": {

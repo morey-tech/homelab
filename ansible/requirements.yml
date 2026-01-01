@@ -5,11 +5,11 @@ collections:
   # Proxmox modules moved from community.general in v11.0.0
   - name: community.proxmox
     version: "1.5.0"
-  # rhpds.assisted_installer
+  # renovate: datasource=github-tags depName=rhpds/assisted_installer
   - name: git+https://github.com/rhpds/assisted_installer
     version: v0.0.2
   - name: pfsensible.core
     version: "0.7.1"
-  # pfsensible.haproxy fork with TCP/SNI support
+  # renovate: datasource=github-tags depName=morey-tech/pfsensible-haproxy
   - name: git+https://github.com/morey-tech/pfsensible-haproxy.git
     version: 0.2.0
