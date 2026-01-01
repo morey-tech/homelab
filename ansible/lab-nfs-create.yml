@@ -71,6 +71,7 @@
         <<: *pve_api
         node: "{{ pve_node }}"
         vmid: "{{ pve_vm_id }}"
+        hostname: "{{ inventory_hostname_short }}"
         state: started
       delegate_to: localhost
 
