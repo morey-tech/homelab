@@ -37,7 +37,13 @@
       "Bash(gh run view:*)",
       "Bash(gh pr checks:*)",
       "Bash(gh run watch:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(git -C /workspaces/homelab branch:*)",
+      "Bash(git -C /workspaces/homelab log --all --grep=\"devspaces\\\\|extension\" -i --oneline)",
+      "Bash(git -C /workspaces/homelab show ocp-mgmt-devspaces:kubernetes/ocp-mgmt/system/openshift-devspaces/checluster.yaml)",
+      "Bash(git -C /workspaces/homelab log --oneline -20 fix/devspaces-container-compatibility)",
+      "Bash(git -C /workspaces/homelab log --all -p --grep=\"extension\" -i -- \"*.yaml\" \"*.yml\" \"*.md\")",
+      "Bash(git -C /workspaces/homelab checkout:*)"
     ],
     "deny": [],
     "ask": []
