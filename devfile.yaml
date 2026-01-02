@@ -2,13 +2,6 @@ schemaVersion: 2.3.0
 metadata:
   generateName: morey-tech-homelab
   version: 0.1.0
-attributes:
-  .vscode/extensions.json: |
-    {
-      "recommendations": [
-        "Anthropic.claude-code"
-      ]
-    }
 components:
   - name: devcontainer
     container:
@@ -18,3 +11,15 @@ components:
       cpuRequest: 2000m
       mountSources: true
       sourceMapping: /projects
+      env:
+        - name: DEFAULT_EXTENSIONS
+          value: /tmp/claude-code.vsix
+commands:
+  - id: install-claude-extension
+    exec:
+      component: devcontainer
+      commandLine: |
+        curl -L "https://open-vsx.org/api/Anthropic/claude-code/linux-x64/latest/file/Anthropic.claude-code-2.0.75@linux-x64.vsix" -o /tmp/claude-code.vsix
+events:
+  postStart:
+    - install-claude-extension
