@@ -32,3 +32,25 @@ EOF
 chmod 600 ~/.ssh/config
 
 echo "SSH config created successfully!"
+
+echo "Setting up GitHub CLI authentication..."
+
+# Extract GitHub token from git credential helper
+GITHUB_TOKEN=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill 2>/dev/null | grep "^password=" | cut -d= -f2)
+
+if [ -n "$GITHUB_TOKEN" ]; then
+    # Authenticate gh CLI
+    if echo "$GITHUB_TOKEN" | gh auth login --with-token 2>/dev/null; then
+        echo "GitHub CLI authenticated successfully!"
+        gh auth status
+    else
+        echo "Warning: Failed to authenticate gh CLI. Manual login may be required."
+    fi
+    # Clear token from memory
+    unset GITHUB_TOKEN
+else
+    echo "No GitHub credentials found. Skipping gh CLI authentication."
+    echo "To authenticate manually, run: gh auth login"
+fi
+
+echo "Workspace setup complete!"

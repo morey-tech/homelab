@@ -12,6 +12,11 @@ Development container for homelab infrastructure work, with pre-installed tools 
 | Cloud | ocm (OpenShift Cluster Manager), gh (GitHub CLI) |
 | Python | ansible, ansible-lint, black, yamllint, proxmoxer |
 
+## GitHub CLI Authentication
+
+- **DevSpaces**: Automatically authenticated using OAuth credentials
+- **Local DevContainer**: Requires manual `gh auth login`
+
 ## Build
 
 ```bash
