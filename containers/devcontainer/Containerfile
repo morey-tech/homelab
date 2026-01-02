@@ -85,6 +85,7 @@ RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
 
 # Install Python pip and packages for Ansible and homelab automation
 RUN dnf install -y python3-pip && dnf clean all
+RUN pip3 install --upgrade pip
 COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
