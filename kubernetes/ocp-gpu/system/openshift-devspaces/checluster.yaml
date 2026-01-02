@@ -5,7 +5,9 @@ metadata:
   name: devspaces
   namespace: openshift-devspaces
 spec:
-  components: {}
+  components:
+    pluginRegistry:
+      openVSXURL: https://open-vsx.org
   containerRegistry: {}
   devEnvironments:
     defaultPlugins:
