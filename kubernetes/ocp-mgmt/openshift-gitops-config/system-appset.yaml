@@ -60,3 +60,11 @@ spec:
       destination:
         namespace: openshift-devspaces
     {{ end }}
+    {{- if eq .path.basename "external-secrets" }}
+    spec:
+      syncPolicy:
+        syncOptions:
+        - allowEmpty=true
+        - CreateNamespace=true
+        - ServerSideApply=true
+    {{ end }}
