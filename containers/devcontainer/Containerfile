@@ -3,7 +3,8 @@
 # while maintaining local VS Code devcontainer support
 #
 # UDI already includes: kubectl, oc, helm, kustomize, terraform, kubectx, kubens, gh
-FROM registry.redhat.io/devspaces/udi-rhel9:latest
+# Using quay.io public mirror (registry.redhat.io requires authentication)
+FROM quay.io/devfile/universal-developer-image:ubi9-latest
 
 LABEL org.opencontainers.image.title="devcontainer"
 LABEL org.opencontainers.image.description="Development container for homelab infrastructure"
