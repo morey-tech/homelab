@@ -11,3 +11,12 @@ components:
       cpuRequest: 2000m
       mountSources: true
       sourceMapping: /projects
+commands:
+  - id: post-create-setup
+    exec:
+      component: devcontainer
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: /projects/homelab/.devcontainer/postCreate.sh
+events:
+  postStart:
+    - post-create-setup

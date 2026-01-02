@@ -92,9 +92,11 @@ Cloud-based development environment running on the ocp-mgmt cluster.
 https://github.com/morey-tech/homelab
 ```
 
-**Included Tools**: oc, kubectl, kustomize, helm, ansible, terraform, gh CLI
+**Included Tools**: oc, kubectl, kustomize, helm, ansible, terraform, gh CLI (auto-authenticated)
 
 **Extensions**: Automatically installs Claude Code and Ansible extensions via [.vscode/extensions.json](.vscode/extensions.json)
+
+**Note**: GitHub CLI is automatically authenticated using DevSpaces OAuth credentials on workspace startup.
 
 ### Local DevContainer
 
