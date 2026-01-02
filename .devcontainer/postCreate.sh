@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
 
+# Detect project root (works in both DevSpaces and local DevContainer)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 echo "Installing Ansible collections..."
-cd /workspaces/homelab/ansible
+cd "$PROJECT_ROOT/ansible"
 ansible-galaxy collection install -r requirements.yml
 
 echo "Ansible collections installed successfully!"
