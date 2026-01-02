@@ -9,3 +9,5 @@ components:
       memoryRequest: 2Gi
       memoryLimit: 4Gi
       cpuRequest: 2000m
+      mountSources: true
+      sourceMapping: /projects

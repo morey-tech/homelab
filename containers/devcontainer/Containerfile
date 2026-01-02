@@ -1,138 +1,108 @@
-# See here for image contents: https://github.com/devcontainers/images/tree/main/src/base-ubuntu
-FROM mcr.microsoft.com/devcontainers/base:ubuntu24.04
+# DevSpaces-compatible development container
+# Extends Red Hat Universal Developer Image (UDI) for OpenShift DevSpaces compatibility
+# while maintaining local VS Code devcontainer support
+#
+# UDI already includes: kubectl, oc, helm, kustomize, terraform, kubectx, kubens, gh
+FROM registry.redhat.io/devspaces/udi-rhel9:latest
 
 LABEL org.opencontainers.image.title="devcontainer"
 LABEL org.opencontainers.image.description="Development container for homelab infrastructure"
 LABEL org.opencontainers.image.source="https://github.com/morey-tech/homelab"
 
-ARG USERNAME=morey-tech
-ARG USER_UID=1001
-ARG USER_GID=$USER_UID
 ARG TARGETARCH
 
-# Add non-root user.
-RUN groupmod -n $USERNAME vscode \
-    && usermod -l $USERNAME vscode \
-    && usermod -d /home/morey-tech -m morey-tech
+USER root
 
-# Add GitHub CLI repository
-RUN mkdir -p -m 755 /etc/apt/keyrings \
-    && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+# Rename 'user' to 'morey-tech' and relocate home directory
+# This maintains compatibility with local devcontainer config while working with DevSpaces
+RUN usermod -l morey-tech user \
+    && groupmod -n morey-tech user \
+    && usermod -d /home/morey-tech -m morey-tech \
+    && ln -s /home/morey-tech /home/user
 
-# Install packages, and clean  up apt.
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y sudo libssl-dev libffi-dev python3-dev python3-pip iputils-ping dnsutils bash-completion apache2-utils tmux gh \
-    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+# Set environment for both local and DevSpaces usage
+ENV HOME=/home/morey-tech
+ENV USER_NAME=morey-tech
 
-# Add user to suders file.
-RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
+# Ensure permissions for OpenShift arbitrary UID support
+RUN chgrp -R 0 /home/morey-tech \
+    && chmod -R g=u /etc/passwd /etc/group /home/morey-tech
 
-# Install Python packages
-COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install --break-system-packages -r /tmp/requirements.txt
+# Install additional tools not included in UDI
 
-# Install `oc` and `kubectl`
-ENV OC_VERSION=4.17.0-okd-scos.0
-RUN OC_ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64-" || echo "") && \
-    wget https://github.com/okd-project/okd/releases/download/${OC_VERSION}/openshift-client-linux-${OC_ARCH}${OC_VERSION}.tar.gz \
-    && tar -xvf openshift-client-linux-${OC_ARCH}${OC_VERSION}.tar.gz \
-    && mv oc kubectl /usr/local/bin/ \
-    && rm -f openshift-client-linux-${OC_ARCH}${OC_VERSION}.tar.gz
-
-ENV KUBECTX_VERSION=v0.9.5
-RUN KUBECTX_ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "x86_64") && \
-    curl -Lo /tmp/kubectx.tar.gz "https://github.com/ahmetb/kubectx/releases/download/${KUBECTX_VERSION}/kubectx_${KUBECTX_VERSION}_linux_${KUBECTX_ARCH}.tar.gz" \
-    && tar -xvf /tmp/kubectx.tar.gz -C /tmp \
-    && mv /tmp/kubectx /usr/local/bin/kubectx \
-    && curl -Lo /tmp/kubens.tar.gz "https://github.com/ahmetb/kubectx/releases/download/${KUBECTX_VERSION}/kubens_${KUBECTX_VERSION}_linux_${KUBECTX_ARCH}.tar.gz" \
-    && tar -xvf /tmp/kubens.tar.gz -C /tmp \
-    && mv /tmp/kubens /usr/local/bin/kubens \
-    && rm -f /tmp/kubectx.tar.gz /tmp/kubens.tar.gz
-
+# konfig - kubectl config management
 ENV KONFIG_VERSION=v0.2.6
 RUN curl -Lo konfig https://github.com/corneliusweig/konfig/raw/${KONFIG_VERSION}/konfig \
     && chmod +x konfig \
-    && sudo mv -i konfig /usr/local/bin
+    && mv konfig /usr/local/bin/
 
+# kubeneat - clean kubectl output
 ENV KUBENEAT_VERSION=v2.0.4
 RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
-    wget https://github.com/itaysk/kubectl-neat/releases/download/${KUBENEAT_VERSION}/kubectl-neat_linux_${ARCH}.tar.gz \
-    && tar -xvzf kubectl-neat_linux_${ARCH}.tar.gz kubectl-neat \
+    curl -Lo kubectl-neat.tar.gz https://github.com/itaysk/kubectl-neat/releases/download/${KUBENEAT_VERSION}/kubectl-neat_linux_${ARCH}.tar.gz \
+    && tar -xvzf kubectl-neat.tar.gz kubectl-neat \
     && mv kubectl-neat /usr/local/bin/kubeneat \
     && chmod 755 /usr/local/bin/kubeneat \
-    && rm -f kubectl-neat_linux_${ARCH}.tar.gz
+    && rm -f kubectl-neat.tar.gz
 
+# kubeseal - sealed secrets CLI
 ENV KUBESEAL_VERSION=0.18.5
 RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
-    wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-${ARCH}.tar.gz \
-    && tar -xvzf kubeseal-${KUBESEAL_VERSION}-linux-${ARCH}.tar.gz kubeseal \
+    curl -Lo kubeseal.tar.gz https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-${ARCH}.tar.gz \
+    && tar -xvzf kubeseal.tar.gz kubeseal \
     && mv kubeseal /usr/local/bin/ \
     && chmod 755 /usr/local/bin/kubeseal \
-    && rm -f kubeseal-${KUBESEAL_VERSION}-linux-${ARCH}.tar.gz
+    && rm -f kubeseal.tar.gz
 
-# Select desired TAG from https://github.com/argoproj/argo-cd/releases
+# argocd CLI
 ENV ARGOCD_VERSION=v2.8.4
 RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
-    curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/$ARGOCD_VERSION/argocd-linux-${ARCH} \
-    && chmod +x /usr/local/bin/argocd \
-    && echo 'source <(argocd completion bash)' >> /usr/share/bash-completion/completions/argocd
+    curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-${ARCH} \
+    && chmod +x /usr/local/bin/argocd
 
-ENV HELM_VERSION=3.13.1
-RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
-    curl -LO "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz" \
-    && tar -zxvf "helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz" \
-    && mv linux-${ARCH}/helm /usr/local/bin/ \
-    && rm -rf "helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz" linux-${ARCH} \
-    && echo 'source <(helm completion bash)' >> /usr/share/bash-completion/completions/helm
-
+# k9s - Kubernetes TUI
 ENV K9S_VERSION=v0.30.8
 RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
-    curl -LO "https://github.com/derailed/k9s/releases/download/${K9S_VERSION}/k9s_Linux_${ARCH}.tar.gz" \
-    && tar -zxvf "k9s_Linux_${ARCH}.tar.gz" \
+    curl -Lo k9s.tar.gz https://github.com/derailed/k9s/releases/download/${K9S_VERSION}/k9s_Linux_${ARCH}.tar.gz \
+    && tar -xvzf k9s.tar.gz k9s \
     && mv k9s /usr/local/bin/ \
-    && rm -rf "k9s_Linux_${ARCH}.tar.gz"
+    && chmod 755 /usr/local/bin/k9s \
+    && rm -f k9s.tar.gz
 
-# https://github.com/kubernetes-sigs/kustomize/releases
-ENV KUSTOMIZE_VERSION=v5.3.0
-RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
-    curl -Lo /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_${ARCH}.tar.gz \
-    && tar -xvf /tmp/kustomize.tar.gz -C /tmp \
-    && mv /tmp/kustomize /usr/local/bin/kustomize \
-    && chmod +x /usr/local/bin/kustomize \
-    && rm -f /tmp/kustomize.tar.gz \
-    && echo 'source <(kustomize completion bash)' >> /usr/share/bash-completion/completions/kustomize
-
-ENV TERRAFORM_VERSION=1.7.4
-RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
-    curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" \
-    && unzip terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip \
-    && mv terraform /usr/local/bin/ \
-    && rm -rf terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip
-
+# vcluster - virtual clusters
 ENV VCLUSTER_VERSION=v0.20.0-beta.1
 RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
-    curl -L -o vcluster "https://github.com/loft-sh/vcluster/releases/download/${VCLUSTER_VERSION}/vcluster-linux-${ARCH}" \
+    curl -L -o vcluster https://github.com/loft-sh/vcluster/releases/download/${VCLUSTER_VERSION}/vcluster-linux-${ARCH} \
     && install -c -m 0755 vcluster /usr/local/bin \
     && rm -f vcluster
 
-# OCM CLI - https://github.com/openshift-online/ocm-cli
+# OCM CLI - OpenShift Cluster Manager
 ENV OCM_VERSION=v1.0.10
 RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
-    curl -Lo /usr/local/bin/ocm "https://github.com/openshift-online/ocm-cli/releases/download/${OCM_VERSION}/ocm-linux-${ARCH}" \
+    curl -Lo /usr/local/bin/ocm https://github.com/openshift-online/ocm-cli/releases/download/${OCM_VERSION}/ocm-linux-${ARCH} \
     && chmod +x /usr/local/bin/ocm
 
-# Add aliases and such
-RUN echo 'source /etc/profile.d/bash_completion.sh' >> /etc/bash.bashrc \
-    && echo 'alias k="kubectl"' >> /etc/bash.bashrc \
-    && echo 'source <(kubectl completion bash)' >> /etc/bash.bashrc \
-    && echo 'complete -F __start_kubectl k' >> /etc/bash.bashrc \
-    && mkdir -p /home/$USERNAME/.kube/ && touch /home/$USERNAME/.kube/config \
-    && chown -R $USERNAME:$USERNAME /home/$USERNAME/.kube/
+# Install Python packages for Ansible and homelab automation
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt
 
-# [Optional] Set the default user. Omit if you want to keep the default as root.
-USER $USERNAME
+# Add custom bash aliases
+COPY .bash_aliases /home/morey-tech/.bash_aliases
+RUN chown morey-tech:0 /home/morey-tech/.bash_aliases \
+    && chmod g=u /home/morey-tech/.bash_aliases
 
-COPY .bash_aliases /home/$USERNAME/.bash_aliases
+# Add CLI completions
+RUN echo 'source <(argocd completion bash)' >> /etc/bash_completion.d/argocd \
+    && echo 'alias k="kubectl"' >> /home/morey-tech/.bashrc \
+    && echo 'complete -F __start_kubectl k' >> /home/morey-tech/.bashrc
+
+# Ensure .kube directory exists with proper permissions
+RUN mkdir -p /home/morey-tech/.kube \
+    && touch /home/morey-tech/.kube/config \
+    && chown -R morey-tech:0 /home/morey-tech/.kube \
+    && chmod -R g=u /home/morey-tech/.kube
+
+# Switch back to non-root user
+USER morey-tech
+WORKDIR /projects
