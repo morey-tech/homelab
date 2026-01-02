@@ -33,7 +33,11 @@
       "Bash(gh pr view:*)",
       "Bash(git -C /workspaces/homelab log --oneline -5)",
       "Bash(pip3 show:*)",
-      "Bash(paste:*)"
+      "Bash(paste:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh run watch:*)",
+      "Bash(gh run list:*)"
     ],
     "deny": [],
     "ask": []
