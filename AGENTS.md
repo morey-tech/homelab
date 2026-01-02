@@ -104,44 +104,6 @@ spec:
 
 ---
 
-## Example: GitHub CLI Auto-Authentication
-
-**Issue**: #122 - Auto-setup gh CLI auth using DevSpaces GitHub App credentials
-**PR**: TBD - feat(devcontainer): auto-configure gh CLI auth in DevSpaces
-
-### Problem
-
-GitHub CLI (`gh`) required manual `gh auth login` in each DevSpaces session, breaking automation workflows despite DevSpaces having GitHub credentials via OAuth integration.
-
-### Solution
-
-Extract OAuth token from DevSpaces git credential helper and authenticate gh CLI automatically in `postCreate.sh`.
-
-**Implementation**: [.devcontainer/postCreate.sh](.devcontainer/postCreate.sh)
-
-### Technical Approach
-
-```bash
-# Extract token from git credential helper
-GITHUB_TOKEN=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill 2>/dev/null | grep "^password=" | cut -d= -f2)
-
-# Authenticate gh CLI if token available
-if [ -n "$GITHUB_TOKEN" ]; then
-    echo "$GITHUB_TOKEN" | gh auth login --with-token 2>/dev/null
-    unset GITHUB_TOKEN
-fi
-```
-
-### Key Learnings
-
-- DevSpaces mounts GitHub OAuth credentials at `/.git-credentials/credentials`
-- Git credential helper can be programmatically queried using `git credential fill`
-- `gh auth login --with-token` enables full authentication without user interaction
-- Graceful failure (empty token extraction) makes it safe for local DevContainers
-- Token scopes include `repo`, `read:org`, `read:user`, `user:email`, `workflow`
-
----
-
 ## Example: README Documentation Update
 
 **Task**: Update repository documentation following hierarchical structure
