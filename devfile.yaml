@@ -12,24 +12,11 @@ components:
       mountSources: true
       sourceMapping: /projects
 commands:
-  - id: setup-gh-auth
+  - id: post-create-setup
     exec:
       component: devcontainer
-      commandLine: |
-        #!/bin/bash
-        echo "Setting up GitHub CLI authentication..."
-        GITHUB_TOKEN=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill 2>/dev/null | grep "^password=" | cut -d= -f2)
-        if [ -n "$GITHUB_TOKEN" ]; then
-          if echo "$GITHUB_TOKEN" | gh auth login --with-token 2>/dev/null; then
-            echo "GitHub CLI authenticated successfully!"
-            gh auth status
-          else
-            echo "Warning: Failed to authenticate gh CLI."
-          fi
-          unset GITHUB_TOKEN
-        else
-          echo "No GitHub credentials found. Skipping gh CLI authentication."
-        fi
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: /projects/homelab/.devcontainer/postCreate.sh
 events:
   postStart:
-    - setup-gh-auth
+    - post-create-setup
