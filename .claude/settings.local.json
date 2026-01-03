@@ -48,5 +48,6 @@
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "apiKeyHelper": "bash -c 'echo $ANTHROPIC_API_KEY'"
 }

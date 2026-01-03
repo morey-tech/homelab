@@ -1,3 +1,6 @@
 {
-    "ansible.python.interpreterPath": "/usr/bin/python3"
+    "ansible.python.interpreterPath": "/usr/bin/python3",
+    "claudeCode.disableLoginPrompt": true,
+    "claudeCode.environmentVariables": [],
+    "claudeCode.initialPermissionMode": "plan"
 }
