@@ -57,4 +57,7 @@ else
     echo "To authenticate manually, run: gh auth login"
 fi
 
+echo "Installing claude CLI..."
+curl -fsSL https://claude.ai/install.sh | bash
+
 echo "Workspace setup complete!"
