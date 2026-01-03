@@ -92,11 +92,15 @@ Cloud-based development environment running on the ocp-mgmt cluster.
 https://github.com/morey-tech/homelab
 ```
 
-**Included Tools**: oc, kubectl, kustomize, helm, ansible, terraform, gh CLI (auto-authenticated)
+**Included Tools**: oc, kubectl, kustomize, helm, ansible, terraform, gh CLI
 
 **Extensions**: Automatically installs Claude Code and Ansible extensions via [.vscode/extensions.json](.vscode/extensions.json)
 
-**Note**: GitHub CLI is automatically authenticated using DevSpaces OAuth credentials on workspace startup.
+**Auto-configured Credentials** (ocp-gpu cluster):
+- **GitHub CLI**: Authenticated using DevSpaces OAuth credentials (no setup required)
+- **Claude Code**: API key injected from Bitwarden as `ANTHROPIC_API_KEY` environment variable
+
+The Claude Code extension will automatically authenticate using the API key when you open a workspace.
 
 ### Local DevContainer
 
@@ -116,6 +120,10 @@ code .
 **Requirements**: Docker or Podman, VS Code with Dev Containers extension
 
 **Container Image**: `ghcr.io/morey-tech/homelab/devcontainer:latest` (multi-arch: amd64/arm64)
+
+**Manual Configuration Required**:
+- **GitHub CLI**: Run `gh auth login` after container starts
+- **Claude Code**: Set `ANTHROPIC_API_KEY` environment variable or use Claude.ai subscription
 
 See [containers/devcontainer/README.md](containers/devcontainer/README.md) for details.
 
