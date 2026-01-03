@@ -53,13 +53,17 @@ ExternalSecret that automatically configures GitHub OAuth for DevSpaces:
 
 **File:** [claude-code-api-key.yaml](claude-code-api-key.yaml)
 
-ExternalSecret that automatically injects Anthropic API key into workspaces:
+ClusterExternalSecret that automatically injects Anthropic API key into all user workspace namespaces:
 
+- **Resource Type:** `ClusterExternalSecret` (creates ExternalSecrets in multiple namespaces)
+- **Namespace Selector:** Targets all namespaces with label `app.kubernetes.io/component: workspaces-namespace`
 - **Bitwarden Item UUID:** `4d42580d-6663-4dd2-b7b7-b3c700295b2f`
 - **Source:** ClusterSecretStore `bitwarden-login`
 - **Field:** `password` (contains Anthropic API key)
-- **Target Secret:** `claude-code-api-key`
+- **Target Secret:** `claude-code-api-key` (created in each workspace namespace)
 - **Environment Variable:** `ANTHROPIC_API_KEY`
+
+**Why ClusterExternalSecret?** The DevWorkspace controller only mounts secrets from the same namespace as the workspace. User workspaces run in namespaces like `admin-devspaces`, not `openshift-devspaces`. ClusterExternalSecret automatically creates the secret in all matching namespaces.
 
 **Purpose:** Eliminates manual OAuth authentication for Claude Code extension. API key is automatically available in all new workspaces.
 
@@ -100,11 +104,17 @@ The Claude Code API key is automatically mounted into all DevSpaces workspaces u
 ### Architecture
 
 ```
-ExternalSecret ──> ClusterSecretStore ──> bitwarden-cli (webhook) ──> Bitwarden Vault
-     │                 (bitwarden-login)      (port 8087)
+ClusterExternalSecret ──> ClusterSecretStore ──> bitwarden-cli (webhook) ──> Bitwarden Vault
+     │                       (bitwarden-login)      (port 8087)
      │
-     └──> Kubernetes Secret ──> DevWorkspace Controller ──> Workspace Pod
+     ├──> ExternalSecret (admin-devspaces) ──> Secret ──> DevWorkspace Controller ──> Workspace Pod
+     │
+     ├──> ExternalSecret (user2-devspaces) ──> Secret ──> DevWorkspace Controller ──> Workspace Pod
+     │
+     └──> ... (one ExternalSecret per workspace namespace)
 ```
+
+**Note:** ClusterExternalSecret automatically creates an ExternalSecret in each namespace matching the selector (`app.kubernetes.io/component: workspaces-namespace`), which then creates the actual Kubernetes Secret in that namespace.
 
 ### Credential Storage
 
@@ -136,10 +146,12 @@ To rotate or update credentials:
 
 3. **Force ExternalSecret refresh:**
    ```bash
-   # Delete secret to force recreation
-   oc delete secret -n openshift-devspaces claude-code-api-key
+   # Delete secrets from all workspace namespaces to force recreation
+   for ns in $(oc get namespaces -l app.kubernetes.io/component=workspaces-namespace -o jsonpath='{.items[*].metadata.name}'); do
+     oc delete secret -n $ns claude-code-api-key --ignore-not-found
+   done
 
-   # ExternalSecrets Operator will recreate it automatically
+   # ClusterExternalSecret will recreate ExternalSecrets and secrets automatically
    ```
 
 4. **Restart existing workspaces:**
@@ -150,28 +162,32 @@ To rotate or update credentials:
 
 ## Verification & Testing
 
-### Verify ExternalSecret Sync Status
+### Verify ClusterExternalSecret Sync Status
 
-After ArgoCD syncs the manifests, verify the ExternalSecrets are working:
+After ArgoCD syncs the manifests, verify the ClusterExternalSecret is working:
 
 ```bash
-# Check ExternalSecret resource exists
-oc get externalsecret -n openshift-devspaces
+# Check ClusterExternalSecret resource exists
+oc get clusterexternalsecret claude-code-api-key
 
-# Check sync status for Claude API key
-oc describe externalsecret -n openshift-devspaces claude-code-api-key
+# Describe ClusterExternalSecret
+oc describe clusterexternalsecret claude-code-api-key
 
-# Verify Kubernetes secret was created
-oc get secret -n openshift-devspaces claude-code-api-key
+# Check ExternalSecrets created in workspace namespaces
+oc get externalsecret --all-namespaces | grep claude-code-api-key
+
+# Verify secrets created in a specific workspace namespace (e.g., admin-devspaces)
+oc get secret -n admin-devspaces claude-code-api-key
 
 # Check secret has correct labels
-oc get secret -n openshift-devspaces claude-code-api-key -o yaml | grep -A5 labels
+oc get secret -n admin-devspaces claude-code-api-key -o yaml | grep -A5 labels
 ```
 
 **Expected output:**
-- ExternalSecret status: `SecretSynced`
-- Condition: `Ready=True`
-- Secret contains `ANTHROPIC_API_KEY` key
+- ClusterExternalSecret exists and is healthy
+- ExternalSecrets created in all workspace namespaces (e.g., `admin-devspaces`)
+- Each ExternalSecret status: `SecretSynced`, Condition: `Ready=True`
+- Secrets contain `ANTHROPIC_API_KEY` key
 - Labels include `controller.devfile.io/mount-to-devworkspace: 'true'`
 
 ### Test in New Workspace
