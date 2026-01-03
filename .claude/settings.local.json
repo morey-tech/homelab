@@ -43,7 +43,8 @@
       "Bash(gh run view:*)",
       "Bash(gh run watch:*)",
       "Bash(pip3 show:*)",
-      "WebFetch(domain:docs.redhat.com)"
+      "WebFetch(domain:docs.redhat.com)",
+      "Bash(gh auth status:*)"
     ],
     "deny": [],
     "ask": []
