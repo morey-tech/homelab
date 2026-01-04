@@ -57,7 +57,12 @@ else
     echo "To authenticate manually, run: gh auth login"
 fi
 
-echo "Installing claude CLI..."
-curl -fsSL https://claude.ai/install.sh | bash
+echo "Verifying Claude CLI installation..."
+if command -v claude &> /dev/null; then
+    claude --version
+    echo "Claude CLI is available!"
+else
+    echo "Warning: Claude CLI not found. This should be installed in the devspace-base image."
+fi
 
 echo "Workspace setup complete!"

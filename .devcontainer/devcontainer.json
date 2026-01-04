@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json.
 {
 	"name": "morey-tech/homelab",
-	"image": "ghcr.io/morey-tech/homelab/devcontainer:latest",
+	"image": "ghcr.io/morey-tech/homelab/devspace-homelab:latest",
 	"runArgs": [
 		"--cap-add=NET_RAW",
 		"--network=host"

@@ -63,17 +63,17 @@
   },
   "packageRules": [
     {
-      "description": "Group all devcontainer Python dependencies together",
+      "description": "Group all devspace-homelab Python dependencies together",
       "matchManagers": [
         "pip_requirements"
       ],
       "matchFileNames": [
-        "containers/devcontainer/requirements.txt"
+        "containers/devspace-homelab/requirements.txt"
       ],
-      "groupName": "Devcontainer Python dependencies",
+      "groupName": "Devspace-Homelab Python dependencies",
       "labels": [
         "renovate",
-        "devcontainer",
+        "devspace-homelab",
         "python"
       ]
     },

@@ -1,12 +1,9 @@
-# DevSpaces-compatible development container
-# Extends Red Hat Universal Developer Image (UDI) for OpenShift DevSpaces compatibility
-# while maintaining local VS Code devcontainer support
-#
-# UDI already includes: kubectl, oc, helm, kustomize, terraform, kubectx, kubens, gh
-# Using quay.io public mirror (registry.redhat.io requires authentication)
-FROM quay.io/devfile/universal-developer-image:ubi9-latest
+# Homelab-specific development container
+# Extends devspace-base with homelab infrastructure tools
+# Includes Kubernetes, GitOps, and Infrastructure as Code tooling
+FROM ghcr.io/morey-tech/homelab/devspace-base:sha-1cc8808
 
-LABEL org.opencontainers.image.title="devcontainer"
+LABEL org.opencontainers.image.title="devspace-homelab"
 LABEL org.opencontainers.image.description="Development container for homelab infrastructure"
 LABEL org.opencontainers.image.source="https://github.com/morey-tech/homelab"
 
@@ -24,6 +21,9 @@ RUN usermod -l morey-tech user \
 # Set environment for both local and DevSpaces usage
 ENV HOME=/home/morey-tech
 ENV USER_NAME=morey-tech
+
+# Update PATH to include Claude CLI from devspace-base in morey-tech home
+ENV PATH="/home/morey-tech/.local/bin:${PATH}"
 
 # Ensure permissions for OpenShift arbitrary UID support
 RUN chgrp -R 0 /home/morey-tech \
