@@ -24,6 +24,17 @@ RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
 # The install script auto-detects architecture and installs to /home/user/.local/bin/
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
+# Install GitHub CLI auto-authentication script
+COPY gh-auth-init.sh /usr/local/bin/gh-auth-init.sh
+RUN chmod +x /usr/local/bin/gh-auth-init.sh && \
+    mkdir -p /home/user/.bashrc.d && \
+    ln -s /usr/local/bin/gh-auth-init.sh /home/user/.bashrc.d/00-gh-auth.sh && \
+    chown -R user:user /home/user/.bashrc.d
+
+# Ensure .bashrc sources .bashrc.d scripts
+RUN grep -q '.bashrc.d' /home/user/.bashrc || \
+    echo -e '\n# Source additional shell initialization scripts\nif [ -d ~/.bashrc.d ]; then\n    for rc in ~/.bashrc.d/*; do\n        [ -f "$rc" ] && . "$rc"\n    done\nfi' >> /home/user/.bashrc
+
 # Ensure CLIs are in PATH
 ENV PATH="/home/user/.local/bin:${PATH}"
 
