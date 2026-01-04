@@ -67,7 +67,8 @@ homelab/
 │   └── README.md       # Terraform usage documentation
 │
 ├── containers/         # Custom container images
-│   ├── devcontainer/   # Development environment (multi-arch)
+│   ├── devspace-base/     # Base devspace image with Claude CLI
+│   ├── devspace-homelab/  # Homelab-specific development environment (multi-arch)
 │   ├── hf-cli/         # HuggingFace CLI tool
 │   └── README.md       # Container build conventions
 │
@@ -119,13 +120,15 @@ code .
 
 **Requirements**: Docker or Podman, VS Code with Dev Containers extension
 
-**Container Image**: `ghcr.io/morey-tech/homelab/devcontainer:latest` (multi-arch: amd64/arm64)
+**Container Images**:
+- **Base**: `ghcr.io/morey-tech/homelab/devspace-base:latest` - Base image with Claude CLI and GitHub CLI
+- **Homelab**: `ghcr.io/morey-tech/homelab/devspace-homelab:latest` - Full homelab tooling (multi-arch: amd64/arm64)
 
 **Manual Configuration Required**:
 - **GitHub CLI**: Run `gh auth login` after container starts
 - **Claude Code**: Set `ANTHROPIC_API_KEY` environment variable or use Claude.ai subscription
 
-See [containers/devcontainer/README.md](containers/devcontainer/README.md) for details.
+See [containers/devspace-homelab/README.md](containers/devspace-homelab/README.md) for details.
 
 ## Quick Start
 
