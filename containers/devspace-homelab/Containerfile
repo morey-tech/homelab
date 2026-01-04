@@ -25,15 +25,10 @@ ENV HOME=/home/morey-tech
 ENV USER_NAME=morey-tech
 ENV PATH="/home/morey-tech/.local/bin:${PATH}"
 
-# Link gh-auth script for morey-tech user
-RUN mkdir -p /home/morey-tech/.bashrc.d && \
-    ln -s /usr/local/bin/gh-auth-init.sh /home/morey-tech/.bashrc.d/00-gh-auth.sh && \
-    chown -R morey-tech:0 /home/morey-tech/.bashrc.d && \
+# The gh-auth-init.sh symlink is inherited from devspace-base when home directory is moved
+# Just ensure correct permissions for OpenShift arbitrary UID support
+RUN chown -R morey-tech:0 /home/morey-tech/.bashrc.d && \
     chmod -R g=u /home/morey-tech/.bashrc.d
-
-# Ensure .bashrc sources .bashrc.d scripts for morey-tech user
-RUN grep -q '.bashrc.d' /home/morey-tech/.bashrc || \
-    echo -e '\n# Source additional shell initialization scripts\nif [ -d ~/.bashrc.d ]; then\n    for rc in ~/.bashrc.d/*; do\n        [ -f "$rc" ] && . "$rc"\n    done\nfi' >> /home/morey-tech/.bashrc
 
 # Ensure permissions for OpenShift arbitrary UID support
 RUN chgrp -R 0 /home/morey-tech \
