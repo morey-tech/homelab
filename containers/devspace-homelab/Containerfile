@@ -1,7 +1,9 @@
-# Homelab-specific development container
-# Extends devspace-base with homelab infrastructure tools
-# Includes Kubernetes, GitOps, and Infrastructure as Code tooling
-FROM ghcr.io/morey-tech/homelab/devspace-base:sha-1cc8808
+# DevSpaces-compatible development container
+# Extends devspace-base which includes Claude CLI and GitHub CLI with auto-authentication
+# Maintains OpenShift DevSpaces compatibility while working with local VS Code devcontainer
+#
+# Base image includes: kubectl, oc, helm, kustomize, terraform, kubectx, kubens, gh, claude
+FROM ghcr.io/morey-tech/homelab/devspace-base:latest
 
 LABEL org.opencontainers.image.title="devspace-homelab"
 LABEL org.opencontainers.image.description="Development container for homelab infrastructure"
@@ -21,9 +23,17 @@ RUN usermod -l morey-tech user \
 # Set environment for both local and DevSpaces usage
 ENV HOME=/home/morey-tech
 ENV USER_NAME=morey-tech
-
-# Update PATH to include Claude CLI from devspace-base in morey-tech home
 ENV PATH="/home/morey-tech/.local/bin:${PATH}"
+
+# Link gh-auth script for morey-tech user
+RUN mkdir -p /home/morey-tech/.bashrc.d && \
+    ln -s /usr/local/bin/gh-auth-init.sh /home/morey-tech/.bashrc.d/00-gh-auth.sh && \
+    chown -R morey-tech:0 /home/morey-tech/.bashrc.d && \
+    chmod -R g=u /home/morey-tech/.bashrc.d
+
+# Ensure .bashrc sources .bashrc.d scripts for morey-tech user
+RUN grep -q '.bashrc.d' /home/morey-tech/.bashrc || \
+    echo -e '\n# Source additional shell initialization scripts\nif [ -d ~/.bashrc.d ]; then\n    for rc in ~/.bashrc.d/*; do\n        [ -f "$rc" ] && . "$rc"\n    done\nfi' >> /home/morey-tech/.bashrc
 
 # Ensure permissions for OpenShift arbitrary UID support
 RUN chgrp -R 0 /home/morey-tech \
