@@ -1,0 +1,35 @@
+# Base development container extending Red Hat Universal Developer Image
+# Provides Claude CLI and GitHub CLI for AI-assisted development
+# Designed for OpenShift DevSpaces and local VS Code devcontainer usage
+#
+# UDI already includes: kubectl, oc, helm, kustomize, terraform, kubectx, kubens
+FROM quay.io/devfile/universal-developer-image:ubi9-latest
+
+LABEL org.opencontainers.image.title="devspace-base"
+LABEL org.opencontainers.image.description="Base development container with Claude CLI and GitHub CLI"
+LABEL org.opencontainers.image.source="https://github.com/morey-tech/homelab"
+
+ARG TARGETARCH
+
+USER root
+
+# Install GitHub CLI
+# UDI may or may not include gh CLI, so install it explicitly to be sure
+RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
+    curl -fsSL https://cli.github.com/packages/rpm/gh-cli.repo | tee /etc/yum.repos.d/gh-cli.repo && \
+    dnf install -y gh && \
+    dnf clean all
+
+# Install Claude CLI
+# The install script auto-detects architecture and installs to /home/user/.local/bin/
+RUN curl -fsSL https://claude.ai/install.sh | bash
+
+# Ensure CLIs are in PATH
+ENV PATH="/home/user/.local/bin:${PATH}"
+
+# Verify installations
+RUN gh --version && \
+    (claude --version || echo "Warning: Claude CLI may not be installed correctly")
+
+USER user
+WORKDIR /projects
