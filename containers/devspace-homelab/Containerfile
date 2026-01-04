@@ -1,7 +1,9 @@
-# Homelab-specific development container
-# Extends devspace-base with homelab infrastructure tools
-# Includes Kubernetes, GitOps, and Infrastructure as Code tooling
-FROM ghcr.io/morey-tech/homelab/devspace-base:sha-1cc8808
+# DevSpaces-compatible development container
+# Extends devspace-base which includes Claude CLI and GitHub CLI with auto-authentication
+# Maintains OpenShift DevSpaces compatibility while working with local VS Code devcontainer
+#
+# Base image includes: kubectl, oc, helm, kustomize, terraform, kubectx, kubens, gh, claude
+FROM ghcr.io/morey-tech/homelab/devspace-base:sha-946dfba
 
 LABEL org.opencontainers.image.title="devspace-homelab"
 LABEL org.opencontainers.image.description="Development container for homelab infrastructure"
@@ -21,9 +23,12 @@ RUN usermod -l morey-tech user \
 # Set environment for both local and DevSpaces usage
 ENV HOME=/home/morey-tech
 ENV USER_NAME=morey-tech
-
-# Update PATH to include Claude CLI from devspace-base in morey-tech home
 ENV PATH="/home/morey-tech/.local/bin:${PATH}"
+
+# The gh-auth-init.sh symlink is inherited from devspace-base when home directory is moved
+# Just ensure correct permissions for OpenShift arbitrary UID support
+RUN chown -R morey-tech:0 /home/morey-tech/.bashrc.d && \
+    chmod -R g=u /home/morey-tech/.bashrc.d
 
 # Ensure permissions for OpenShift arbitrary UID support
 RUN chgrp -R 0 /home/morey-tech \
