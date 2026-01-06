@@ -20,6 +20,34 @@ RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
     dnf install -y gh && \
     dnf clean all
 
+# Install browser dependencies for Puppeteer/Chromium
+# Required by VSCode extensions that use headless browsers (e.g., Roo Code)
+RUN dnf install -y \
+    nspr \
+    nss \
+    alsa-lib \
+    atk \
+    cups-libs \
+    gtk3 \
+    pango \
+    libX11 \
+    libX11-xcb \
+    libXcomposite \
+    libXcursor \
+    libXdamage \
+    libXext \
+    libXfixes \
+    libXi \
+    libXrandr \
+    libXrender \
+    libXScrnSaver \
+    libXtst \
+    fontconfig \
+    liberation-fonts \
+    urw-base35-fonts \
+    && dnf update nss -y \
+    && dnf clean all
+
 # Install Claude CLI
 # The install script auto-detects architecture and installs to /home/user/.local/bin/
 RUN curl -fsSL https://claude.ai/install.sh | bash
