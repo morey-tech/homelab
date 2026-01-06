@@ -1,0 +1,32 @@
+# VS Code editor configuration for Roo Code auto-import
+# 
+# This ConfigMap is deployed to the openshift-devspaces namespace and automatically
+# replicated to all user workspace namespaces by the DevWorkspace controller.
+# The 'app.kubernetes.io/part-of: che.eclipse.org' label instructs DevSpaces
+# to apply these settings to the VS Code editor in all workspaces.
+#
+# By deploying to openshift-devspaces namespace, these settings are:
+# - Automatically applied to all user workspaces
+# - Protected from modification by users in their own namespaces
+# - Centrally managed and version-controlled
+#
+# Reference: https://docs.redhat.com/en/documentation/red_hat_openshift_dev_spaces/3.25/html/administration_guide/configuring-visual-studio-code#editor-configurations-for-microsoft-visual-studio-code
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vscode-editor-configurations  # Must be named this.
+  namespace: openshift-devspaces
+  labels:
+    app.kubernetes.io/part-of: che.eclipse.org
+    app.kubernetes.io/component: workspaces-config
+data:
+  settings.json: |
+    {
+      "roo-cline.autoImportSettingsPath": "~/.roo-code-settings.json"
+    }
+  extensions.json: |
+    {
+      "recommendations": [
+        "rooveterinaryinc.roo-cline"
+      ]
+    }

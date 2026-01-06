@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: roo-code-generate-script
+  namespace: openshift-devspaces
+  labels:
+    app.kubernetes.io/part-of: che.eclipse.org
+    app.kubernetes.io/component: workspaces-config
+    controller.devfile.io/mount-to-devworkspace: 'true'
+    controller.devfile.io/watch-configmap: 'true'
+  annotations:
+    controller.devfile.io/mount-as: subpath
+    controller.devfile.io/mount-path: /etc/roo-code
+data:
+  generate-settings.sh: |
+    #!/bin/bash
+    # Generate Roo Code settings from template and environment variables
+    
+    TEMPLATE_FILE="/etc/roo-code/settings-template.json"
+    OUTPUT_FILE="$HOME/.roo-code-settings.json"
+    
+    echo "Roo Code settings generation starting..."
+    
+    # Check if template exists
+    if [ ! -f "$TEMPLATE_FILE" ]; then
+      echo "Error: Template file not found at $TEMPLATE_FILE"
+      exit 1
+    fi
+    
+    # Check if API key is available
+    if [ -z "$ANTHROPIC_API_KEY" ]; then
+      echo "Warning: ANTHROPIC_API_KEY not set, using placeholder"
+      ANTHROPIC_API_KEY="YOUR_API_KEY_HERE"
+    fi
+    
+    # Generate settings by replacing placeholders
+    sed "s|{{ANTHROPIC_API_KEY}}|$ANTHROPIC_API_KEY|g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+    
+    echo "Roo Code settings generated at $OUTPUT_FILE"
+    
+    # Set proper permissions
+    chmod 600 "$OUTPUT_FILE"
+    
+    echo "Roo Code settings generation complete"

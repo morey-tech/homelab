@@ -17,6 +17,15 @@ commands:
       component: devcontainer
       workingDir: ${PROJECT_SOURCE}
       commandLine: /projects/homelab/.devcontainer/postCreate.sh
+  - id: generate-roo-settings
+    exec:
+      component: devcontainer
+      commandLine: |
+        if [ -f /etc/roo-code/generate-settings.sh ]; then
+          bash /etc/roo-code/generate-settings.sh
+        fi
+      workingDir: ${PROJECT_SOURCE}
 events:
   postStart:
     - post-create-setup
+    - generate-roo-settings
