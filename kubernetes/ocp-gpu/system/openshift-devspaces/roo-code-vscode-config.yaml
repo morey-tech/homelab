@@ -14,7 +14,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: roo-code-vscode-config
+  name: vscode-editor-configurations
   namespace: openshift-devspaces
   labels:
     app.kubernetes.io/part-of: che.eclipse.org
