@@ -14,7 +14,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: vscode-editor-configurations
+  name: vscode-editor-configurations  # Must be named this.
   namespace: openshift-devspaces
   labels:
     app.kubernetes.io/part-of: che.eclipse.org
