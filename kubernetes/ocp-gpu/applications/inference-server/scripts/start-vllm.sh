@@ -32,7 +32,9 @@ while true; do
     --tensor-parallel-size=1 \
     --max-model-len=$MAX_LEN \
     --dtype=float16 \
-    --gpu-memory-utilization=$GPU_UTIL > >(tee $OUTPUT_FILE) 2>&1 &
+    --gpu-memory-utilization=$GPU_UTIL \
+    --enable-auto-tool-choice \
+    --tool-call-parser=hermes > >(tee $OUTPUT_FILE) 2>&1 &
 
   VLLM_PID=$!
 
