@@ -14,31 +14,127 @@ metadata:
 data:
   settings-template.json: |
     {
-      "apiProviders": [
-        {
-          "id": "anthropic-api",
-          "name": "Anthropic API",
-          "provider": "anthropic",
-          "apiKey": "{{ANTHROPIC_API_KEY}}",
-          "baseUrl": "https://api.anthropic.com",
-          "defaultModel": "claude-sonnet-4-5"
+      "providerProfiles": {
+        "currentApiConfigName": "Claude",
+        "apiConfigs": {
+          "Claude": {
+            "enableReasoningEffort": true,
+            "apiModelId": "claude-sonnet-4-5",
+            "apiKey": "{{ANTHROPIC_API_KEY}}",
+            "apiProvider": "anthropic",
+            "id": "8oppx292el"
+          },
+          "vLLM": {
+            "enableReasoningEffort": true,
+            "openAiBaseUrl": "https://interence-server-inference-server.apps.ocp-gpu.rh-lab.morey.tech/v1",
+            "openAiApiKey": "xxx",
+            "openAiModelId": "local-llm",
+            "openAiCustomModelInfo": {
+              "maxTokens": -1,
+              "contextWindow": 40000,
+              "supportsImages": true,
+              "supportsPromptCache": false,
+              "inputPrice": 0,
+              "outputPrice": 0,
+              "reasoningEffort": "low",
+              "supportsNativeTools": true,
+              "defaultToolProtocol": "native"
+            },
+            "openAiHeaders": {},
+            "apiProvider": "openai",
+            "id": "qaudgghoobj"
+          }
         },
-        {
-          "id": "local-llm",
-          "name": "Local Inference Server",
-          "provider": "openai-compatible",
-          "apiKey": "not-needed",
-          "baseUrl": "https://interence-server-inference-server.apps.ocp-gpu.rh-lab.morey.tech/v1",
-          "defaultModel": "local-llm"
+        "modeApiConfigs": {
+          "architect": "8oppx292el",
+          "code": "8oppx292el",
+          "ask": "qaudgghoobj",
+          "debug": "8oppx292el",
+          "orchestrator": "8oppx292el"
+        },
+        "migrations": {
+          "rateLimitSecondsMigrated": true,
+          "diffSettingsMigrated": true,
+          "openAiHeadersMigrated": true,
+          "consecutiveMistakeLimitMigrated": true,
+          "todoListEnabledMigrated": true,
+          "claudeCodeLegacySettingsMigrated": true
         }
-      ],
+      },
       "globalSettings": {
-        "uiSettings": {
-          "collapseThinkingByDefault": true
+        "autoApprovalEnabled": true,
+        "alwaysAllowReadOnly": true,
+        "alwaysAllowReadOnlyOutsideWorkspace": false,
+        "alwaysAllowWrite": true,
+        "alwaysAllowWriteOutsideWorkspace": false,
+        "alwaysAllowWriteProtected": false,
+        "writeDelayMs": 1000,
+        "alwaysAllowBrowser": true,
+        "alwaysAllowMcp": true,
+        "alwaysAllowModeSwitch": true,
+        "alwaysAllowSubtasks": true,
+        "alwaysAllowExecute": false,
+        "alwaysAllowFollowupQuestions": true,
+        "followupAutoApproveTimeoutMs": 60000,
+        "allowedCommands": ["git log", "git diff", "git show", "git add", "oc get"],
+        "deniedCommands": [],
+        "allowedMaxRequests": null,
+        "allowedMaxCost": null,
+        "autoCondenseContext": true,
+        "autoCondenseContextPercent": 100,
+        "maxConcurrentFileReads": 5,
+        "includeCurrentTime": true,
+        "includeCurrentCost": true,
+        "maxGitStatusFiles": 0,
+        "includeDiagnosticMessages": true,
+        "maxDiagnosticMessages": 50,
+        "browserToolEnabled": true,
+        "browserViewportSize": "900x600",
+        "screenshotQuality": 75,
+        "remoteBrowserEnabled": false,
+        "enableCheckpoints": true,
+        "checkpointTimeout": 15,
+        "ttsEnabled": false,
+        "ttsSpeed": 1,
+        "soundEnabled": false,
+        "soundVolume": 0.5,
+        "maxOpenTabsContext": 20,
+        "maxWorkspaceFiles": 200,
+        "showRooIgnoredFiles": false,
+        "enableSubfolderRules": false,
+        "maxReadFileLine": -1,
+        "maxImageFileSize": 5,
+        "maxTotalImageSize": 20,
+        "terminalOutputLineLimit": 500,
+        "terminalOutputCharacterLimit": 50000,
+        "terminalShellIntegrationTimeout": 5000,
+        "terminalShellIntegrationDisabled": true,
+        "terminalCommandDelay": 0,
+        "terminalPowershellCounter": false,
+        "terminalZshClearEolMark": true,
+        "terminalZshOhMy": false,
+        "terminalZshP10k": false,
+        "terminalZdotdir": false,
+        "terminalCompressProgressBar": true,
+        "experiments": {
+          "powerSteering": false,
+          "multiFileApplyDiff": false,
+          "preventFocusDisruption": false,
+          "imageGeneration": false,
+          "runSlashCommand": false,
+          "multipleNativeToolCalls": false,
+          "customTools": false
         },
-        "contextSettings": {
-          "includeCurrentTime": false,
-          "includeCurrentCost": true
-        }
+        "language": "en",
+        "telemetrySetting": "enabled",
+        "mcpEnabled": true,
+        "mode": "orchestrator",
+        "customModes": [],
+        "customSupportPrompts": {},
+        "includeTaskHistoryInEnhance": true,
+        "reasoningBlockCollapsed": true,
+        "enterBehavior": "send",
+        "profileThresholds": {},
+        "hasOpenedModeSelector": true
       }
     }
