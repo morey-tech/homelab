@@ -4,6 +4,8 @@ metadata:
   name: roo-code-generate-script
   namespace: openshift-devspaces
   labels:
+    app.kubernetes.io/part-of: che.eclipse.org
+    app.kubernetes.io/component: workspaces-config
     controller.devfile.io/mount-to-devworkspace: 'true'
     controller.devfile.io/watch-configmap: 'true'
   annotations:
