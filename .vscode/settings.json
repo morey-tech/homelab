@@ -3,5 +3,4 @@
     "claudeCode.disableLoginPrompt": true,
     "claudeCode.environmentVariables": [],
     "claudeCode.initialPermissionMode": "plan",
-    "roo-cline.autoImportSettingsPath": "~/.roo-code-settings.json"
 }
