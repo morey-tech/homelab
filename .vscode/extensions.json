@@ -7,6 +7,7 @@
     "ms-kubernetes-tools.vscode-kubernetes-tools",
     "redhat.ansible",
     "redhat.vscode-openshift-connector",
+    "rooveterinaryinc.roo-cline",
     "yzhang.markdown-all-in-one"
   ]
 }

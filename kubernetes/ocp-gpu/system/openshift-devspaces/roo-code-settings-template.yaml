@@ -1,0 +1,42 @@
+capiVersion: v1
+kind: ConfigMap
+metadata:
+  name: roo-code-settings-template
+  namespace: openshift-devspaces
+  labels:
+    controller.devfile.io/mount-to-devworkspace: 'true'
+    controller.devfile.io/watch-configmap: 'true'
+  annotations:
+    controller.devfile.io/mount-as: subpath
+    controller.devfile.io/mount-path: /etc/roo-code
+data:
+  settings-template.json: |
+    {
+      "apiProviders": [
+        {
+          "id": "anthropic-api",
+          "name": "Anthropic API",
+          "provider": "anthropic",
+          "apiKey": "{{ANTHROPIC_API_KEY}}",
+          "baseUrl": "https://api.anthropic.com",
+          "defaultModel": "claude-sonnet-4-5"
+        },
+        {
+          "id": "local-llm",
+          "name": "Local Inference Server",
+          "provider": "openai-compatible",
+          "apiKey": "not-needed",
+          "baseUrl": "https://interence-server-inference-server.apps.ocp-gpu.rh-lab.morey.tech/v1",
+          "defaultModel": "local-llm"
+        }
+      ],
+      "globalSettings": {
+        "uiSettings": {
+          "collapseThinkingByDefault": true
+        },
+        "contextSettings": {
+          "includeCurrentTime": false,
+          "includeCurrentCost": true
+        }
+      }
+    }
