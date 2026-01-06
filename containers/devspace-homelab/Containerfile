@@ -3,7 +3,7 @@
 # Maintains OpenShift DevSpaces compatibility while working with local VS Code devcontainer
 #
 # Base image includes: kubectl, oc, helm, kustomize, terraform, kubectx, kubens, gh, claude
-FROM ghcr.io/morey-tech/homelab/devspace-base:sha-946dfba
+FROM ghcr.io/morey-tech/homelab/devspace-base:sha-dad4013
 
 LABEL org.opencontainers.image.title="devspace-homelab"
 LABEL org.opencontainers.image.description="Development container for homelab infrastructure"
