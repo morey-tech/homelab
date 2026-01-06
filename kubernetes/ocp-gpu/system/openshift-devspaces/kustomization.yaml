@@ -7,3 +7,4 @@ resources:
   - claude-code-api-key.yaml
   - roo-code-settings-template.yaml
   - roo-code-generate-script.yaml
+  - roo-code-vscode-config.yaml
