@@ -56,6 +56,12 @@ gh --version
 claude --version
 ```
 
+## Browser Support
+
+The image includes runtime dependencies for headless browser operation, supporting VSCode extensions that use Puppeteer or similar browser automation libraries (e.g., Roo Code for URL content fetching).
+
+**Note**: A full browser (Chrome/Chromium) is not installed. Extensions that bundle their own browser binaries (like Puppeteer) will use the provided system libraries.
+
 ## Compatibility
 
 - **OpenShift DevSpaces**: Fully compatible
