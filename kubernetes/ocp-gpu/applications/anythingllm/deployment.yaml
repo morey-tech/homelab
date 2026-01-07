@@ -20,27 +20,15 @@ spec:
         deployment: anythingllm
     spec:
       containers:
-        - name: anythingllm
-          image: 'quay.io/rh-aiservices-bu/anythingllm-workbench:1.9.1'
-          ports:
-            - containerPort: 8888
-              protocol: TCP
-          envFrom:
-            - secretRef:
-                name: inference-server-config
-          resources: {}
-          terminationMessagePath: /dev/termination-log
-          terminationMessagePolicy: File
-          imagePullPolicy: IfNotPresent
-      restartPolicy: Always
-      terminationGracePeriodSeconds: 30
-      dnsPolicy: ClusterFirst
-      securityContext: {}
-      schedulerName: default-scheduler
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 25%
-      maxSurge: 25%
-  revisionHistoryLimit: 10
-  progressDeadlineSeconds: 600
+      - name: anythingllm
+        image: 'quay.io/rh-aiservices-bu/anythingllm-workbench:1.9.1'
+        ports:
+          - containerPort: 8888
+            protocol: TCP
+        envFrom:
+          - secretRef:
+              name: inference-server-config
+        volumeMounts:
+          - name: storage
+            mountPath: /app/server/storage
+        resources: {}
