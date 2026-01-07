@@ -32,3 +32,7 @@ spec:
           - name: storage
             mountPath: /app/server/storage
         resources: {}
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: anythingllm-pvc
