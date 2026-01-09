@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - https://github.com/redhat-cop/gitops-catalog/gpu-operator-certified/operator/overlays/v25.3?ref=main
   - cluster-policy.yaml
+  - nvidia-dashboard-configmap.yaml
