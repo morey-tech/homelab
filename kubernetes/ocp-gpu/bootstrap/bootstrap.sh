@@ -71,7 +71,7 @@ oc apply -n external-secrets-system -f "${SCRIPT_DIR}/${BITWARDEN_SECRET_FILE}"
 echo -e "${GREEN}  ✓ bitwarden secret applied${NC}\n"
 
 echo "  → Building and applying external-secrets kustomization"
-oc kustomize "${SCRIPT_DIR}/../system/external-secrets/" --enable-helm | oc apply -f -
+oc kustomize "${SCRIPT_DIR}/../system/external-secrets/" --enable-helm | oc apply --server-side=true -f -
 echo -e "${GREEN}  ✓ external secrets base resources applied${NC}\n"
 
 echo "  → Waiting for external-secrets webhook to be ready..."
@@ -110,7 +110,7 @@ fi
 echo -e "${YELLOW}[8/11] Applying htpasswd OAuth configuration...${NC}"
 
 echo "  → Applying htpass-admin configuration files"
-oc apply -f "${SCRIPT_DIR}/../system/htpass-admin/"
+oc kustomize "${SCRIPT_DIR}/../system/htpass-admin/" --enable-helm | oc apply -f -
 echo -e "${GREEN}  ✓ htpasswd OAuth configuration applied${NC}\n"
 
 echo "  → Restarting oauth-openshift deployment"
