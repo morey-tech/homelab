@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: anythingllm
-        image: 'quay.io/rh-aiservices-bu/anythingllm-workbench:1.9.1'
+        image: 'quay.io/rh-aiservices-bu/anythingllm-workbench:1.8.5'
         ports:
           - containerPort: 8888
             protocol: TCP
