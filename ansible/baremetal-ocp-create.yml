@@ -24,7 +24,7 @@
           loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
           loop_control:
             label: "{{ item.name }}, {{ item.id }}"
-          when: recreate
+          when: recreate | bool
 
         - name: Delete Existing Discovery ISOs
           ansible.builtin.file:
@@ -33,7 +33,7 @@
           loop: "{{ listclusters.result | selectattr('name', 'equalto', cluster_name) | list }}"
           loop_control:
             label: "{{ item.name }}, {{ item.id }}"
-          when: recreate
+          when: recreate | bool
           delegate_to: "desktop-nick.home.morey.tech"  # Pick a host from the hypervisor group
 
         - name: Set cluster_id to existing installer
@@ -59,12 +59,12 @@
             ingress_vips: "{{ ingress_vips if groups[nodes_group] | length >= 3 else [] }}"
             ssh_public_key: "{{ ssh_authorized_keys }}"
           register: newcluster
-          when: not cluster_id is defined or recreate
+          when: not cluster_id is defined or recreate | bool
 
         - name: Set cluster_id to new installer
           ansible.builtin.set_fact:
             cluster_id: "{{ newcluster.result.id }}"
-          when: not cluster_id is defined or recreate
+          when: not cluster_id is defined or recreate | bool
 
         # debug cluster_id
         - name: Print selected cluster_id
