@@ -22,5 +22,5 @@ spec:
   source: redhat-operators
   sourceNamespace: openshift-marketplace
   name: kubevirt-hyperconverged
-  startingCSV: kubevirt-hyperconverged-operator.v4.18.17
+  startingCSV: kubevirt-hyperconverged-operator.v4.20.3
   channel: "stable"

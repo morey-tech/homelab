@@ -45,6 +45,11 @@ spec:
             pod-security.kubernetes.io/audit: privileged
             pod-security.kubernetes.io/warn: privileged
   templatePatch: |
+    {{- if eq .path.basename "openshift-cnv" }}
+    spec:
+      destination:
+        namespace: openshift-cnv
+    {{ end }}
     {{- if eq .path.basename "openshift-nfd" }}
     spec:
       destination:
