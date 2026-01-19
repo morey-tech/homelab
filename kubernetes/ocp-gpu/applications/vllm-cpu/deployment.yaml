@@ -57,6 +57,8 @@ spec:
               value: '/models-cache/.cache'
             - name: TRANSFORMERS_CACHE
               value: '/models-cache/.cache'
+            - name: CUDA_VISIBLE_DEVICES
+              value: ''
           args: [
             "--model",
             # "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
@@ -67,7 +69,6 @@ spec:
             "--max-model-len", "32768",
             "--served-model-name=local-llm",
             "--dtype", "float16",
-            "--device", "cpu",
             "--enforce-eager" ]
           securityContext:
             capabilities:
