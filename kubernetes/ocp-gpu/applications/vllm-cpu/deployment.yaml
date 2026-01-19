@@ -19,11 +19,11 @@ spec:
       containers:
         - resources:
             limits:
-              # cpu: '2'
-              memory: 48Gi
+              # cpu: unlimited for better performance
+              memory: 56Gi
             requests:
-              cpu: '2'
-              memory: 24Gi
+              cpu: '4'
+              memory: 28Gi
           readinessProbe:
             httpGet:
               path: /health
@@ -52,7 +52,8 @@ spec:
           args: [
             "--model",
             # "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-            "ibm-granite/granite-3.1-2b-instruct",
+            # "ibm-granite/granite-3.1-2b-instruct",
+            "ibm-granite/granite-3.1-3b-a800m-instruct",
             "--download-dir",
             "/models-cache",
             "--max-model-len", "32768",
