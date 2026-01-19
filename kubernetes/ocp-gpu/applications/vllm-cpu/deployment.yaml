@@ -49,6 +49,10 @@ spec:
               value: ''
             - name: VLLM_CPU_KVCACHE_SPACE
               value: '40'
+            - name: VLLM_CPU_SGL_KERNEL
+              value: '1'
+            - name: VLLM_CPU_MOE_PREPACK
+              value: '0'
           args: [
             "--model",
             # "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
@@ -87,7 +91,7 @@ spec:
             - name: shm
               mountPath: /dev/shm
           terminationMessagePolicy: File
-          image: 'quay.io/rh-aiservices-bu/vllm-cpu-openai-ubi9:0.3'
+          image: 'vllm/vllm-openai:v0.13.0'
       volumes:
         - name: models-cache
           persistentVolumeClaim:
