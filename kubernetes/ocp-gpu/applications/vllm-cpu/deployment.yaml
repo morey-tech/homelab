@@ -53,6 +53,10 @@ spec:
               value: '1'
             - name: VLLM_CPU_MOE_PREPACK
               value: '0'
+            - name: HF_HOME
+              value: '/models-cache/.cache'
+            - name: TRANSFORMERS_CACHE
+              value: '/models-cache/.cache'
           args: [
             "--model",
             # "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
