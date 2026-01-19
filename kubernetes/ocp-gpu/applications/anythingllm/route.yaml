@@ -8,6 +8,8 @@ metadata:
     app.kubernetes.io/instance: anythingllm
     app.kubernetes.io/name: anythingllm
     app.kubernetes.io/part-of: anythingllm
+  annotations:
+    haproxy.router.openshift.io/timeout: 10m
 spec:
   to:
     kind: Service
