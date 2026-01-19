@@ -20,10 +20,10 @@ spec:
         - resources:
             limits:
               # cpu: '2'
-              memory: 8Gi
+              memory: 48Gi
             requests:
-              cpu: '1'
-              memory: 4Gi
+              cpu: '2'
+              memory: 24Gi
           readinessProbe:
             httpGet:
               path: /health
@@ -47,12 +47,15 @@ spec:
           env:
             - name: HUGGING_FACE_HUB_TOKEN
               value: ''
+            - name: VLLM_CPU_KVCACHE_SPACE
+              value: '40'
           args: [
             "--model",
-            "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+            # "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+            "ibm-granite/granite-3.1-2b-instruct",
             "--download-dir",
             "/models-cache",
-            "--max-model-len", "2048",
+            "--max-model-len", "32768",
             "--served-model-name=local-llm" ]
           securityContext:
             capabilities:
@@ -90,7 +93,7 @@ spec:
         - name: shm
           emptyDir:
             medium: Memory
-            sizeLimit: 1Gi
+            sizeLimit: 4Gi
       dnsPolicy: ClusterFirst
   strategy:
     type: Recreate
