@@ -57,7 +57,8 @@ spec:
             "--download-dir",
             "/models-cache",
             "--max-model-len", "32768",
-            "--served-model-name=local-llm" ]
+            "--served-model-name=local-llm",
+            "--dtype", "float16" ]
           securityContext:
             capabilities:
               drop:
