@@ -1,0 +1,25 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: anythingllm-inference-server
+  labels:
+    app: anythingllm-inference-server
+    app.kubernetes.io/component: anythingllm
+    app.kubernetes.io/instance: inference-server
+    app.kubernetes.io/name: anythingllm
+    app.kubernetes.io/part-of: anythingllm
+    backend: inference-server
+  annotations:
+    haproxy.router.openshift.io/timeout: 10m
+spec:
+  host: anythingllm-inference-server.apps.ocp-gpu.rh-lab.morey.tech
+  to:
+    kind: Service
+    name: anythingllm-inference-server
+    weight: 100
+  port:
+    targetPort: 8888-tcp
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

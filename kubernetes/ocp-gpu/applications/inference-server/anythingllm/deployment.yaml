@@ -1,0 +1,39 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: anythingllm-inference-server
+  labels:
+    app: anythingllm-inference-server
+    app.kubernetes.io/component: anythingllm
+    app.kubernetes.io/instance: inference-server
+    app.kubernetes.io/name: anythingllm
+    app.kubernetes.io/part-of: anythingllm
+    backend: inference-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anythingllm-inference-server
+  template:
+    metadata:
+      labels:
+        app: anythingllm-inference-server
+        deployment: anythingllm-inference-server
+    spec:
+      containers:
+      - name: anythingllm
+        image: 'quay.io/rh-aiservices-bu/anythingllm-workbench:1.8.5'
+        ports:
+          - containerPort: 8888
+            protocol: TCP
+        envFrom:
+          - secretRef:
+              name: inference-server-config
+        volumeMounts:
+          - name: storage
+            mountPath: /app/server/storage
+        resources: {}
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: anythingllm-inference-server-pvc

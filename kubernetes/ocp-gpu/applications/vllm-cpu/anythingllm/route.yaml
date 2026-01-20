@@ -1,19 +1,21 @@
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
-  name: anythingllm
+  name: anythingllm-vllm-cpu
   labels:
-    app: anythingllm
+    app: anythingllm-vllm-cpu
     app.kubernetes.io/component: anythingllm
-    app.kubernetes.io/instance: anythingllm
+    app.kubernetes.io/instance: vllm-cpu
     app.kubernetes.io/name: anythingllm
     app.kubernetes.io/part-of: anythingllm
+    backend: vllm-cpu
   annotations:
     haproxy.router.openshift.io/timeout: 10m
 spec:
+  host: anythingllm-vllm-cpu.apps.ocp-gpu.rh-lab.morey.tech
   to:
     kind: Service
-    name: anythingllm
+    name: anythingllm-vllm-cpu
     weight: 100
   port:
     targetPort: 8888-tcp

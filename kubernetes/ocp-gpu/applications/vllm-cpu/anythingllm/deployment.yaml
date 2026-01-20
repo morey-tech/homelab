@@ -1,23 +1,24 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: anythingllm
+  name: anythingllm-vllm-cpu
   labels:
-    app: anythingllm
+    app: anythingllm-vllm-cpu
     app.kubernetes.io/component: anythingllm
-    app.kubernetes.io/instance: anythingllm
+    app.kubernetes.io/instance: vllm-cpu
     app.kubernetes.io/name: anythingllm
     app.kubernetes.io/part-of: anythingllm
+    backend: vllm-cpu
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: anythingllm
+      app: anythingllm-vllm-cpu
   template:
     metadata:
       labels:
-        app: anythingllm
-        deployment: anythingllm
+        app: anythingllm-vllm-cpu
+        deployment: anythingllm-vllm-cpu
     spec:
       containers:
       - name: anythingllm
@@ -35,4 +36,4 @@ spec:
       volumes:
       - name: storage
         persistentVolumeClaim:
-          claimName: anythingllm-pvc
+          claimName: anythingllm-vllm-cpu-pvc

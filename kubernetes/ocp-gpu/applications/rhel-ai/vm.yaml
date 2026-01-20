@@ -1,0 +1,63 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: rhel-ai
+  namespace: default
+spec:
+  dataVolumeTemplates:
+    - metadata:
+        name: rhel-ai-volume
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: rhel-ai-cuda-3.2
+          namespace: default
+        storage:
+          resources:
+            requests:
+              storage: 150Gi
+          storageClassName: lvms-lvm-nvme-vg
+  instancetype:
+    name: u1.2xlarge
+  preference:
+    name: rhel.10
+    kind: VirtualMachineClusterPreference
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        network.kubevirt.io/headlessService: headless
+    spec:
+      domain:
+        devices:
+          autoattachPodInterface: false
+          disks:
+            - bootOrder: 1
+              name: rootdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+      networks:
+        - name: default
+          pod: {}
+      subdomain: headless
+      volumes:
+        - dataVolume:
+            name: rhel-ai-volume
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              chpasswd:
+                expire: false
+              password: 95aa-4qw1-javm
+              user: rhel
+              runcmd: []
+          name: cloudinitdisk
+      accessCredentials:
+        - sshPublicKey:
+            propagationMethod:
+              noCloud: {}
+            source:
+              secret:
+                secretName: desktop-nick-morey-tech-ssh-pub-key
