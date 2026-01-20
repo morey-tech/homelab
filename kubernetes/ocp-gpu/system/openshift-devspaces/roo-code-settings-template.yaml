@@ -30,8 +30,8 @@ data:
             "openAiApiKey": "xxx",
             "openAiModelId": "local-llm",
             "openAiCustomModelInfo": {
-              "maxTokens": -1,
-              "contextWindow": 40000,
+              "maxTokens": 24576,
+              "contextWindow": 40960,
               "supportsImages": true,
               "supportsPromptCache": false,
               "inputPrice": 0,
