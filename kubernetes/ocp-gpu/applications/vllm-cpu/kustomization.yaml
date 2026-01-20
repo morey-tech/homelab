@@ -13,3 +13,4 @@ resources:
 - service.yaml
 # wave 2
 - route.yaml
+- anythingllm
