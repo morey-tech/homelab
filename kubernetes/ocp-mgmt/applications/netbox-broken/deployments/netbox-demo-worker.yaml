@@ -39,7 +39,7 @@ spec:
         - /opt/netbox/venv/bin/python
         - /opt/netbox/netbox/manage.py
         - rqworker
-        image: ghcr.io/netbox-community/netbox:v4.5.0
+        image: ghcr.io/netbox-community/netbox:v4.5.1
         imagePullPolicy: IfNotPresent
         name: netbox-worker
         securityContext:
