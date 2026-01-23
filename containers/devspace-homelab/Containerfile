@@ -88,6 +88,15 @@ RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
     curl -Lo /usr/local/bin/ocm https://github.com/openshift-online/ocm-cli/releases/download/${OCM_VERSION}/ocm-linux-${ARCH} \
     && chmod +x /usr/local/bin/ocm
 
+# Velero CLI - Backup and restore for Kubernetes
+ENV VELERO_VERSION=v1.14.1
+RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
+    curl -sL -o velero.tar.gz https://github.com/vmware-tanzu/velero/releases/download/${VELERO_VERSION}/velero-${VELERO_VERSION}-linux-${ARCH}.tar.gz \
+    && tar -xzf velero.tar.gz velero-${VELERO_VERSION}-linux-${ARCH}/velero \
+    && mv velero-${VELERO_VERSION}-linux-${ARCH}/velero /usr/local/bin/ \
+    && chmod 755 /usr/local/bin/velero \
+    && rm -rf velero.tar.gz velero-${VELERO_VERSION}-linux-${ARCH}
+
 # Install Python 3.12 for modern package compatibility (ansible 13.x requires Python 3.12+)
 RUN dnf install -y python3.12 python3.12-pip && dnf clean all
 COPY requirements.txt /tmp/requirements.txt
