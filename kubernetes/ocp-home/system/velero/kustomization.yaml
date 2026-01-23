@@ -16,3 +16,6 @@ resources:
   - backupstoragelocation.yaml
   - schedule-hourly.yaml
   - schedule-daily.yaml
+
+patchesStrategicMerge:
+  - service-patch.yaml
