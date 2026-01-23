@@ -13,8 +13,6 @@ helmCharts:
 
 resources:
   - scc-rbac.yaml
-  - nfs-pv.yaml
-  - nfs-pvc.yaml
   - backupstoragelocation.yaml
   - schedule-hourly.yaml
   - schedule-daily.yaml
