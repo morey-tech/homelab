@@ -13,6 +13,15 @@ ARG TARGETARCH
 
 USER root
 
+# Install and configure locale to prevent "cannot change locale" warnings
+RUN dnf install -y glibc-locale-source glibc-langpack-en \
+    && localedef -i en_US -f UTF-8 en_US.UTF-8 \
+    && dnf clean all
+
+# Set locale environment variables
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
 # Rename 'user' to 'morey-tech' and relocate home directory
 # This maintains compatibility with local devcontainer config while working with DevSpaces
 RUN usermod -l morey-tech user \
