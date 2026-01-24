@@ -25,13 +25,22 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  # Container dependency groups:
+  # - Base containers: auto-detected (names ending in "-base")
+  # - Dependent containers: explicitly listed below
+  # - Independent containers: all others
+  DEPENDENT_CONTAINERS: '["devspace-homelab"]'
 
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      containers: ${{ steps.set-containers.outputs.containers }}
-      has_containers: ${{ steps.set-containers.outputs.has_containers }}
+      base_containers: ${{ steps.categorize-containers.outputs.base_containers }}
+      dependent_containers: ${{ steps.categorize-containers.outputs.dependent_containers }}
+      independent_containers: ${{ steps.categorize-containers.outputs.independent_containers }}
+      has_base: ${{ steps.categorize-containers.outputs.has_base }}
+      has_dependent: ${{ steps.categorize-containers.outputs.has_dependent }}
+      has_independent: ${{ steps.categorize-containers.outputs.has_independent }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -75,13 +84,60 @@ jobs:
             fi
           fi
 
-      - name: Print detected containers
+      - name: Categorize containers by dependency
+        id: categorize-containers
+        env:
+          ALL_CONTAINERS: ${{ steps.set-containers.outputs.containers }}
         run: |
-          echo "Containers to build: ${{ steps.set-containers.outputs.containers }}"
+          # Categorize containers into base, dependent, and independent groups
+          # - Base: containers ending with "-base" (auto-detected)
+          # - Dependent: containers explicitly listed in DEPENDENT_CONTAINERS env var
+          # - Independent: all others
+          
+          echo "All containers: $ALL_CONTAINERS"
+          
+          # Extract base containers (ending in "-base")
+          base_containers=$(echo "$ALL_CONTAINERS" | jq -c '[.[] | select(endswith("-base"))]')
+          echo "base_containers=$base_containers" >> $GITHUB_OUTPUT
+          
+          # Extract dependent containers (match against DEPENDENT_CONTAINERS list)
+          dependent_containers=$(echo "$ALL_CONTAINERS" | jq -c --argjson deps '${{ env.DEPENDENT_CONTAINERS }}' '[.[] | select(. as $c | $deps | index($c))]')
+          echo "dependent_containers=$dependent_containers" >> $GITHUB_OUTPUT
+          
+          # Extract independent containers (not base, not dependent)
+          independent_containers=$(echo "$ALL_CONTAINERS" | jq -c --argjson deps '${{ env.DEPENDENT_CONTAINERS }}' '[.[] | select(endswith("-base") | not) | select(. as $c | $deps | index($c) | not)]')
+          echo "independent_containers=$independent_containers" >> $GITHUB_OUTPUT
+          
+          # Set boolean flags for conditional job execution
+          if [[ "$base_containers" != "[]" ]]; then
+            echo "has_base=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_base=false" >> $GITHUB_OUTPUT
+          fi
+          
+          if [[ "$dependent_containers" != "[]" ]]; then
+            echo "has_dependent=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_dependent=false" >> $GITHUB_OUTPUT
+          fi
+          
+          if [[ "$independent_containers" != "[]" ]]; then
+            echo "has_independent=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_independent=false" >> $GITHUB_OUTPUT
+          fi
 
-  build-and-push:
+      - name: Print categorized containers
+        run: |
+          echo "Base containers: ${{ steps.categorize-containers.outputs.base_containers }}"
+          echo "Dependent containers: ${{ steps.categorize-containers.outputs.dependent_containers }}"
+          echo "Independent containers: ${{ steps.categorize-containers.outputs.independent_containers }}"
+
+  # Stage 1: Build base containers (auto-detected by "-base" suffix)
+  # These must complete before dependent containers can build
+  build-base-containers:
     needs: detect-changes
-    if: needs.detect-changes.outputs.has_containers == 'true'
+    if: needs.detect-changes.outputs.has_base == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -89,7 +145,152 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        container: ${{ fromJson(needs.detect-changes.outputs.containers) }}
+        container: ${{ fromJson(needs.detect-changes.outputs.base_containers) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Free disk space
+        run: |
+          echo "Before cleanup:"
+          df -h
+          # Remove unnecessary large packages
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          echo "After cleanup:"
+          df -h
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./containers/${{ matrix.container }}
+          file: ./containers/${{ matrix.container }}/Containerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Hybrid cache strategy: GHA + Registry
+          # This allows cache reuse across branches and PRs
+          cache-from: |
+            type=gha,scope=buildkit-${{ matrix.container }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}:buildcache
+          cache-to: |
+            type=gha,mode=max,scope=buildkit-${{ matrix.container }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}:buildcache,mode=max
+
+  # Stage 2: Build dependent containers (explicitly listed in DEPENDENT_CONTAINERS)
+  # These depend on base containers and must wait for them to complete
+  build-dependent-containers:
+    needs: [detect-changes, build-base-containers]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.has_dependent == 'true' &&
+      (needs.build-base-containers.result == 'success' || needs.build-base-containers.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        container: ${{ fromJson(needs.detect-changes.outputs.dependent_containers) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Free disk space
+        run: |
+          echo "Before cleanup:"
+          df -h
+          # Remove unnecessary large packages
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          echo "After cleanup:"
+          df -h
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./containers/${{ matrix.container }}
+          file: ./containers/${{ matrix.container }}/Containerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Hybrid cache strategy: GHA + Registry
+          # This allows cache reuse across branches and PRs
+          cache-from: |
+            type=gha,scope=buildkit-${{ matrix.container }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}:buildcache
+          cache-to: |
+            type=gha,mode=max,scope=buildkit-${{ matrix.container }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}:buildcache,mode=max
+
+  # Stage 3: Build independent containers (all others not base or dependent)
+  # These can build in parallel with base containers
+  build-independent-containers:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_independent == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        container: ${{ fromJson(needs.detect-changes.outputs.independent_containers) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
