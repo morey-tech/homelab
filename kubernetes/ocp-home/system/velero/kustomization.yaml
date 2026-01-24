@@ -19,3 +19,4 @@ resources:
 
 patchesStrategicMerge:
   - service-patch.yaml
+  - deployment-patch.yaml
