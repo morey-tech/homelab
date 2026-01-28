@@ -10,8 +10,8 @@ spec:
       openVSXURL: https://open-vsx.org
   containerRegistry: {}
   devEnvironments:
-    # Allow running nested containers using tools like Podman (OpenShift 4.20+)
-    disableContainerRunCapabilities: false
+    # # Allow running nested containers using tools like Podman (OpenShift 4.20+)
+    # disableContainerRunCapabilities: false
     # https://docs.redhat.com/en/documentation/red_hat_openshift_dev_spaces/3.24/html/administration_guide/configuring-devspaces#limiting-the-number-of-workspaces-that-all-users-can-run-simultaneously
     maxNumberOfRunningWorkspacesPerCluster: -1  # Unlimited.
     maxNumberOfRunningWorkspacesPerUser: -1     # Unlimited.
