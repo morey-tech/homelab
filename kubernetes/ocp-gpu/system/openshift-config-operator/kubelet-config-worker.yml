@@ -5,7 +5,7 @@ metadata:
 spec:
   machineConfigPoolSelector:
     matchLabels:
-      pools.operator.machineconfiguration.openshift.io/worker: ""
+      pools.operator.machineconfiguration.openshift.io/master: ""
   kubeletConfig: 
       systemReserved:
         cpu: 500m        # change the CPU if needed
