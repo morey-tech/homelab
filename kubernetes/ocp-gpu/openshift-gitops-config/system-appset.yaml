@@ -88,3 +88,10 @@ spec:
         - CreateNamespace=true
         - ServerSideApply=true
     {{ end }}
+    {{- if eq .path.basename "openshift-config-operator" }}
+    metadata:
+      name: '{{.path.basename}}'
+    spec:
+      destination:
+        namespace: {{.path.basename}}
+    {{ end }}
