@@ -1,7 +1,7 @@
 apiVersion: machineconfiguration.openshift.io/v1
 kind: KubeletConfig
 metadata:
-  name: kubelet-config-worker
+  name: kubelet-config-master
 spec:
   machineConfigPoolSelector:
     matchLabels:
