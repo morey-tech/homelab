@@ -14,7 +14,7 @@ metadata:
   namespace: openshift-nfd
 spec:
   channel: stable
-  installPlanApproval: manual
+  installPlanApproval: Manual
   name: nfd
   source: redhat-operators
   sourceNamespace: openshift-marketplace
