@@ -56,9 +56,11 @@ spec:
         namespace: openshift-cnv
     {{ end }}
     {{- if eq .path.basename "openshift-nfd" }}
+    metadata:
+      name: '{{.path.basename}}'
     spec:
       destination:
-        namespace: openshift-nfd
+        namespace: {{.path.basename}}
     {{ end }}
     {{- if eq .path.basename "nvidia-gpu-operator" }}
     spec:
