@@ -1,0 +1,29 @@
+apiVersion: ocs.openshift.io/v1
+kind: StorageCluster
+metadata:
+  annotations:
+    uninstall.ocs.openshift.io/cleanup-policy: delete
+    uninstall.ocs.openshift.io/mode: graceful
+  name: ocs-storagecluster
+spec:
+  arbiter: {}
+  encryption:
+    keyRotation:
+      schedule: '@weekly'
+    kms: {}
+  externalStorage: {}
+  managedResources:
+    cephBlockPools: {}
+    cephCluster: {}
+    cephConfig: {}
+    cephDashboard: {}
+    cephFilesystems: {}
+    cephNonResilientPools: {}
+    cephObjectStoreUsers: {}
+    cephObjectStores: {}
+    cephRBDMirror: {}
+    cephToolbox: {}
+  multiCloudGateway:
+    dbStorageClassName: lvms-lvm-nvme-vg
+    reconcileStrategy: standalone
+  resourceProfile: balanced
