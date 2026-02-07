@@ -19,11 +19,11 @@ spec:
       containers:
         - resources:
             limits:
-              # cpu: unlimited for better performance
-              memory: 56Gi
+              # cpu: '2'
+              memory: 8Gi
             requests:
-              cpu: '4'
-              memory: 28Gi
+              cpu: '1'
+              memory: 4Gi
           readinessProbe:
             httpGet:
               path: /health
@@ -47,29 +47,13 @@ spec:
           env:
             - name: HUGGING_FACE_HUB_TOKEN
               value: ''
-            - name: VLLM_CPU_KVCACHE_SPACE
-              value: '40'
-            - name: VLLM_CPU_SGL_KERNEL
-              value: '1'
-            - name: VLLM_CPU_MOE_PREPACK
-              value: '0'
-            - name: HF_HOME
-              value: '/models-cache/.cache'
-            - name: TRANSFORMERS_CACHE
-              value: '/models-cache/.cache'
-            - name: CUDA_VISIBLE_DEVICES
-              value: ''
           args: [
             "--model",
-            # "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-            # "ibm-granite/granite-3.1-2b-instruct",
-            "ibm-granite/granite-3.1-3b-a800m-instruct",
+            "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
             "--download-dir",
             "/models-cache",
-            "--max-model-len", "32768",
-            "--served-model-name=local-llm",
-            "--dtype", "float16",
-            "--enforce-eager" ]
+            "--max-model-len", "2048",
+            "--served-model-name=local-llm" ]
           securityContext:
             capabilities:
               drop:
@@ -98,7 +82,7 @@ spec:
             - name: shm
               mountPath: /dev/shm
           terminationMessagePolicy: File
-          image: 'vllm/vllm-openai:v0.13.0'
+          image: 'quay.io/rh-aiservices-bu/vllm-cpu-openai-ubi9:0.3'
       volumes:
         - name: models-cache
           persistentVolumeClaim:
@@ -106,7 +90,7 @@ spec:
         - name: shm
           emptyDir:
             medium: Memory
-            sizeLimit: 4Gi
+            sizeLimit: 1Gi
       dnsPolicy: ClusterFirst
   strategy:
     type: Recreate
