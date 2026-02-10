@@ -25,7 +25,7 @@ helmCharts:
             image:
               # https://github.com/immich-app/immich/pkgs/container/immich-server
               # renovate: datasource=docker depName=ghcr.io/immich-app/immich-server
-              tag: v2.4.1
+              tag: v2.5.6
             env:
               DB_HOSTNAME: immich-postgresql-rw
               DB_USERNAME: immich
@@ -78,7 +78,7 @@ helmCharts:
             main:
               image:
                 # renovate: datasource=docker depName=ghcr.io/immich-app/immich-machine-learning
-                tag: v2.4.1-openvino
+                tag: v2.5.6-openvino
               probes:
                 liveness:
                   spec:
