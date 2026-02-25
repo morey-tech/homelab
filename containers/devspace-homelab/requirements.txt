@@ -1,5 +1,5 @@
-ansible==13.2.0
-ansible-lint==26.1.1
+ansible==13.4.0
+ansible-lint==26.2.0
 black==26.1.0
 proxmoxer==2.2.0
 requests==2.32.5
