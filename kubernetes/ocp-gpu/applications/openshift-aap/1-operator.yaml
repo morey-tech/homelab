@@ -14,7 +14,7 @@ kind: Subscription
 metadata:
   name: aap-subscription
 spec:
-  channel: 'stable-2.5'
+  channel: 'stable-2.6'
   installPlanApproval: Automatic
   name: ansible-automation-platform-operator
   source: redhat-operators
