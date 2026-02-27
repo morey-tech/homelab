@@ -1,0 +1,16 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: aap-external
+spec:
+  host: aap.ocp-gpu.morey.tech
+  path: /
+  to:
+    kind: Service
+    name: aap
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+  wildcardPolicy: None
