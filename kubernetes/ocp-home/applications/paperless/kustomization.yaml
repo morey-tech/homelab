@@ -21,7 +21,7 @@ helmCharts:
     image:
       # https://github.com/paperless-ngx/paperless-ngx/pkgs/container/paperless-ngx/versions?filters%5Bversion_type%5D=tagged
       # renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
-      tag: 2.20.3
+      tag: 2.20.9
       pullPolicy: IfNotPresent
     env:
       PAPERLESS_TIME_ZONE: America/New_York
