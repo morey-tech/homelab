@@ -1,0 +1,20 @@
+# ---
+# apiVersion: operators.coreos.com/v1
+# kind: OperatorGroup
+# metadata:
+#   name: servicemeshoperator3-group
+# spec:
+#   targetNamespaces:
+#     - openshift-operators
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: servicemeshoperator3
+spec:
+  name: servicemeshoperator3
+  channel: stable
+  installPlanApproval: Automatic
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  # startingCSV: servicemeshoperator3-3.2.2
