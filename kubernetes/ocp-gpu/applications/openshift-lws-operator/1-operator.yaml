@@ -2,7 +2,9 @@ apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   name: openshift-lws-operator-group
-spec: {}
+spec:
+  targetNamespaces:
+  - openshift-lws-operator
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
