@@ -1,0 +1,13 @@
+## This patch removes hardcoded UID/GID settings from the external-dns deployment
+## to make it compatible with OpenShift's Security Context Constraints (SCC).
+##
+## OpenShift's restricted SCC automatically assigns UIDs/GIDs from the namespace's
+## allowed range. Hardcoded values conflict with this and cause pod creation failures.
+##
+## We keep the security hardening settings (runAsNonRoot, readOnlyRootFilesystem,
+## capabilities.drop) and only remove the UID/GID specifications.
+
+- op: remove
+  path: /spec/template/spec/securityContext/fsGroup
+- op: remove
+  path: /spec/template/spec/containers/0/securityContext/runAsUser
