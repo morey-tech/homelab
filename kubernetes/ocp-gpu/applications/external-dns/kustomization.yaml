@@ -1,6 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: external-dns-system
+namespace: external-dns
 resources:
   - cloudflare-auth-secret.yaml
 
