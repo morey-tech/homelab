@@ -12,20 +12,29 @@
     frontend_bind_addr: "wan_ipv4"
     frontend_port: 443
 
-    # Backend configuration
-    backend_name: "ocp-home-backend"
-    backend_server_ip: "192.168.6.71"  # MetalLB external ingress
-    backend_server_port: 443
+    # Backend configurations
+    backends:
+      - name: "ocp-home-backend"
+        server_ip: "192.168.6.71"
+        server_port: 443
+      - name: "ocp-gpu-backend"
+        server_ip: "192.168.6.81"
+        server_port: 443
 
-    # ACL configuration for SNI-based routing
-    acl_name: "overseerr_sni"
-    sni_hostname: "overseerr.morey.tech"
+    # Routing rules for SNI-based routing
+    routing_rules:
+      - acl_name: "overseerr_sni"
+        sni_hostname: "overseerr.morey.tech"
+        backend_name: "ocp-home-backend"
+      - acl_name: "aap_sni"
+        sni_hostname: "aap.morey.tech"
+        backend_name: "ocp-gpu-backend"
 
   tasks:
     # 1. Create HTTPS backend pool
     - name: Create HAProxy backend for HTTPS
       pfsensible.haproxy.pfsense_haproxy_backend:
-        name: "{{ backend_name }}"
+        name: "{{ item.name }}"
         balance: roundrobin
         check_type: SSL
         check_frequency: 2000
@@ -33,6 +42,7 @@
         server_timeout: 30000
         retries: 3
         state: present
+      loop: "{{ backends }}"
       throttle: 1
       tags:
         - haproxy
@@ -41,12 +51,13 @@
     # 2. Add backend server
     - name: Add backend server
       pfsensible.haproxy.pfsense_haproxy_backend_server:
-        backend: "{{ backend_name }}"
-        name: "{{ backend_name }}-server"
-        address: "{{ backend_server_ip }}"
-        port: "{{ backend_server_port }}"
+        backend: "{{ item.name }}"
+        name: "{{ item.name }}-server"
+        address: "{{ item.server_ip }}"
+        port: "{{ item.server_port }}"
         mode: active
         state: present
+      loop: "{{ backends }}"
       throttle: 1
       tags:
         - haproxy
@@ -79,16 +90,17 @@
         - haproxy
         - frontend
         - bind
-
+########
     # 5. Create SNI ACL
     - name: Create ACL for SNI hostname
       pfsensible.haproxy.pfsense_haproxy_frontend_acl:
         frontend: "{{ frontend_name }}"
-        name: "{{ acl_name }}"
+        name: "{{ item.acl_name }}"
         expression: ssl_sni_matches
-        value: "{{ sni_hostname }}"
+        value: "{{ item.sni_hostname }}"
         casesensitive: false
         state: present
+      loop: "{{ routing_rules }}"
       throttle: 1
       tags:
         - haproxy
@@ -100,38 +112,12 @@
       pfsensible.haproxy.pfsense_haproxy_frontend_action:
         frontend: "{{ frontend_name }}"
         action: use_backend
-        backend: "{{ backend_name }}"
-        acl: "{{ acl_name }}"
+        backend: "{{ item.backend_name }}"
+        acl: "{{ item.acl_name }}"
         state: present
+      loop: "{{ routing_rules }}"
       throttle: 1
       tags:
         - haproxy
         - frontend
         - action
-
-# =============================================================================
-# OPTIONAL: Add more services by duplicating ACL/action tasks below
-# =============================================================================
-#
-# Example: Add routing for another service
-#
-# - name: Create SNI ACL for service2
-#   pfsensible.haproxy.pfsense_haproxy_frontend_acl:
-#     frontend: "{{ frontend_name }}"
-#     name: "service2_sni"
-#     expression: ssl_sni_matches
-#     value: "service2.morey.tech"
-#     casesensitive: false
-#     state: present
-#   throttle: 1
-#   tags: [haproxy, frontend, acl]
-#
-# - name: Route service2 traffic to backend
-#   pfsensible.haproxy.pfsense_haproxy_frontend_action:
-#     frontend: "{{ frontend_name }}"
-#     action: use_backend
-#     backend: "service2-backend"
-#     acl: "service2_sni"
-#     state: present
-#   throttle: 1
-#   tags: [haproxy, frontend, action]
