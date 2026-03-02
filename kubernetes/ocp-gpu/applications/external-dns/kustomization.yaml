@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: external-dns
 resources:
   - cloudflare-auth-secret.yaml
-  - dns-endpoint.yaml
 
 patches:
 - path: deployment-scc-fix.yaml
