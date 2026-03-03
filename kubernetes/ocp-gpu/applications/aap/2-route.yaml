@@ -2,6 +2,9 @@ kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
   name: aap-external
+  annotations:
+    # Default cert only covers apps.ocp-home.rh-lab.morey.tech, so this needs a custom one.
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   host: aap.ocp-gpu.morey.tech
   path: /
@@ -20,7 +23,7 @@ kind: DNSEndpoint
 metadata:
   name: aap-ocp-gpu-morey-tech
   annotations:
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
+    external-dns.alpha.kubernetes.io/include: 'true'
 spec:
   endpoints:
   - dnsName: aap.ocp-gpu.morey.tech
@@ -28,3 +31,7 @@ spec:
     recordType: CNAME
     targets:
     - home.morey.tech
+    # Provider specific configurations are set like an annotation would on other sources
+    providerSpecific:
+      - name: external-dns.alpha.kubernetes.io/cloudflare-proxied
+        value: "true"
