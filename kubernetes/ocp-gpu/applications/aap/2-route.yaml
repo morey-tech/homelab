@@ -4,7 +4,10 @@ metadata:
   name: aap-external
   annotations:
     # Default cert only covers apps.ocp-home.rh-lab.morey.tech, so this needs a custom one.
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Uses cert-manager/openshift-routes annotations.
+    # https://github.com/cert-manager/openshift-routes?tab=readme-ov-file#usage
+    cert-manager.io/issuer-kind: ClusterIssuer
+    cert-manager.io/issuer-name: letsencrypt-prod
 spec:
   host: aap.ocp-gpu.morey.tech
   path: /
