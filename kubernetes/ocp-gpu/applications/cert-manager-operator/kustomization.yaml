@@ -11,3 +11,4 @@ helmCharts:
   includeCRDs: true
   version: v0.8.5
   repo: oci://ghcr.io/cert-manager/charts
+  releaseName: openshift-routes
