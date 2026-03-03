@@ -9,7 +9,7 @@ metadata:
     cert-manager.io/issuer-kind: ClusterIssuer
     cert-manager.io/issuer-name: letsencrypt-prod
 spec:
-  host: aap.ocp-gpu.morey.tech
+  host: aap.morey.tech
   path: /
   to:
     kind: Service
@@ -29,7 +29,7 @@ metadata:
     external-dns.alpha.kubernetes.io/include: 'true'
 spec:
   endpoints:
-  - dnsName: aap.ocp-gpu.morey.tech
+  - dnsName: aap.morey.tech
     recordTTL: 300
     recordType: CNAME
     targets:
