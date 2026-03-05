@@ -1,0 +1,21 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: nfd-group
+  namespace: red-hat-hawtio-operator
+spec:
+  targetNamespaces:
+    - red-hat-hawtio-operator
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: red-hat-hawtio-operator
+  namespace: red-hat-hawtio-operator
+spec:
+  channel: stable
+  installPlanApproval: Manual
+  name: red-hat-hawtio-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: red-hat-hawtio-operator.1.0.2
