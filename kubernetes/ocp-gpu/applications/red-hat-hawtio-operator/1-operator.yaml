@@ -13,7 +13,7 @@ metadata:
   name: red-hat-hawtio-operator
   namespace: red-hat-hawtio-operator
 spec:
-  channel: stable
+  channel: stable-v1
   installPlanApproval: Manual
   name: red-hat-hawtio-operator
   source: redhat-operators
