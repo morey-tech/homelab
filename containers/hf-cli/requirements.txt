@@ -1,1 +1,1 @@
-huggingface_hub==1.4.1
+huggingface_hub==1.8.0
