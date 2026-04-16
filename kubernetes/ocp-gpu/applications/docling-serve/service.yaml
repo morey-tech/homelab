@@ -1,0 +1,19 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: docling-serve
+  labels:
+    app: docling-serve
+spec:
+  ipFamilies:
+    - IPv4
+  ports:
+    - name: http
+      protocol: TCP
+      port: 5001
+      targetPort: http
+  type: ClusterIP
+  ipFamilyPolicy: SingleStack
+  sessionAffinity: None
+  selector:
+    app: docling-serve
