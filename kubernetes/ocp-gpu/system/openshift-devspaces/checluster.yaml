@@ -14,6 +14,8 @@ spec:
       requests:
         memory: 2G
         cpu: '2'
+      limits:
+        memory: 4G
     # # Allow running nested containers using tools like Podman (OpenShift 4.20+)
     # disableContainerRunCapabilities: false
     # https://docs.redhat.com/en/documentation/red_hat_openshift_dev_spaces/3.24/html/administration_guide/configuring-devspaces#limiting-the-number-of-workspaces-that-all-users-can-run-simultaneously
