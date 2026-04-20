@@ -10,7 +10,7 @@ spec:
     deviceClasses:
       - deviceSelector:
           paths:
-            - /dev/nvme1n1
+            - /dev/disk/by-id/nvme-WDS200T3X0C-00SJG0_21031B801713
           forceWipeDevicesAndDestroyAllData: true
         fstype: xfs
         thinPoolConfig:
