@@ -57,6 +57,8 @@ spec:
               kind: DNSEndpoint
               metadata:
                 name: home-morey-tech
+                annotations:
+                  external-dns.alpha.kubernetes.io/include: 'true'
                 ownerReferences:
                   - apiVersion: batch/v1
                     blockOwnerDeletion: false
@@ -79,6 +81,8 @@ spec:
               kind: DNSEndpoint
               metadata:
                 name: home-unproxied-morey-tech
+                annotations:
+                  external-dns.alpha.kubernetes.io/include: 'true'
                 ownerReferences:
                   - apiVersion: batch/v1
                     blockOwnerDeletion: false
