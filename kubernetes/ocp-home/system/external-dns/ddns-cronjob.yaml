@@ -99,7 +99,7 @@ spec:
                   - $PUBLIC_IP
                   providerSpecific:
                     - name: external-dns.alpha.kubernetes.io/cloudflare-proxied
-                      value: "true"
+                      value: "false"
               EOF
             env:
             - name: IP_HOSTNAME_PROXIED
