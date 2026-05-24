@@ -20,6 +20,7 @@ helmCharts:
   repo: https://kubernetes-sigs.github.io/external-dns
   releaseName: external-dns
   valuesInline:
+    logLevel: debug
     policy: upsert-only
     sources:
       - crd
