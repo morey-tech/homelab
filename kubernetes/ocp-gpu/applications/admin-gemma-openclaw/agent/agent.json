@@ -1,0 +1,16 @@
+{
+  "name": "admin-gemma",
+  "display_name": "Gemma",
+  "description": "AI assistant on this OpenClaw instance",
+  "color": "#3498DB",
+  "capabilities": [
+    "chat",
+    "help",
+    "general-knowledge"
+  ],
+  "tags": [
+    "assistant",
+    "general"
+  ],
+  "version": "1.0.0"
+}

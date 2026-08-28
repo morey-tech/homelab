@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: admin-gemma-openclaw
+resources:
+- serviceaccounts.yaml
+- pvc.yaml
+- configmaps.yaml
+- config-configmap.yaml
+- external-secrets.yaml
+- service.yaml
+- deployment.yaml
+- route.yaml
+
+configMapGenerator:
+- name: openclaw-agent
+  files:
+  - agent/AGENTS.md
+  - agent/HEARTBEAT.md
+  - agent/IDENTITY.md
+  - agent/MEMORY.md
+  - agent/SOUL.md
+  - agent/TOOLS.md
+  - agent/USER.md
+  - agent/agent.json
+  options:
+    disableNameSuffixHash: true
+    labels:
+      app: openclaw

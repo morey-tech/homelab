@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: openclaw
+  name: openclaw-config
+  namespace: admin-gemma-openclaw
+data:
+  openclaw.json: >-
+    {"plugins":{"entries":{}},"gateway":{"mode":"local","auth":{"mode":"token","token":"dXKGlALwik5960kq0v+kE2uyjXMvMV1h9ojzeU1Luq4="},"http":{"endpoints":{"chatCompletions":{"enabled":true},"responses":{"enabled":true}}},"controlUi":{"enabled":true,"allowedOrigins":["https://openclaw-admin-gemma-openclaw.apps.ocp-gpu.rh-lab.morey.tech"]},"bind":"loopback"},"agents":{"defaults":{"workspace":"~/.openclaw/workspace","model":{"primary":"anthropic/claude-opus-4-6"},"models":{"anthropic/claude-opus-4-6":{"alias":"claude-opus-4-6"}}},"list":[{"id":"admin-gemma","name":"Gemma","identity":{"name":"Gemma"},"workspace":"~/.openclaw/workspace-admin-gemma","model":{"primary":"anthropic/claude-opus-4-6"},"subagents":{"allowAgents":[]}}]},"skills":{"load":{"extraDirs":["~/.openclaw/skills","~/.openclaw/workspace-admin-gemma/skills"],"watch":true,"watchDebounceMs":1000}},"cron":{"enabled":false},"browser":{"enabled":true,"defaultProfile":"openclaw","profiles":{"openclaw":{"cdpUrl":"http://localhost:9222","attachOnly":true,"color":"#4285F4"}}}}

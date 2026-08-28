@@ -1,0 +1,497 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: openclaw
+    app.kubernetes.io/managed-by: openclaw-installer
+    openclaw.agent: gemma
+    openclaw.prefix: admin
+  name: openclaw
+  namespace: admin-gemma-openclaw
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openclaw
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: openclaw
+    spec:
+      serviceAccountName: openclaw-oauth-proxy
+      initContainers:
+      - name: init-config
+        image: registry.access.redhat.com/ubi9-minimal:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - -c
+        - |-
+          mkdir -p /home/node /home/node/.openclaw /home/node/.openclaw/tmp
+          if [ -f /home/node/openclaw.json ] || [ -d /home/node/workspace ]; then
+            for path in /home/node/* /home/node/.[!.]* /home/node/..?*; do
+              [ -e "$path" ] || continue
+              base="$(basename "$path")"
+              case "$base" in .|..|.openclaw|gcp|lost+found) continue ;; esac
+              [ -e "/home/node/.openclaw/$base" ] && continue
+              mv "$path" "/home/node/.openclaw/$base" 2>/dev/null || cp -R "$path" "/home/node/.openclaw/$base" 2>/dev/null || true
+            done
+          fi
+          mkdir -p /home/node/.openclaw/tmp /home/node/.npm /home/node/.cache /home/node/.config
+          chmod 700 /home/node/.openclaw /home/node/.openclaw/tmp /home/node/.npm /home/node/.cache /home/node/.config 2>/dev/null || true
+          cp /config/openclaw.json /home/node/.openclaw/openclaw.json
+          chmod 600 /home/node/.openclaw/openclaw.json
+          mkdir -p /home/node/.openclaw/bin
+          mkdir -p /home/node/.openclaw/workspace
+          mkdir -p /home/node/.openclaw/skills
+          mkdir -p /home/node/.openclaw/cron
+
+          mkdir -p /home/node/.openclaw/workspace-admin-gemma
+          mkdir -p /home/node/.openclaw/workspace-admin-gemma/memory
+          mkdir -p /home/node/.openclaw/workspace-admin-gemma/skills
+          touch /home/node/.openclaw/workspace-admin-gemma/.env
+          cat > /home/node/.openclaw/bin/openclaw-vault <<'EOF_VAULT_HELPER'
+          #!/usr/local/bin/node
+          const { existsSync, readFileSync } = require('node:fs');
+          const { spawnSync } = require('node:child_process');
+
+          function fail(message, code = 2) {
+            if (message) process.stderr.write(String(message).trimEnd() + '\n');
+            process.exit(code);
+          }
+
+          function parseJson(text, label) {
+            try {
+              return JSON.parse(text);
+            } catch {
+              fail(`${label} returned invalid JSON`);
+            }
+          }
+
+          function sleep(ms) {
+            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+          }
+
+          function runVaultWithRetry(args, env, label) {
+            const maxAttempts = Number.parseInt(env.VAULT_HELPER_MAX_ATTEMPTS || '8', 10) || 8;
+            const delayMs = Number.parseInt(env.VAULT_HELPER_RETRY_DELAY_MS || '750', 10) || 750;
+            let last = null;
+            for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+              const result = spawnSync('/usr/bin/vault', args, { encoding: 'utf8', env });
+              if (result.status === 0) {
+                return result;
+              }
+              last = result;
+              if (attempt < maxAttempts) {
+                sleep(delayMs);
+              }
+            }
+            if (last && last.stderr) process.stderr.write(last.stderr);
+            fail(`${label} failed with code ${(last && last.status) || 2}`, (last && last.status) || 2);
+          }
+
+          let input = '';
+          process.stdin.setEncoding('utf8');
+          process.stdin.on('data', (chunk) => { input += chunk; });
+          process.stdin.on('end', () => {
+            let request = {};
+            try {
+              request = JSON.parse(input || '{}');
+            } catch {
+              fail('invalid exec-provider request payload');
+            }
+            const ids = Array.isArray(request.ids) ? request.ids.filter((id) => typeof id === 'string') : [];
+            const env = { ...process.env };
+            env.HOME = env.HOME || '/home/node';
+            env.VAULT_ADDR = env.VAULT_ADDR || 'http://vault.vault.svc:8200';
+            if (!env.VAULT_TOKEN) {
+              const jwtPath = env.VAULT_JWT_PATH || '/var/run/secrets/kubernetes.io/serviceaccount/token';
+              if (existsSync(jwtPath)) {
+                const jwt = readFileSync(jwtPath, 'utf8').trim();
+                if (!jwt) fail('vault service account token file was empty');
+                const role = env.VAULT_K8S_ROLE || 'openclaw';
+                const authPath = env.VAULT_K8S_AUTH_PATH || 'auth/kubernetes/login';
+                const login = runVaultWithRetry(
+                  ['write', '-format=json', authPath, `role=${role}`, `jwt=${jwt}`],
+                  env,
+                  'vault kubernetes auth',
+                );
+                const loginJson = parseJson(login.stdout, 'vault kubernetes auth');
+                const token = loginJson && loginJson.auth && typeof loginJson.auth.client_token === 'string'
+                  ? loginJson.auth.client_token.trim()
+                  : '';
+                if (!token) fail('vault kubernetes auth response missing client_token');
+                env.VAULT_TOKEN = token;
+              }
+            }
+            const result = runVaultWithRetry(process.argv.slice(2), env, 'vault command');
+            const secretData = parseJson(result.stdout, 'vault provider');
+            if (!secretData || typeof secretData !== 'object' || Array.isArray(secretData)) {
+              fail('vault provider returned a non-object payload');
+            }
+            const values = {};
+            const errors = {};
+            for (const id of ids) {
+              if (Object.prototype.hasOwnProperty.call(secretData, id)) {
+                values[id] = secretData[id];
+              } else {
+                errors[id] = { message: `missing key ${id}` };
+              }
+            }
+            const response = { protocolVersion: 1, values };
+            if (Object.keys(errors).length > 0) response.errors = errors;
+            process.stdout.write(JSON.stringify(response));
+          });
+          EOF_VAULT_HELPER
+          chmod 0755 /home/node/.openclaw/bin/openclaw-vault
+            cp /agents/AGENTS.md /home/node/.openclaw/workspace-admin-gemma/AGENTS.md 2>/dev/null || true
+            cp /agents/agent.json /home/node/.openclaw/workspace-admin-gemma/agent.json 2>/dev/null || true
+            cp /agents/SOUL.md /home/node/.openclaw/workspace-admin-gemma/SOUL.md 2>/dev/null || true
+            cp /agents/IDENTITY.md /home/node/.openclaw/workspace-admin-gemma/IDENTITY.md 2>/dev/null || true
+            cp /agents/TOOLS.md /home/node/.openclaw/workspace-admin-gemma/TOOLS.md 2>/dev/null || true
+            cp /agents/USER.md /home/node/.openclaw/workspace-admin-gemma/USER.md 2>/dev/null || true
+            cp /agents/HEARTBEAT.md /home/node/.openclaw/workspace-admin-gemma/HEARTBEAT.md 2>/dev/null || true
+            cp /agents/MEMORY.md /home/node/.openclaw/workspace-admin-gemma/MEMORY.md 2>/dev/null || true
+          for dir in /agents-tree/workspace-*; do
+            [ -d "$dir" ] || continue
+            base="$(basename "$dir")"
+            dest="/home/node/.openclaw/workspace-admin-gemma"
+            mkdir -p "$dest"
+            mkdir -p "$dest/memory" "$dest/skills"
+            cp -r "$dir"/. "$dest"/ 2>/dev/null || true
+          done
+          cp -r /skills-src/. /home/node/.openclaw/skills/ 2>/dev/null || true
+          cp /cron-src/jobs.json /home/node/.openclaw/cron/jobs.json 2>/dev/null || true
+          cp /exec-approvals-src/exec-approvals.json /home/node/.openclaw/exec-approvals.json 2>/dev/null || true
+          mkdir -p /home/node/.openclaw/agents/admin-gemma/sessions
+          mkdir -p /home/node/.openclaw/agents/admin-gemma/agent
+          cat > /home/node/.openclaw/agents/admin-gemma/agent/auth-profiles.json <<'EOF_AUTH_PROFILES'
+          {
+            "version": 1,
+            "profiles": {
+              "anthropic:default": {
+                "type": "api_key",
+                "provider": "anthropic",
+                "keyRef": {
+                  "source": "env",
+                  "provider": "default",
+                  "id": "ANTHROPIC_API_KEY"
+                }
+              }
+            }
+          }
+          EOF_AUTH_PROFILES
+          chmod 600 /home/node/.openclaw/agents/admin-gemma/agent/auth-profiles.json
+          chown -R 1000:0 /home/node/.openclaw 2>/dev/null || true
+          chmod -R g=u /home/node/.openclaw 2>/dev/null || true
+          chmod -R o-rwx /home/node/.openclaw 2>/dev/null || true
+          chmod 700 /home/node/.openclaw 2>/dev/null || true
+          chmod 600 /home/node/.openclaw/openclaw.json 2>/dev/null || true
+          chmod 0755 /home/node/.openclaw/bin/openclaw-vault 2>/dev/null || true
+          echo "Config initialized"
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        volumeMounts:
+        - mountPath: /home/node
+          name: openclaw-home
+        - mountPath: /config
+          name: config-template
+        - mountPath: /openclaw-secrets
+          name: openclaw-secrets
+          readOnly: true
+        - mountPath: /agents
+          name: agent-config
+        - mountPath: /agents-tree
+          name: agent-tree-config
+          readOnly: true
+        - mountPath: /skills-src
+          name: skills-config
+          readOnly: true
+        - mountPath: /cron-src
+          name: cron-config
+          readOnly: true
+        - mountPath: /exec-approvals-src
+          name: exec-approvals-config
+          readOnly: true
+      containers:
+      - name: oauth-proxy
+        image: quay.io/openshift/origin-oauth-proxy:4.14
+        imagePullPolicy: IfNotPresent
+        args:
+        - --http-address=:8443
+        - --https-address=
+        - --provider=openshift
+        - --upstream=http://localhost:18789
+        - --client-id=system:serviceaccount:admin-gemma-openclaw:openclaw-oauth-proxy
+        - --client-secret-file=/etc/oauth/config/client-secret
+        - --cookie-secret-file=/etc/oauth/config/cookie_secret
+        - --cookie-expire=23h0m0s
+        - --pass-access-token
+        - --scope=user:info
+        - --skip-auth-regex=^/(metrics|api)
+        ports:
+        - containerPort: 8443
+          name: oauth-ui
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /oauth/healthz
+            port: oauth-ui
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /oauth/healthz
+            port: oauth-ui
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /etc/oauth/config
+          name: oauth-config
+        - mountPath: /etc/tls/private
+          name: proxy-tls
+      - name: gateway
+        image: ghcr.io/openclaw/openclaw:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - -c
+        - umask 007 && exec node dist/index.js gateway run --bind loopback --port 18789
+        env:
+        - name: HOME
+          value: /home/node
+        - name: TMPDIR
+          value: /home/node/.openclaw/tmp
+        - name: NODE_ENV
+          value: production
+        - name: OPENCLAW_CONFIG_DIR
+          value: /home/node/.openclaw
+        - name: OPENCLAW_STATE_DIR
+          value: /home/node/.openclaw
+        - name: NPM_CONFIG_CACHE
+          value: /home/node/.npm
+        - name: npm_config_cache
+          value: /home/node/.npm
+        - name: XDG_CACHE_HOME
+          value: /home/node/.cache
+        - name: XDG_CONFIG_HOME
+          value: /home/node/.config
+        - name: CHROME_CDP_URL
+          value: http://localhost:9222
+        - name: OPENCLAW_GATEWAY_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: OPENCLAW_GATEWAY_TOKEN
+              name: openclaw-secrets
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: ANTHROPIC_API_KEY
+              name: openclaw-secrets
+              optional: true
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: OPENAI_API_KEY
+              name: openclaw-secrets
+              optional: true
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: GEMINI_API_KEY
+              name: openclaw-secrets
+              optional: true
+        - name: OPENROUTER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: OPENROUTER_API_KEY
+              name: openclaw-secrets
+              optional: true
+        - name: MODEL_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: MODEL_ENDPOINT
+              name: openclaw-secrets
+              optional: true
+        - name: MODEL_ENDPOINT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: MODEL_ENDPOINT_API_KEY
+              name: openclaw-secrets
+              optional: true
+        - name: TELEGRAM_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: TELEGRAM_BOT_TOKEN
+              name: openclaw-secrets
+              optional: true
+        - name: GOOGLE_CLOUD_PROJECT
+          valueFrom:
+            secretKeyRef:
+              key: GOOGLE_CLOUD_PROJECT
+              name: openclaw-secrets
+              optional: true
+        - name: GOOGLE_CLOUD_LOCATION
+          valueFrom:
+            secretKeyRef:
+              key: GOOGLE_CLOUD_LOCATION
+              name: openclaw-secrets
+              optional: true
+        - name: SSH_IDENTITY
+          valueFrom:
+            secretKeyRef:
+              key: SSH_IDENTITY
+              name: openclaw-secrets
+              optional: true
+        - name: SSH_CERTIFICATE
+          valueFrom:
+            secretKeyRef:
+              key: SSH_CERTIFICATE
+              name: openclaw-secrets
+              optional: true
+        - name: SSH_KNOWN_HOSTS
+          valueFrom:
+            secretKeyRef:
+              key: SSH_KNOWN_HOSTS
+              name: openclaw-secrets
+              optional: true
+        ports:
+        - containerPort: 18789
+          name: gateway
+          protocol: TCP
+        livenessProbe:
+          exec:
+            command:
+            - node
+            - -e
+            - require('http').get('http://127.0.0.1:18789/',r=>process.exit(r.statusCode<400?0:1)).on('error',()=>process.exit(1))
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          failureThreshold: 3
+          timeoutSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - node
+            - -e
+            - require('http').get('http://127.0.0.1:18789/',r=>process.exit(r.statusCode<400?0:1)).on('error',()=>process.exit(1))
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 2
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: "1"
+            memory: 4Gi
+          requests:
+            cpu: 250m
+            memory: 1Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /home/node
+          name: openclaw-home
+        - mountPath: /tmp
+          name: tmp-volume
+      - name: chromium
+        image: chromedp/headless-shell:stable
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9222
+          name: cdp
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /json/version
+            port: 9222
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 512Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: chromium-shm
+        - mountPath: /tmp
+          name: chromium-tmp
+      volumes:
+      - name: openclaw-home
+        persistentVolumeClaim:
+          claimName: openclaw-home-pvc
+      - name: openclaw-secrets
+        secret:
+          secretName: openclaw-secrets
+      - name: config-template
+        configMap:
+          name: openclaw-config
+      - name: agent-config
+        configMap:
+          name: openclaw-agent
+      - name: skills-config
+        configMap:
+          name: openclaw-skills
+      - name: cron-config
+        configMap:
+          name: openclaw-cron
+      - name: exec-approvals-config
+        configMap:
+          name: openclaw-exec-approvals
+          optional: true
+      - name: agent-tree-config
+        configMap:
+          name: openclaw-agent-tree
+      - name: tmp-volume
+        emptyDir: {}
+      - name: chromium-shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 256Mi
+      - name: chromium-tmp
+        emptyDir: {}
+      - name: oauth-config
+        secret:
+          secretName: openclaw-oauth-config
+      - name: proxy-tls
+        secret:
+          secretName: openclaw-proxy-tls

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: openclaw
+  name: openclaw-home-pvc
+  namespace: admin-gemma-openclaw
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: lvms-lvm-nvme-vg
+  volumeMode: Filesystem

@@ -1,0 +1,21 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    haproxy.router.openshift.io/timeout: 30m
+  labels:
+    app: openclaw
+  name: openclaw
+  namespace: admin-gemma-openclaw
+spec:
+  host: openclaw-admin-gemma-openclaw.apps.ocp-gpu.rh-lab.morey.tech
+  port:
+    targetPort: oauth-ui
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: openclaw
+    weight: 100
+  wildcardPolicy: None

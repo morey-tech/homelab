@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: openclaw
+  name: openclaw-agent-tree
+  namespace: admin-gemma-openclaw
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: openclaw
+  name: openclaw-skills
+  namespace: admin-gemma-openclaw
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: openclaw
+  name: openclaw-cron
+  namespace: admin-gemma-openclaw
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: openclaw
+  name: openclaw-exec-approvals
+  namespace: admin-gemma-openclaw
