@@ -19,7 +19,7 @@ The pilot is one RR worker, one coach, one deterministic controller, and one sha
 - Advice must expose assumptions, uncertainty, trade-offs, and missing information. It must not manufacture personalized certainty.
 - Transcript citations identify the episode and source locator used. No fabricated citation is acceptable.
 - Phase 0 runs without PostgreSQL, pgvector, A2A, Llama Stack, Tempo, or Loki. Versioned fixtures and JSONL results are sufficient to decide whether the mechanism works.
-- The deployed `Qwen3-30B-A3B-quantized.w4a16` endpoint is the model baseline. Model changes are evaluated, not assumed to be improvements.
+- The current `Qwen3-30B-A3B-quantized.w4a16` Deployment is a benchmark control, not the presumptive final model or serving configuration. Phase 0 selects the model and settings; Phase 1 replaces the hand-built Deployment with KServe.
 - Traces are redacted before persistence. Secrets, credentials, account identifiers, and unnecessary personal data never enter fixtures, records, lessons, or retrieval content.
 
 ## Known corpus condition
@@ -44,9 +44,54 @@ Create a manifest containing source commit, episode number, available paths, con
 
 All arms use the same model version, corpus snapshot, retrieval results, tool permissions, token budget, sampling settings, and scenario ordering. The coach never sees held-out expected behaviours or scoring keys.
 
+## Model-serving decision track
+
+The existing implementation is an ordinary Kubernetes `Deployment` using a `latest` runtime tag, a 100 GiB model PVC, `GPU_MEMORY_UTILIZATION=0.92`, and a script that searches downward from a 40,960-token maximum until vLLM starts. It does not explicitly bound sequences or batched tokens, and it optimizes for the largest single context rather than the mixed worker/coach workload.
+
+Phase 0 must choose a complete serving profile, not just a model name:
+
+- model repository and immutable revision;
+- license, architecture, total/active parameters, weight quantization, and runtime dtype;
+- model chat template, tool-call parser, and reasoning parser;
+- maximum per-request context and output limits;
+- GPU KV-cache bytes and dtype;
+- maximum sequences and batched tokens;
+- prefix-caching, chunked-prefill, long-prefill, and preemption settings;
+- CPU/RAM, `/dev/shm`, ephemeral storage, and GPU resources;
+- artifact delivery and local model-cache capacity; and
+- the pinned OpenShift AI/KServe/vLLM runtime image.
+
+Use [`worksheets/model-serving-decision.md`](worksheets/model-serving-decision.md) for each candidate. Refresh the shortlist when Phase 0 starts, but include at least:
+
+| Candidate class | Purpose |
+| --- | --- |
+| Current quantized Qwen3 30B-A3B | Control against the existing deployment |
+| Strong tool-capable 8B-class model | Maximum KV-cache and concurrency control |
+| Strong tool-capable 12B–16B-class model | Balanced capability/capacity candidate |
+| Recent small-active-parameter MoE that fits one 3090 when quantized | Test whether MoE quality justifies its larger weight footprint |
+
+Reject any candidate that lacks a documented vLLM-compatible chat template/tool parser, fails the financial-safety gates, or needs CPU weight offload for the primary workload.
+
+### Workload and cache target
+
+The target is not several simultaneous 40k conversations. The primary mixed profile is two RR workers plus one coach, where each RR request is bounded around 10k input/1.5k output and the coach receives an approximately 8k summarized trace with a 1k output cap. Evaluation replay runs off-peak.
+
+Benchmark:
+
+- context ceilings of 16,384 tokens first and 24,576 only if quality requires it; keep 40,960 as a comparison, not a default;
+- `max-num-seqs` of 2, 4, and 6;
+- `max-num-batched-tokens` of 2,048, 4,096, and 8,192;
+- auto/FP16 KV cache versus FP8 KV cache only when the runtime and model support it and the frozen quality suite shows no material loss;
+- explicit secure prefix caching and chunked prefill; and
+- the actual KV-cache bytes, token capacity, reported max concurrency, recompute preemptions, TTFT, inter-token latency, throughput, queue time, and OOM rate.
+
+During profiling, let vLLM measure available cache from a conservative GPU-memory-utilization value. For the selected configuration, record and pin the measured safe KV-cache allocation when the installed runtime supports explicit cache bytes. Do not use a startup retry loop to discover production settings.
+
+Model artifact cache is a separate capacity decision. Size it from the measured active model + rollback model + download/unpack staging + at least 25% headroom. The existing 100 GiB PVC remains only if that calculation supports it.
+
 ## Phase 0 — evidence, authoring, and feasibility
 
-Target: 2–3 weekends. Run locally or in a development namespace; do not wait for #187.
+Target: time-box to 3–4 weekends, including serving benchmarks. Run locally or in a development namespace; do not wait for #187.
 
 ### 0.1 Freeze inputs and rules
 
@@ -54,6 +99,7 @@ Target: 2–3 weekends. Run locally or in a development namespace; do not wait f
 - Define the RR worker boundary, allowed tools, citation format, redaction rules, and current-fact verification rule.
 - Set hard budgets for worker prompt, retrieved context, trace summary, coach prompt, output tokens, queue time, and total run time.
 - Define the failure-class taxonomy before scoring runs.
+- Record the current Deployment as the serving control, including its model revision, runtime image, actual KV capacity, latency, throughput, OOM behaviour, and tool-call fidelity.
 
 ### 0.2 Author the human source material
 
@@ -67,14 +113,23 @@ Use the worksheets in [`worksheets/`](worksheets/):
 
 The model may normalize formatting or flag missing fields, but it must not invent the source doctrine. A human reviews every evidence note and card before it enters the frozen set.
 
-### 0.3 Build the smallest evaluation runner
+### 0.3 Select the model and serving profile
+
+- Create the model shortlist and immutable revisions.
+- Deploy each candidate through a temporary KServe `InferenceService` using the supported vLLM NVIDIA `ServingRuntime` or a pinned compatible custom `ServingRuntime`.
+- Run the fixed worker, coach, mixed-interactive, and off-peak-evaluation workload profiles.
+- Score domain quality, coaching quality, tool/schema fidelity, context truncation, KV capacity, concurrency, preemption, latency, throughput, and OOMs.
+- Select one primary and one rollback model/configuration. Preserve every decision worksheet and raw result.
+- Produce the GitOps-ready KServe manifests, but do not retire the existing Deployment until the selected `InferenceService` passes Phase 1 acceptance.
+
+### 0.4 Build the smallest evaluation runner
 
 - Use deterministic retrieval over the pinned corpus. A local lexical/BM25 index is sufficient for Phase 0.
 - Store inputs, retrieved source IDs, outputs, scores, model settings, and timings as versioned fixtures or JSONL.
 - Implement deterministic checks first: citation resolution, required fields, calculation fixtures, budget limits, and critical-failure gates.
 - Use a blinded human rubric only for qualities that cannot be tested mechanically.
 
-### 0.4 Run the experiment
+### 0.5 Run the experiment
 
 1. Run Arm A on the calibration set and record failure classes.
 2. Freeze the checklist, coach prompt, cards, scenarios, rubric, and retrieval configuration.
@@ -90,7 +145,8 @@ Proceed with a coach only if it:
 - improves related-task success without coach intervention;
 - introduces no critical safety or citation regression;
 - stays within the fixed context and latency budgets; and
-- produces an effect large enough to justify a second inference pass.
+- produces an effect large enough to justify a second inference pass; and
+- has a selected model/KServe/vLLM configuration that sustains the mixed worker/coach profile on the 3090.
 
 If it does not, ship the static checklist and retain the evaluation suite. Do not build the coaching platform.
 
@@ -98,6 +154,9 @@ If it does not, ship the static checklist and retain the evaluation suite. Do no
 
 Entry condition: Phase 0 supports continuing.
 
+- Replace the hand-built inference `Deployment`, `Service`, `Route`, download scripts, and auto-sizing loop with the selected GitOps-managed KServe `InferenceService`/`ServingRuntime` configuration.
+- Pin the model revision and runtime image; provision the measured artifact cache and rollback capacity.
+- Apply the selected context, KV-cache, sequence, batched-token, prefix-cache, prefill, parser, and resource settings.
 - Implement the RR worker, coach, and deterministic LangGraph controller.
 - Keep coach invocation limited to pre-brief, abnormality, and after-action review.
 - Add per-agent concurrency, token, and queue limits before multi-user use.
@@ -106,7 +165,7 @@ Entry condition: Phase 0 supports continuing.
 - Decide the PostgreSQL location before implementation. If pgvector is selected, use an image that actually includes the extension.
 - Keep tools read-only and require human approval for experiments.
 
-Exit: the Phase 0 comparison can be reproduced from the deployed workflow, records survive restart, and no unredacted sensitive data is persisted.
+Exit: the selected KServe endpoint survives restart and reproduces the Phase 0 quality/capacity result; the Phase 0 comparison can be reproduced from the deployed workflow; records survive restart; and no unredacted sensitive data is persisted. Only then remove the old inference Deployment.
 
 ## Phase 2 — observable learning loop
 
@@ -164,6 +223,9 @@ Exit: an approved lesson can be promoted and rolled back without allowing the co
 - [x] Static checklist is a legitimate winning outcome.
 - [x] Phase 0 uses repository fixtures/JSONL; PostgreSQL is deferred.
 - [x] Full OTel/Tempo/Loki is deferred until the mechanism shows value.
+- [ ] Select the Phase 0 primary and rollback model/configuration.
+- [ ] Validate the mixed worker/coach capacity target on the 3090.
+- [ ] Size the model artifact cache and GPU KV cache from measurements.
 - [ ] Phase 1 placement after #187.
 - [ ] Phase 1 PostgreSQL and pgvector placement.
 
