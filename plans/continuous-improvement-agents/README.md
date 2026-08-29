@@ -26,13 +26,15 @@ The pilot is one RR worker, one coach, one deterministic controller, and one sha
 
 The Phase 0 corpus must be pinned to `rr-scraper` commit `77da0971b7601f761302343a6ef636426ad88560` until deliberately refreshed.
 
+Some Rational Reminder episodes do not have transcripts available to scrape from the source website. Those omissions are an expected source limitation, not a corpus defect or a Phase 0 remediation task.
+
 | Corpus view | Observed state | Phase 0 action |
 | --- | --- | --- |
-| `transcripts/all.md` | About 26 MB | Use as the completeness reference, not as one prompt |
-| `transcripts/groups_of_20/` | 21 files, through episode 424 | Use to reconcile coverage |
-| `transcripts/individual/` | 362 files | Reconcile missing episodes before treating this as the retrieval corpus |
+| `transcripts/all.md` | About 26 MB | Use as the aggregate view, not as one prompt |
+| `transcripts/groups_of_20/` | 21 files, with episode-number ranges through 424 | Use for bounded bulk indexing; ranges can legitimately contain episode gaps |
+| `transcripts/individual/` | 362 available transcript files | Treat as the authoritative per-episode retrieval set for this snapshot |
 
-Create a manifest containing source commit, episode number, available paths, content hash, title/date/guest when available, and ingestion status. Freeze the manifest with the evaluation suite.
+Create a manifest containing source commit, episode number, available paths, content hash, title/date/guest when available, and ingestion status. When an unavailable episode is known, record it as `source_transcript_unavailable`; do not attempt to synthesize or backfill its content. Freeze the manifest with the evaluation suite.
 
 ## Experimental arms
 
@@ -95,7 +97,7 @@ Target: time-box to 3–4 weekends, including serving benchmarks. Run locally or
 
 ### 0.1 Freeze inputs and rules
 
-- Build and review the corpus manifest; reconcile the grouped and individual transcript views.
+- Build and review the corpus manifest. Confirm that every ingested item maps to an available source transcript; treat episodes without source transcripts as expected exclusions.
 - Define the RR worker boundary, allowed tools, citation format, redaction rules, and current-fact verification rule.
 - Set hard budgets for worker prompt, retrieved context, trace summary, coach prompt, output tokens, queue time, and total run time.
 - Define the failure-class taxonomy before scoring runs.
