@@ -11,6 +11,7 @@ These worksheets keep source evidence, domain doctrine, improvement doctrine, an
 | 3 | [`coach-doctrine-card.md`](coach-doctrine-card.md) | An operational coaching principle from the two books |
 | 4 | [`financial-guidance-scenario.md`](financial-guidance-scenario.md) | A calibration or held-out RR worker evaluation |
 | 5 | [`coaching-scenario.md`](coaching-scenario.md) | A coach evaluation plus an uncoached transfer task |
+| 6 | [`model-serving-decision.md`](model-serving-decision.md) | A benchmarked model, KV-cache, batching, artifact-cache, and KServe configuration |
 
 Copy a worksheet for every item. Suggested destination layout for the implementation:
 
@@ -23,6 +24,8 @@ evals/
   scenarios/domain/FGS-###.yaml
   scenarios/coaching/CIS-###.yaml
   results/
+serving-decisions/
+  MSD-###.md
 ```
 
 ## ID conventions
@@ -35,6 +38,7 @@ evals/
 | `FGS` | Financial-guidance scenario |
 | `CIS` | Coaching/improvement scenario |
 | `FC` | Failure class |
+| `MSD` | Model-serving decision |
 
 IDs are permanent. Do not recycle an ID when an item is retired.
 
@@ -62,6 +66,7 @@ The model may reformat text, detect blank fields, or suggest search terms. It ma
 - 10 coach doctrine cards.
 - 20 financial-guidance scenarios: 10 calibration and 10 held-out.
 - 10 coaching scenarios with 10 related transfer tasks.
+- One model-serving decision record per shortlisted model/configuration pair.
 - Coverage across retrieval misses, unsupported synthesis, citations, current-fact verification, missing inputs, trade-offs, calculations, advice boundaries, coach takeover, non-transfer, context budget, and redaction.
 
 ## Definition of ready
