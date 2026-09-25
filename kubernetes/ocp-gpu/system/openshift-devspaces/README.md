@@ -2,6 +2,10 @@
 
 This directory contains the OpenShift DevSpaces configuration for the ocp-gpu cluster, including automated credential management for seamless development workflows.
 
+## Tailscale access to OCP Home
+
+See [Tailscale workspace setup](TAILSCALE.md) for automatic access to OCP Home through an OAuth-enrolled egress proxy. Dev Spaces mounts a token-free kubeconfig; all callers share the proxy identity and read-only permissions.
+
 ## Overview
 
 OpenShift DevSpaces provides cloud-based development environments with automatic extension installation and pre-configured credentials. This setup eliminates manual authentication steps for both GitHub and Claude Code.

@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  namespace: tailscale-system
+  name: ocp-home-api-from-devspaces
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  podSelector:
+    matchLabels:
+      tailscale.com/parent-resource-type: svc
+      tailscale.com/parent-resource: ocp-home-api
+      tailscale.com/parent-resource-ns: tailscale-system
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/component: workspaces-namespace
+              app.kubernetes.io/part-of: che.eclipse.org
+          podSelector:
+            matchExpressions:
+              - key: controller.devfile.io/devworkspace_id
+                operator: Exists
+      ports:
+        - port: 443
+          protocol: TCP
+    # Authenticated WireGuard transport for direct peer connectivity.
+    # The TCP API forwarding port remains restricted to workspace pods.
+    - ports:
+        - port: 41641
+          protocol: UDP

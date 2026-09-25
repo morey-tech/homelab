@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: tailscale-system
+  name: ocp-home-api
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    tailscale.com/tailnet-fqdn: ocp-home-api.taile3c3a8.ts.net
+    tailscale.com/hostname: ocp-gpu-devspaces
+    tailscale.com/tags: tag:ocp-gpu-devspaces
+    tailscale.com/proxy-class: devspaces-egress
+spec:
+  type: ExternalName
+  # Replaced by the operator; Argo ignores this field after initial creation.
+  externalName: pending.invalid
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP

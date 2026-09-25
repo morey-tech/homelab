@@ -1,0 +1,39 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - operator-oauth.yaml
+  - proxy-scc.yaml
+  - proxyclass.yaml
+  - ocp-home-api.yaml
+  - networkpolicy.yaml
+
+helmCharts:
+  - name: tailscale-operator
+    includeCRDs: true
+    version: 1.102.4
+    repo: https://pkgs.tailscale.com/helmcharts
+    releaseName: tailscale-operator
+    namespace: tailscale-system
+    valuesInline:
+      apiServerProxyConfig:
+        mode: "false"
+      ingressClass:
+        enabled: false
+      operatorConfig:
+        hostname: ocp-gpu-operator
+        defaultTags:
+          - tag:ocp-gpu-operator
+        extraEnv:
+          - name: XDG_CONFIG_HOME
+            value: /tmp/tailscale
+        podSecurityContext:
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+      proxyConfig:
+        defaultTags: tag:ocp-gpu-devspaces

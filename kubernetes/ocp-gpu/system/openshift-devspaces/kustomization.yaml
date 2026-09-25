@@ -9,3 +9,4 @@ resources:
   - roo-code-generate-script.yaml
   - vscode-editor-configurations.yaml
   - getting-started-samples.yaml
+  - ocp-home-kubeconfig.yaml

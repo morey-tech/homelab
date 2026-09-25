@@ -97,3 +97,19 @@ spec:
       destination:
         namespace: {{.path.basename}}
     {{ end }}
+    {{- if eq .path.basename "tailscale" }}
+    spec:
+      ignoreDifferences:
+        - group: ""
+          kind: Service
+          name: ocp-home-api
+          namespace: tailscale-system
+          jsonPointers:
+            - /spec/externalName
+      syncPolicy:
+        syncOptions:
+        - allowEmpty=true
+        - CreateNamespace=true
+        - ServerSideApply=true
+        - RespectIgnoreDifferences=true
+    {{ end }}

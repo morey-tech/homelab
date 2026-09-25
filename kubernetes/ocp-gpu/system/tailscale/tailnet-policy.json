@@ -1,0 +1,22 @@
+{
+  "tagOwners": {
+    "tag:ocp-gpu-operator": ["autogroup:admin"],
+    "tag:ocp-gpu-devspaces": ["tag:ocp-gpu-operator"]
+  },
+  "grants": [
+    {
+      "src": ["tag:ocp-gpu-devspaces"],
+      "dst": ["tag:ocp-home-api"],
+      "ip": ["tcp:443"],
+      "app": {
+        "tailscale.com/cap/kubernetes": [
+          {
+            "impersonate": {
+              "groups": ["tailnet-readers"]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

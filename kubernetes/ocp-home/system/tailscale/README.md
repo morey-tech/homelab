@@ -41,6 +41,8 @@ The operator uses userspace networking for its in-process API proxy, with an Ope
 
 ## Client setup and validation
 
+For OCP GPU Dev Spaces, use the [workspace client setup](../../../ocp-gpu/system/openshift-devspaces/TAILSCALE.md). It uses a shared operator-managed egress proxy and a mounted token-free kubeconfig. OCP Home sees the tagged proxy identity for all workspace callers.
+
 Run on a device already connected to this tailnet with Tailscale and kubectl installed. Discover the actual endpoint:
 
 ```bash
