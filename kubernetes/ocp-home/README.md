@@ -36,6 +36,7 @@ oc login -u admin --server=https://api.ocp-home.rh-lab.morey.tech:6443
 - **OpenShift GitOps** - ArgoCD for GitOps deployment
 - **OpenShift DevSpaces** - Cloud development environments
 - **External Secrets Operator** - Bitwarden secret synchronization
+- **Tailscale Operator** - [Tailnet-authenticated API access and setup](system/tailscale/README.md) via `ocp-home-api`, with initial `view` access
 - **Cert-Manager** - Let's Encrypt certificate automation
 - **External-DNS** - Automatic DNS record creation
 - **MetalLB** - Bare-metal load balancer
