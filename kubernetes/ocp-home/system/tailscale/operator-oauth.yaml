@@ -1,0 +1,22 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: operator-oauth
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-login
+    kind: ClusterSecretStore
+  target:
+    name: operator-oauth
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  data:
+    - secretKey: client_id
+      remoteRef:
+        key: 4e619a2e-c27e-483e-943f-b4d000f315a9
+        property: username
+    - secretKey: client_secret
+      remoteRef:
+        key: 4e619a2e-c27e-483e-943f-b4d000f315a9
+        property: password
