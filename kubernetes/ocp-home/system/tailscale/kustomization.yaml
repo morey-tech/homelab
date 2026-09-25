@@ -17,6 +17,10 @@ helmCharts:
         mode: "true"
       operatorConfig:
         hostname: ocp-home-api
+        # tsnet needs a writable config directory under OpenShift's assigned UID.
+        extraEnv:
+          - name: XDG_CONFIG_HOME
+            value: /tmp/tailscale
         defaultTags:
           - tag:ocp-home-api
         podSecurityContext:

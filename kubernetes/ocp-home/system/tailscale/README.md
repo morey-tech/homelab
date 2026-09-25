@@ -29,6 +29,8 @@ kustomize build --enable-helm kubernetes/ocp-home/system/tailscale > /tmp/ocp-ho
 
 Deploy through ArgoCD after committing and pushing the configuration to its tracked revision. Do not apply the rendered manifests directly. Run the secret refresh and rollout checks above after ArgoCD has created the resources.
 
+The operator sets `XDG_CONFIG_HOME=/tmp/tailscale` so tsnet can create its local configuration directory with the OpenShift-assigned UID; device identity remains persisted in the `operator` Kubernetes Secret. The ExternalSecret explicitly declares remote reference defaults to avoid ArgoCD drift from API defaulting.
+
 The operator uses userspace networking for its in-process API proxy, with an OpenShift-assigned non-root UID, dropped capabilities, and no privileged SCC binding. General ingress/egress proxies are outside this configuration's scope. Tailscale's documented OpenShift support limitations make live admission and runtime checks necessary.
 
 ## Policy and RBAC
