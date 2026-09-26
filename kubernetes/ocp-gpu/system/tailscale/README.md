@@ -65,7 +65,7 @@ Review, commit, and push the repository changes to `main`. Allow the existing Gi
 
 The ApplicationSet enables server-side apply for the large Tailscale CRDs. It ignores `spec.externalName` only on `tailscale-system/ocp-home-api` and enables `RespectIgnoreDifferences`, because the operator replaces the initial `pending.invalid` value with its generated headless Service. Other Service fields remain managed by Argo.
 
-The SCC binding and NetworkPolicy use sync wave `-1`, the operator and ProxyClass use the default wave, and the egress Service uses wave `1`. Wait for credentials and operator readiness before expecting the egress device to appear. The proxy is a single replica; a restart temporarily interrupts access.
+The SCC binding, NetworkPolicy, and Service admission policy use sync wave `-1`, the operator and ProxyClass use the default wave, and the egress Service uses wave `1`. Wait for credentials and operator readiness before expecting the egress device to appear. The proxy is a single replica; a restart temporarily interrupts access.
 
 After the applications sync, stop/start a Dev Spaces workspace to mount `/etc/ocp-home/kubeconfig`, then follow the [workspace guide](../openshift-devspaces/TAILSCALE.md). The ConfigMap uses `mount-on-start` to avoid restarting active workspaces automatically. The `devspace-homelab` image adds the context to `KUBECONFIG` in shells. No devfile update, browser login, or per-workspace device state is required.
 
@@ -77,7 +77,32 @@ OAuth credentials and proxy device state stay in Kubernetes Secrets in `tailscal
 
 [networkpolicy.yaml](networkpolicy.yaml) selects the operator-generated pods for this specific egress Service. It permits TCP 443 only from pods carrying a DevWorkspace ID in namespaces labelled as Dev Spaces workspace namespaces. UDP 41641 remains available for authenticated WireGuard transport. Outbound traffic is not restricted, allowing Kubernetes API, DNS, control-plane, DERP, and direct peer connections.
 
-This policy limits access to this proxy, but does not isolate mutually untrusted workspace owners: callers share its identity, namespace owners may control labels, and users authorized to create operator-managed Services could request additional proxies. Kubernetes administrators retain their usual access.
+This policy limits access to this proxy, but does not isolate mutually untrusted workspace owners: callers share its identity, and namespace owners may control labels. Kubernetes administrators retain their usual access.
+
+### Service admission policy
+
+The operator acts on any Service in the cluster that has `tailscale.com/*` metadata or `spec.loadBalancerClass: tailscale`. It creates a tailnet device for that Service, with any tags from `tailscale.com/tags` that the operator owns. Without a guard, any user who can create Services, including every Dev Spaces user in their own namespace, could request their own egress proxy with `tag:ocp-gpu-devspaces`, or expose workloads to the tailnet.
+
+[service-admission-policy.yaml](service-admission-policy.yaml) is a ValidatingAdmissionPolicy with a `Deny` binding. It rejects Service creates and updates outside `tailscale-system` that have:
+
+- any `tailscale.com/` annotation (`tailnet-fqdn`, `tailnet-ip`, `expose`, `tags`, `hostname`, `proxy-class`, `proxy-group`, and so on)
+- any `tailscale.com/` label (the operator also reads `tailscale.com/proxy-class` as a label)
+- `spec.loadBalancerClass: tailscale`
+
+Services with a `deletionTimestamp` are exempt, so finalizer removal can finish. `failurePolicy: Fail` means that policy errors block the request instead of allowing it. Ingress resources are not covered because the chart's `tailscale` IngressClass is disabled. Connector, ProxyGroup, and other Tailscale custom resources require cluster-level permissions that workspace users do not have.
+
+To add another operator-managed Service, create it in `tailscale-system` through GitOps. Cluster administrators can bypass the policy by working in that namespace, or by editing the policy or binding.
+
+Before this policy was added, no Service outside `tailscale-system` carried Tailscale metadata:
+
+```bash
+oc get svc -A -o json | jq -r '.items[]
+  | select(.metadata.namespace != "tailscale-system")
+  | select(((.metadata.annotations//{})|keys|any(startswith("tailscale.com/")))
+      or ((.metadata.labels//{})|keys|any(startswith("tailscale.com/")))
+      or .spec.loadBalancerClass == "tailscale")
+  | "\(.metadata.namespace)/\(.metadata.name)"'
+```
 
 ## Verify after rollout
 
@@ -95,6 +120,31 @@ oc -n admin-devspaces get configmap ocp-home-kubeconfig
 ```
 
 The operator should use its ordinary restricted SCC, while the egress pod uses `privileged`. Confirm that the Service's `externalName` now refers to an operator-generated Service and that Argo remains Synced after reconciliation.
+
+Check the Service admission policy with server-side dry runs, which run admission but persist nothing:
+
+```bash
+oc get validatingadmissionpolicy,validatingadmissionpolicybinding tailscale-services-operator-namespace-only
+oc get validatingadmissionpolicy tailscale-services-operator-namespace-only -o jsonpath='{.status.typeChecking}{"\n"}'
+
+# Denied: Tailscale annotation outside tailscale-system
+oc -n admin-devspaces create service clusterip ts-policy-test --tcp=443 --dry-run=client -o yaml \
+  | oc annotate --local -f - tailscale.com/tailnet-fqdn=ocp-home-api.taile3c3a8.ts.net -o yaml \
+  | oc apply --dry-run=server -f -
+
+# Denied: tailscale loadBalancerClass outside tailscale-system
+oc -n admin-devspaces create service loadbalancer ts-policy-test --tcp=443 -o yaml --dry-run=client \
+  | oc patch --local -f - --type=merge -p '{"spec":{"loadBalancerClass":"tailscale"}}' -o yaml \
+  | oc apply --dry-run=server -f -
+
+# Allowed: ordinary Service, and Tailscale Service in tailscale-system
+oc -n admin-devspaces create service clusterip ts-policy-test --tcp=443 --dry-run=server
+oc -n tailscale-system create service clusterip ts-policy-test --tcp=443 --dry-run=client -o yaml \
+  | oc annotate --local -f - tailscale.com/tailnet-fqdn=example.invalid -o yaml \
+  | oc apply --dry-run=server -f -
+```
+
+The denied requests should report `ValidatingAdmissionPolicy 'tailscale-services-operator-namespace-only' with binding ... denied request`. `typeChecking` should report no warnings.
 
 From a restarted workspace:
 
@@ -121,6 +171,7 @@ Read-only cluster inspection confirmed the existing SCC role, workspace labels, 
 - Operator awaiting its Secret: confirm the Bitwarden item name, vault cache, OAuth scopes, and ExternalSecret conditions without printing credential values.
 - Proxy admission failure: inspect pod events, the proxy service account, the SCC RoleBinding, and namespace Pod Security admission. The ApplicationSet labels this namespace for privileged workloads.
 - No proxy or pending Service: inspect operator logs, ProxyClass status, OAuth tag ownership, and device approval.
+- Service rejected by `tailscale-services-operator-namespace-only`: Tailscale-managed Services belong in `tailscale-system`. If the policy blocks unrelated Services, set the binding's `validationActions` to `[Warn, Audit]` through GitOps while investigating.
 - TLS failure: verify both copies of the target FQDN. Do not disable certificate verification.
 - API 403: check the source proxy tag, OCP Home destination tag, Kubernetes capability grant, and `tailnet-readers` binding.
 - Rotate credentials through Bitwarden and External Secrets, then arrange an operator rollout through GitOps. Existing proxy state is independent of the OAuth secret.

@@ -6,6 +6,7 @@ resources:
   - proxyclass.yaml
   - ocp-home-api.yaml
   - networkpolicy.yaml
+  - service-admission-policy.yaml
 
 helmCharts:
   - name: tailscale-operator
