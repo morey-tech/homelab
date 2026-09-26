@@ -34,6 +34,9 @@ ENV HOME=/home/morey-tech
 ENV USER_NAME=morey-tech
 ENV PATH="/home/morey-tech/.local/bin:${PATH}"
 
+# Merge the OCP Home proxy kubeconfig in shells without setting KUBECONFIG container-wide
+COPY ocp-home-kubeconfig.sh /home/morey-tech/.bashrc.d/10-ocp-home-kubeconfig.sh
+
 # The gh-auth-init.sh symlink is inherited from devspace-base when home directory is moved
 # Just ensure correct permissions for OpenShift arbitrary UID support
 RUN chown -R morey-tech:0 /home/morey-tech/.bashrc.d && \

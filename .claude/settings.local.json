@@ -1,4 +1,5 @@
 {
+  "apiKeyHelper": "bash -c 'echo $ANTHROPIC_API_KEY'",
   "permissions": {
     "allow": [
       "Bash(cat:*)",
@@ -44,10 +45,10 @@
       "Bash(gh run watch:*)",
       "Bash(pip3 show:*)",
       "WebFetch(domain:docs.redhat.com)",
-      "Bash(gh auth status:*)"
+      "Bash(gh auth status:*)",
+      "Bash(gh search *)"
     ],
     "deny": [],
     "ask": []
-  },
-  "apiKeyHelper": "bash -c 'echo $ANTHROPIC_API_KEY'"
+  }
 }

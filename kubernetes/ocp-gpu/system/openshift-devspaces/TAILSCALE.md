@@ -12,13 +12,15 @@ oc --context=ocp-home-tailnet get pods --all-namespaces
 
 The default remains the local OCP GPU context (`logged-user`). Use `--context=ocp-home-tailnet` when accessing OCP Home. These commands work with `kubectl` as well as `oc`.
 
-Dev Spaces mounts a token-free kubeconfig from [ocp-home-kubeconfig.yaml](ocp-home-kubeconfig.yaml). A second managed ConfigMap, [ocp-home-kubeconfig-env.yaml](ocp-home-kubeconfig-env.yaml), supplies this environment variable to workspace containers at startup:
+Dev Spaces mounts a token-free kubeconfig from [ocp-home-kubeconfig.yaml](ocp-home-kubeconfig.yaml). The `devspace-homelab` image's [shell init snippet](../../../../containers/devspace-homelab/ocp-home-kubeconfig.sh), installed at `~/.bashrc.d/10-ocp-home-kubeconfig.sh`, exports this in interactive shells when the mount exists:
 
 ```bash
-KUBECONFIG=/home/user/.kube/config:/etc/ocp-home/kubeconfig
+KUBECONFIG=$HOME/.kube/config:/etc/ocp-home/kubeconfig
 ```
 
-The first file is generated and refreshed by Dev Spaces for the local cluster. The second adds the proxy context without selecting a default. Clients combine the files when reading them; local credentials are not copied into the ConfigMap. The `devspace-homelab` image retains `/home/user` as a symlink to `/home/morey-tech`, so the local path works with its renamed user. No image rebuild, shell initialization script, manual export, or per-workspace devfile change is required. A devfile that explicitly sets `KUBECONFIG` overrides the environment ConfigMap and must include both paths itself.
+The first file is generated and refreshed by Dev Spaces for the local cluster. The second adds the proxy context without selecting a default. Clients combine the files when reading them; local credentials are not copied into the ConfigMap. No manual export or per-workspace devfile change is required.
+
+`KUBECONFIG` must not be set in the container environment (via a ConfigMap, devfile, or image `ENV`). The dashboard's kubeconfig injection reads `KUBECONFIG` as a single directory. A multi-path value makes it write the user's credentials to `~/.kube/config:/etc/ocp-home/kubeconfig/config`, leaving `~/.kube/config` empty, and `oc` then falls back to the workspace service account ([eclipse-che/che#23972](https://github.com/eclipse-che/che/issues/23972)). Other images must provide an equivalent shell export, or use `--kubeconfig=/etc/ocp-home/kubeconfig --context=ocp-home-tailnet`.
 
 No Tailscale installation, browser login, or auth key is needed inside the workspace. The operator enrolls a shared egress device with OAuth credentials held in its own namespace.
 
@@ -76,7 +78,8 @@ Expected: the user entry is empty, with no token, certificate, or exec credentia
 
 ## Troubleshooting
 
-- Missing file or context: verify that Argo has synced both ConfigMaps, that both exist in the workspace namespace, and that `printenv KUBECONFIG` includes both paths; then stop/start the workspace.
+- Missing file or context: verify that Argo has synced the ConfigMap, that it exists in the workspace namespace, that `/etc/ocp-home/kubeconfig` is mounted, and that `printenv KUBECONFIG` in a new terminal includes both paths; then stop/start the workspace.
+- `oc whoami` reports `system:serviceaccount:...` instead of your user: `KUBECONFIG` is probably set in the container environment (check `cat /proc/1/environ | tr '\0' '\n' | grep KUBECONFIG`). Remove it, delete any `~/.kube/config:` directory, and use **Refresh kubeconfig** in the workspace's Advanced tab or stop/start the workspace.
 - DNS failure: check the operator-managed Service target and proxy readiness in `tailscale-system`.
 - Timeout: check proxy readiness, the workspace labels against its NetworkPolicy, and the tailnet grant to `tag:ocp-home-api` TCP 443.
 - Certificate error: the Service target annotation and kubeconfig `tls-server-name` must identify the same actual OCP Home tailnet FQDN. Keep TLS verification enabled.

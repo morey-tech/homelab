@@ -27,7 +27,7 @@ This image extends `devspace-base` which provides Claude CLI, GitHub CLI, and ba
 
 ## Kubernetes contexts in Dev Spaces
 
-The [OCP GPU Dev Spaces configuration](../../kubernetes/ocp-gpu/system/openshift-devspaces/TAILSCALE.md) mounts the OCP Home proxy kubeconfig and supplies `KUBECONFIG=/home/user/.kube/config:/etc/ocp-home/kubeconfig` at workspace startup. The image keeps `/home/user` as a symlink to `/home/morey-tech`, preserving the generated local kubeconfig path.
+The [OCP GPU Dev Spaces configuration](../../kubernetes/ocp-gpu/system/openshift-devspaces/TAILSCALE.md) mounts the OCP Home proxy kubeconfig at `/etc/ocp-home/kubeconfig`. The image's [ocp-home-kubeconfig.sh](ocp-home-kubeconfig.sh), installed in `~/.bashrc.d`, exports `KUBECONFIG=$HOME/.kube/config:/etc/ocp-home/kubeconfig` in interactive shells when that mount exists.
 
 ```bash
 oc config get-contexts
@@ -35,7 +35,9 @@ oc get pods                                      # Local OCP GPU cluster (defaul
 oc --context=ocp-home-tailnet get pods -A         # OCP Home through Tailscale
 ```
 
-The additional context is read-only and uses the shared proxy identity. This is configured through Argo CD-managed ConfigMaps, so it requires no image rebuild and does not change local devcontainer configuration. After those resources sync, stop/start the Dev Space to receive the mount and environment variable.
+The additional context is read-only and uses the shared proxy identity. Outside Dev Spaces the mount is absent, so the snippet does nothing.
+
+Do not set `KUBECONFIG` as an image `ENV` or container environment variable. The Dev Spaces dashboard writes the user's kubeconfig to the directory derived from `KUBECONFIG`, and cannot handle a multi-path value ([eclipse-che/che#23972](https://github.com/eclipse-che/che/issues/23972)).
 
 ## GitHub CLI Authentication
 

@@ -33,7 +33,7 @@ OCP Home kube-apiserver                             RBAC: tailnet-readers → vi
 
 - **OCP Home** exposes its API only through the operator's in-process proxy. The [tailnet policy](../../../ocp-home/system/tailscale/tailnet-policy.json) grants TCP 443 to `tag:ocp-home-api` from `autogroup:member` and `autogroup:tagged`, mapped to `tailnet-readers`. There are no tokens or client certificates.
 - **OCP GPU** declares an `ExternalName` Service annotated with `tailscale.com/tailnet-fqdn`. The operator creates a kernel-mode egress StatefulSet for it and repoints `spec.externalName` at its own headless Service.
-- **Dev Spaces** mounts a [kubeconfig](../openshift-devspaces/ocp-home-kubeconfig.yaml) whose server is the in-cluster Service. Its `tls-server-name` is set to the OCP Home tailnet FQDN, so TLS runs end-to-end and is verified against the real Tailscale certificate. The [env ConfigMap](../openshift-devspaces/ocp-home-kubeconfig-env.yaml) appends this kubeconfig to `KUBECONFIG`, and the local `logged-user` context stays the default. Nothing Tailscale-related runs inside workspaces.
+- **Dev Spaces** mounts a [kubeconfig](../openshift-devspaces/ocp-home-kubeconfig.yaml) whose server is the in-cluster Service. Its `tls-server-name` is set to the OCP Home tailnet FQDN, so TLS runs end-to-end and is verified against the real Tailscale certificate. The `devspace-homelab` image's [shell init snippet](../../../../containers/devspace-homelab/ocp-home-kubeconfig.sh) appends this kubeconfig to `KUBECONFIG`, and the local `logged-user` context stays the default. `KUBECONFIG` is deliberately not set container-wide ([eclipse-che/che#23972](https://github.com/eclipse-che/che/issues/23972)). Nothing Tailscale-related runs inside workspaces.
 
 Consequences:
 
@@ -67,7 +67,7 @@ The ApplicationSet enables server-side apply for the large Tailscale CRDs. It ig
 
 The SCC binding and NetworkPolicy use sync wave `-1`, the operator and ProxyClass use the default wave, and the egress Service uses wave `1`. Wait for credentials and operator readiness before expecting the egress device to appear. The proxy is a single replica; a restart temporarily interrupts access.
 
-After the applications sync, stop/start a Dev Spaces workspace to mount `/etc/ocp-home/kubeconfig` and receive the managed `KUBECONFIG` environment variable, then follow the [workspace guide](../openshift-devspaces/TAILSCALE.md). Both ConfigMaps use `mount-on-start` to avoid restarting active workspaces automatically. No image rebuild, devfile update, browser login, or per-workspace device state is required.
+After the applications sync, stop/start a Dev Spaces workspace to mount `/etc/ocp-home/kubeconfig`, then follow the [workspace guide](../openshift-devspaces/TAILSCALE.md). The ConfigMap uses `mount-on-start` to avoid restarting active workspaces automatically. The `devspace-homelab` image adds the context to `KUBECONFIG` in shells. No devfile update, browser login, or per-workspace device state is required.
 
 ## OpenShift permissions and network access
 
@@ -91,7 +91,7 @@ oc -n tailscale-system rollout status deployment/operator --timeout=180s
 oc -n tailscale-system get service ocp-home-api -o jsonpath='{.spec.externalName}{"\n"}'
 oc -n tailscale-system get pods -l tailscale.com/parent-resource=ocp-home-api \
   -o custom-columns='NAME:.metadata.name,SCC:.metadata.annotations.openshift\.io/scc,READY:.status.containerStatuses[*].ready'
-oc -n admin-devspaces get configmap ocp-home-kubeconfig ocp-home-kubeconfig-env
+oc -n admin-devspaces get configmap ocp-home-kubeconfig
 ```
 
 The operator should use its ordinary restricted SCC, while the egress pod uses `privileged`. Confirm that the Service's `externalName` now refers to an operator-generated Service and that Argo remains Synced after reconciliation.
