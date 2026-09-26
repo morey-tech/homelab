@@ -2,6 +2,8 @@
 
 The operator exposes a private HTTPS API endpoint with hostname `ocp-home-api` in the tailnet's MagicDNS domain. The full domain is assigned by Tailscale at enrollment; use the discovery command below instead of guessing it. The native endpoint remains `https://api.ocp-home.rh-lab.morey.tech:6443`.
 
+For how OCP GPU Dev Spaces reaches this endpoint through an egress proxy, see the [cross-cluster architecture](../../../ocp-gpu/system/tailscale/README.md#architecture).
+
 ## Installation and enrollment
 
 ArgoCD's system ApplicationSet discovers this directory as `tailscale-system`. Kustomize installs the pinned Tailscale operator chart in namespace `tailscale-system`; the ApplicationSet enables server-side apply for its large CRDs.

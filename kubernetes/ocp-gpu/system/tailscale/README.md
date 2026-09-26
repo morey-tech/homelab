@@ -2,6 +2,46 @@
 
 This application gives OCP GPU Dev Spaces workspaces automatic, shared read-only access to OCP Home. Argo CD installs the Tailscale operator; OAuth enrolls the operator and its egress proxy. Workspace containers need only the [mounted kubeconfig](../openshift-devspaces/ocp-home-kubeconfig.yaml).
 
+## Architecture
+
+Both clusters run the same pinned `tailscale-operator` chart in `tailscale-system`. Each cluster enrolls with its own OAuth client, which External Secrets pulls from Bitwarden. The two operators are configured for opposite roles:
+
+| | OCP Home ([config](../../../ocp-home/system/tailscale/kustomization.yaml)) | OCP GPU ([config](kustomization.yaml)) |
+|---|---|---|
+| Role | API server proxy (server) | Egress proxy (client) |
+| `apiServerProxyConfig.mode` | `"true"`: identity auth + impersonation | `"false"` |
+| Tailnet device / tag | `ocp-home-api` / `tag:ocp-home-api` | `ocp-gpu-devspaces` / `tag:ocp-gpu-devspaces` |
+| Operator tag | `tag:ocp-home-api` | `tag:ocp-gpu-operator` |
+| Supporting resources | `tailnet-readers` → `view` ClusterRoleBinding | ProxyClass, proxy-only privileged SCC, egress Service, NetworkPolicy |
+
+Request path from a workspace:
+
+```text
+workspace: oc --context=ocp-home-tailnet get pods -A
+  │  HTTPS, SNI ocp-home-api.taile3c3a8.ts.net, no credentials
+  ▼
+Service tailscale-system/ocp-home-api (OCP GPU)    NetworkPolicy: workspace pods only
+  ▼
+egress proxy pod, tailnet device ocp-gpu-devspaces  TCP forward, no TLS termination
+  │  WireGuard (direct or DERP)
+  ▼
+OCP Home operator ocp-home-api :443                 terminates TLS, identifies caller by tailnet identity
+  │  tailscale.com/cap/kubernetes grant → impersonate group tailnet-readers
+  ▼
+OCP Home kube-apiserver                             RBAC: tailnet-readers → view (read-only)
+```
+
+- **OCP Home** exposes its API only through the operator's in-process proxy. The [tailnet policy](../../../ocp-home/system/tailscale/tailnet-policy.json) grants TCP 443 to `tag:ocp-home-api` from `autogroup:member` and `autogroup:tagged`, mapped to `tailnet-readers`. There are no tokens or client certificates.
+- **OCP GPU** declares an `ExternalName` Service annotated with `tailscale.com/tailnet-fqdn`. The operator creates a kernel-mode egress StatefulSet for it and repoints `spec.externalName` at its own headless Service.
+- **Dev Spaces** mounts a [kubeconfig](../openshift-devspaces/ocp-home-kubeconfig.yaml) whose server is the in-cluster Service. Its `tls-server-name` is set to the OCP Home tailnet FQDN, so TLS runs end-to-end and is verified against the real Tailscale certificate. The [env ConfigMap](../openshift-devspaces/ocp-home-kubeconfig-env.yaml) appends this kubeconfig to `KUBECONFIG`, and the local `logged-user` context stays the default. Nothing Tailscale-related runs inside workspaces.
+
+Consequences:
+
+- All workspace users share the egress device's identity. OCP Home audit logs show `ocp-gpu-devspaces`, not the individual user.
+- Access is read-only. Write access would need a new capability grant plus RBAC on OCP Home.
+- OCP Home's `autogroup:tagged` grant already covers the egress device. Removing only the OCP GPU grant does not revoke access.
+- The egress proxy is a single privileged replica. A restart briefly interrupts access.
+
 ## One-time enrollment setup
 
 1. Merge [tailnet-policy.json](tailnet-policy.json) into the existing tailnet policy in the [access controls console](https://login.tailscale.com/admin/acls). Preserve existing rules. The fragment defines `tag:ocp-gpu-operator`, lets it own `tag:ocp-gpu-devspaces`, and grants that proxy tag TCP 443 to `tag:ocp-home-api` with Kubernetes group `tailnet-readers`. This policy is not applied by Argo CD.
