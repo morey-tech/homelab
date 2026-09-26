@@ -7,6 +7,8 @@ Everything is deployed as code:
 - The tailnet policy is version-controlled and applied by GitHub Actions.
 - OAuth client credentials come from Bitwarden through External Secrets.
 
+## Contents
+
 - [The problem](#the-problem)
 - [Architecture](#architecture)
 - [Request flow](#request-flow)
