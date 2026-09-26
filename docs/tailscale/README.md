@@ -2,10 +2,11 @@
 
 Every OpenShift Dev Spaces workspace on `ocp-gpu` starts with a working `kubectl`/`oc` context for the `ocp-home` cluster. There's no `oc login`, no token, and no credential stored in the workspace. Identity comes from Tailscale, and authorization is defined in the tailnet policy and Kubernetes RBAC.
 
-Everything is deployed as code:
+Everything is deployed as code, except the tailnet settings:
 - Argo CD deploys the Tailscale Kubernetes operator to both clusters from this repository.
 - The tailnet policy is version-controlled and applied by GitHub Actions.
 - OAuth client credentials come from Bitwarden through External Secrets.
+- Tailnet settings (MagicDNS, HTTPS certificates, and the OAuth clients) are still configured by hand in the admin console. Moving them to Terraform is listed under [Future improvements](#future-improvements).
 
 ## Contents
 
@@ -18,6 +19,7 @@ Everything is deployed as code:
 - [Setup and verification](#setup-and-verification)
 - [Lessons learned](#lessons-learned)
 - [Future improvements](#future-improvements)
+- [Change history](#change-history)
 - [File map](#file-map)
 
 ## The problem
@@ -298,6 +300,32 @@ The per-cluster guides have the detailed rollout, validation, troubleshooting, a
 - **Use the upstream action for PR checks.** If [tailscale/gitops-acl-action#84](https://github.com/tailscale/gitops-acl-action/issues/84) lands, replace the hand-rolled `gitops-pusher` steps with the action's outputs, and keep getting its updates.
 - **More clusters.** Expose `ocp-mgmt` and `ocp-lab` the same way, and ship one multi-context kubeconfig to workspaces.
 - **Continuous verification.** Add a scheduled check that runs `auth whoami` and `can-i` through the proxy and alerts when access breaks or grows unexpectedly.
+
+## Change history
+
+**[All changes in one diff](https://github.com/morey-tech/homelab/compare/a3b36b4...4b43b6a)** (`a3b36b4...4b43b6a`). The range also includes two unrelated Dev Spaces commits, [`9d3e6fa`](https://github.com/morey-tech/homelab/commit/9d3e6fa) and [`03e1384`](https://github.com/morey-tech/homelab/commit/03e1384).
+
+| Commit | Change |
+|---|---|
+| [`00602c7`](https://github.com/morey-tech/homelab/commit/00602c7) | `ocp-home`: Tailscale operator with the API server proxy in auth mode, `tailnet-readers` → `view` ([#196](https://github.com/morey-tech/homelab/pull/196)) |
+| [`1e8fb80`](https://github.com/morey-tech/homelab/commit/1e8fb80) | `ocp-home`: fix operator startup under OpenShift's UID and ExternalSecret drift ([#198](https://github.com/morey-tech/homelab/pull/198)) |
+| [`b2233bf`](https://github.com/morey-tech/homelab/commit/b2233bf) | `ocp-gpu`: operator, egress proxy, ProxyClass, SCC binding, NetworkPolicy, and workspace kubeconfig |
+| [`a80e0cd`](https://github.com/morey-tech/homelab/commit/a80e0cd) | `ocp-gpu`: merge the kubeconfig into workspaces with a `KUBECONFIG` env ConfigMap |
+| [`5d0c063`](https://github.com/morey-tech/homelab/commit/5d0c063) | Replace the env ConfigMap with a shell init snippet after it broke Dev Spaces kubeconfig injection ([eclipse-che/che#23972](https://github.com/eclipse-che/che/issues/23972)) |
+| [`63c80e9`](https://github.com/morey-tech/homelab/commit/63c80e9) | `ocp-gpu`: ValidatingAdmissionPolicy limiting Tailscale Services to `tailscale-system` |
+| [`08e7702`](https://github.com/morey-tech/homelab/commit/08e7702) | `cluster-admin` on `ocp-home` for admin Dev Spaces: `tailnet-admins` binding and NetworkPolicy lock-down to `admin-devspaces` |
+| [`769fbe2`](https://github.com/morey-tech/homelab/commit/769fbe2), [`20f0297`](https://github.com/morey-tech/homelab/commit/20f0297), [`f90243f`](https://github.com/morey-tech/homelab/commit/f90243f) | Docs: architecture, moving the tailnet policy to its own repository, and removing the local policy fragments |
+| [`946bdda`](https://github.com/morey-tech/homelab/commit/946bdda), [`22ec823`](https://github.com/morey-tech/homelab/commit/22ec823), [`4b43b6a`](https://github.com/morey-tech/homelab/commit/4b43b6a) | This document |
+
+### Tailnet policy repository
+
+**[All tailnet policy changes in one diff](https://github.com/morey-tech/homelab-private/compare/92a1a4e...17ff940)** (`92a1a4e...17ff940`). This repository is private, so the link only works for people with access. The range also includes one unrelated dependency update, `6cd5d96`.
+
+| Pull request | Change |
+|---|---|
+| [#121](https://github.com/morey-tech/homelab-private/pull/121) (`43e6381`) | Import the policy from the admin console, and add the PR check and apply workflow |
+| [#122](https://github.com/morey-tech/homelab-private/pull/122) (`eb0ee3e`) | Limit the allow-all grant to `autogroup:member`, and add deny tests for `tag:ocp-gpu-devspaces` |
+| [#123](https://github.com/morey-tech/homelab-private/pull/123) (`17ff940`) | Grant `tailnet-admins` to `tag:ocp-gpu-devspaces` |
 
 ## File map
 
