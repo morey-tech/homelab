@@ -16,7 +16,7 @@ commands:
     exec:
       component: devcontainer
       workingDir: ${PROJECT_SOURCE}
-      commandLine: /projects/homelab/.devcontainer/postCreate.sh
+      commandLine: ${PROJECT_SOURCE}/.devcontainer/postCreate.sh
   - id: generate-roo-settings
     exec:
       component: devcontainer
