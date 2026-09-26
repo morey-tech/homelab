@@ -8,7 +8,10 @@ For how OCP GPU Dev Spaces reaches this endpoint through an egress proxy, see th
 
 ArgoCD's system ApplicationSet discovers this directory as `tailscale-system`. Kustomize installs the pinned Tailscale operator chart in namespace `tailscale-system`; the ApplicationSet enables server-side apply for its large CRDs.
 
-1. Add the entries from [tailnet-policy.json](tailnet-policy.json) to the tailnet policy. The policy lives in the private `morey-tech/homelab-private` repo at `tailscale/policy.hujson`, and merging a PR to `main` applies it through GitHub Actions. Don't edit it in the admin console. This file is an additive fragment for reference, not a replacement for the tailnet policy, and Argo CD does not apply it.
+1. The tailnet policy lives in the private repo, at [homelab-private `tailscale/policy.hujson`](https://github.com/morey-tech/homelab-private/blob/main/tailscale/policy.hujson), and merging a PR to `main` applies it through GitHub Actions. Don't edit it in the admin console. For OCP Home, the policy:
+   - defines `tag:ocp-home-api`, owned by `autogroup:admin`
+   - lets `tag:ocp-home-api` own `tag:ocp-home-proxy`
+   - grants `autogroup:member` and `autogroup:tagged` TCP 443 to `tag:ocp-home-api`, with Kubernetes group `tailnet-readers`
 2. Enable MagicDNS and HTTPS certificates in the [DNS console](https://login.tailscale.com/admin/dns). HTTPS certificate issuance publishes the endpoint hostname in certificate transparency logs; the endpoint itself remains private.
 3. In the [OAuth clients console](https://login.tailscale.com/admin/settings/oauth), create an operator client with **Devices / Core**, **Auth Keys**, and **Services** write scopes, restricted to `tag:ocp-home-api`. The policy lets that tag own `tag:ocp-home-proxy` for operator-managed proxies. Approve the operator device if tailnet device approval requires it.
 4. In the Bitwarden vault used by OCP Home's External Secrets service, use the **Login** item `ocp-home Tailscale operator` (UUID `4e619a2e-c27e-483e-943f-b4d000f315a9`). Store the OAuth client ID as **Username** and client secret as **Password**. [operator-oauth.yaml](operator-oauth.yaml) references the UUID, so renaming the item does not affect synchronization. Do not commit credentials or pass them as Helm values.
@@ -41,7 +44,7 @@ The operator uses userspace networking for its in-process API proxy, with an Ope
 
 [tailnet-readers.yaml](tailnet-readers.yaml) binds that group to the built-in `view` ClusterRole across namespaces. User devices retain the user's Tailscale login as their Kubernetes username; tagged devices use their node FQDN. Do not bind `system:authenticated` or assign `system:masters` for this setup. Existing RBAC and other tailnet grants are additive, so inspect them when checking effective permissions.
 
-[tailnet-admins.yaml](tailnet-admins.yaml) binds group `tailnet-admins` to `cluster-admin`. This policy fragment does not grant that group to anyone. The [OCP GPU tailnet policy](../../../ocp-gpu/system/tailscale/tailnet-policy.json) grants it only to the Dev Spaces egress device `tag:ocp-gpu-devspaces`, which OCP GPU restricts to `admin-devspaces` workspaces. Grant `tailnet-admins` to other sources only if they should have full cluster administration.
+[tailnet-admins.yaml](tailnet-admins.yaml) binds group `tailnet-admins` to `cluster-admin`. The tailnet policy grants that group only to the OCP GPU Dev Spaces egress device `tag:ocp-gpu-devspaces`, which OCP GPU restricts to `admin-devspaces` workspaces. Grant `tailnet-admins` to other sources only if they should have full cluster administration.
 
 ## Client setup and validation
 
