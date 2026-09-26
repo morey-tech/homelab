@@ -1,6 +1,6 @@
-# Tailscale: login-free OCP Home access from Dev Spaces
+# Tailscale: login-free `ocp-home` access from `ocp-gpu` Dev Spaces
 
-Every OpenShift Dev Spaces workspace on **ocp-gpu** starts with a working `kubectl`/`oc` context for the **ocp-home** cluster. There's no `oc login`, no token, and no credential stored in the workspace. Identity comes from Tailscale, and authorization is defined in the tailnet policy and Kubernetes RBAC.
+Every OpenShift Dev Spaces workspace on `ocp-gpu` starts with a working `kubectl`/`oc` context for the `ocp-home` cluster. There's no `oc login`, no token, and no credential stored in the workspace. Identity comes from Tailscale, and authorization is defined in the tailnet policy and Kubernetes RBAC.
 
 Everything is deployed as code:
 - Argo CD deploys the Tailscale Kubernetes operator to both clusters from this repository.
@@ -20,9 +20,9 @@ Everything is deployed as code:
 
 ## The problem
 
-Dev Spaces automatically logs a workspace into the cluster it runs on (ocp-gpu), but not into any other cluster. Reaching ocp-home from a workspace used to take this every time:
+Dev Spaces automatically logs a workspace into the cluster it runs on (`ocp-gpu`), but not into any other cluster. Reaching `ocp-home` from a workspace used to take this every time:
 
-1. Open the ocp-home web console and log in.
+1. Open the `ocp-home` web console and log in.
 2. Choose **Copy login command** from the user menu, log in again, and choose **Display token**.
 3. Paste the command into the workspace terminal:
 
@@ -34,7 +34,7 @@ This had three problems:
 
 - **It didn't persist.** The workspace home directory isn't on a persistent volume, so the login was lost whenever the workspace restarted. Each new workspace also needed its own login.
 - **It expired.** OpenShift OAuth tokens last 24 hours by default.
-- **It spread a bearer token around.** The token ended up in `~/.kube/config` and shell history. Anyone who got hold of it could use the ocp-home API from anywhere that could reach it.
+- **It spread a bearer token around.** The token ended up in `~/.kube/config` and shell history. Anyone who got hold of it could use the `ocp-home` API from anywhere that could reach it.
 
 Now, a workspace needs nothing beyond having started:
 
@@ -76,15 +76,15 @@ flowchart LR
 
 | Component | Cluster | Role | Source |
 |---|---|---|---|
-| Tailscale operator with API server proxy | ocp-home | Joins the tailnet as `ocp-home-api`. Serves HTTPS on port 443 with a Tailscale-issued certificate, identifies each caller by its tailnet identity, and forwards requests to the kube-apiserver as that identity (`apiServerProxyConfig.mode: "true"`) | [kustomization.yaml](../../kubernetes/ocp-home/system/tailscale/kustomization.yaml) |
-| `tailnet-readers` → `view` | ocp-home | Read-only access for all tailnet users and tagged devices | [tailnet-readers.yaml](../../kubernetes/ocp-home/system/tailscale/tailnet-readers.yaml) |
-| `tailnet-admins` → `cluster-admin` | ocp-home | Admin access, granted in the tailnet policy only to the Dev Spaces egress device | [tailnet-admins.yaml](../../kubernetes/ocp-home/system/tailscale/tailnet-admins.yaml) |
-| Tailscale operator | ocp-gpu | API server proxy and ingress off; only manages egress proxies | [kustomization.yaml](../../kubernetes/ocp-gpu/system/tailscale/kustomization.yaml) |
-| Egress Service `ocp-home-api` | ocp-gpu | `tailscale.com/tailnet-fqdn: ocp-home-api.taile3c3a8.ts.net` makes the operator run an egress proxy pod, tailnet device `ocp-gpu-devspaces`. It gives ocp-home's endpoint an in-cluster DNS name | [ocp-home-api.yaml](../../kubernetes/ocp-gpu/system/tailscale/ocp-home-api.yaml) |
-| ProxyClass and SCC binding | ocp-gpu | Runs the kernel-mode proxy as root, with the `privileged` SCC granted only to the `proxies` service account | [proxyclass.yaml](../../kubernetes/ocp-gpu/system/tailscale/proxyclass.yaml), [proxy-scc.yaml](../../kubernetes/ocp-gpu/system/tailscale/proxy-scc.yaml) |
-| NetworkPolicy | ocp-gpu | Only workspace pods in `admin-devspaces` can reach the proxy on TCP 443 | [networkpolicy.yaml](../../kubernetes/ocp-gpu/system/tailscale/networkpolicy.yaml) |
-| ValidatingAdmissionPolicy | ocp-gpu | Rejects Services with Tailscale metadata outside `tailscale-system`, so users can't request their own tailnet proxies | [service-admission-policy.yaml](../../kubernetes/ocp-gpu/system/tailscale/service-admission-policy.yaml) |
-| Workspace kubeconfig | ocp-gpu | Credential-free kubeconfig that Dev Spaces mounts into every workspace at `/etc/ocp-home/kubeconfig` | [ocp-home-kubeconfig.yaml](../../kubernetes/ocp-gpu/system/openshift-devspaces/ocp-home-kubeconfig.yaml) |
+| Tailscale operator with API server proxy | `ocp-home` | Joins the tailnet as `ocp-home-api`. Serves HTTPS on port 443 with a Tailscale-issued certificate, identifies each caller by its tailnet identity, and forwards requests to the kube-apiserver as that identity (`apiServerProxyConfig.mode: "true"`) | [kustomization.yaml](../../kubernetes/ocp-home/system/tailscale/kustomization.yaml) |
+| `tailnet-readers` → `view` | `ocp-home` | Read-only access for all tailnet users and tagged devices | [tailnet-readers.yaml](../../kubernetes/ocp-home/system/tailscale/tailnet-readers.yaml) |
+| `tailnet-admins` → `cluster-admin` | `ocp-home` | Admin access, granted in the tailnet policy only to the Dev Spaces egress device | [tailnet-admins.yaml](../../kubernetes/ocp-home/system/tailscale/tailnet-admins.yaml) |
+| Tailscale operator | `ocp-gpu` | API server proxy and ingress off; only manages egress proxies | [kustomization.yaml](../../kubernetes/ocp-gpu/system/tailscale/kustomization.yaml) |
+| Egress Service `ocp-home-api` | `ocp-gpu` | `tailscale.com/tailnet-fqdn: ocp-home-api.taile3c3a8.ts.net` makes the operator run an egress proxy pod, tailnet device `ocp-gpu-devspaces`. It gives `ocp-home`'s endpoint an in-cluster DNS name | [ocp-home-api.yaml](../../kubernetes/ocp-gpu/system/tailscale/ocp-home-api.yaml) |
+| ProxyClass and SCC binding | `ocp-gpu` | Runs the kernel-mode proxy as root, with the `privileged` SCC granted only to the `proxies` service account | [proxyclass.yaml](../../kubernetes/ocp-gpu/system/tailscale/proxyclass.yaml), [proxy-scc.yaml](../../kubernetes/ocp-gpu/system/tailscale/proxy-scc.yaml) |
+| NetworkPolicy | `ocp-gpu` | Only workspace pods in `admin-devspaces` can reach the proxy on TCP 443 | [networkpolicy.yaml](../../kubernetes/ocp-gpu/system/tailscale/networkpolicy.yaml) |
+| ValidatingAdmissionPolicy | `ocp-gpu` | Rejects Services with Tailscale metadata outside `tailscale-system`, so users can't request their own tailnet proxies | [service-admission-policy.yaml](../../kubernetes/ocp-gpu/system/tailscale/service-admission-policy.yaml) |
+| Workspace kubeconfig | `ocp-gpu` | Credential-free kubeconfig that Dev Spaces mounts into every workspace at `/etc/ocp-home/kubeconfig` | [ocp-home-kubeconfig.yaml](../../kubernetes/ocp-gpu/system/openshift-devspaces/ocp-home-kubeconfig.yaml) |
 | Shell init snippet | image | Adds the mounted kubeconfig to `KUBECONFIG` in workspace shells | [ocp-home-kubeconfig.sh](../../containers/devspace-homelab/ocp-home-kubeconfig.sh) |
 | Tailnet policy | tailnet | Tag ownership, grants, Kubernetes capability mapping, and ACL tests | Private repo, [excerpt below](#tailnet-policy) |
 
@@ -120,9 +120,9 @@ users:
     user: {}          # no token, certificate, or exec plugin
 ```
 
-- **TLS runs end to end.** It goes from the `oc` client to the ocp-home operator; the egress proxy only forwards TCP. Setting `tls-server-name` gives the right SNI and certificate check without cluster-wide MagicDNS or an HTTP proxy.
+- **TLS runs end to end.** It goes from the `oc` client to the `ocp-home` operator; the egress proxy only forwards TCP. Setting `tls-server-name` gives the right SNI and certificate check without cluster-wide MagicDNS or an HTTP proxy.
 - **No credentials anywhere in the workspace.** The API server proxy sees the connection come from the tailnet device `ocp-gpu-devspaces` (tag `tag:ocp-gpu-devspaces`). It sets `Impersonate-User` to that device's FQDN and `Impersonate-Group` to the groups the tailnet policy grants.
-- **OpenShift RBAC does the rest.** ocp-home authorizes the request as the impersonated user and groups:
+- **OpenShift RBAC does the rest.** `ocp-home` authorizes the request as the impersonated user and groups:
 
 ```console
 $ oc --context=ocp-home-tailnet auth whoami
@@ -207,16 +207,16 @@ Each operator's OAuth client is limited to its own tag. Tag ownership then limit
 | Option | Result |
 |---|---|
 | Keep pasting `oc login` tokens | Manual on every workspace start, expires daily, and leaves a bearer token in the workspace |
-| Long-lived ServiceAccount token for ocp-home, synced from Bitwarden into workspaces | Automatic, but it's a static admin credential that has to be rotated and protected, and it works from anywhere that can reach the API if leaked |
-| Federate ocp-gpu identities into ocp-home's OAuth or OIDC | Heavier setup on both clusters. Still token-based, and it only helps Dev Spaces, not the rest of the tailnet |
+| Long-lived ServiceAccount token for `ocp-home`, synced from Bitwarden into workspaces | Automatic, but it's a static admin credential that has to be rotated and protected, and it works from anywhere that can reach the API if leaked |
+| Federate `ocp-gpu` identities into `ocp-home`'s OAuth or OIDC | Heavier setup on both clusters. Still token-based, and it only helps Dev Spaces, not the rest of the tailnet |
 | Run `tailscaled` inside every workspace | Each workspace start would enroll a new device and need an auth key in the workspace or a browser login. Workspaces are unprivileged and short-lived; `admin-devspaces` alone has 21 of them |
-| **Chosen: operator API server proxy on ocp-home, and one operator-managed egress proxy on ocp-gpu** | No credentials in workspaces or Git, one stable tailnet device, access defined in the tailnet policy, and no changes to workspace images or devfiles |
+| **Chosen: operator API server proxy on `ocp-home`, and one operator-managed egress proxy on `ocp-gpu`** | No credentials in workspaces or Git, one stable tailnet device, access defined in the tailnet policy, and no changes to workspace images or devfiles |
 
 What this gets:
 
 - **Identity instead of secrets.** Access is decided by which tailnet device the traffic comes from. Tailscale enforces that cryptographically with WireGuard node keys, not with a token that can be copied.
 - **One place to control access.** Tailnet grants decide who can reach the API and which Kubernetes groups they get; RBAC decides what those groups can do. Revoking access is a policy change or a device removal, not a token hunt.
-- **Useful beyond Dev Spaces.** The same ocp-home endpoint gives every tailnet user token-free read-only access:
+- **Useful beyond Dev Spaces.** The same `ocp-home` endpoint gives every tailnet user token-free read-only access:
 
   ```bash
   tailscale configure kubeconfig ocp-home-api
@@ -233,16 +233,16 @@ Access is controlled in layers, each defined in code:
 |---|---|---|
 | Tailnet policy | Only `tag:ocp-gpu-devspaces` gets `tailnet-admins`; everything else tagged gets at most `tailnet-readers`. ACL tests confirm the proxy can reach only what it should | Private tailnet policy |
 | Tag ownership | Each operator can create devices only with the tags it owns | Private tailnet policy, OAuth client tag restrictions |
-| ocp-home RBAC | Admin access requires the `tailnet-admins` group; tailnet identity alone gives only `view` | [tailnet-admins.yaml](../../kubernetes/ocp-home/system/tailscale/tailnet-admins.yaml), [tailnet-readers.yaml](../../kubernetes/ocp-home/system/tailscale/tailnet-readers.yaml) |
-| ocp-gpu NetworkPolicy | Only DevWorkspace pods in `admin-devspaces` can reach the proxy on TCP 443. It matches `kubernetes.io/metadata.name`, which namespace owners can't change | [networkpolicy.yaml](../../kubernetes/ocp-gpu/system/tailscale/networkpolicy.yaml) |
-| ocp-gpu admission | Services with `tailscale.com/*` metadata or `loadBalancerClass: tailscale` are rejected outside `tailscale-system` | [service-admission-policy.yaml](../../kubernetes/ocp-gpu/system/tailscale/service-admission-policy.yaml) |
+| `ocp-home` RBAC | Admin access requires the `tailnet-admins` group; tailnet identity alone gives only `view` | [tailnet-admins.yaml](../../kubernetes/ocp-home/system/tailscale/tailnet-admins.yaml), [tailnet-readers.yaml](../../kubernetes/ocp-home/system/tailscale/tailnet-readers.yaml) |
+| `ocp-gpu` NetworkPolicy | Only DevWorkspace pods in `admin-devspaces` can reach the proxy on TCP 443. It matches `kubernetes.io/metadata.name`, which namespace owners can't change | [networkpolicy.yaml](../../kubernetes/ocp-gpu/system/tailscale/networkpolicy.yaml) |
+| `ocp-gpu` admission | Services with `tailscale.com/*` metadata or `loadBalancerClass: tailscale` are rejected outside `tailscale-system` | [service-admission-policy.yaml](../../kubernetes/ocp-gpu/system/tailscale/service-admission-policy.yaml) |
 | OpenShift SCC | `privileged` is granted only to the proxy service account; the operator runs non-root with all capabilities dropped | [proxy-scc.yaml](../../kubernetes/ocp-gpu/system/tailscale/proxy-scc.yaml) |
 | Secrets | OAuth credentials come only from Bitwarden through External Secrets; device state stays in `tailscale-system` Secrets | `operator-oauth.yaml` in each cluster |
 
 Known trade-offs:
 
-- **Shared identity.** Everyone using the proxy appears to ocp-home as `ocp-gpu-devspaces.taile3c3a8.ts.net`. Audit logs identify the proxy, not the person.
-- **Effective admin boundary.** Anyone who can run pods in `admin-devspaces`, or read Secrets and exec into pods in ocp-gpu's `tailscale-system`, effectively has `cluster-admin` on ocp-home.
+- **Shared identity.** Everyone using the proxy appears to `ocp-home` as `ocp-gpu-devspaces.taile3c3a8.ts.net`. Audit logs identify the proxy, not the person.
+- **Effective admin boundary.** Anyone who can run pods in `admin-devspaces`, or read Secrets and exec into pods in `ocp-gpu`'s `tailscale-system`, effectively has `cluster-admin` on ocp-home.
 - **Privileged, single replica.** The egress proxy is one privileged pod; a restart briefly interrupts access.
 
 ## Setup and verification
@@ -252,8 +252,8 @@ One-time tailnet setup:
 1. Turn on MagicDNS and HTTPS certificates in the [DNS settings](https://login.tailscale.com/admin/dns).
 2. Add the tags, grants, and tests shown [above](#tailnet-policy) to the tailnet policy through its repository.
 3. Create one [OAuth client](https://login.tailscale.com/admin/settings/oauth) per operator, with **Devices Core**, **Auth Keys**, and **Services** write scopes:
-   - ocp-home: restricted to `tag:ocp-home-api`
-   - ocp-gpu: restricted to `tag:ocp-gpu-operator`
+   - `ocp-home`: restricted to `tag:ocp-home-api`
+   - `ocp-gpu`: restricted to `tag:ocp-gpu-operator`
 4. Store each client in Bitwarden as a Login item, with the client ID as the username and the secret as the password. Each cluster's `operator-oauth.yaml` references its item.
 
 Deploy by pushing to `main` and syncing the `tailscale-system` Application on each cluster, and `openshift-devspaces-system` on ocp-gpu. Then check from a restarted workspace:
@@ -268,8 +268,8 @@ oc --context=ocp-home-tailnet get nodes
 
 The per-cluster guides have the detailed rollout, validation, troubleshooting, and rollback steps:
 
-- [ocp-home API server proxy](../../kubernetes/ocp-home/system/tailscale/README.md)
-- [ocp-gpu egress proxy](../../kubernetes/ocp-gpu/system/tailscale/README.md)
+- [`ocp-home` API server proxy](../../kubernetes/ocp-home/system/tailscale/README.md)
+- [`ocp-gpu` egress proxy](../../kubernetes/ocp-gpu/system/tailscale/README.md)
 - [Dev Spaces workspace usage](../../kubernetes/ocp-gpu/system/openshift-devspaces/TAILSCALE.md)
 
 ## Lessons learned
@@ -294,7 +294,7 @@ The per-cluster guides have the detailed rollout, validation, troubleshooting, a
 - **Narrower read access.** Replace the broad `autogroup:tagged` → `tailnet-readers` grant with explicit tags.
 - **Manage the remaining setup as code.** Handle DNS and HTTPS settings and the OAuth clients with the Tailscale Terraform provider, so a new tailnet can be built from code.
 - **Use the upstream action for PR checks.** If [tailscale/gitops-acl-action#84](https://github.com/tailscale/gitops-acl-action/issues/84) lands, replace the hand-rolled `gitops-pusher` steps with the action's outputs, and keep getting its updates.
-- **More clusters.** Expose ocp-mgmt and ocp-lab the same way, and ship one multi-context kubeconfig to workspaces.
+- **More clusters.** Expose `ocp-mgmt` and `ocp-lab` the same way, and ship one multi-context kubeconfig to workspaces.
 - **Continuous verification.** Add a scheduled check that runs `auth whoami` and `can-i` through the proxy and alerts when access breaks or grows unexpectedly.
 
 ## File map
