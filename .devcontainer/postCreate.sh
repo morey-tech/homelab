@@ -5,6 +5,24 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
+# Dev Spaces home is ephemeral; keep Claude Code sessions/memory on the workspace PVC.
+if [ -n "$DEVWORKSPACE_ID" ]; then
+    echo "Persisting ~/.claude on the workspace PVC..."
+    CLAUDE_PERSIST=/projects/.claude-home
+    mkdir -p "$CLAUDE_PERSIST"
+    if [ ! -L ~/.claude ]; then
+        if [ ! -d "$CLAUDE_PERSIST/.claude" ]; then
+            if [ -d ~/.claude ]; then
+                cp -a ~/.claude "$CLAUDE_PERSIST/"
+            else
+                mkdir -p "$CLAUDE_PERSIST/.claude"
+            fi
+        fi
+        rm -rf ~/.claude
+        ln -s "$CLAUDE_PERSIST/.claude" ~/.claude
+    fi
+fi
+
 echo "Installing Ansible collections..."
 cd "$PROJECT_ROOT/ansible"
 ansible-galaxy collection install -r requirements.yml
