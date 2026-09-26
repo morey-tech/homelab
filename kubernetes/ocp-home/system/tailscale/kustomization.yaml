@@ -4,6 +4,7 @@ namespace: tailscale-system
 resources:
   - operator-oauth.yaml
   - tailnet-readers.yaml
+  - tailnet-admins.yaml
 
 helmCharts:
   - name: tailscale-operator

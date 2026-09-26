@@ -12,7 +12,7 @@
         "tailscale.com/cap/kubernetes": [
           {
             "impersonate": {
-              "groups": ["tailnet-readers"]
+              "groups": ["tailnet-admins"]
             }
           }
         ]

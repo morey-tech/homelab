@@ -24,7 +24,9 @@ The first file is generated and refreshed by Dev Spaces for the local cluster. T
 
 No Tailscale installation, browser login, or auth key is needed inside the workspace. The operator enrolls a shared egress device with OAuth credentials held in its own namespace.
 
-All workspace callers use the egress proxy's tagged-device identity. The OCP Home API proxy maps that identity to `tailnet-readers`, whose `view` role permits read-only access. Audit logs identify the proxy's node FQDN rather than the individual Dev Spaces user. This connection does not grant administration rights.
+All callers use the egress proxy's tagged-device identity. The OCP Home API proxy maps that identity to `tailnet-admins`, which is bound to `cluster-admin`, as well as to `tailnet-readers`. Audit logs show the proxy's node FQDN rather than the individual Dev Spaces user.
+
+Only workspaces in `admin-devspaces` can reach the proxy. Dev Spaces syncs the kubeconfig to every user namespace, but in other namespaces the NetworkPolicy blocks the connection and the context times out.
 
 ## Select a context
 
@@ -56,7 +58,7 @@ workspace oc/kubectl
 
 The kubeconfig's `tls-server-name` is the actual OCP Home proxy FQDN. This preserves SNI and certificate validation while connecting through Kubernetes DNS. HTTPS runs end-to-end to OCP Home; the egress proxy forwards TCP. A separate HTTP proxy and cluster-wide MagicDNS configuration are unnecessary.
 
-Both ConfigMaps are synchronized into user namespaces by Dev Spaces. `mount-on-start` prevents their creation from interrupting active workspaces; stop/start a workspace after Argo sync to receive them. Existing workspaces do not need devfile changes. Workspaces need only `oc` or `kubectl` and normal trusted CA certificates.
+Dev Spaces syncs the ConfigMap into user namespaces. `mount-on-start` prevents its creation from interrupting active workspaces; stop/start a workspace after Argo sync to receive them. Existing workspaces do not need devfile changes. Workspaces need only `oc` or `kubectl` and normal trusted CA certificates.
 
 See the [operator deployment guide](../tailscale/README.md) for OAuth setup, GitOps rollout, OpenShift permissions, and network isolation.
 
@@ -68,22 +70,20 @@ oc config current-context
 oc --context=ocp-home-tailnet config view --minify
 oc --context=ocp-home-tailnet auth whoami -o json
 oc --context=ocp-home-tailnet get pods --all-namespaces
-oc --context=ocp-home-tailnet auth can-i list pods --all-namespaces
-oc --context=ocp-home-tailnet auth can-i get secrets --all-namespaces
-oc --context=ocp-home-tailnet auth can-i create deployments --all-namespaces
+oc --context=ocp-home-tailnet auth can-i '*' '*' --all-namespaces
 oc --context=ocp-home-tailnet get --raw=/version
 ```
 
-Expected: the user entry is empty, with no token, certificate, or exec credential. `whoami` reports the egress device's FQDN and `tailnet-readers`. Pod listing succeeds; secret reads and deployment creation return `no` unless another RBAC grant gives that identity more access. The normal OCP GPU context must still work separately.
+Expected: the user entry is empty, with no token, certificate, or exec credential. `whoami` reports the egress device's FQDN with `tailnet-admins` and `tailnet-readers`, and `can-i '*' '*'` returns `yes`. The normal OCP GPU context must still work separately.
 
 ## Troubleshooting
 
 - Missing file or context: verify that Argo has synced the ConfigMap, that it exists in the workspace namespace, that `/etc/ocp-home/kubeconfig` is mounted, and that `printenv KUBECONFIG` in a new terminal includes both paths; then stop/start the workspace.
 - `oc whoami` reports `system:serviceaccount:...` instead of your user: `KUBECONFIG` is probably set in the container environment (check `cat /proc/1/environ | tr '\0' '\n' | grep KUBECONFIG`). Remove it, delete any `~/.kube/config:` directory, and use **Refresh kubeconfig** in the workspace's Advanced tab or stop/start the workspace.
 - DNS failure: check the operator-managed Service target and proxy readiness in `tailscale-system`.
-- Timeout: check proxy readiness, the workspace labels against its NetworkPolicy, and the tailnet grant to `tag:ocp-home-api` TCP 443.
+- Timeout: confirm the workspace runs in `admin-devspaces`, then check proxy readiness and the tailnet grant to `tag:ocp-home-api` TCP 443.
 - Certificate error: the Service target annotation and kubeconfig `tls-server-name` must identify the same actual OCP Home tailnet FQDN. Keep TLS verification enabled.
-- HTTP 403: inspect `oc auth whoami`, the tailnet Kubernetes capability grant, and the OCP Home `tailnet-readers` binding.
+- HTTP 403, or read-only access: inspect `oc auth whoami`, the `tailnet-admins` capability grant in the tailnet policy, and the OCP Home `ocp-home-tailnet-admins-cluster-admin` binding.
 
 ## References
 

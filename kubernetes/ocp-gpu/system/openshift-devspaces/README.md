@@ -4,7 +4,7 @@ This directory contains the OpenShift DevSpaces configuration for the ocp-gpu cl
 
 ## Tailscale access to OCP Home
 
-See [Tailscale workspace setup](TAILSCALE.md) for automatic access to OCP Home through an OAuth-enrolled egress proxy. Dev Spaces mounts a token-free kubeconfig, and the `devspace-homelab` image merges it into `KUBECONFIG` from shell init. The local OCP GPU context stays selected by default; use `oc --context=ocp-home-tailnet get pods -A` for OCP Home. All callers share the proxy identity and read-only permissions.
+See [Tailscale workspace setup](TAILSCALE.md) for automatic access to OCP Home through an OAuth-enrolled egress proxy. Dev Spaces mounts a token-free kubeconfig, and the `devspace-homelab` image merges it into `KUBECONFIG` from shell init. The local OCP GPU context stays selected by default; use `oc --context=ocp-home-tailnet get pods -A` for OCP Home. Only workspaces in `admin-devspaces` can reach the proxy, which has `cluster-admin` on OCP Home.
 
 ## Overview
 

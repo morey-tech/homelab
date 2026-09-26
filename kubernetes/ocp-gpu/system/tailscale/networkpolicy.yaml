@@ -14,11 +14,12 @@ spec:
   policyTypes:
     - Ingress
   ingress:
+    # The proxy maps to cluster-admin on OCP Home: admin's workspaces only.
+    # kubernetes.io/metadata.name is set by the API server and cannot be spoofed.
     - from:
         - namespaceSelector:
             matchLabels:
-              app.kubernetes.io/component: workspaces-namespace
-              app.kubernetes.io/part-of: che.eclipse.org
+              kubernetes.io/metadata.name: admin-devspaces
           podSelector:
             matchExpressions:
               - key: controller.devfile.io/devworkspace_id
@@ -27,7 +28,7 @@ spec:
         - port: 443
           protocol: TCP
     # Authenticated WireGuard transport for direct peer connectivity.
-    # The TCP API forwarding port remains restricted to workspace pods.
+    # The TCP API forwarding port remains restricted to admin workspace pods.
     - ports:
         - port: 41641
           protocol: UDP

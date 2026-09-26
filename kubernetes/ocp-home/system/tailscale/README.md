@@ -41,6 +41,8 @@ The operator uses userspace networking for its in-process API proxy, with an Ope
 
 [tailnet-readers.yaml](tailnet-readers.yaml) binds that group to the built-in `view` ClusterRole across namespaces. User devices retain the user's Tailscale login as their Kubernetes username; tagged devices use their node FQDN. Do not bind `system:authenticated` or assign `system:masters` for this setup. Existing RBAC and other tailnet grants are additive, so inspect them when checking effective permissions.
 
+[tailnet-admins.yaml](tailnet-admins.yaml) binds group `tailnet-admins` to `cluster-admin`. This policy fragment does not grant that group to anyone. The [OCP GPU tailnet policy](../../../ocp-gpu/system/tailscale/tailnet-policy.json) grants it only to the Dev Spaces egress device `tag:ocp-gpu-devspaces`, which OCP GPU restricts to `admin-devspaces` workspaces. Grant `tailnet-admins` to other sources only if they should have full cluster administration.
+
 ## Client setup and validation
 
 For OCP GPU Dev Spaces, use the [workspace client setup](../../../ocp-gpu/system/openshift-devspaces/TAILSCALE.md). It uses a shared operator-managed egress proxy and a mounted token-free kubeconfig. OCP Home sees the tagged proxy identity for all workspace callers.

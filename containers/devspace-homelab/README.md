@@ -35,7 +35,7 @@ oc get pods                                      # Local OCP GPU cluster (defaul
 oc --context=ocp-home-tailnet get pods -A         # OCP Home through Tailscale
 ```
 
-The additional context is read-only and uses the shared proxy identity. Outside Dev Spaces the mount is absent, so the snippet does nothing.
+The additional context uses the proxy's identity, which has `cluster-admin` on OCP Home, and works only from `admin-devspaces` workspaces. Outside Dev Spaces the mount is absent, so the snippet does nothing.
 
 Do not set `KUBECONFIG` as an image `ENV` or container environment variable. The Dev Spaces dashboard writes the user's kubeconfig to the directory derived from `KUBECONFIG`, and cannot handle a multi-path value ([eclipse-che/che#23972](https://github.com/eclipse-che/che/issues/23972)).
 
