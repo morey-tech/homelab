@@ -25,6 +25,18 @@ This image extends `devspace-base` which provides Claude CLI, GitHub CLI, and ba
 | Cloud | ocm (OpenShift Cluster Manager) |
 | Python | ansible, ansible-lint, black, yamllint, proxmoxer |
 
+## Kubernetes contexts in Dev Spaces
+
+The [OCP GPU Dev Spaces configuration](../../kubernetes/ocp-gpu/system/openshift-devspaces/TAILSCALE.md) mounts the OCP Home proxy kubeconfig and supplies `KUBECONFIG=/home/user/.kube/config:/etc/ocp-home/kubeconfig` at workspace startup. The image keeps `/home/user` as a symlink to `/home/morey-tech`, preserving the generated local kubeconfig path.
+
+```bash
+oc config get-contexts
+oc get pods                                      # Local OCP GPU cluster (default)
+oc --context=ocp-home-tailnet get pods -A         # OCP Home through Tailscale
+```
+
+The additional context is read-only and uses the shared proxy identity. This is configured through Argo CD-managed ConfigMaps, so it requires no image rebuild and does not change local devcontainer configuration. After those resources sync, stop/start the Dev Space to receive the mount and environment variable.
+
 ## GitHub CLI Authentication
 
 - **DevSpaces**: Automatically authenticated using OAuth credentials

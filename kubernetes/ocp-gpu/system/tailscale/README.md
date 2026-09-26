@@ -27,7 +27,7 @@ The ApplicationSet enables server-side apply for the large Tailscale CRDs. It ig
 
 The SCC binding and NetworkPolicy use sync wave `-1`, the operator and ProxyClass use the default wave, and the egress Service uses wave `1`. Wait for credentials and operator readiness before expecting the egress device to appear. The proxy is a single replica; a restart temporarily interrupts access.
 
-After the applications sync, stop/start a Dev Spaces workspace to mount `/etc/ocp-home/kubeconfig`, then follow the [workspace guide](../openshift-devspaces/TAILSCALE.md). The ConfigMap uses `mount-on-start` to avoid restarting active workspaces automatically. No image rebuild, devfile update, browser login, or per-workspace device state is required.
+After the applications sync, stop/start a Dev Spaces workspace to mount `/etc/ocp-home/kubeconfig` and receive the managed `KUBECONFIG` environment variable, then follow the [workspace guide](../openshift-devspaces/TAILSCALE.md). Both ConfigMaps use `mount-on-start` to avoid restarting active workspaces automatically. No image rebuild, devfile update, browser login, or per-workspace device state is required.
 
 ## OpenShift permissions and network access
 
@@ -51,7 +51,7 @@ oc -n tailscale-system rollout status deployment/operator --timeout=180s
 oc -n tailscale-system get service ocp-home-api -o jsonpath='{.spec.externalName}{"\n"}'
 oc -n tailscale-system get pods -l tailscale.com/parent-resource=ocp-home-api \
   -o custom-columns='NAME:.metadata.name,SCC:.metadata.annotations.openshift\.io/scc,READY:.status.containerStatuses[*].ready'
-oc -n admin-devspaces get configmap ocp-home-kubeconfig
+oc -n admin-devspaces get configmap ocp-home-kubeconfig ocp-home-kubeconfig-env
 ```
 
 The operator should use its ordinary restricted SCC, while the egress pod uses `privileged`. Confirm that the Service's `externalName` now refers to an operator-generated Service and that Argo remains Synced after reconciliation.
@@ -59,10 +59,10 @@ The operator should use its ordinary restricted SCC, while the egress pod uses `
 From a restarted workspace:
 
 ```bash
-oc --kubeconfig=/etc/ocp-home/kubeconfig auth whoami -o json
-oc --kubeconfig=/etc/ocp-home/kubeconfig get pods --all-namespaces
-oc --kubeconfig=/etc/ocp-home/kubeconfig auth can-i get secrets --all-namespaces
-oc --kubeconfig=/etc/ocp-home/kubeconfig auth can-i create deployments --all-namespaces
+oc --context=ocp-home-tailnet auth whoami -o json
+oc --context=ocp-home-tailnet get pods --all-namespaces
+oc --context=ocp-home-tailnet auth can-i get secrets --all-namespaces
+oc --context=ocp-home-tailnet auth can-i create deployments --all-namespaces
 curl --fail --show-error --noproxy '*' \
   --connect-to ocp-home-api.taile3c3a8.ts.net:443:ocp-home-api.tailscale-system.svc.cluster.local:443 \
   https://ocp-home-api.taile3c3a8.ts.net/version

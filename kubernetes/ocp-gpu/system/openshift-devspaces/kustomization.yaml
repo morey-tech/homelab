@@ -10,3 +10,4 @@ resources:
   - vscode-editor-configurations.yaml
   - getting-started-samples.yaml
   - ocp-home-kubeconfig.yaml
+  - ocp-home-kubeconfig-env.yaml
