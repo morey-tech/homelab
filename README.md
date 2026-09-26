@@ -100,6 +100,7 @@ https://github.com/morey-tech/homelab
 **Auto-configured Credentials** (ocp-gpu cluster):
 - **GitHub CLI**: Authenticated using DevSpaces OAuth credentials (no setup required)
 - **Claude Code**: API key injected from Bitwarden as `ANTHROPIC_API_KEY` environment variable
+- **OCP Home cluster**: `oc --context=ocp-home-tailnet` works in every admin workspace with no login, authenticated by Tailscale ([how it works](docs/tailscale/README.md))
 
 The Claude Code extension will automatically authenticate using the API key when you open a workspace.
 
