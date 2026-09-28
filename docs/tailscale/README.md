@@ -304,7 +304,7 @@ The per-cluster guides have the detailed rollout, validation, troubleshooting, a
 - **Session recording.** Deploy the operator's `Recorder` and require recording for `kubectl exec` sessions through the API server proxy.
 - **High availability.** Move the egress proxy to a multi-replica `ProxyGroup`, and look at whether an unprivileged proxy mode can avoid the `privileged` SCC. This wasn't done here because both clusters are single-node OpenShift (SNO), so extra replicas would share the same node and wouldn't add availability. It becomes worthwhile on multi-node clusters.
 - **Narrower read access.** Replace the broad `autogroup:tagged` → `tailnet-readers` grant with explicit tags.
-- **Manage the remaining setup as code.** Handle DNS and HTTPS settings and the OAuth clients with the Tailscale Terraform provider, so a new tailnet can be built from code.
+- **Manage the remaining setup as code.** Handle DNS and HTTPS settings and the OAuth clients with [the Tailscale Terraform provider](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_settings), so a new tailnet can be built from code.
 - **Use the upstream action for PR checks.** If [tailscale/gitops-acl-action#84](https://github.com/tailscale/gitops-acl-action/issues/84) lands, replace the hand-rolled `gitops-pusher` steps with the action's outputs, and keep getting its updates.
 - **More clusters.** Expose `ocp-mgmt` and `ocp-lab` the same way, and ship one multi-context kubeconfig to workspaces.
 - **Continuous verification.** Add a scheduled check that runs `auth whoami` and `can-i` through the proxy and alerts when access breaks or grows unexpectedly.
