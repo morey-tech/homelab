@@ -10,17 +10,21 @@ Everything is deployed as code, except the tailnet settings:
 
 ## Contents
 
-- [The problem](#the-problem)
-- [Architecture](#architecture)
-- [Request flow](#request-flow)
-- [How it is deployed](#how-it-is-deployed)
-- [Why this approach](#why-this-approach)
-- [Security model](#security-model)
-- [Setup and verification](#setup-and-verification)
-- [Lessons learned](#lessons-learned)
-- [Future improvements](#future-improvements)
-- [Change history](#change-history)
-- [File map](#file-map)
+- [Tailscale: login-free `ocp-home` access from `ocp-gpu` Dev Spaces](#tailscale-login-free-ocp-home-access-from-ocp-gpu-dev-spaces)
+  - [Contents](#contents)
+  - [The problem](#the-problem)
+  - [Architecture](#architecture)
+  - [Request flow](#request-flow)
+  - [How it is deployed](#how-it-is-deployed)
+    - [Tailnet policy](#tailnet-policy)
+  - [Why this approach](#why-this-approach)
+  - [Security model](#security-model)
+  - [Setup and verification](#setup-and-verification)
+  - [Lessons learned](#lessons-learned)
+  - [Future improvements](#future-improvements)
+  - [Change history](#change-history)
+    - [Tailnet policy repository](#tailnet-policy-repository)
+  - [File map](#file-map)
 
 ## The problem
 
@@ -48,6 +52,8 @@ oc --context=ocp-home-tailnet get pods -A    # ocp-home: through Tailscale
 ```
 
 ## Architecture
+
+![Tailscale archtecture across ocp-gpu Dev Workspace to ocp-home kube-apiserver.](tailscale-architecture.png)
 
 ```mermaid
 flowchart LR
