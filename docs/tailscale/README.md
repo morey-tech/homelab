@@ -51,6 +51,8 @@ oc get pods -A                               # ocp-gpu: the local cluster (defau
 oc --context=ocp-home-tailnet get pods -A    # ocp-home: through Tailscale
 ```
 
+![Tailscale archtecture across ocp-gpu Dev Workspace to ocp-home kube-apiserver.](demo-oc.gif)
+
 ## Architecture
 
 ![Tailscale archtecture across ocp-gpu Dev Workspace to ocp-home kube-apiserver.](tailscale-architecture.png)
