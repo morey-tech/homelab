@@ -32,7 +32,7 @@ spec:
     enabled: true
   cdi:
     default: false
-    enabled: false
+    enabled: true
   driver:
     licensingConfig:
       nlsEnabled: true
