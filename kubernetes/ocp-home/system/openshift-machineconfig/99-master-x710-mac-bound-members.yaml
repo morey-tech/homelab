@@ -1,0 +1,25 @@
+# ocp-home SNO: match onboard X710 bond members by permanent MAC.
+# Applying this MachineConfig may reboot the master node.
+# Keep the 82599ES PCIe card installed for the initial rollout.
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: 99-master-x710-mac-bound-members
+  labels:
+    machineconfiguration.openshift.io/role: master
+spec:
+  config:
+    ignition:
+      version: 3.4.0
+    storage:
+      files:
+      - path: /etc/NetworkManager/system-connections/enp3s0f0.nmconnection
+        mode: 384
+        overwrite: true
+        contents:
+          source: data:text/plain;charset=utf-8;base64,W2Nvbm5lY3Rpb25dCmlkPWVucDNzMGYwCnV1aWQ9NDAyZTU2MzctMDlhNi00ZDAzLTg1NzctNmNkZTgwODMzNmExCnR5cGU9ZXRoZXJuZXQKY29udHJvbGxlcj1ib25kMAptYXN0ZXI9Ym9uZDAKcG9ydC10eXBlPWJvbmQKc2xhdmUtdHlwZT1ib25kCgpbZXRoZXJuZXRdCm1hYy1hZGRyZXNzPTU4OjQ3OmNhOjdmOjA0Ojk0CgpbdXNlcl0Kb3JnLmZyZWVkZXNrdG9wLk5ldHdvcmtNYW5hZ2VyLm9yaWdpbj1ubS1pbml0cmQtZ2VuZXJhdG9yCg==
+      - path: /etc/NetworkManager/system-connections/enp3s0f1.nmconnection
+        mode: 384
+        overwrite: true
+        contents:
+          source: data:text/plain;charset=utf-8;base64,W2Nvbm5lY3Rpb25dCmlkPWVucDNzMGYxCnV1aWQ9ZmQ2NjQ1MDItYzFiZS00NjI0LWI5MmUtOTIyOTZkMDc1NjU2CnR5cGU9ZXRoZXJuZXQKY29udHJvbGxlcj1ib25kMAptYXN0ZXI9Ym9uZDAKcG9ydC10eXBlPWJvbmQKc2xhdmUtdHlwZT1ib25kCgpbZXRoZXJuZXRdCm1hYy1hZGRyZXNzPTU4OjQ3OmNhOjdmOjA0Ojk1CgpbdXNlcl0Kb3JnLmZyZWVkZXNrdG9wLk5ldHdvcmtNYW5hZ2VyLm9yaWdpbj1ubS1pbml0cmQtZ2VuZXJhdG9yCg==
