@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: x710-network-config-placeholder
-data:
-  TEST: test
