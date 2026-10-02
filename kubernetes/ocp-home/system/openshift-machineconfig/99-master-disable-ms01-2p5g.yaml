@@ -19,3 +19,7 @@ spec:
         overwrite: true
         contents:
           source: data:text/plain;charset=utf-8;base64,W2tleWZpbGVdCnVubWFuYWdlZC1kZXZpY2VzKz1tYWM6NTg6NDc6Y2E6N2Y6MDQ6OTY7bWFjOjU4OjQ3OmNhOjdmOjA0Ojk3Cg==
+
+## Base64 Contents
+# [keyfile]
+# unmanaged-devices+=mac:58:47:ca:7f:04:96;mac:58:47:ca:7f:04:97
