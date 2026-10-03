@@ -74,7 +74,7 @@ oc get pods -n external-secrets-system
 oc get route cluster-argocd-server -n openshift-gitops
 ```
 
-Expected Applications: `openshift-gitops-config`, `external-secrets-system`, and `htpass-admin-system`. Sign in to Argo CD through OpenShift OAuth as `admin`.
+Core bootstrap Applications: `openshift-gitops-config`, `external-secrets-system`, and `htpass-admin-system`. The certificate migration adds `cert-manager-operator-system`, `cert-manager-system`, `openshift-ingress-system`, and `openshift-apiserver-system`. Sign in to Argo CD through OpenShift OAuth as `admin`.
 
 The script retains `kubeadmin`. After confirming `admin` login and cluster-admin access, remove the installer account manually:
 
