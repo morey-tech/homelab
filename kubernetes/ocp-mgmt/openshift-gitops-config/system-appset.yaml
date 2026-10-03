@@ -13,6 +13,10 @@ spec:
       directories:
       - path: kubernetes/ocp-mgmt/system/external-secrets
       - path: kubernetes/ocp-mgmt/system/htpass-admin
+      - path: kubernetes/ocp-mgmt/system/cert-manager-operator
+      - path: kubernetes/ocp-mgmt/system/cert-manager
+      - path: kubernetes/ocp-mgmt/system/openshift-ingress
+      - path: kubernetes/ocp-mgmt/system/openshift-apiserver
   ignoreApplicationDifferences:
     - jsonPointers:
       # Allow automated sync policy to be disabled manually.
@@ -53,4 +57,34 @@ spec:
         - allowEmpty=true
         - CreateNamespace=true
         - ServerSideApply=true
+    {{ end }}
+    {{- if or (eq .path.basename "cert-manager") (eq .path.basename "cert-manager-operator") }}
+    spec:
+      destination:
+        namespace: {{.path.basename}}
+      syncPolicy:
+        retry:
+          limit: 10
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+        - CreateNamespace=true
+        - SkipDryRunOnMissingResource=true
+    {{ end }}
+    {{- if or (eq .path.basename "openshift-ingress") (eq .path.basename "openshift-apiserver") }}
+    spec:
+      destination:
+        namespace: {{ if eq .path.basename "openshift-ingress" }}openshift-ingress{{ else }}openshift-config{{ end }}
+      syncPolicy:
+        retry:
+          limit: 10
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+        - ServerSideApply=true
+        - SkipDryRunOnMissingResource=true
     {{ end }}

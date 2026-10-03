@@ -21,7 +21,7 @@ Recreated management cluster with a minimal GitOps foundation. Workloads from th
 - **External Secrets Operator**: Bitwarden CLI backend and the `bitwarden-login`, `bitwarden-fields`, and `bitwarden-notes` ClusterSecretStores.
 - **Administrator access**: HTPasswd `admin` user, `cluster-admins` group, OpenShift OAuth for Argo CD, and an `ocp-mgmt` console banner.
 
-No application workloads are enabled. Storage, GPU/NFD operators, certificates, custom ingress, virtualization, ACM, DevSpaces, Tailscale, AAP, and other applications are deferred. The cluster uses its default ingress certificate. This bootstrap does not change node roles, labels, taints, disks, or machine configuration.
+No application workloads are enabled. Storage, GPU/NFD operators, virtualization, ACM, DevSpaces, Tailscale, AAP, and other applications are deferred. Certificate automation is enabled as the first migration stage after bootstrap. This bootstrap does not change node roles, labels, taints, disks, or machine configuration.
 
 ## Initial Setup
 
@@ -74,7 +74,7 @@ oc get pods -n external-secrets-system
 oc get route cluster-argocd-server -n openshift-gitops
 ```
 
-Expected Applications: `openshift-gitops-config`, `external-secrets-system`, and `htpass-admin-system`. Sign in to Argo CD through OpenShift OAuth as `admin`.
+Core bootstrap Applications: `openshift-gitops-config`, `external-secrets-system`, and `htpass-admin-system`. The certificate migration adds `cert-manager-operator-system`, `cert-manager-system`, `openshift-ingress-system`, and `openshift-apiserver-system`. Sign in to Argo CD through OpenShift OAuth as `admin`.
 
 The script retains `kubeadmin`. After confirming `admin` login and cluster-admin access, remove the installer account manually:
 
@@ -93,9 +93,40 @@ oc create secret generic htpass-secret \
 oc apply -k kubernetes/ocp-mgmt/system/htpass-admin
 ```
 
+## Certificate Management
+
+The configuration copies the former `ocp-gpu` setup with `ocp-mgmt` hostnames and ACME contact email:
+
+- **Red Hat cert-manager Operator**: `stable-v1` channel in `cert-manager-operator`; manages cert-manager in `cert-manager`.
+- **OpenShift Route support**: `openshift-routes` chart `v0.8.5` for annotated Routes.
+- **Cloudflare DNS-01**: ESO obtains `cloudflare-api-token-secret` from the existing Bitwarden login item. The token remains outside Git.
+- **ClusterIssuers**: `letsencrypt-staging` and `letsencrypt-prod`, with public DNS resolvers `8.8.8.8:53` and `1.1.1.1:53`.
+- **Ingress**: `apps-wildcard-cert` covers `apps.ocp-mgmt.rh-lab.morey.tech` and `*.apps.ocp-mgmt.rh-lab.morey.tech`.
+- **API**: `api-server-cert` covers `api.ocp-mgmt.rh-lab.morey.tech`.
+
+Certificates use the production issuer. Argo CD sync wave 1 issues each certificate before wave 2 changes the IngressController or APIServer certificate reference. These components are explicitly enabled by `openshift-gitops-config/system-appset.yaml`; the initial bootstrap script remains unchanged.
+
+```bash
+oc get applications -n openshift-gitops
+oc get csv -n cert-manager-operator
+oc get pods -n cert-manager
+oc get externalsecret cloudflare-api-token-secret -n cert-manager
+oc get clusterissuers
+oc get certificate apps-wildcard-cert -n openshift-ingress
+oc get certificate api-server-cert -n openshift-config
+oc get clusteroperators authentication ingress kube-apiserver
+```
+
+For local rendering, use a standalone Kustomize version with OCI Helm support (Argo CD uses v5.8.1):
+
+```bash
+kustomize build --enable-helm kubernetes/ocp-mgmt/system/cert-manager-operator
+kustomize build kubernetes/ocp-mgmt/system/cert-manager
+```
+
 ## Staged Migration
 
-The system ApplicationSet explicitly includes only `system/external-secrets` and `system/htpass-admin`. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
+The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, and API/ingress certificates. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
 
 Use the retained [ocp-gpu configuration](../ocp-gpu/README.md) as migration source material. Review each component's hostnames, namespaces, storage, secrets, and node placement before enabling it. Old management manifests remain available in Git history.
 
