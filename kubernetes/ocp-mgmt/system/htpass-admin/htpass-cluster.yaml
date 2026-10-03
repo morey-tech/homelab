@@ -10,10 +10,3 @@ spec:
       mappingMethod: claim
       name: htpasswd
       type: HTPasswd
-  templates:
-    # error:  ## Not applicable to HTPasswd provider.
-    #     name: error-template
-    login:
-        name: login-template
-    providerSelection:
-        name: providers-template

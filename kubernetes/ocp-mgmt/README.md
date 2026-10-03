@@ -1,202 +1,106 @@
 # OpenShift Cluster: ocp-mgmt
 
-Management and testing cluster for Ansible Automation Platform, DevSpaces, and demo workloads.
+Recreated management cluster with a minimal GitOps foundation. Workloads from the former `ocp-gpu` cluster will migrate in stages.
 
 ## Cluster Information
 
-- **API Endpoint**: `https://api.ocp-mgmt.rh-lab.morey.tech:6443`
-- **Console**: `https://console-openshift-console.apps.ocp-mgmt.rh-lab.morey.tech`
-- **ArgoCD**: `https://openshift-gitops-server-openshift-gitops.apps.ocp-mgmt.rh-lab.morey.tech`
+| Node | Role |
+|------|------|
+| ms-02 | Control plane and worker |
+| ms-03 | Control plane and worker |
+| ms-04 | Control plane and worker |
+| tr-gpu | Dedicated worker; formerly the ocp-gpu node |
 
-## Quick Start
+- **API**: [api.ocp-mgmt.rh-lab.morey.tech:6443](https://api.ocp-mgmt.rh-lab.morey.tech:6443)
+- **Console**: [console-openshift-console.apps.ocp-mgmt.rh-lab.morey.tech](https://console-openshift-console.apps.ocp-mgmt.rh-lab.morey.tech)
+- **Argo CD**: [cluster-argocd-server-openshift-gitops.apps.ocp-mgmt.rh-lab.morey.tech](https://cluster-argocd-server-openshift-gitops.apps.ocp-mgmt.rh-lab.morey.tech)
 
-### Login
-```bash
-oc login -u admin --server=https://api.ocp-mgmt.rh-lab.morey.tech:6443
-```
+## Bootstrap Scope
 
-## Deployed Applications
+- **OpenShift GitOps**: Operator, `cluster-argocd` instance, controller permissions, and root Application adapted from `ocp-gpu`.
+- **External Secrets Operator**: Bitwarden CLI backend and the `bitwarden-login`, `bitwarden-fields`, and `bitwarden-notes` ClusterSecretStores.
+- **Administrator access**: HTPasswd `admin` user, `cluster-admins` group, OpenShift OAuth for Argo CD, and an `ocp-mgmt` console banner.
 
-### Production Applications
-
-| Application | Namespace | URL | Purpose | Notable Features |
-|-------------|-----------|-----|---------|-----------------|
-| Ansible Automation Platform | ansible-automation-platform | [aap.ocp-mgmt.morey.tech](https://aap.ocp-mgmt.morey.tech) | Automation controller | Custom domain, AAP operator |
-| AnythingLLM | anythingllm | [anythingllm.apps.ocp-mgmt](https://anythingllm-anythingllm.apps.ocp-mgmt.rh-lab.morey.tech) | LLM chat/RAG application | 10m timeout |
-| Netbox | netbox | [netbox-netbox.apps.ocp-mgmt](https://netbox-netbox.apps.ocp-mgmt.rh-lab.morey.tech) | Infrastructure IPAM/DCIM | Helm chart |
-| vLLM CPU | vllm-cpu | [vllm-cpu.apps.ocp-mgmt](https://vllm-cpu-vllm-cpu.apps.ocp-mgmt.rh-lab.morey.tech) | CPU-based LLM inference | No GPU required |
-| CCPT | ccpt | [ccpt.apps.ocp-mgmt](https://ccpt.apps.ocp-mgmt.rh-lab.morey.tech) | Custom application | - |
-| Wingspan Scoring | wingspan-scoring | [wingspan-scoring.apps.ocp-mgmt](https://wingspan-scoring.apps.ocp-mgmt.rh-lab.morey.tech) | Custom application | - |
-| RHSCA | rhsca | - | Custom application | - |
-
-### Testing/Demo Workloads
-
-| Application | Namespace | URL | Purpose | Notes |
-|-------------|-----------|-----|---------|-------|
-| netbox-broken | netbox-broken | [netbox-demo.apps.ocp-mgmt](https://netbox-demo.apps.ocp-mgmt.rh-lab.morey.tech) | Intentionally broken Netbox | Demo/troubleshooting |
-| uid-gid-in-action | uid-gid-in-action | - | Security context demo | SCC testing |
-| demo | demo | - | General demo workloads | Testing |
-
-## Infrastructure Components
-
-**Operators & System Services**:
-- **OpenShift GitOps** - ArgoCD for GitOps deployment
-- **OpenShift DevSpaces** - Cloud development environments (runs here!)
-- **Ansible Automation Platform Operator** - AAP lifecycle management
-- **External Secrets Operator** - Bitwarden secret synchronization
-- **Cert-Manager** - Let's Encrypt certificate automation
-- **OpenShift Virtualization (CNV)** - VM workloads
-- **OpenShift Data Foundation** - Ceph storage
-
-## Cluster-Specific Features
-
-### Ansible Automation Platform
-
-AAP provides centralized automation and webhooks for infrastructure management.
-
-**Access**: [https://aap.ocp-mgmt.morey.tech](https://aap.ocp-mgmt.morey.tech)
-
-**Capabilities**:
-- Centralized playbook execution
-- Webhook-triggered automation
-- Job templates and workflows
-- Credential management
-
-**Common Tasks**:
-```bash
-# Check AAP operator status
-oc get pods -n ansible-automation-platform-operator
-
-# View AAP resources
-oc get automationcontroller -n ansible-automation-platform
-```
-
-### OpenShift DevSpaces
-
-This cluster hosts the OpenShift DevSpaces instance used for development.
-
-**Features**:
-- Automatic extension installation (Claude Code, Ansible)
-- Pre-configured development tools
-- Workspace creation from repository URL
-- Integration with OpenShift clusters
-
-**Check DevSpaces Status**:
-```bash
-# DevSpaces operator
-oc get pods -n openshift-devspaces
-
-# CheCluster configuration
-oc get checluster -n openshift-devspaces
-```
-
-### Demo/Testing Workloads
-
-This cluster includes intentionally broken or test applications for demos and troubleshooting practice.
-
-**netbox-broken**: Demonstrates troubleshooting scenarios
-**uid-gid-in-action**: Security context and SCC testing
-**demo**: General testing workloads
-
-## Managing Applications
-
-### Deploy Application
-
-```bash
-mkdir -p applications/my-app
-cat <<EOF > applications/my-app/kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: my-app
-
-resources:
-- namespace.yaml
-- deployment.yaml
-EOF
-
-git add applications/my-app/
-git commit -m "feat(ocp-mgmt): add my-app for testing"
-git push
-```
-
-### AAP Webhook Integration
-
-Configure AAP job templates with webhooks for event-driven automation.
-
-```bash
-# Example: Trigger AAP job from OpenShift
-oc create secret generic aap-webhook \
-  --from-literal=url=https://aap.ocp-mgmt.morey.tech/api/v2/job_templates/XX/github/
-
-# Add webhook annotation to trigger jobs
-metadata:
-  annotations:
-    webhook.aap/job-template: "my-template"
-```
+No application workloads are enabled. Storage, GPU/NFD operators, certificates, custom ingress, virtualization, ACM, DevSpaces, Tailscale, AAP, and other applications are deferred. The cluster uses its default ingress certificate. This bootstrap does not change node roles, labels, taints, disks, or machine configuration.
 
 ## Initial Setup
 
+Run commands from the repository root. Install `oc`, Helm 3, and `htpasswd`. The script uses `oc kustomize --enable-helm` and needs network access to the ESO chart repository and container registries.
+
+**Merge the minimal configuration before running bootstrap.** The root Application and ApplicationSet track the repository's default branch (`HEAD`). Running against an older default branch would reconcile the previous management configuration.
+
+### Log In to the New Cluster
+
+Use the installer-provided administrator credentials:
+
+```bash
+oc login --server=https://api.ocp-mgmt.rh-lab.morey.tech:6443
+oc get nodes
+```
+
+Confirm `ms-02`, `ms-03`, `ms-04`, and `tr-gpu` are Ready. The bootstrap script refuses to run against another API endpoint.
+
+### Prepare Bitwarden Credentials
+
+Copy the Notes section of the `ocp-mgmt.rh-lab.morey.tech external-secrets bitwarden` entry in Bitwarden into `kubernetes/ocp-mgmt/system/external-secrets/bitwarden-secret.yaml`. It must define the `bitwarden-cli` Secret in `external-secrets-system`, with `BW_PASSWORD`, `BW_CLIENTID`, and `BW_CLIENTSECRET` keys. This file is Git-ignored; verify any existing local copy still has the intended credentials.
+
 ### Set Up HTPasswd Auth
 
-Create HTPasswd file with `admin` user.
+Create the `admin` password file if needed:
+
 ```bash
-htpasswd -B -c ocp-mgmt.htpasswd admin
+htpasswd -B -c kubernetes/ocp-mgmt/ocp-mgmt.htpasswd admin
 # Enter password from Bitwarden: "OpenShift ocp-mgmt admin password"
 ```
 
-Create secret with HTPasswd contents.
-```bash
-oc create secret generic htpass-secret --from-file=htpasswd=ocp-mgmt.htpasswd -n openshift-config
-```
+The password file is Git-ignored. The script creates or updates `htpass-secret`, applies the HTPasswd identity provider, and grants `admin` cluster access through `cluster-admins`.
 
-Add htpasswd identity provider and cluster role binding for admin user.
-```bash
-oc apply -f ./system/htpass-admin
-```
-
-## Troubleshooting
-
-### Check AAP Status
+### Run Bootstrap
 
 ```bash
-# AAP operator
-oc get pods -n ansible-automation-platform-operator
-
-# AAP instance
-oc get automationcontroller -n ansible-automation-platform
-
-# AAP logs
-oc logs -n ansible-automation-platform deployment/<aap-deployment>
+bash kubernetes/ocp-mgmt/bootstrap/bootstrap.sh
 ```
 
-### Check DevSpaces Status
+The script checks credentials and renders manifests before changing the cluster. It installs ESO before applying ClusterSecretStores, waits for operator and Argo CD readiness, then enables the two system Applications. It can be rerun after resolving a failure. Override `HTPASSWD_FILE` or `BITWARDEN_SECRET_FILE` with absolute paths if credentials are stored elsewhere.
+
+### Verify Access and GitOps
 
 ```bash
-# DevSpaces operator
-oc get pods -n openshift-devspaces
-
-# Che server
-oc get checluster -n openshift-devspaces -o yaml
-
-# User workspaces
-oc get devworkspace -A
+oc login -u admin --server=https://api.ocp-mgmt.rh-lab.morey.tech:6443
+oc auth can-i '*' '*' --all-namespaces
+oc get applications -n openshift-gitops
+oc get clustersecretstores
+oc get pods -n external-secrets-system
+oc get route cluster-argocd-server -n openshift-gitops
 ```
 
-### Common Issues
+Expected Applications: `openshift-gitops-config`, `external-secrets-system`, and `htpass-admin-system`. Sign in to Argo CD through OpenShift OAuth as `admin`.
 
-**AAP webhook not firing**:
-- Check webhook URL is correct
-- Verify network connectivity
-- Review AAP job template configuration
-- Check OpenShift events for errors
+The script retains `kubeadmin`. After confirming `admin` login and cluster-admin access, remove the installer account manually:
 
-**DevSpaces workspace failing to start**:
-- Check DevWorkspace status: `oc get devworkspace -A`
-- Review che-server logs: `oc logs -n openshift-devspaces deployment/devspaces`
-- Verify PVC creation for workspace storage
+```bash
+oc delete secret kubeadmin -n kube-system
+```
+
+### Manual Authentication Recovery
+
+To reapply the HTPasswd configuration independently:
+
+```bash
+oc create secret generic htpass-secret \
+  --from-file=htpasswd=kubernetes/ocp-mgmt/ocp-mgmt.htpasswd \
+  -n openshift-config --dry-run=client -o yaml | oc apply -f -
+oc apply -k kubernetes/ocp-mgmt/system/htpass-admin
+```
+
+## Staged Migration
+
+The system ApplicationSet explicitly includes only `system/external-secrets` and `system/htpass-admin`. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
+
+Use the retained [ocp-gpu configuration](../ocp-gpu/README.md) as migration source material. Review each component's hostnames, namespaces, storage, secrets, and node placement before enabling it. Old management manifests remain available in Git history.
 
 ## Related Documentation
 
-- [Main Kubernetes README](../README.md) - GitOps workflow and common patterns
-- [Ansible Automation Platform Documentation](https://access.redhat.com/documentation/en-us/red_hat_ansible_automation_platform)
-- [OpenShift DevSpaces Documentation](https://access.redhat.com/documentation/en-us/red_hat_openshift_dev_spaces)
+- [Kubernetes GitOps workflow](../README.md)
+- [External Secrets setup](system/external-secrets/README.md)
+- [Administrator authentication](system/htpass-admin/README.md)
