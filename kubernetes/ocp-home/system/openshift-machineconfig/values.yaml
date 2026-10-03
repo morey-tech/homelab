@@ -1,4 +1,6 @@
 machineConfigs:
+  # Prevent DHCP on unused 2.5GbE ports and asymmetric routing.
+  # Match permanent MACs and preserve existing unmanaged-device entries.
   - name: 99-master-disable-ms01-2p5g
     files:
       - path: /etc/NetworkManager/conf.d/99-disable-ms01-2p5g.conf
