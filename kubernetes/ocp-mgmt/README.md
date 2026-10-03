@@ -74,7 +74,7 @@ oc get pods -n external-secrets-system
 oc get route cluster-argocd-server -n openshift-gitops
 ```
 
-Core bootstrap Applications: `openshift-gitops-config`, `external-secrets-system`, and `htpass-admin-system`. The certificate migration adds `cert-manager-operator-system`, `cert-manager-system`, `openshift-ingress-system`, and `openshift-apiserver-system`. Sign in to Argo CD through OpenShift OAuth as `admin`.
+Core bootstrap Applications: `openshift-gitops-config`, `external-secrets-system`, and `htpass-admin-system`. The certificate migration adds `cert-manager-operator-system`, `cert-manager-system`, `openshift-ingress-system`, and `openshift-apiserver-system`. Discord alerting adds `openshift-monitoring-system`. Sign in to Argo CD through OpenShift OAuth as `admin`.
 
 The script retains `kubeadmin`. After confirming `admin` login and cluster-admin access, remove the installer account manually:
 
@@ -124,9 +124,31 @@ kustomize build --enable-helm kubernetes/ocp-mgmt/system/cert-manager-operator
 kustomize build kubernetes/ocp-mgmt/system/cert-manager
 ```
 
+## Discord Alert Notifications
+
+The platform Alertmanager sends warning and critical alerts, plus resolved notifications, to Discord. Notification titles identify `ocp-mgmt`. Informational alerts and Watchdog remain on empty receivers. Existing severity inhibition rules, namespace grouping, 30-second initial wait, 5-minute group interval, 12-hour repeat interval, and environment proxy settings are preserved.
+
+ESO reads the webhook URL from the **password** field of Bitwarden item `7c74654f-a595-4aa6-a1c4-b4d80182f0cd`. It renders the existing `openshift-monitoring/alertmanager-main` Secret through [the monitoring component](system/openshift-monitoring/alertmanager-external-secret.yaml). The URL is not committed to Git. `creationPolicy: Merge` and `deletionPolicy: Retain` preserve the platform Secret's lifecycle. Alertmanager reloads configuration automatically.
+
+```bash
+oc get application openshift-monitoring-system -n openshift-gitops
+oc get externalsecret alertmanager-main -n openshift-monitoring
+oc get pods -n openshift-monitoring -l alertmanager=main
+oc get clusteroperator monitoring
+```
+
+To rotate the webhook, update the same Bitwarden password and refresh ESO after the Bitwarden CLI backend has synchronized:
+
+```bash
+oc annotate externalsecret alertmanager-main -n openshift-monitoring \
+  force-sync="$(date +%s)" --overwrite
+```
+
+Make routing changes in Git; direct edits to `alertmanager-main` will be overwritten by ESO. Removing the ExternalSecret leaves the last configuration in place, so disable the Discord receivers in Git before removing the integration.
+
 ## Staged Migration
 
-The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, and API/ingress certificates. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
+The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, API/ingress certificates, and Discord alerting. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
 
 Use the retained [ocp-gpu configuration](../ocp-gpu/README.md) as migration source material. Review each component's hostnames, namespaces, storage, secrets, and node placement before enabling it. Old management manifests remain available in Git history.
 
