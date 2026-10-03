@@ -5,7 +5,7 @@ Production-grade homelab infrastructure running multiple OpenShift clusters with
 ## Architecture Overview
 
 This homelab consists of:
-- **5 OpenShift Clusters** - Production, GPU-accelerated AI/ML, management, lab, and local development environments
+- **Cluster Environments** - Production, management, lab, and local development; the former GPU cluster is retained as migration source material
 - **GitOps Deployment** - ArgoCD ApplicationSets for automated multi-cluster management
 - **Infrastructure as Code** - Ansible playbooks for configuration management and Terraform for provisioning
 - **Automated Dependency Management** - Renovate for continuous updates of Helm charts, container images, and Ansible collections
@@ -26,7 +26,7 @@ This homelab consists of:
                           ↓
 ┌─────────────────────────────────────────────────────────┐
 │  Kubernetes/OpenShift Clusters                          │
-│  ocp-home | ocp-gpu | ocp-mgmt | ocp-lab | kind         │
+│  ocp-home | ocp-mgmt | ocp-lab | kind                   │
 └─────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────┐
@@ -40,8 +40,8 @@ This homelab consists of:
 | Cluster | Purpose | API Endpoint | Key Features |
 |---------|---------|--------------|--------------|
 | [ocp-home](kubernetes/ocp-home/README.md) | Production workloads | api.ocp-home.rh-lab.morey.tech:6443 | Intel GPU, 8 applications, external DNS |
-| [ocp-gpu](kubernetes/ocp-gpu/README.md) | GPU-accelerated AI/ML | api.ocp-gpu.rh-lab.morey.tech:6443 | NVIDIA GPUs, vLLM, AnythingLLM |
-| [ocp-mgmt](kubernetes/ocp-mgmt/README.md) | Management & testing | api.ocp-mgmt.rh-lab.morey.tech:6443 | AAP, DevSpaces, demo workloads |
+| [ocp-gpu](kubernetes/ocp-gpu/README.md) | Migration source (retired cluster) | Retired | Former node is now tr-gpu in ocp-mgmt |
+| [ocp-mgmt](kubernetes/ocp-mgmt/README.md) | Recreated management cluster | api.ocp-mgmt.rh-lab.morey.tech:6443 | ms-02/03/04 control-plane/workers, tr-gpu worker; minimal GitOps bootstrap |
 | [ocp-lab](kubernetes/ocp-lab/README.md) | Lab experiments | api.ocp-lab.rh-lab.morey.tech:6443 | Testing environment |
 | [kind-personal](kubernetes/kind-personal/README.md) | Local development | localhost | Kind cluster bootstrap |
 
@@ -51,8 +51,8 @@ This homelab consists of:
 homelab/
 ├── kubernetes/          # GitOps Kubernetes manifests
 │   ├── ocp-home/       # Production cluster - Immich, Home Assistant, Netbox, Paperless
-│   ├── ocp-gpu/        # GPU cluster - AnythingLLM, inference servers
-│   ├── ocp-mgmt/       # Management cluster - AAP, DevSpaces, demos
+│   ├── ocp-gpu/        # Former GPU cluster - retained for staged migration
+│   ├── ocp-mgmt/       # Management cluster - minimal GitOps, ESO, admin access
 │   ├── ocp-lab/        # Lab cluster - Testing and experiments
 │   ├── kind-personal/  # Local Kind cluster
 │   ├── rubrik/         # Rubrik environment
@@ -86,7 +86,7 @@ This repository includes a complete development environment with all required to
 
 ### OpenShift DevSpaces (Recommended)
 
-Cloud-based development environment running on the ocp-mgmt cluster.
+Cloud-based development configuration is retained under `ocp-gpu` for staged migration. DevSpaces is not part of the recreated `ocp-mgmt` bootstrap; use the local DevContainer during migration.
 
 **Access**: Navigate to your OpenShift DevSpaces instance and create workspace from:
 ```
@@ -97,7 +97,7 @@ https://github.com/morey-tech/homelab
 
 **Extensions**: Automatically installs Claude Code and Ansible extensions via [.vscode/extensions.json](.vscode/extensions.json)
 
-**Auto-configured Credentials** (ocp-gpu cluster):
+**Previous DevSpaces Credential Setup** (ocp-gpu; requires migration):
 - **GitHub CLI**: Authenticated using DevSpaces OAuth credentials (no setup required)
 - **Claude Code**: API key injected from Bitwarden as `ANTHROPIC_API_KEY` environment variable
 - **OCP Home cluster**: `oc --context=ocp-home-tailnet` works in every admin workspace with no login, authenticated by Tailscale ([how it works](docs/tailscale/README.md))
