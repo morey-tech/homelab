@@ -1,0 +1,14 @@
+machineConfigs:
+  - name: 99-master-disable-ms01-2p5g
+    files:
+      - path: /etc/NetworkManager/conf.d/99-disable-ms01-2p5g.conf
+        mode: 420
+        source: files/99-disable-ms01-2p5g.conf
+  - name: 99-master-x710-mac-bound-members
+    files:
+      - path: /etc/NetworkManager/system-connections/enp3s0f0.nmconnection
+        mode: 384
+        source: files/enp3s0f0.nmconnection
+      - path: /etc/NetworkManager/system-connections/enp3s0f1.nmconnection
+        mode: 384
+        source: files/enp3s0f1.nmconnection

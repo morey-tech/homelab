@@ -1,0 +1,22 @@
+{{- range .Values.machineConfigs }}
+---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: {{ .name | quote }}
+  labels:
+    machineconfiguration.openshift.io/role: master
+spec:
+  config:
+    ignition:
+      version: 3.4.0
+    storage:
+      files:
+        {{- range .files }}
+        - path: {{ .path | quote }}
+          mode: {{ .mode }}
+          overwrite: true
+          contents:
+            source: {{ required (printf "Missing or empty file: %s" .source) ($.Files.Get .source) | b64enc | printf "data:text/plain;charset=utf-8;base64,%s" | quote }}
+        {{- end }}
+{{ end }}

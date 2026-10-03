@@ -1,0 +1,4 @@
+apiVersion: v2
+name: ocp-home-machineconfig
+version: 0.1.0
+type: application

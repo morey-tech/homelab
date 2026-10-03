@@ -1,0 +1,14 @@
+[connection]
+id=enp3s0f0
+uuid=402e5637-09a6-4d03-8577-6cde808336a1
+type=ethernet
+controller=bond0
+master=bond0
+port-type=bond
+slave-type=bond
+
+[ethernet]
+mac-address=58:47:ca:7f:04:94
+
+[user]
+org.freedesktop.NetworkManager.origin=nm-initrd-generator
