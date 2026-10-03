@@ -17,6 +17,7 @@ spec:
       - path: kubernetes/ocp-mgmt/system/cert-manager
       - path: kubernetes/ocp-mgmt/system/openshift-ingress
       - path: kubernetes/ocp-mgmt/system/openshift-apiserver
+      - path: kubernetes/ocp-mgmt/system/openshift-monitoring
   ignoreApplicationDifferences:
     - jsonPointers:
       # Allow automated sync policy to be disabled manually.
@@ -87,4 +88,11 @@ spec:
         syncOptions:
         - ServerSideApply=true
         - SkipDryRunOnMissingResource=true
+    {{ end }}
+    {{- if eq .path.basename "openshift-monitoring" }}
+    spec:
+      destination:
+        namespace: openshift-monitoring
+      syncPolicy:
+        syncOptions: []
     {{ end }}
