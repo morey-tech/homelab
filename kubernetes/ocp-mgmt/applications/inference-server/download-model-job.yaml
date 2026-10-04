@@ -1,7 +1,11 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: download-qwen3-4b-2507-cdbee75-hf-9e38f79
+  name: download-model
+  annotations:
+    # Job pod templates are immutable; recreate only this Job when syncing it.
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   backoffLimit: 3
   activeDeadlineSeconds: 3600

@@ -21,13 +21,15 @@ OpenShift AI manages `local-llm` through KServe's Standard deployment mode (form
 
 Prerequisites: `lvms-vg-ai` ready on `tr-gpu`, NVIDIA validation completed, OpenShift AI ready, and hardware profile `tr-gpu-3090` installed. The application ApplicationSet explicitly includes this workload. Git owns the model configuration; edits to managed resources through the dashboard are reconciled back to Git.
 
-The PVC and download Job share sync wave 0 so `WaitForFirstConsumer` can bind the local volume. The Job downloads the pinned revision into its own directory and records completion. Wave 1 starts KServe only after the Job succeeds. Restarts use the existing files without downloading again. No Hugging Face token is needed for this public model.
+The PVC and download Job share sync wave 0 so `WaitForFirstConsumer` can bind the local volume. The stable-name `download-model` Job uses [Argo CD force replacement](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-options/#force-sync) (`Force=true,Replace=true`) to delete and recreate the Job when syncing it, allowing image, resource, and script changes without manual renaming. This annotation applies only to the Job, not the PVC or inference workload. The Job downloads the pinned revision into its own directory and records completion. Wave 1 starts KServe only after the Job succeeds. Subsequent runs skip downloading when the revision's completion marker exists. No Hugging Face token is needed for this public model.
+
+The Job remains a normal tracked resource, not a hook, so changes to its spec participate in drift detection. A full application sync reruns it even when its spec has not changed, replacing its previous pod and logs; collect failure logs before another sync. Use a full application sync for model changes so the download and inference waves run together. Do not move the Job to `PreSync` or put the PVC in an earlier wave: a new `WaitForFirstConsumer` claim needs the download pod to bind. On migration to the stable name, Argo CD prunes the previously tracked revision-named Job.
 
 ```bash
 kustomize build kubernetes/ocp-mgmt/applications/inference-server
 oc get application inference-server -n openshift-gitops
 oc get pvc,job,pods -n inference-server
-oc logs job/download-qwen3-4b-2507-cdbee75-hf-9e38f79 -n inference-server
+oc logs job/download-model -n inference-server
 oc get inferenceservice local-llm -n inference-server
 oc get deployment local-llm-predictor -n inference-server -o jsonpath='{.spec.strategy}{"\n"}'
 python kubernetes/ocp-mgmt/applications/inference-server/scripts/smoke-test.py
@@ -62,8 +64,8 @@ The `networking.kserve.io/visibility: exposed` label enables the OpenShift AI-ma
 
 ## Model changes and recovery
 
-Choose a model revision and compatible runtime, then update the download Job's name, repository, revision, expected artifacts, and target directory together with the InferenceService `storageUri`. The Job is a regular completed Job, not a recurring sync hook; rename it when changing immutable Job fields. Keep `local-llm` as the API name so clients do not need reconfiguration. Review GPU memory, context length, and concurrency for each model.
+Choose a model revision and compatible runtime, then update the download Job's repository, revision, expected artifacts, and target directory together with the InferenceService `storageUri`. Keep the Job name `download-model`; Argo CD recreates it with the new pod template. Keep `local-llm` as the API name so clients do not need reconfiguration. Review GPU memory, context length, and concurrency for each model.
 
-The PVC is guarded with `Prune=confirm,Delete=false`; retiring the application does not automatically delete model data. Storage is local to `tr-gpu`, with no failover or replication. Model weights can be downloaded again; back up irreplaceable datasets separately. To repeat the initial download after repairing missing artifacts, remove the `.download-complete` marker for that revision and delete its completed Job, then let Argo CD recreate it. Preserve any useful data before deleting a PVC.
+The PVC is guarded with `Prune=confirm,Delete=false`; retiring the application does not automatically delete model data. Storage is local to `tr-gpu`, with no failover or replication. Model weights can be downloaded again; back up irreplaceable datasets separately. A failed download without a completion marker can be retried with a full Argo CD sync after addressing its cause. A marker bypasses artifact checks, so recovery of damaged files in a previously completed directory requires a reviewed Git change selecting a fresh target directory in both the Job and InferenceService. Preserve any useful data before deleting a PVC.
 
 The 3090 is a homelab configuration outside Red Hat's listed enterprise accelerator models. The smoke test establishes functionality for the pinned runtime and model; larger models require separate validation.
