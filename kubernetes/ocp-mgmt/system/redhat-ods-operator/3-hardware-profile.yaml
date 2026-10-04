@@ -1,0 +1,37 @@
+apiVersion: infrastructure.opendatahub.io/v1
+kind: HardwareProfile
+metadata:
+  name: tr-gpu-3090
+  namespace: redhat-ods-applications
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    opendatahub.io/display-name: tr-gpu RTX 3090
+    opendatahub.io/description: One 24 GiB RTX 3090 with local AI storage on tr-gpu.
+    opendatahub.io/disabled: "false"
+    opendatahub.io/dashboard-feature-visibility: '["modelServing"]'
+spec:
+  identifiers:
+    - identifier: cpu
+      displayName: CPU
+      resourceType: CPU
+      minCount: 1
+      defaultCount: 2
+      maxCount: 16
+    - identifier: memory
+      displayName: Memory
+      resourceType: Memory
+      minCount: 4Gi
+      defaultCount: 8Gi
+      maxCount: 64Gi
+    - identifier: nvidia.com/gpu
+      displayName: NVIDIA GPU
+      resourceType: Accelerator
+      minCount: 1
+      defaultCount: 1
+      maxCount: 1
+  scheduling:
+    type: Node
+    node:
+      nodeSelector:
+        kubernetes.io/hostname: tr-gpu

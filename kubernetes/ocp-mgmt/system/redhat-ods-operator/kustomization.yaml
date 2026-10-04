@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - 1-operator.yaml
   - 2-datasciencecluster.yaml
+  - 3-hardware-profile.yaml
