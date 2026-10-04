@@ -41,6 +41,7 @@ spec:
                       repo_id=os.environ["MODEL_REPO"],
                       revision=revision,
                       local_dir=str(target),
+                      max_workers=1,
                   )
                   for name in (
                       "config.json",
@@ -63,6 +64,9 @@ spec:
               value: /models/qwen3-4b-instruct-2507-cdbee75f17c01a7cc42f958dc650907174af0554
             - name: HF_HOME
               value: /tmp/huggingface
+            # Use HTTP downloads to avoid Xet's additional transfer concurrency.
+            - name: HF_HUB_DISABLE_XET
+              value: "1"
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -70,9 +74,9 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 512Mi
+              memory: 1Gi
             limits:
-              memory: 2Gi
+              memory: 4Gi
           volumeMounts:
             - name: models
               mountPath: /models
