@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: csi-driver-nfs-system
 resources:
   - privileged-scc-binding.yaml
-  - storageclass.yaml
+  - storageclass-nvme.yaml
   - storageclass-mass.yaml
 helmCharts:
   - name: csi-driver-nfs
