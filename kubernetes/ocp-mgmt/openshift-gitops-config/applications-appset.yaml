@@ -14,6 +14,7 @@ spec:
         revision: HEAD
         directories:
           - path: kubernetes/ocp-mgmt/applications/inference-server
+          - path: kubernetes/ocp-mgmt/applications/anythingllm
   ignoreApplicationDifferences:
     - jsonPointers:
         - /spec/syncPolicy/automated

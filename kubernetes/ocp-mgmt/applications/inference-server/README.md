@@ -18,7 +18,7 @@ OpenShift AI manages `local-llm` through KServe's Standard deployment mode (form
 
 ## Rollout and verification
 
-Prerequisites: `lvms-vg-ai` ready on `tr-gpu`, NVIDIA validation completed, OpenShift AI ready, and hardware profile `tr-gpu-3090` installed. The application ApplicationSet explicitly discovers only this workload. Git owns the model configuration; edits to managed resources through the dashboard are reconciled back to Git.
+Prerequisites: `lvms-vg-ai` ready on `tr-gpu`, NVIDIA validation completed, OpenShift AI ready, and hardware profile `tr-gpu-3090` installed. The application ApplicationSet explicitly includes this workload. Git owns the model configuration; edits to managed resources through the dashboard are reconciled back to Git.
 
 The PVC and download Job share sync wave 0 so `WaitForFirstConsumer` can bind the local volume. The Job downloads the pinned revision into its own directory and records completion. Wave 1 starts KServe only after the Job succeeds. Restarts use the existing files without downloading again. No Hugging Face token is needed for this public model.
 
@@ -44,6 +44,8 @@ oc create token inference-client -n inference-server --duration=1h
 ```
 
 Use the endpoint as an OpenAI-compatible base URL, the token as the API key, and `local-llm` as the model name. Tokens expire and must be renewed; no static credential is stored in Git. The Role permits only `get` on this InferenceService, which KServe's proxy checks before accepting requests. For Qwen3 smoke testing, pass `chat_template_kwargs: {enable_thinking: false}`.
+
+[AnythingLLM](../anythingllm/README.md) uses the same endpoint from its own namespace. The separate `anythingllm-local-llm` RoleBinding grants its ServiceAccount the same model-scoped permission. Its controller-generated persistent token is kept in a Kubernetes Secret, never Git; this differs from the short-lived tokens above.
 
 The `networking.kserve.io/visibility: exposed` label enables the OpenShift AI-managed Route. KServe and the platform model controller own the Service and Route. The route allows ten-minute requests for generation and streaming. NetworkPolicy permits inference traffic through port 8443 and limits direct runtime port 8080 to monitoring namespaces.
 

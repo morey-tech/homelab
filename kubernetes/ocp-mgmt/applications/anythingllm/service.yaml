@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: anythingllm
+spec:
+  selector:
+    app: anythingllm
+  ports:
+    - name: http
+      port: 8888
+      targetPort: http

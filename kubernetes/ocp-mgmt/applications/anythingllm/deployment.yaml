@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anythingllm
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: anythingllm
+  template:
+    metadata:
+      labels:
+        app: anythingllm
+    spec:
+      serviceAccountName: anythingllm
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: tr-gpu
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: anythingllm
+          image: quay.io/rh-aiservices-bu/anythingllm-workbench:1.9.1@sha256:06c7575150900239aa12c619a3e7cea271682ad506c8489243d3fb1e981dd2e9
+          ports:
+            - name: http
+              containerPort: 8888
+          envFrom:
+            - configMapRef:
+                name: anythingllm-config
+            - secretRef:
+                name: anythingllm-auth
+          env:
+            - name: GENERIC_OPEN_AI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: anythingllm-inference-token
+                  key: token
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 250m
+              memory: 2Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          startupProbe:
+            httpGet:
+              path: /api/ping
+              port: http
+            periodSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /api/ping
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/ping
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+          volumeMounts:
+            # The workbench launcher symlinks storage, collector data, and .env here.
+            - name: data
+              mountPath: /opt/app-root/src/anythingllm
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: anythingllm

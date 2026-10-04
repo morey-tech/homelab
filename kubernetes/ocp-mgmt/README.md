@@ -194,6 +194,7 @@ The manifests were moved out of the retired `ocp-gpu` cluster. That cluster is n
 | OpenShift Dev Spaces | openshift-devspaces | [devspaces.apps.ocp-mgmt.rh-lab.morey.tech](https://devspaces.apps.ocp-mgmt.rh-lab.morey.tech) | Cloud development environments | Per-workspace local NVMe LVM storage, nested containers, Open VSX, Bitwarden-backed credentials |
 | OpenShift AI | redhat-ods-applications | [OpenShift AI dashboard](https://rhods-dashboard-redhat-ods-applications.apps.ocp-mgmt.rh-lab.morey.tech) | Model deployment and monitoring | KServe, RTX 3090 hardware profile, OpenShift authentication |
 | Inference Server | inference-server | [API access](applications/inference-server/README.md#clients) | OpenAI-compatible chat inference | KServe-managed vLLM, Qwen3-0.6B, dedicated NVMe model storage, token authentication |
+| AnythingLLM | anythingllm | [anythingllm.apps.ocp-mgmt.rh-lab.morey.tech](https://anythingllm.apps.ocp-mgmt.rh-lab.morey.tech) | Chat and document workspaces using `local-llm` | Generated UI password, scoped KServe credential, native embeddings, persistent AI NVMe storage |
 
 See [Dev Spaces configuration](system/openshift-devspaces/README.md) for verification, the required GitHub OAuth callback update, and [Tailscale access to OCP Home](system/openshift-devspaces/TAILSCALE.md).
 
@@ -203,7 +204,7 @@ See [Dev Spaces configuration](system/openshift-devspaces/README.md) for verific
 
 ## Staged Migration
 
-The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, API/ingress certificates, Discord alerting, the NFS CSI driver, LVM Storage, the Dev Spaces operator, Dev Spaces configuration, Tailscale egress, OpenShift NFD, the NVIDIA GPU Operator, and OpenShift AI. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet explicitly includes only `applications/inference-server`; add other workloads deliberately as they migrate.
+The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, API/ingress certificates, Discord alerting, the NFS CSI driver, LVM Storage, the Dev Spaces operator, Dev Spaces configuration, Tailscale egress, OpenShift NFD, the NVIDIA GPU Operator, and OpenShift AI. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet explicitly includes `applications/inference-server` and [AnythingLLM](applications/anythingllm/README.md); add other workloads deliberately as they migrate.
 
 Use the retained [ocp-gpu configuration](../ocp-gpu/README.md) as migration source material. Review each component's hostnames, namespaces, storage, secrets, and node placement before enabling it. Old management manifests remain available in Git history.
 

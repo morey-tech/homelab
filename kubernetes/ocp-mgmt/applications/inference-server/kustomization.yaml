@@ -7,4 +7,5 @@ resources:
   - serving-runtime.yaml
   - inference-service.yaml
   - client-rbac.yaml
+  - anythingllm-rbac.yaml
   - networkpolicy.yaml
