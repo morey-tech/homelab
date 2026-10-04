@@ -18,6 +18,7 @@ spec:
       - path: kubernetes/ocp-mgmt/system/openshift-ingress
       - path: kubernetes/ocp-mgmt/system/openshift-apiserver
       - path: kubernetes/ocp-mgmt/system/openshift-monitoring
+      - path: kubernetes/ocp-mgmt/system/csi-driver-nfs
   ignoreApplicationDifferences:
     - jsonPointers:
       # Allow automated sync policy to be disabled manually.
