@@ -9,7 +9,7 @@ OpenShift AI manages `local-llm` through KServe's Standard deployment mode (form
 | Model | `Qwen/Qwen3-0.6B`, revision `c1899de289a04d12100db370d81485cdf75e47ca` |
 | Runtime | OpenShift AI 3.5.1 NVIDIA vLLM image, pinned by digest |
 | Hardware | `tr-gpu-3090` profile, one `nvidia.com/gpu` |
-| CPU / system RAM | Requests 2 CPU / 8 GiB RAM; RAM limit 16 GiB |
+| CPU / system RAM | Requests 2 CPU / 8 GiB RAM; limits 2 CPU / 16 GiB RAM |
 | Context / concurrency | 4,096 tokens / 2 sequences |
 | GPU memory target | 80% |
 | Storage | 50 GiB expandable `models` PVC on `lvms-vg-ai` |
@@ -45,7 +45,7 @@ oc create token inference-client -n inference-server --duration=1h
 
 Use the endpoint as an OpenAI-compatible base URL, the token as the API key, and `local-llm` as the model name. Tokens expire and must be renewed; no static credential is stored in Git. The Role permits only `get` on this InferenceService, which KServe's proxy checks before accepting requests. For Qwen3 smoke testing, pass `chat_template_kwargs: {enable_thinking: false}`.
 
-KServe owns its Service and Route. The route allows ten-minute requests for generation and streaming. NetworkPolicy permits inference traffic through port 8443 and limits direct runtime port 8080 to monitoring namespaces.
+The `networking.kserve.io/visibility: exposed` label enables the OpenShift AI-managed Route. KServe and the platform model controller own the Service and Route. The route allows ten-minute requests for generation and streaming. NetworkPolicy permits inference traffic through port 8443 and limits direct runtime port 8080 to monitoring namespaces.
 
 ## Model changes and recovery
 

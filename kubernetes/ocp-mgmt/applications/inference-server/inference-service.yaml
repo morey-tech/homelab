@@ -4,6 +4,7 @@ metadata:
   name: local-llm
   labels:
     opendatahub.io/dashboard: "true"
+    networking.kserve.io/visibility: exposed
   annotations:
     # Wave 1 waits for the model download Job to complete.
     argocd.argoproj.io/sync-wave: "1"
@@ -33,5 +34,6 @@ spec:
           memory: 8Gi
           nvidia.com/gpu: "1"
         limits:
+          cpu: "2"
           memory: 16Gi
           nvidia.com/gpu: "1"
