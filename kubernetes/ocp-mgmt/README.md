@@ -21,7 +21,7 @@ Recreated management cluster with a minimal GitOps foundation. Workloads from th
 - **External Secrets Operator**: Bitwarden CLI backend and the `bitwarden-login`, `bitwarden-fields`, and `bitwarden-notes` ClusterSecretStores.
 - **Administrator access**: HTPasswd `admin` user, `cluster-admins` group, OpenShift OAuth for Argo CD, and an `ocp-mgmt` console banner.
 
-Dev Spaces is enabled for cloud development. Local/block storage, GPU/NFD operators, virtualization, ACM, Tailscale, AAP, and other applications are deferred. Certificate automation is enabled as the first migration stage after bootstrap. This bootstrap does not change node roles, labels, taints, disks, or machine configuration.
+Dev Spaces uses local NVMe LVM storage for cloud development with nested containers. GPU/NFD operators, virtualization, ACM, Tailscale, AAP, and other applications are deferred. Certificate automation is enabled as the first migration stage after bootstrap. This bootstrap does not change node roles, labels, taints, disks, or machine configuration.
 
 ## Initial Setup
 
@@ -152,17 +152,23 @@ The non-default `qnap-nvme` and `qnap-mass` StorageClasses dynamically provision
 
 See [QNAP NFS storage](system/csi-driver-nfs/README.md) for export prerequisites, an example claim, and operational details.
 
+## Local NVMe LVM Storage
+
+[Red Hat LVM Storage](system/openshift-lvm-storage/README.md) provides the non-default `lvms-vg-nvme` class with XFS on one 2 TB Samsung drive each on `ms-02`, `ms-04`, and `tr-gpu`. The second tr-gpu drive and all OS disks are excluded by serial-specific device selection. `ms-03` is excluded until a 2 TB drive is installed and explicitly selected.
+
+Dev Spaces uses this class to support workspace user namespaces and nested containers. Volumes are node-local and not replicated. Initial sync enables authorized wiping of legacy data on the selected drives; review the storage README for the shared old tr-gpu pool, rollout order, and required disk readiness checks. Existing NFS workspace claims require separate recreation or migration.
+
 ## Application Catalog
 
 | Application | Namespace | URL | Purpose | Notable Features |
 |-------------|-----------|-----|---------|-----------------|
-| OpenShift Dev Spaces | openshift-devspaces | [devspaces.apps.ocp-mgmt.rh-lab.morey.tech](https://devspaces.apps.ocp-mgmt.rh-lab.morey.tech) | Cloud development environments | Per-workspace QNAP NVMe storage, Open VSX, Bitwarden-backed credentials |
+| OpenShift Dev Spaces | openshift-devspaces | [devspaces.apps.ocp-mgmt.rh-lab.morey.tech](https://devspaces.apps.ocp-mgmt.rh-lab.morey.tech) | Cloud development environments | Per-workspace local NVMe LVM storage, nested containers, Open VSX, Bitwarden-backed credentials |
 
 See [Dev Spaces configuration](system/openshift-devspaces/README.md) for verification, the required GitHub OAuth callback update, and deferred Tailscale dependency.
 
 ## Staged Migration
 
-The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, API/ingress certificates, Discord alerting, the NFS CSI driver, the Dev Spaces operator, and Dev Spaces configuration. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
+The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, API/ingress certificates, Discord alerting, the NFS CSI driver, LVM Storage, the Dev Spaces operator, and Dev Spaces configuration. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
 
 Use the retained [ocp-gpu configuration](../ocp-gpu/README.md) as migration source material. Review each component's hostnames, namespaces, storage, secrets, and node placement before enabling it. Old management manifests remain available in Git history.
 

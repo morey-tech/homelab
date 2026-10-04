@@ -20,6 +20,7 @@ spec:
       - path: kubernetes/ocp-mgmt/system/openshift-monitoring
       - path: kubernetes/ocp-mgmt/system/csi-driver-nfs
       - path: kubernetes/ocp-mgmt/system/openshift-operators
+      - path: kubernetes/ocp-mgmt/system/openshift-lvm-storage
       - path: kubernetes/ocp-mgmt/system/openshift-devspaces
   ignoreApplicationDifferences:
     - jsonPointers:
@@ -99,7 +100,7 @@ spec:
       syncPolicy:
         syncOptions: []
     {{ end }}
-    {{- if or (eq .path.basename "openshift-operators") (eq .path.basename "openshift-devspaces") }}
+    {{- if or (eq .path.basename "openshift-operators") (eq .path.basename "openshift-devspaces") (eq .path.basename "openshift-lvm-storage") }}
     spec:
       destination:
         namespace: {{.path.basename}}
