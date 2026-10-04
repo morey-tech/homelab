@@ -40,13 +40,15 @@ Reusing the app moves its callback away from ocp-gpu. If both installations must
 
 See the [Red Hat configuration reference](https://docs.redhat.com/en/documentation/red_hat_openshift_dev_spaces/3.26/html/administration_guide/configuring-devspaces) for storage and OAuth fields.
 
-## Deferred dependencies
+## OCP Home access through Tailscale
 
-- **OCP Home access:** The source `ocp-home-kubeconfig` ConfigMap is omitted because its Tailscale egress Service is not deployed on ocp-mgmt. Migrate Tailscale and its tailnet policy before adding that workspace mount. Workspaces retain their local ocp-mgmt kubeconfig.
+The [Tailscale application](../tailscale/README.md) provides an egress proxy to OCP Home using the existing OCP GPU OAuth client and tags, with management-specific device hostnames. The [workspace kubeconfig](ocp-home-kubeconfig.yaml) mounts at `/etc/ocp-home/kubeconfig` when a workspace starts. The homelab image merges it into `KUBECONFIG` through shell initialization, preserving the local ocp-mgmt context as the default.
+
+Only DevWorkspace pods in `admin-devspaces` can reach the proxy, whose shared tailnet identity has `cluster-admin` on OCP Home through the existing grant. Other user namespaces receive the kubeconfig but cannot connect. See [workspace setup and verification](TAILSCALE.md); stop/start existing workspaces after Argo sync to receive the mount.
 
 ## GitOps and verification
 
-The system ApplicationSet explicitly enables `openshift-operators-system`, `openshift-lvm-storage-system`, and `openshift-devspaces-system`. Follow the [storage rollout order](../openshift-lvm-storage/README.md#destructive-initialization-and-argo-cd-rollout) before syncing the Dev Spaces cutover; separate Applications are not readiness-ordered. Retry and `SkipDryRunOnMissingResource` support installation while operator CRDs become available.
+The system ApplicationSet explicitly enables `openshift-operators-system`, `openshift-lvm-storage-system`, `openshift-devspaces-system`, and `tailscale-system`. Follow the [storage rollout order](../openshift-lvm-storage/README.md#destructive-initialization-and-argo-cd-rollout) before syncing the Dev Spaces cutover; separate Applications are not readiness-ordered. Retry and `SkipDryRunOnMissingResource` support installation while operator CRDs become available.
 
 ```bash
 kustomize build kubernetes/ocp-mgmt/system/openshift-lvm-storage

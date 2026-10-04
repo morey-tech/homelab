@@ -21,7 +21,7 @@ Recreated management cluster with a minimal GitOps foundation. Workloads from th
 - **External Secrets Operator**: Bitwarden CLI backend and the `bitwarden-login`, `bitwarden-fields`, and `bitwarden-notes` ClusterSecretStores.
 - **Administrator access**: HTPasswd `admin` user, `cluster-admins` group, OpenShift OAuth for Argo CD, and an `ocp-mgmt` console banner.
 
-Dev Spaces uses local NVMe LVM storage for cloud development with nested containers. GPU/NFD operators, virtualization, ACM, Tailscale, AAP, and other applications are deferred. Certificate automation is enabled as the first migration stage after bootstrap. This bootstrap does not change node roles, labels, taints, disks, or machine configuration.
+Dev Spaces uses local NVMe LVM storage for cloud development with nested containers. GPU/NFD operators, virtualization, ACM, AAP, and other applications are deferred. Certificate automation is enabled as the first migration stage after bootstrap. This bootstrap does not change node roles, labels, taints, disks, or machine configuration.
 
 ## Initial Setup
 
@@ -74,7 +74,7 @@ oc get pods -n external-secrets-system
 oc get route cluster-argocd-server -n openshift-gitops
 ```
 
-Core bootstrap Applications: `openshift-gitops-config`, `external-secrets-system`, and `htpass-admin-system`. The certificate migration adds `cert-manager-operator-system`, `cert-manager-system`, `openshift-ingress-system`, and `openshift-apiserver-system`. Discord alerting adds `openshift-monitoring-system`, NFS provisioning adds `csi-driver-nfs-system`, and Dev Spaces adds `openshift-operators-system` and `openshift-devspaces-system`. Sign in to Argo CD through OpenShift OAuth as `admin`.
+Core bootstrap Applications: `openshift-gitops-config`, `external-secrets-system`, and `htpass-admin-system`. The certificate migration adds `cert-manager-operator-system`, `cert-manager-system`, `openshift-ingress-system`, and `openshift-apiserver-system`. Discord alerting adds `openshift-monitoring-system`, NFS provisioning adds `csi-driver-nfs-system`, and Dev Spaces adds `openshift-operators-system` and `openshift-devspaces-system`; Tailscale egress adds `tailscale-system`. Sign in to Argo CD through OpenShift OAuth as `admin`.
 
 The script retains `kubeadmin`. After confirming `admin` login and cluster-admin access, remove the installer account manually:
 
@@ -164,11 +164,15 @@ Dev Spaces uses this class to support workspace user namespaces and nested conta
 |-------------|-----------|-----|---------|-----------------|
 | OpenShift Dev Spaces | openshift-devspaces | [devspaces.apps.ocp-mgmt.rh-lab.morey.tech](https://devspaces.apps.ocp-mgmt.rh-lab.morey.tech) | Cloud development environments | Per-workspace local NVMe LVM storage, nested containers, Open VSX, Bitwarden-backed credentials |
 
-See [Dev Spaces configuration](system/openshift-devspaces/README.md) for verification, the required GitHub OAuth callback update, and deferred Tailscale dependency.
+See [Dev Spaces configuration](system/openshift-devspaces/README.md) for verification, the required GitHub OAuth callback update, and [Tailscale access to OCP Home](system/openshift-devspaces/TAILSCALE.md).
+
+## Tailscale
+
+- [Tailscale operator and egress proxy](system/tailscale/README.md): connects admin Dev Spaces workspaces to the OCP Home API. Reuses the OCP GPU OAuth client and tags with distinct management device hostnames, a proxy-only privileged SCC binding, and network and Service admission policies.
 
 ## Staged Migration
 
-The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, API/ingress certificates, Discord alerting, the NFS CSI driver, LVM Storage, the Dev Spaces operator, and Dev Spaces configuration. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
+The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, API/ingress certificates, Discord alerting, the NFS CSI driver, LVM Storage, the Dev Spaces operator, Dev Spaces configuration, and Tailscale egress. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
 
 Use the retained [ocp-gpu configuration](../ocp-gpu/README.md) as migration source material. Review each component's hostnames, namespaces, storage, secrets, and node placement before enabling it. Old management manifests remain available in Git history.
 
