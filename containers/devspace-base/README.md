@@ -8,6 +8,7 @@ This image serves as the foundation for all morey-tech devspace containers. It p
 - All tools included in Red Hat UDI (kubectl, oc, helm, kustomize, terraform, kubectx, kubens)
 - GitHub CLI (gh) for GitHub operations
 - Claude CLI for AI-assisted development
+- OpenCode CLI, with its version pinned in the Containerfile
 
 ## Tools Included
 
@@ -19,7 +20,7 @@ This image serves as the foundation for all morey-tech devspace containers. It p
 
 ### Added in devspace-base
 - **GitHub**: gh (GitHub CLI)
-- **AI Assistant**: claude (Claude CLI)
+- **AI Assistants**: claude (Claude CLI), opencode (OpenCode CLI)
 
 ## Base Image
 
@@ -48,12 +49,13 @@ Runs as `user` (UID 1001, GID 1001) - the default user from Red Hat UDI.
 
 ## CLIs
 
-GitHub CLI and Claude CLI are installed and added to PATH.
+GitHub CLI, Claude CLI, and OpenCode CLI are installed and added to PATH. OpenCode provider configuration and credentials are not included in this image; supply them through the workspace platform or your local environment.
 
 To verify installations:
 ```bash
 gh --version
 claude --version
+opencode --version
 ```
 
 ## Browser Support

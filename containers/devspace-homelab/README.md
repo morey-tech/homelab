@@ -14,7 +14,7 @@ This image extends `devspace-base` which provides Claude CLI, GitHub CLI, and ba
 | GitOps | helm, kustomize |
 | Infrastructure as Code | terraform |
 | Cloud | gh (GitHub CLI) |
-| AI | claude (Claude CLI) |
+| AI | claude (Claude CLI), opencode (OpenCode CLI) |
 
 ### Added in devspace-homelab
 | Category | Tools |
@@ -45,6 +45,8 @@ Do not set `KUBECONFIG` as an image `ENV` or container environment variable. The
 - **Local DevContainer**: Requires manual `gh auth login`
 
 ## Build
+
+CI rebuilds this image when `devspace-base` changes and uses the base image's same-commit SHA tag. Homelab-only builds and local builds use the published base `latest` by default; override `DEVSPACE_BASE_IMAGE` with a published immutable reference for a reproducible base selection.
 
 ```bash
 podman build -t devspace-homelab:latest ./containers/devspace-homelab

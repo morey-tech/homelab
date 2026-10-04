@@ -95,6 +95,11 @@ jobs:
           # - Independent: all others
           
           echo "All containers: $ALL_CONTAINERS"
+
+          # Rebuild consumers when their shared tool image changes.
+          if echo "$ALL_CONTAINERS" | jq -e 'index("devspace-base") != null' > /dev/null; then
+            ALL_CONTAINERS=$(echo "$ALL_CONTAINERS" | jq -c --argjson deps "$DEPENDENT_CONTAINERS" '. + $deps | unique')
+          fi
           
           # Extract base containers (ending in "-base")
           base_containers=$(echo "$ALL_CONTAINERS" | jq -c '[.[] | select(endswith("-base"))]')
@@ -224,6 +229,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Select base image
+        id: base-image
+        env:
+          BASE_CONTAINERS: ${{ needs.detect-changes.outputs.base_containers }}
+        run: |
+          tag=latest
+          if echo "$BASE_CONTAINERS" | jq -e 'index("devspace-base") != null' > /dev/null; then
+            tag="sha-${GITHUB_SHA:0:7}"
+          fi
+          echo "image=${REGISTRY}/${GITHUB_REPOSITORY_OWNER}/homelab/devspace-base:${tag}" >> "$GITHUB_OUTPUT"
+
       - name: Free disk space
         run: |
           echo "Before cleanup:"
@@ -265,6 +281,9 @@ jobs:
         with:
           context: ./containers/${{ matrix.container }}
           file: ./containers/${{ matrix.container }}/Containerfile
+          pull: true
+          build-args: |
+            DEVSPACE_BASE_IMAGE=${{ steps.base-image.outputs.image }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}

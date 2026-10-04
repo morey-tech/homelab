@@ -51,6 +51,12 @@ RUN dnf install -y \
 # The install script auto-detects architecture and installs to /home/user/.local/bin/
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
+# Provide the binary only; Dev Spaces supplies provider configuration and secrets.
+ARG OPENCODE_VERSION=1.18.34
+RUN npm install --global --prefix /opt/opencode --no-audit --no-fund opencode-ai@${OPENCODE_VERSION} \
+    && ln -s /opt/opencode/bin/opencode /usr/local/bin/opencode \
+    && opencode --version
+
 # Install GitHub CLI auto-authentication script
 COPY gh-auth-init.sh /usr/local/bin/gh-auth-init.sh
 RUN chmod +x /usr/local/bin/gh-auth-init.sh && \
