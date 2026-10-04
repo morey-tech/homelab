@@ -6,3 +6,4 @@ resources:
   - github-oauth.yaml
   - claude-code-api-key.yaml
   - getting-started-samples.yaml
+  - vscode-editor-configurations.yaml

@@ -11,11 +11,16 @@ This configuration copies the former [ocp-gpu Dev Spaces setup](../../../ocp-gpu
 | Storage | One 5Gi `lvms-vg-nvme` ReadWriteOnce PVC per workspace; persistent user home disabled |
 | GitHub OAuth | `github-oauth-config` ExternalSecret from Bitwarden item `4afc34a2-53be-4b9b-b46c-b3a70008d238` via `bitwarden-login` |
 | Claude Code | `claude-code-api-key` ClusterExternalSecret injects `ANTHROPIC_API_KEY` into namespaces labelled `app.kubernetes.io/component: workspaces-namespace` |
+| Global VS Code extensions | `openai.chatgpt` via `vscode-editor-configurations` ConfigMap |
 | Getting started | `morey-tech/homelab` repository sample |
 
 The [LVM configuration](../openshift-lvm-storage/README.md) provisions XFS volumes from one selected 2 TB Samsung NVMe per eligible node. `disableContainerRunCapabilities: false` enables nested container capabilities and workspace user namespaces. XFS supports the ID-mapped mounts that failed on NFS with `mount_setattr /projects: Invalid argument`; see [Kubernetes user namespace limitations](https://kubernetes.io/docs/concepts/workloads/pods/user-namespaces/).
 
 The class is explicitly selected and is not the cluster default. Volumes are node-local, use `WaitForFirstConsumer`, and cannot fail over to another node. The operator-generated class uses reclaim policy `Delete`, so deleting a workspace PVC deletes its local data.
+
+## Global VS Code extensions
+
+The [editor ConfigMap](vscode-editor-configurations.yaml) recommends `openai.chatgpt` for all Dev Spaces workspaces. After Argo CD sync, start or restart a workspace and check the editor's Extensions view for installation. Removing Roo Code from the global recommendation list does not uninstall copies already installed in existing workspaces; uninstall those from the Extensions view if needed.
 
 ## Existing NFS workspaces
 
