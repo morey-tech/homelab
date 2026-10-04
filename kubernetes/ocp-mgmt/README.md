@@ -181,6 +181,10 @@ oc get node tr-gpu -o jsonpath='{.status.allocatable.nvidia\.com/gpu}{"\n"}'
 
 The manifests were moved out of the retired `ocp-gpu` cluster. That cluster is no longer running, and its former node, `tr-gpu`, now belongs to `ocp-mgmt`. There are no running deployments on `ocp-gpu` to preserve or uninstall.
 
+## OpenShift AI
+
+[OpenShift AI](system/redhat-ods-operator/README.md) provides its dashboard and KServe for model serving on `tr-gpu`. The operator tracks `stable-3.5` with manual InstallPlan approval. Training, pipelines, workbenches, and distributed inference components are disabled. Model data uses the separate `lvms-vg-ai` storage class.
+
 ## Application Catalog
 
 | Application | Namespace | URL | Purpose | Notable Features |

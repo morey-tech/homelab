@@ -25,6 +25,7 @@ spec:
       - path: kubernetes/ocp-mgmt/system/tailscale
       - path: kubernetes/ocp-mgmt/system/openshift-nfd
       - path: kubernetes/ocp-mgmt/system/nvidia-gpu-operator
+      - path: kubernetes/ocp-mgmt/system/redhat-ods-operator
   ignoreApplicationDifferences:
     - jsonPointers:
       # Allow automated sync policy to be disabled manually.
@@ -103,7 +104,7 @@ spec:
       syncPolicy:
         syncOptions: []
     {{ end }}
-    {{- if or (eq .path.basename "openshift-operators") (eq .path.basename "openshift-devspaces") (eq .path.basename "openshift-lvm-storage") (eq .path.basename "openshift-nfd") (eq .path.basename "nvidia-gpu-operator") }}
+    {{- if or (eq .path.basename "openshift-operators") (eq .path.basename "openshift-devspaces") (eq .path.basename "openshift-lvm-storage") (eq .path.basename "openshift-nfd") (eq .path.basename "nvidia-gpu-operator") (eq .path.basename "redhat-ods-operator") }}
     spec:
       destination:
         namespace: {{.path.basename}}
