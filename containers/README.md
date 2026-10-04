@@ -91,6 +91,21 @@ Current containers:
 - `devspace-homelab` → Depends on `devspace-base` (explicitly listed)
 - `hf-cli` → Independent container
 
+## Build Cache
+
+All three build stages import and export a [BuildKit registry cache](https://docs.docker.com/build/cache/backends/registry/) at `ghcr.io/morey-tech/homelab/CONTAINER:buildcache`, where `CONTAINER` is the container directory name. Export retains `mode=max` to cache intermediate layers. These existing cache references are unchanged; builds no longer duplicate cache imports and exports through the GitHub Actions cache backend. This does not disable other actions' own caches, such as QEMU's.
+
+The [September 26 homelab build](https://github.com/morey-tech/homelab/actions/runs/36262103755/job/108459791355) spent 324 seconds exporting GHA cache versus 17 seconds exporting registry cache. Registry-only caching removes that duplicate export; actual end-to-end savings and future cache hits must be checked in subsequent builds. Disk cleanup remains unchanged. Existing GHA cache entries are left to expire under GitHub's retention policy.
+
+Workflow-only changes can run detection without selecting an image build. After the reviewed change is committed and pushed, manually dispatch a representative build (this publishes images and updates the cache):
+
+```bash
+gh workflow run container-build.yml --ref main -f container=devspace-homelab
+gh run list --workflow container-build.yml --limit 5
+```
+
+Check the build log for a successful `:buildcache` import, `CACHED` steps where inputs are unchanged, a successful registry cache export, and no `exporting to GitHub Actions Cache` phase. Compare the build-step duration with the previous run. A missing registry cache permits a cold build and is populated on successful export.
+
 ## Conventions
 
 - Use `Containerfile` (OCI standard) rather than `Dockerfile`

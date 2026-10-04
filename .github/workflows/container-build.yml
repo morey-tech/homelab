@@ -200,13 +200,10 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Hybrid cache strategy: GHA + Registry
-          # This allows cache reuse across branches and PRs
+          # Reuse the registry cache without a duplicate GitHub Actions cache export.
           cache-from: |
-            type=gha,scope=buildkit-${{ matrix.container }}
             type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}:buildcache
           cache-to: |
-            type=gha,mode=max,scope=buildkit-${{ matrix.container }}
             type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}:buildcache,mode=max
 
   # Stage 2: Build dependent containers (explicitly listed in DEPENDENT_CONTAINERS)
@@ -288,13 +285,10 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Hybrid cache strategy: GHA + Registry
-          # This allows cache reuse across branches and PRs
+          # Reuse the registry cache without a duplicate GitHub Actions cache export.
           cache-from: |
-            type=gha,scope=buildkit-${{ matrix.container }}
             type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}:buildcache
           cache-to: |
-            type=gha,mode=max,scope=buildkit-${{ matrix.container }}
             type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}:buildcache,mode=max
 
   # Stage 3: Build independent containers (all others not base or dependent)
@@ -359,11 +353,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Hybrid cache strategy: GHA + Registry
-          # This allows cache reuse across branches and PRs
+          # Reuse the registry cache without a duplicate GitHub Actions cache export.
           cache-from: |
-            type=gha,scope=buildkit-${{ matrix.container }}
             type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}:buildcache
           cache-to: |
-            type=gha,mode=max,scope=buildkit-${{ matrix.container }}
             type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/homelab/${{ matrix.container }}:buildcache,mode=max
