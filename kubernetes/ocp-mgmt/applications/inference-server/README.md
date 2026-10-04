@@ -21,7 +21,11 @@ OpenShift AI manages `local-llm` through KServe's Standard deployment mode (form
 
 Prerequisites: `lvms-vg-ai` ready on `tr-gpu`, NVIDIA validation completed, OpenShift AI ready, and hardware profile `tr-gpu-3090` installed. The application ApplicationSet explicitly includes this workload. Git owns the model configuration; edits to managed resources through the dashboard are reconciled back to Git.
 
-The PVC and download Job share sync wave 0 so `WaitForFirstConsumer` can bind the local volume. The stable-name `download-model` Job uses [Argo CD force replacement](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-options/#force-sync) (`Force=true,Replace=true`) to delete and recreate the Job when syncing it, allowing image, resource, and script changes without manual renaming. This annotation applies only to the Job, not the PVC or inference workload. The Job downloads the pinned revision into its own directory and records completion. Wave 1 starts KServe only after the Job succeeds. Subsequent runs skip downloading when the revision's completion marker exists. No Hugging Face token is needed for this public model.
+The PVC and download Job share sync wave 0 so `WaitForFirstConsumer` can bind the local volume. The stable-name `download-model` Job uses [Argo CD force replacement](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-options/#force-sync) (`Force=true,Replace=true`) to delete and recreate the Job when syncing it, allowing image, resource, and script changes without manual renaming. This annotation applies only to the Job, not the PVC or inference workload. The Job downloads the pinned revision into its own directory and records completion. Wave 1 starts KServe only after the Job succeeds. Subsequent runs skip downloading when the revision's completion marker exists. Although the model is public, downloads use a Bitwarden-backed HF token for authenticated Hub rate limits.
+
+The wave -1 `hf-token` ExternalSecret reads the password field of Bitwarden Login item `9ca241df-26a6-4ef1-8026-b4d9016ebc27` through `bitwarden-login`. ESO refreshes the `hf-token` Secret hourly. Only the download container receives its `HF_TOKEN` key through a required `secretKeyRef`; it cannot start without that key. No token value is stored in Git or passed to the offline serving runtime or AnythingLLM. The cluster's Bitwarden account must have access to the item.
+
+For rotation, update the item's password, wait for the Bitwarden backend and ESO to synchronize, then run a full Argo CD application sync to recreate the Job with the refreshed environment. Updating a Secret does not change an already-running container's environment. A cached model skips Hub access, so a successful cached run alone does not validate the token. Authentication does not replace the downloader's memory-pressure mitigations.
 
 The downloader requests 1 GiB of system RAM and has a 4 GiB limit. The initial 2 GiB configuration was OOM-killed during the 4B model download. It now downloads one file at a time (`max_workers=1`) with [Xet disabled](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfhubdisablexet) to reduce transfer concurrency. This changes neither GPU allocation nor serving context. The model directory and download metadata are preserved so the replacement Job can reuse completed files.
 
@@ -30,6 +34,7 @@ The Job remains a normal tracked resource, not a hook, so changes to its spec pa
 ```bash
 kustomize build kubernetes/ocp-mgmt/applications/inference-server
 oc get application inference-server -n openshift-gitops
+oc get externalsecret hf-token -n inference-server
 oc get pvc,job,pods -n inference-server
 oc logs job/download-model -n inference-server
 oc get inferenceservice local-llm -n inference-server

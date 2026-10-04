@@ -56,6 +56,11 @@ spec:
                   marker.write_text(revision + "\n")
                   print("Pinned model revision downloaded successfully")
           env:
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: HF_TOKEN
             - name: MODEL_REPO
               value: Qwen/Qwen3-4B-Instruct-2507
             - name: MODEL_REVISION
