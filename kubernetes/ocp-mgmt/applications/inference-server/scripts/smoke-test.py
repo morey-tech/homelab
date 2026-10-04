@@ -39,7 +39,6 @@ def main():
         "messages": [{"role": "user", "content": "Reply with a short greeting."}],
         "max_tokens": 32,
         "temperature": 0,
-        "chat_template_kwargs": {"enable_thinking": False},
     }
     request = urllib.request.Request(
         base_url + "/v1/chat/completions", headers=headers, data=json.dumps(payload).encode()

@@ -6,7 +6,7 @@
 oc get secret anythingllm-auth -n anythingllm -o jsonpath='{.data.AUTH_TOKEN}' | base64 -d
 ```
 
-Create a workspace and use the preconfigured system model. No external LLM account is required. Qwen3-0.6B is the initial validation model; append `/no_think` to a prompt to request a short answer without reasoning.
+Create a workspace and use the preconfigured system model. No external LLM account is required. `local-llm` serves Qwen3-4B-Instruct-2507, a non-thinking model; no `/no_think` suffix is needed. The context remains at 4,096 tokens while GPU memory headroom is measured before testing longer contexts.
 
 | Setting | Value |
 |---------|-------|

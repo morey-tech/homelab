@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: download-qwen3-06b-c1899de-hf-9e38f79
+  name: download-qwen3-4b-2507-cdbee75-hf-9e38f79
 spec:
   backoffLimit: 3
   activeDeadlineSeconds: 3600
@@ -38,18 +38,25 @@ spec:
                       revision=revision,
                       local_dir=str(target),
                   )
-                  for name in ("config.json", "tokenizer_config.json", "model.safetensors"):
+                  for name in (
+                      "config.json",
+                      "tokenizer_config.json",
+                      "model.safetensors.index.json",
+                      "model-00001-of-00003.safetensors",
+                      "model-00002-of-00003.safetensors",
+                      "model-00003-of-00003.safetensors",
+                  ):
                       if not (target / name).is_file():
                           raise RuntimeError(f"Missing model artifact: {name}")
                   marker.write_text(revision + "\n")
                   print("Pinned model revision downloaded successfully")
           env:
             - name: MODEL_REPO
-              value: Qwen/Qwen3-0.6B
+              value: Qwen/Qwen3-4B-Instruct-2507
             - name: MODEL_REVISION
-              value: c1899de289a04d12100db370d81485cdf75e47ca
+              value: cdbee75f17c01a7cc42f958dc650907174af0554
             - name: MODEL_DIRECTORY
-              value: /models/qwen3-0.6b-c1899de289a04d12100db370d81485cdf75e47ca
+              value: /models/qwen3-4b-instruct-2507-cdbee75f17c01a7cc42f958dc650907174af0554
             - name: HF_HOME
               value: /tmp/huggingface
           securityContext:

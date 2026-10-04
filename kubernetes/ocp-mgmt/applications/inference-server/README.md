@@ -1,12 +1,12 @@
 # KServe inference on ocp-mgmt
 
-OpenShift AI manages `local-llm` through KServe's Standard deployment mode (formerly RawDeployment). A NVIDIA vLLM ServingRuntime runs one replica on `tr-gpu`'s 24 GiB RTX 3090. The initial Qwen3-0.6B model validates serving; it is not the final model selection.
+OpenShift AI manages `local-llm` through KServe's Standard deployment mode (formerly RawDeployment). A NVIDIA vLLM ServingRuntime runs one replica on `tr-gpu`'s 24 GiB RTX 3090. Qwen3-4B-Instruct-2507 replaces the initial Qwen3-0.6B validation model; context stays at 4,096 tokens until the new model's GPU memory headroom is measured.
 
 | Setting | Value |
 |---------|-------|
 | Namespace / Argo CD Application | `inference-server` |
 | InferenceService / API model name | `local-llm` |
-| Model | `Qwen/Qwen3-0.6B`, revision `c1899de289a04d12100db370d81485cdf75e47ca` |
+| Model | `Qwen/Qwen3-4B-Instruct-2507`, revision `cdbee75f17c01a7cc42f958dc650907174af0554` |
 | Model downloader | `hf-cli` build `sha-9e38f79`, `huggingface_hub` 1.33.0, pinned by digest |
 | Runtime | OpenShift AI 3.5.1 NVIDIA vLLM image, pinned by digest |
 | Hardware | `tr-gpu-3090` profile, one `nvidia.com/gpu` |
@@ -27,13 +27,23 @@ The PVC and download Job share sync wave 0 so `WaitForFirstConsumer` can bind th
 kustomize build kubernetes/ocp-mgmt/applications/inference-server
 oc get application inference-server -n openshift-gitops
 oc get pvc,job,pods -n inference-server
-oc logs job/download-qwen3-06b-c1899de-hf-9e38f79 -n inference-server
+oc logs job/download-qwen3-4b-2507-cdbee75-hf-9e38f79 -n inference-server
 oc get inferenceservice local-llm -n inference-server
 oc get deployment local-llm-predictor -n inference-server -o jsonpath='{.spec.strategy}{"\n"}'
 python kubernetes/ocp-mgmt/applications/inference-server/scripts/smoke-test.py
 ```
 
 The smoke test obtains a short-lived token without displaying it and verifies TLS, rejection of unauthenticated access, model discovery, chat completion, and streaming. It requires a logged-in `oc` session authorized to request a token for `inference-client`.
+
+After the reviewed model change is committed, pushed, and reconciled by Argo CD, verify the new predictor's `storageUri` and successful startup, then run both client smoke tests. Inspect the new pod's startup memory profile before proposing any context increase:
+
+```bash
+oc get inferenceservice local-llm -n inference-server -o jsonpath='{.spec.predictor.model.storageUri}{"\n"}'
+oc logs deployment/local-llm-predictor -n inference-server -c kserve-container | rg 'Model loading took|Available KV cache memory|GPU KV cache size|Maximum concurrency'
+python kubernetes/ocp-mgmt/applications/anythingllm/scripts/smoke-test.py
+```
+
+Keep FP16, 80% GPU memory allocation, two concurrent sequences, and AnythingLLM's 4,096-token budget / 1,024-token response limit unchanged for this baseline. vLLM preallocates its KV cache, so GPU free-memory readings alone do not show the available context capacity. The cache token count is shared across concurrent requests, not a per-request context guarantee. The three weight shards total approximately 7.5 GiB; the old model directory remains on the 50 GiB PVC for rollback.
 
 ## Clients
 
@@ -44,7 +54,7 @@ oc get inferenceservice local-llm -n inference-server -o jsonpath='{.status.url}
 oc create token inference-client -n inference-server --duration=1h
 ```
 
-Use the endpoint as an OpenAI-compatible base URL, the token as the API key, and `local-llm` as the model name. Tokens expire and must be renewed; no static credential is stored in Git. The Role permits only `get` on this InferenceService, which KServe's proxy checks before accepting requests. For Qwen3 smoke testing, pass `chat_template_kwargs: {enable_thinking: false}`.
+Use the endpoint as an OpenAI-compatible base URL, the token as the API key, and `local-llm` as the model name. Tokens expire and must be renewed; no static credential is stored in Git. The Role permits only `get` on this InferenceService, which KServe's proxy checks before accepting requests. Qwen3-4B-Instruct-2507 is non-thinking and needs no thinking-mode override.
 
 [AnythingLLM](../anythingllm/README.md) uses the same endpoint from its own namespace. The separate `anythingllm-local-llm` RoleBinding grants its ServiceAccount the same model-scoped permission. Its controller-generated persistent token is kept in a Kubernetes Secret, never Git; this differs from the short-lived tokens above.
 

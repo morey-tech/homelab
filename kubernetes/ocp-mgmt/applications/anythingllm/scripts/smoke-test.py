@@ -76,7 +76,7 @@ def main():
         # Use the configured system provider/model, not a per-workspace override.
         with request(
             path + "/stream-chat",
-            payload={"message": "Reply with a short greeting. /no_think"}, token=token,
+            payload={"message": "Reply with a short greeting."}, token=token,
         ) as response:
             fragments = []
             closed = False

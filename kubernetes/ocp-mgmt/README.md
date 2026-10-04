@@ -185,7 +185,7 @@ The manifests were moved out of the retired `ocp-gpu` cluster. That cluster is n
 
 [OpenShift AI](system/redhat-ods-operator/README.md) provides its dashboard and KServe for model serving on `tr-gpu`. The operator tracks `stable-3.5` with manual InstallPlan approval. Training, pipelines, workbenches, and distributed inference components are disabled. Model data uses the separate `lvms-vg-ai` storage class.
 
-[The inference server](applications/inference-server/README.md) initially serves Qwen3-0.6B as `local-llm` using the NVIDIA vLLM runtime managed by KServe. It uses one GPU, a persistent model volume on the WD NVMe, HTTPS token authentication, and a recreate update strategy. Its manifests and model revision are managed in Git.
+[The inference server](applications/inference-server/README.md) serves Qwen3-4B-Instruct-2507 as `local-llm` using the NVIDIA vLLM runtime managed by KServe. It uses one GPU, a persistent model volume on the WD NVMe, HTTPS token authentication, and a recreate update strategy. Context remains at 4,096 tokens pending measurement of the new model's GPU memory headroom. Its manifests and model revision are managed in Git.
 
 ## Application Catalog
 
@@ -193,7 +193,7 @@ The manifests were moved out of the retired `ocp-gpu` cluster. That cluster is n
 |-------------|-----------|-----|---------|-----------------|
 | OpenShift Dev Spaces | openshift-devspaces | [devspaces.apps.ocp-mgmt.rh-lab.morey.tech](https://devspaces.apps.ocp-mgmt.rh-lab.morey.tech) | Cloud development environments | Per-workspace local NVMe LVM storage, nested containers, Open VSX, Bitwarden-backed credentials |
 | OpenShift AI | redhat-ods-applications | [OpenShift AI dashboard](https://rhods-dashboard-redhat-ods-applications.apps.ocp-mgmt.rh-lab.morey.tech) | Model deployment and monitoring | KServe, RTX 3090 hardware profile, OpenShift authentication |
-| Inference Server | inference-server | [API access](applications/inference-server/README.md#clients) | OpenAI-compatible chat inference | KServe-managed vLLM, Qwen3-0.6B, dedicated NVMe model storage, token authentication |
+| Inference Server | inference-server | [API access](applications/inference-server/README.md#clients) | OpenAI-compatible chat inference | KServe-managed vLLM, Qwen3-4B-Instruct-2507, dedicated NVMe model storage, token authentication |
 | AnythingLLM | anythingllm | [anythingllm.apps.ocp-mgmt.rh-lab.morey.tech](https://anythingllm.apps.ocp-mgmt.rh-lab.morey.tech) | Chat and document workspaces using `local-llm` | Generated UI password, scoped KServe credential, native embeddings, persistent AI NVMe storage |
 
 See [Dev Spaces configuration](system/openshift-devspaces/README.md) for verification, the required GitHub OAuth callback update, and [Tailscale access to OCP Home](system/openshift-devspaces/TAILSCALE.md).
