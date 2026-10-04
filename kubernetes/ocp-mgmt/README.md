@@ -154,7 +154,7 @@ See [QNAP NFS storage](system/csi-driver-nfs/README.md) for export prerequisites
 
 ## Local NVMe LVM Storage
 
-[Red Hat LVM Storage](system/openshift-lvm-storage/README.md) provides the non-default `lvms-vg-nvme` class with XFS on one 2 TB Samsung drive each on `ms-02`, `ms-04`, and `tr-gpu`. The second tr-gpu drive and all OS disks are excluded by serial-specific device selection. `ms-03` is excluded until a 2 TB drive is installed and explicitly selected.
+[Red Hat LVM Storage](system/openshift-lvm-storage/README.md) provides the non-default `lvms-vg-nvme` class with XFS on one 2 TB Samsung drive each on `ms-02`, `ms-04`, and `tr-gpu`. The second `tr-gpu` drive, WD SN750 serial `20530C800438`, provides the separate non-default `lvms-vg-ai` class for model storage, datasets, caches, and other local workloads. All disks use serial-specific selection; OS disks are excluded. `ms-03` is excluded until a 2 TB drive is installed and explicitly selected.
 
 Dev Spaces uses this class to support workspace user namespaces and nested containers. Volumes are node-local and not replicated. Initial sync enables authorized wiping of legacy data on the selected drives; review the storage README for the shared old tr-gpu pool, rollout order, and required disk readiness checks. Existing NFS workspace claims require separate recreation or migration.
 
