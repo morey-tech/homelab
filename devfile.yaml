@@ -11,6 +11,14 @@ components:
       cpuRequest: 100m
       mountSources: true
       sourceMapping: /projects
+      volumeMounts:
+        - name: codex-state
+          path: /home/morey-tech/.codex
+  # Keep Codex sessions, settings, and authentication across workspace restarts.
+  - name: codex-state
+    volume:
+      size: 1Gi
+      ephemeral: false
 commands:
   - id: post-create-setup
     exec:
