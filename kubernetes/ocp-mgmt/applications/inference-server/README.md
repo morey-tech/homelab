@@ -62,6 +62,20 @@ python kubernetes/ocp-mgmt/applications/anythingllm/scripts/smoke-test.py
 
 Keep FP16, 80% GPU memory allocation, two concurrent sequences, and AnythingLLM's 4,096-token budget / 1,024-token response limit unchanged for this baseline. vLLM preallocates its KV cache, so GPU free-memory readings alone do not show the available context capacity. The cache token count is shared across concurrent requests, not a per-request context guarantee. The three weight shards total approximately 7.5 GiB; the old model directory remains on the 50 GiB PVC for rollback.
 
+## Startup probe
+
+On 2026-10-04, `local-llm-predictor-58989c74d9-dfz6j` started its runtime container at 22:26:00 UTC, completed vLLM application startup at 22:28:21, and became Ready at 22:28:29. The 14 connection-refused startup checks occurred during normal model loading and compilation; the container had no restarts.
+
+The runtime's `/health` startup probe waits 150 seconds before checking every 10 seconds, with a 5-second timeout and 45 allowed failures. This gives approximately ten minutes total startup allowance, including the initial delay, instead of the previous thirty minutes. Readiness and liveness checks are unchanged. The delay also prevents faster starts from becoming Ready before 150 seconds; this is a baseline from one observed startup, not a guaranteed duration. Recheck timings after model, runtime, or resource changes.
+
+After GitOps rollout, compare the next pod's container start time, timestamped logs, readiness transition, and probe events:
+
+```bash
+oc get pods -n inference-server -l serving.kserve.io/inferenceservice=local-llm -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{range .status.containerStatuses[*]}{.name}{": "}{.state.running.startedAt}{"\n"}{end}{range .status.conditions[?(@.type=="Ready")]}{"Ready: "}{.status}{" at "}{.lastTransitionTime}{"\n"}{end}{end}'
+oc logs deployment/local-llm-predictor -n inference-server -c kserve-container --timestamps
+oc get events -n inference-server --field-selector reason=Unhealthy --sort-by=.lastTimestamp
+```
+
 ## Clients
 
 Get the KServe-managed HTTPS endpoint and request a token:

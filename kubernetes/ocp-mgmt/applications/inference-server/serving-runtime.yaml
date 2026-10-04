@@ -47,8 +47,11 @@ spec:
         httpGet:
           path: /health
           port: 8080
+        # Qwen3-4B startup took ~141s on tr-gpu; allow warm-up before probing.
+        initialDelaySeconds: 150
         periodSeconds: 10
-        failureThreshold: 180
+        timeoutSeconds: 5
+        failureThreshold: 45
       readinessProbe:
         httpGet:
           path: /health
