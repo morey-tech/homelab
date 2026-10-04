@@ -11,7 +11,8 @@ Work directly on `main` by default. Do not create a branch, GitHub issue, or pul
 ### 2. Validate Changes
 
 - Run checks appropriate to the change.
-- Verify functionality, including cluster testing when applicable and available.
+- Before committing, use local validation, read-only cluster inspection, and non-persisting server-side dry runs. Do not modify the cluster to validate uncommitted changes.
+- Defer tests that require changed cluster resources until the approved commits have been pushed by the human and deployed through GitOps.
 - Report test results and any validation that could not be completed.
 
 ### 3. Stop for Human Review Before Committing
@@ -34,6 +35,12 @@ The human manually pushes the commits to `main`. Agents must not push automatica
 ```bash
 git push origin main
 ```
+
+### 6. Deploy Through GitOps
+
+Do not apply changes to the cluster before they have been reviewed, committed, and pushed. This includes direct `oc` or `kubectl` apply, create, patch, edit, delete, and rollout restart operations, as well as ad hoc test Jobs or locally rendered manifests applied "for validation". A request to implement or deploy a change does not authorize bypassing this workflow.
+
+After the human pushes, let Argo CD reconcile the committed manifests rather than applying local files directly. Observe the rollout and run the deferred cluster checks against the GitOps-deployed resources. Report any failures without introducing uncommitted cluster fixes.
 
 ---
 
