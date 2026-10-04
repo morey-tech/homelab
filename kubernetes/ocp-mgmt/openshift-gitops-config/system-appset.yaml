@@ -19,6 +19,8 @@ spec:
       - path: kubernetes/ocp-mgmt/system/openshift-apiserver
       - path: kubernetes/ocp-mgmt/system/openshift-monitoring
       - path: kubernetes/ocp-mgmt/system/csi-driver-nfs
+      - path: kubernetes/ocp-mgmt/system/openshift-operators
+      - path: kubernetes/ocp-mgmt/system/openshift-devspaces
   ignoreApplicationDifferences:
     - jsonPointers:
       # Allow automated sync policy to be disabled manually.
@@ -96,4 +98,19 @@ spec:
         namespace: openshift-monitoring
       syncPolicy:
         syncOptions: []
+    {{ end }}
+    {{- if or (eq .path.basename "openshift-operators") (eq .path.basename "openshift-devspaces") }}
+    spec:
+      destination:
+        namespace: {{.path.basename}}
+      syncPolicy:
+        retry:
+          limit: 10
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+        - CreateNamespace=true
+        - SkipDryRunOnMissingResource=true
     {{ end }}

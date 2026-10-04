@@ -1,0 +1,35 @@
+apiVersion: external-secrets.io/v1
+kind: ClusterExternalSecret
+metadata:
+  name: claude-code-api-key
+spec:
+  # Create secret in all user workspace namespaces
+  namespaceSelector:
+    matchLabels:
+      app.kubernetes.io/component: workspaces-namespace
+  externalSecretSpec:
+    refreshInterval: 1h
+    secretStoreRef:
+      name: bitwarden-login
+      kind: ClusterSecretStore
+    target:
+      name: claude-code-api-key
+      deletionPolicy: Delete
+      template:
+        type: Opaque
+        metadata:
+          labels:
+            # Required for DevWorkspace controller to mount into workspaces
+            controller.devfile.io/mount-to-devworkspace: 'true'
+            controller.devfile.io/watch-secret: 'true'
+          annotations:
+            # Mount secret data as environment variables
+            controller.devfile.io/mount-as: env
+        data:
+          ANTHROPIC_API_KEY: |-
+            {{ .apikey }}
+    data:
+      - secretKey: apikey
+        remoteRef:
+          key: 4d42580d-6663-4dd2-b7b7-b3c700295b2f
+          property: password
