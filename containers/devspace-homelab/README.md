@@ -25,6 +25,14 @@ This image extends `devspace-base` which provides Claude CLI, GitHub CLI, and ba
 | Cloud | ocm (OpenShift Cluster Manager) |
 | Python | ansible, ansible-lint, black, yamllint, proxmoxer |
 
+## OpenCode
+
+The image inherits the pinned OpenCode CLI from `devspace-base`. Provider, model, and permission settings are supplied by the [Dev Spaces platform ConfigMaps](../../kubernetes/ocp-mgmt/system/openshift-devspaces/opencode-config.yaml), not baked into either image. Dev Spaces injects `OPENCODE_CONFIG` and the existing Bitwarden-backed `ANTHROPIC_API_KEY`. Local devcontainers must supply their own configuration and credentials.
+
+The repository's [devfile](../../devfile.yaml) persists `~/.local/share/opencode` on a workspace volume for sessions and any locally saved authentication. The platform supplies the same volume for its fallback workspace container. Project configuration can override platform defaults. CLI upgrades require an image rebuild; platform configuration changes only require GitOps reconciliation and workspace restart.
+
+See [Dev Spaces setup and verification](../../kubernetes/ocp-mgmt/system/openshift-devspaces/README.md#opencode) for rollout steps.
+
 ## Kubernetes contexts in Dev Spaces
 
 The [OCP GPU Dev Spaces configuration](../../kubernetes/ocp-gpu/system/openshift-devspaces/TAILSCALE.md) mounts the OCP Home proxy kubeconfig at `/etc/ocp-home/kubeconfig`. The image's [ocp-home-kubeconfig.sh](ocp-home-kubeconfig.sh), installed in `~/.bashrc.d`, exports `KUBECONFIG=$HOME/.kube/config:/etc/ocp-home/kubeconfig` in interactive shells when that mount exists.

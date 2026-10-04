@@ -14,8 +14,15 @@ components:
       volumeMounts:
         - name: codex-state
           path: /home/morey-tech/.codex
+        - name: opencode-data
+          path: /home/morey-tech/.local/share/opencode
   # Keep Codex sessions, settings, and authentication across workspace restarts.
   - name: codex-state
+    volume:
+      size: 1Gi
+      ephemeral: false
+  # OpenCode stores sessions in its XDG data directory; home itself is ephemeral.
+  - name: opencode-data
     volume:
       size: 1Gi
       ephemeral: false

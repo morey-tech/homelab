@@ -8,3 +8,4 @@ resources:
   - getting-started-samples.yaml
   - vscode-editor-configurations.yaml
   - ocp-home-kubeconfig.yaml
+  - opencode-config.yaml

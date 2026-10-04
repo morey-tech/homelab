@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opencode-config
+  labels:
+    app.kubernetes.io/part-of: che.eclipse.org
+    app.kubernetes.io/component: workspaces-config
+    controller.devfile.io/mount-to-devworkspace: 'true'
+  annotations:
+    controller.devfile.io/mount-as: file
+    controller.devfile.io/mount-path: /etc/devspaces/opencode
+    controller.devfile.io/mount-on-start: 'true'
+data:
+  opencode.json: |
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "model": "anthropic/claude-sonnet-4-6",
+      "enabled_providers": ["anthropic"],
+      "provider": {
+        "anthropic": {
+          "options": {
+            "apiKey": "{env:ANTHROPIC_API_KEY}"
+          }
+        }
+      },
+      "autoupdate": false,
+      "share": "disabled",
+      "permission": "ask"
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opencode-env
+  labels:
+    app.kubernetes.io/part-of: che.eclipse.org
+    app.kubernetes.io/component: workspaces-config
+    controller.devfile.io/mount-to-devworkspace: 'true'
+  annotations:
+    controller.devfile.io/mount-as: env
+    controller.devfile.io/mount-on-start: 'true'
+data:
+  OPENCODE_CONFIG: /etc/devspaces/opencode/opencode.json

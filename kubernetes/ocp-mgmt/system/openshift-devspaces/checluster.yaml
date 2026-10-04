@@ -10,6 +10,20 @@ spec:
       openVSXURL: https://open-vsx.org
   containerRegistry: {}
   devEnvironments:
+    # Fallback for repositories without devfile components, not an override.
+    defaultComponents:
+      - name: devcontainer
+        container:
+          image: ghcr.io/morey-tech/homelab/devspace-homelab:latest
+          mountSources: true
+          sourceMapping: /projects
+          volumeMounts:
+            - name: opencode-data
+              path: /home/morey-tech/.local/share/opencode
+      - name: opencode-data
+        volume:
+          size: 1Gi
+          ephemeral: false
     defaultContainerResources:
       requests:
         memory: 2G

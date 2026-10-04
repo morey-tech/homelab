@@ -10,8 +10,8 @@ This configuration copies the former [ocp-gpu Dev Spaces setup](../../../ocp-gpu
 | CheCluster | Open VSX, unlimited workspaces, nested container capabilities enabled with local XFS storage, 2 CPU / 2G memory requests and 4G memory limit |
 | Storage | One 5Gi `lvms-vg-nvme` ReadWriteOnce PVC per workspace; persistent user home disabled |
 | GitHub OAuth | `github-oauth-config` ExternalSecret from Bitwarden item `4afc34a2-53be-4b9b-b46c-b3a70008d238` via `bitwarden-login` |
-| Claude Code | `claude-code-api-key` ClusterExternalSecret injects `ANTHROPIC_API_KEY` into namespaces labelled `app.kubernetes.io/component: workspaces-namespace` |
-| Global VS Code extensions | `openai.chatgpt` via `vscode-editor-configurations` ConfigMap |
+| Claude Code / OpenCode | `claude-code-api-key` ClusterExternalSecret injects the shared `ANTHROPIC_API_KEY` into namespaces labelled `app.kubernetes.io/component: workspaces-namespace` |
+| Global VS Code extensions | `openai.chatgpt` and `sst-dev.opencode` via `vscode-editor-configurations` ConfigMap |
 | Getting started | `morey-tech/homelab` repository sample |
 
 The [LVM configuration](../openshift-lvm-storage/README.md) provisions XFS volumes from one selected 2 TB Samsung NVMe per eligible node. `disableContainerRunCapabilities: false` enables nested container capabilities and workspace user namespaces. XFS supports the ID-mapped mounts that failed on NFS with `mount_setattr /projects: Invalid argument`; see [Kubernetes user namespace limitations](https://kubernetes.io/docs/concepts/workloads/pods/user-namespaces/).
@@ -20,7 +20,36 @@ The class is explicitly selected and is not the cluster default. Volumes are nod
 
 ## Global VS Code extensions
 
-The [editor ConfigMap](vscode-editor-configurations.yaml) recommends `openai.chatgpt` for all Dev Spaces workspaces. After Argo CD sync, start or restart a workspace and check the editor's Extensions view for installation. Removing Roo Code from the global recommendation list does not uninstall copies already installed in existing workspaces; uninstall those from the Extensions view if needed.
+The [editor ConfigMap](vscode-editor-configurations.yaml) recommends `openai.chatgpt` and [OpenCode (`sst-dev.opencode`)](https://open-vsx.org/extension/sst-dev/opencode) for all Dev Spaces workspaces. OpenCode's extension uses the CLI supplied by `devspace-base`; custom images must also provide the CLI. After Argo CD sync, start or restart a workspace and check the editor's Extensions view for installation. Removing Roo Code from the global recommendation list does not uninstall copies already installed in existing workspaces; uninstall those from the Extensions view if needed.
+
+## OpenCode
+
+The `devspace-base` image provides the OpenCode terminal CLI, inherited by `devspace-homelab`, following the [Red Hat Dev Spaces integration](https://developers.redhat.com/articles/2026/04/22/opencode-model-neutral-ai-coding-assistant-openshift-dev-spaces). Neither image contains provider settings. The platform's [OpenCode ConfigMaps](opencode-config.yaml) use the `workspaces-config` labels to synchronize into every user namespace. They mount configuration at `/etc/devspaces/opencode/opencode.json` and inject `OPENCODE_CONFIG` pointing to it, independent of repository and container home directory. They follow the existing mount-on-start pattern; restart workspaces after reconciliation to receive updates.
+
+The existing `claude-code-api-key` Secret supplies `ANTHROPIC_API_KEY` as an environment variable, not a file. The configuration resolves it at runtime; no `/connect`, copied token, or additional Secret is required. Custom workspace images receive configuration but must provide their own OpenCode binary.
+
+The default model is `anthropic/claude-sonnet-4-6`. Only Anthropic is enabled, session sharing and self-updates are disabled, and tools require approval. These are [OpenCode configuration](https://opencode.ai/docs/config/) defaults, not an enforced security boundary: project/user settings can override them. Repository `AGENTS.md` instructions still apply, including commit review and GitOps deployment rules.
+
+Roll out the image changes first: after review and push, wait for `Container Build` to publish both `devspace-base` and its rebuilt `devspace-homelab` consumer. Then commit/push the reviewed platform defaults and let Argo CD reconcile them. This prevents new fallback workspaces from starting with the older image before OpenCode is available. The workflow publishes `latest` and immutable `sha-...` tags. Create a new workspace, or update an existing workspace's devfile through the dashboard to include the `opencode-data` volume and select the published image SHA tag. A Git pull alone does not update an existing workspace's pod template. Do not delete an existing workspace PVC to upgrade it.
+
+In the new workspace terminal:
+
+```bash
+opencode --version
+test -n "${ANTHROPIC_API_KEY:-}" && printf 'Anthropic key is present\n'
+test -r "$OPENCODE_CONFIG" && printf 'Platform configuration is mounted\n'
+cd /projects/homelab
+opencode models anthropic
+opencode
+```
+
+Ask for a short greeting without tools to verify API access (billed to the existing Anthropic account). Do not print the key or dump resolved provider configuration. Select models with `/models`. The devfile persists OpenCode's data directory at `~/.local/share/opencode`, including sessions, on the workspace PVC; deleting that PVC deletes this data. Verify a session survives a workspace stop/start. Caches and UI state outside the data directory are ephemeral. Secret rotation requires a workspace restart to refresh the injected environment.
+
+## Default workspace components
+
+The [CheCluster](checluster.yaml) defines `spec.devEnvironments.defaultComponents`: the homelab tools container and its persistent OpenCode data volume. This is the platform fallback for repositories without devfile components, including repositories without a devfile. It is not a complete default devfile with commands and events, and does not override repositories that define their own components. See the [CheCluster reference](https://docs.redhat.com/en/documentation/red_hat_openshift_dev_spaces/3.26/pdf/administration_guide/Red_Hat_OpenShift_Dev_Spaces-3.26-Administration_guide-en-US.pdf).
+
+The fallback deliberately has no homelab-specific post-start commands. Repositories with their own devfiles can use a `devspace-base` derivative and declare persistence themselves, as [this repository does](../../../../devfile.yaml). Match the volume mount to that image's home directory (`/home/user` in the base image, `/home/morey-tech` in the homelab image). Changing these defaults affects newly generated workspaces, not existing workspace definitions. After rollout, create a workspace from a repository without a devfile and verify the selected image, OpenCode config/key availability, and session persistence across stop/start.
 
 ## Existing NFS workspaces
 

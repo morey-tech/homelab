@@ -12,6 +12,7 @@ data:
   extensions.json: |
     {
       "recommendations": [
-        "openai.chatgpt"
+        "openai.chatgpt",
+        "sst-dev.opencode"
       ]
     }
