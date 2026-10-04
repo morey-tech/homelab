@@ -1,25 +1,25 @@
-# QNAP NVMe NFS Storage
+# QNAP NFS Storage
 
-`qnap-nvme` dynamically provisions NFS PersistentVolumes through the upstream NFS CSI driver. Each PVC gets its own directory on `qnap-01.rh-lab.morey.tech` (`192.168.6.20`). This replaces the need to hand-write a PV for each claim, as the existing `ocp-home` Immich/Paperless and former `ocp-gpu` AAP manifests do.
+`qnap-nvme` and `qnap-mass` dynamically provision NFS PersistentVolumes through the upstream NFS CSI driver. Each PVC gets its own directory on `qnap-01.rh-lab.morey.tech` (`192.168.6.20`). This replaces the need to hand-write a PV for each claim, as the existing `ocp-home` Immich/Paperless and former `ocp-gpu` AAP manifests do.
 
 ## StorageClass
 
 | Setting | Value |
 |---------|-------|
-| Name | `qnap-nvme` |
+| Name | `qnap-nvme` or `qnap-mass` |
 | Provisioner | `nfs.csi.k8s.io` |
-| Export | `qnap-01.rh-lab.morey.tech:/storage-nvme` |
+| Export | `qnap-01.rh-lab.morey.tech:/storage-nvme` or `qnap-01.rh-lab.morey.tech:/storage-mass`, respectively |
 | Directory | `ocp-mgmt/PVC_NAMESPACE/PVC_NAME-PV_NAME` beneath the export |
 | Access | `ReadWriteMany` supported |
 | Protocol | NFSv4.1, hard mounts |
 | Reclamation | `Retain`; driver deletion policy also retains data |
-| Default class | No; workloads explicitly select `qnap-nvme` |
+| Default class | No; workloads explicitly select `qnap-nvme` or `qnap-mass` |
 
 Requested PVC capacity and expansion are Kubernetes metadata, **not per-directory quotas**. Capacity limits must be enforced on QNAP separately. Retained data and released PVs require deliberate cleanup or recovery after a claim is deleted.
 
 ## QNAP Prerequisites
 
-Export `/storage-nvme` over NFS with read/write access for all management nodes: `192.168.6.91`, `.92`, `.93`, and `.94`. Root mapping/export permissions must allow the CSI controller to create and set permissions on claim directories. The driver sets permissions to `0777` only on newly provisioned claim directories so applications using OpenShift-assigned UIDs can write. Access to the export is controlled on QNAP; these directories are not separate filesystems.
+Export `/storage-nvme` and `/storage-mass` over NFS with read/write access for all management nodes: `192.168.6.91`, `.92`, `.93`, and `.94`. Root mapping/export permissions must allow the CSI controller to create and set permissions on claim directories. The driver sets permissions to `0777` only on newly provisioned claim directories so applications using OpenShift-assigned UIDs can write. Access to the export is controlled on QNAP; these directories are not separate filesystems.
 
 From a cluster node, inspect the exports:
 
@@ -49,6 +49,8 @@ YAML
 oc get pvc nfs-data -n default
 ```
 
+For the mass-storage export, set `storageClassName: qnap-mass`. Both classes use the same `ocp-mgmt/` directory layout beneath their respective exports.
+
 Mount the claim from application pods using `persistentVolumeClaim.claimName: nfs-data`. Multiple pods in that namespace can mount it simultaneously on different nodes. Use application-appropriate storage for workloads requiring block devices or filesystem semantics beyond NFS.
 
 ## Driver Management
@@ -59,7 +61,7 @@ Argo CD manages `csi-driver-nfs-system` using Helm chart `4.13.4`. The controlle
 oc get application csi-driver-nfs-system -n openshift-gitops
 oc get pods -n csi-driver-nfs-system -o wide
 oc get csidriver nfs.csi.k8s.io
-oc get storageclass qnap-nvme
+oc get storageclass qnap-nvme qnap-mass
 oc get pvc,pv -A
 ```
 

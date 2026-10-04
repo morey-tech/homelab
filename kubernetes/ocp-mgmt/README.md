@@ -148,7 +148,7 @@ Make routing changes in Git; direct edits to `alertmanager-main` will be overwri
 
 ## NFS Storage
 
-The non-default `qnap-nvme` StorageClass dynamically provisions per-PVC directories on `qnap-01.rh-lab.morey.tech:/storage-nvme`. It supports `ReadWriteMany` across all four nodes and retains data when claims are deleted. Select `storageClassName: qnap-nvme` in workload PVCs. Requested PVC sizes do not enforce directory quotas on NFS.
+The non-default `qnap-nvme` and `qnap-mass` StorageClasses dynamically provision per-PVC directories on `qnap-01.rh-lab.morey.tech:/storage-nvme` and `/storage-mass`, respectively. Both use the same `ocp-mgmt/` subdirectory layout beneath their export. They support `ReadWriteMany` across all four nodes and retain data when claims are deleted. Select `storageClassName: qnap-nvme` or `storageClassName: qnap-mass` in workload PVCs. Requested PVC sizes do not enforce directory quotas on NFS.
 
 See [QNAP NFS storage](system/csi-driver-nfs/README.md) for export prerequisites, an example claim, and operational details.
 

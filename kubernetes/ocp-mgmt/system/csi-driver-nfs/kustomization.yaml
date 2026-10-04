@@ -4,6 +4,7 @@ namespace: csi-driver-nfs-system
 resources:
   - privileged-scc-binding.yaml
   - storageclass.yaml
+  - storageclass-mass.yaml
 helmCharts:
   - name: csi-driver-nfs
     version: 4.13.4
