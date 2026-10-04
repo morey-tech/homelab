@@ -9,6 +9,8 @@ metadata:
     # Wave 1 waits for the model download Job to complete.
     argocd.argoproj.io/sync-wave: "1"
     serving.kserve.io/deploymentMode: Standard
+    # One dedicated GPU replica; no CPU-based autoscaling is needed.
+    serving.kserve.io/autoscalerClass: none
     security.opendatahub.io/enable-auth: "true"
     serving.kserve.io/enable-prometheus-scraping: "true"
     haproxy.router.openshift.io/timeout: 10m

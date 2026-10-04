@@ -12,6 +12,7 @@ OpenShift AI manages `local-llm` through KServe's Standard deployment mode (form
 | Hardware | `tr-gpu-3090` profile, one `nvidia.com/gpu` |
 | CPU / system RAM | Requests 2 CPU / 8 GiB RAM; limits 2 CPU / 16 GiB RAM |
 | Context / concurrency | 4,096 tokens / 2 sequences |
+| Scaling | Fixed one replica; KServe autoscaler class `none` |
 | GPU memory target | 80% |
 | Storage | 50 GiB expandable `models` PVC on `lvms-vg-ai` |
 | Updates | `Recreate`: release the GPU before replacing the pod; downtime expected |
@@ -43,6 +44,13 @@ python kubernetes/ocp-mgmt/applications/inference-server/scripts/smoke-test.py
 ```
 
 The smoke test obtains a short-lived token without displaying it and verifies TLS, rejection of unauthenticated access, model discovery, chat completion, and streaming. It requires a logged-in `oc` session authorized to request a token for `inference-client`.
+
+This single-GPU workload disables KServe's CPU-based HPA with `serving.kserve.io/autoscalerClass: none` and retains `minReplicas: 1` / `maxReplicas: 1`. KServe sets the Deployment replica count from `minReplicas` and removes its previously managed HPA during reconciliation. CPU metric warnings while pods are unready can occur during model startup; removing the unnecessary HPA does not fix an unready predictor or disable readiness probes and Prometheus scraping. After GitOps rollout, confirm the Deployment remains ready at one replica and the HPA is absent:
+
+```bash
+oc get deployment local-llm-predictor -n inference-server
+oc get hpa local-llm-predictor -n inference-server --ignore-not-found
+```
 
 After the reviewed model change is committed, pushed, and reconciled by Argo CD, verify the new predictor's `storageUri` and successful startup, then run both client smoke tests. Inspect the new pod's startup memory profile before proposing any context increase:
 
