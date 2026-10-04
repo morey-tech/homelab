@@ -7,6 +7,7 @@ OpenShift AI manages `local-llm` through KServe's Standard deployment mode (form
 | Namespace / Argo CD Application | `inference-server` |
 | InferenceService / API model name | `local-llm` |
 | Model | `Qwen/Qwen3-0.6B`, revision `c1899de289a04d12100db370d81485cdf75e47ca` |
+| Model downloader | `hf-cli` build `sha-9e38f79`, `huggingface_hub` 1.33.0, pinned by digest |
 | Runtime | OpenShift AI 3.5.1 NVIDIA vLLM image, pinned by digest |
 | Hardware | `tr-gpu-3090` profile, one `nvidia.com/gpu` |
 | CPU / system RAM | Requests 2 CPU / 8 GiB RAM; limits 2 CPU / 16 GiB RAM |
@@ -26,7 +27,7 @@ The PVC and download Job share sync wave 0 so `WaitForFirstConsumer` can bind th
 kustomize build kubernetes/ocp-mgmt/applications/inference-server
 oc get application inference-server -n openshift-gitops
 oc get pvc,job,pods -n inference-server
-oc logs job/download-qwen3-06b-c1899de -n inference-server
+oc logs job/download-qwen3-06b-c1899de-hf-9e38f79 -n inference-server
 oc get inferenceservice local-llm -n inference-server
 oc get deployment local-llm-predictor -n inference-server -o jsonpath='{.spec.strategy}{"\n"}'
 python kubernetes/ocp-mgmt/applications/inference-server/scripts/smoke-test.py

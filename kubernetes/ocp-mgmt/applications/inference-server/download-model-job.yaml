@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: download-qwen3-06b-c1899de
+  name: download-qwen3-06b-c1899de-hf-9e38f79
 spec:
   backoffLimit: 3
   activeDeadlineSeconds: 3600
@@ -17,7 +17,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: download
-          image: ghcr.io/morey-tech/homelab/hf-cli@sha256:c974dd1420bb27f7605c6f17238c1ba61b0a6b2f54f230c0e52e29137c0fe658
+          image: ghcr.io/morey-tech/homelab/hf-cli@sha256:c502ba8270aba4672b15bfb627e8b274e75855985e2c92abd22d31e703211f4a
           command:
             - python
             - -c
