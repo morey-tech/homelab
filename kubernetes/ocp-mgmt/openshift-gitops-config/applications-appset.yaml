@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: applications-appset
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  syncPolicy:
+    applicationsSync: create-update
+  generators:
+    - git:
+        repoURL: https://github.com/morey-tech/homelab.git
+        revision: HEAD
+        directories:
+          - path: kubernetes/ocp-mgmt/applications/inference-server
+  ignoreApplicationDifferences:
+    - jsonPointers:
+        - /spec/syncPolicy/automated
+        - /spec/source/targetRevision
+  template:
+    metadata:
+      name: '{{.path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/morey-tech/homelab.git
+        targetRevision: HEAD
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.path.basename}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        retry:
+          limit: 10
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+          - CreateNamespace=true
+        managedNamespaceMetadata:
+          labels:
+            opendatahub.io/dashboard: "true"
+            modelmesh-enabled: "false"
+            pod-security.kubernetes.io/enforce: restricted
+            pod-security.kubernetes.io/audit: restricted
+            pod-security.kubernetes.io/warn: restricted

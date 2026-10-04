@@ -1,0 +1,37 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: local-llm
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    # Wave 1 waits for the model download Job to complete.
+    argocd.argoproj.io/sync-wave: "1"
+    serving.kserve.io/deploymentMode: Standard
+    security.opendatahub.io/enable-auth: "true"
+    serving.kserve.io/enable-prometheus-scraping: "true"
+    haproxy.router.openshift.io/timeout: 10m
+    openshift.io/display-name: Local LLM
+    opendatahub.io/hardware-profile-name: tr-gpu-3090
+    opendatahub.io/hardware-profile-namespace: redhat-ods-applications
+spec:
+  predictor:
+    minReplicas: 1
+    maxReplicas: 1
+    deploymentStrategy:
+      type: Recreate
+    nodeSelector:
+      kubernetes.io/hostname: tr-gpu
+    model:
+      modelFormat:
+        name: vLLM
+      runtime: vllm-cuda
+      storageUri: pvc://models/qwen3-0.6b-c1899de289a04d12100db370d81485cdf75e47ca
+      resources:
+        requests:
+          cpu: "2"
+          memory: 8Gi
+          nvidia.com/gpu: "1"
+        limits:
+          memory: 16Gi
+          nvidia.com/gpu: "1"

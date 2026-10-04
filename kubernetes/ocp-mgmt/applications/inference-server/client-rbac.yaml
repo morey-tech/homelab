@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: inference-client
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: local-llm-client
+rules:
+  - apiGroups:
+      - serving.kserve.io
+    resources:
+      - inferenceservices
+    resourceNames:
+      - local-llm
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: local-llm-client
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: local-llm-client
+subjects:
+  - kind: ServiceAccount
+    name: inference-client
+    namespace: inference-server

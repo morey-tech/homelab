@@ -1,0 +1,71 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-qwen3-06b-c1899de
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: tr-gpu
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: download
+          image: ghcr.io/morey-tech/homelab/hf-cli@sha256:c974dd1420bb27f7605c6f17238c1ba61b0a6b2f54f230c0e52e29137c0fe658
+          command:
+            - python
+            - -c
+          args:
+            - |
+              import os
+              from pathlib import Path
+              from huggingface_hub import snapshot_download
+
+              target = Path(os.environ["MODEL_DIRECTORY"])
+              revision = os.environ["MODEL_REVISION"]
+              marker = target / ".download-complete"
+              if marker.exists() and marker.read_text().strip() == revision:
+                  print("Pinned model revision already downloaded")
+              else:
+                  snapshot_download(
+                      repo_id=os.environ["MODEL_REPO"],
+                      revision=revision,
+                      local_dir=str(target),
+                  )
+                  for name in ("config.json", "tokenizer_config.json", "model.safetensors"):
+                      if not (target / name).is_file():
+                          raise RuntimeError(f"Missing model artifact: {name}")
+                  marker.write_text(revision + "\n")
+                  print("Pinned model revision downloaded successfully")
+          env:
+            - name: MODEL_REPO
+              value: Qwen/Qwen3-0.6B
+            - name: MODEL_REVISION
+              value: c1899de289a04d12100db370d81485cdf75e47ca
+            - name: MODEL_DIRECTORY
+              value: /models/qwen3-0.6b-c1899de289a04d12100db370d81485cdf75e47ca
+            - name: HF_HOME
+              value: /tmp/huggingface
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+          volumeMounts:
+            - name: models
+              mountPath: /models
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: models

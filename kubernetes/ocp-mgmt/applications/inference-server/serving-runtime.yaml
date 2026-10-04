@@ -1,0 +1,69 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: vllm-cuda
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    openshift.io/display-name: vLLM NVIDIA GPU ServingRuntime for KServe
+    opendatahub.io/recommended-accelerators: '["nvidia.com/gpu"]'
+    opendatahub.io/template-name: vllm-cuda-runtime-template
+spec:
+  annotations:
+    opendatahub.io/kserve-runtime: vllm
+    prometheus.io/port: "8080"
+    prometheus.io/path: /metrics
+  multiModel: false
+  supportedModelFormats:
+    - name: vLLM
+      autoSelect: true
+  containers:
+    - name: kserve-container
+      # NVIDIA runtime shipped with OpenShift AI 3.5.1.
+      image: registry.redhat.io/rhaii/vllm-cuda-rhel9@sha256:c056e61672b6aea489ad5dde0bd2f8497230f5333e87f7cf6c494eba3bfdc808
+      command:
+        - python
+        - -m
+        - vllm.entrypoints.openai.api_server
+      args:
+        - --port=8080
+        - --model=/mnt/models
+        - --served-model-name={{.Name}}
+        - --dtype=half
+        - --max-model-len=4096
+        - --max-num-seqs=2
+        - --gpu-memory-utilization=0.80
+      env:
+        - name: HF_HOME
+          value: /tmp/huggingface
+        - name: HF_HUB_OFFLINE
+          value: "1"
+        - name: VLLM_CACHE_ROOT
+          value: /tmp/vllm
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      startupProbe:
+        httpGet:
+          path: /health
+          port: 8080
+        periodSeconds: 10
+        failureThreshold: 180
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 8080
+        periodSeconds: 10
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 8080
+        periodSeconds: 30
+      volumeMounts:
+        - name: shm
+          mountPath: /dev/shm
+  volumes:
+    - name: shm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 2Gi
