@@ -7,13 +7,13 @@ This configuration copies the former [ocp-gpu Dev Spaces setup](../../../ocp-gpu
 | Component | Configuration |
 |-----------|---------------|
 | Operator | `devspaces` Subscription, `stable` channel, automatic install plans in `openshift-operators`; uses the existing global OperatorGroup |
-| CheCluster | Open VSX, unlimited workspaces, nested container capabilities, 2 CPU / 2G memory requests and 4G memory limit |
+| CheCluster | Open VSX, unlimited workspaces, nested container capabilities disabled for NFS, 2 CPU / 2G memory requests and 4G memory limit |
 | Storage | One 5Gi `qnap-nvme` PVC per workspace; persistent user home disabled |
 | GitHub OAuth | `github-oauth-config` ExternalSecret from Bitwarden item `4afc34a2-53be-4b9b-b46c-b3a70008d238` via `bitwarden-login` |
 | Claude Code | `claude-code-api-key` ClusterExternalSecret injects `ANTHROPIC_API_KEY` into namespaces labelled `app.kubernetes.io/component: workspaces-namespace` |
 | Getting started | `morey-tech/homelab` repository sample |
 
-The [NFS configuration](../csi-driver-nfs/README.md) retains workspace data after claim deletion. The requested 5Gi does not impose an NFS directory quota. A StorageClass is explicitly selected because neither management StorageClass is default.
+The [NFS configuration](../csi-driver-nfs/README.md) retains workspace data after claim deletion. The requested 5Gi does not impose an NFS directory quota. A StorageClass is explicitly selected because neither management StorageClass is default. Nested container capabilities are disabled: enabling them sets `hostUsers: false`, and QNAP NFS fails the required ID-mapped mount with `mount_setattr /projects: Invalid argument`. Use storage that supports ID-mapped mounts before enabling nested containers.
 
 ## GitHub OAuth callback
 
