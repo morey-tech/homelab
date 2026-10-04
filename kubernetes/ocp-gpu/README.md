@@ -2,6 +2,8 @@
 
 NVIDIA GPU-accelerated cluster for AI/ML workloads and inference servers.
 
+OpenShift NFD and NVIDIA GPU Operator manifests have moved to [ocp-mgmt](../ocp-mgmt/README.md#nvidia-gpu-support), where `tr-gpu` is now a worker. GPU procedures below describe the former cluster setup.
+
 ## Cluster Information
 
 - **API Endpoint**: `https://api.ocp-gpu.rh-lab.morey.tech:6443`
@@ -27,10 +29,10 @@ oc login -u admin --server=https://api.ocp-gpu.rh-lab.morey.tech:6443
 **Operators & System Services**:
 - **OpenShift GitOps** - ArgoCD for GitOps deployment
 - **OpenShift DevSpaces** - Cloud development environments
-- **NVIDIA GPU Operator** - NVIDIA GPU support and device plugin
+- **NVIDIA GPU Operator** - Moved to `ocp-mgmt`
 - **External Secrets Operator** - Bitwarden secret synchronization
 - **Cert-Manager** - Let's Encrypt certificate automation
-- **OpenShift NFD** - Node Feature Discovery
+- **OpenShift NFD** - Moved to `ocp-mgmt`
 - **OpenShift Pipelines** - Tekton CI/CD pipelines
 - **OpenShift Data Foundation** - Ceph storage
 

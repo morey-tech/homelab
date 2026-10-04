@@ -21,7 +21,7 @@ Recreated management cluster with a minimal GitOps foundation. Workloads from th
 - **External Secrets Operator**: Bitwarden CLI backend and the `bitwarden-login`, `bitwarden-fields`, and `bitwarden-notes` ClusterSecretStores.
 - **Administrator access**: HTPasswd `admin` user, `cluster-admins` group, OpenShift OAuth for Argo CD, and an `ocp-mgmt` console banner.
 
-Dev Spaces uses local NVMe LVM storage for cloud development with nested containers. GPU/NFD operators, virtualization, ACM, AAP, and other applications are deferred. Certificate automation is enabled as the first migration stage after bootstrap. This bootstrap does not change node roles, labels, taints, disks, or machine configuration.
+Dev Spaces uses local NVMe LVM storage for cloud development with nested containers. GPU/NFD operators are enabled for the migrated GPU worker; virtualization, ACM, AAP, and other applications are deferred. Certificate automation is enabled as the first migration stage after bootstrap. This bootstrap does not change node roles, labels, taints, disks, or machine configuration.
 
 ## Initial Setup
 
@@ -158,6 +158,29 @@ See [QNAP NFS storage](system/csi-driver-nfs/README.md) for export prerequisites
 
 Dev Spaces uses this class to support workspace user namespaces and nested containers. Volumes are node-local and not replicated. Initial sync enables authorized wiping of legacy data on the selected drives; review the storage README for the shared old tr-gpu pool, rollout order, and required disk readiness checks. Existing NFS workspace claims require separate recreation or migration.
 
+## NVIDIA GPU Support
+
+- **OpenShift NFD**: [Node Feature Discovery](system/openshift-nfd) labels node hardware, including NVIDIA PCI devices, in `openshift-nfd`.
+- **NVIDIA GPU Operator**: [Operator and ClusterPolicy](system/nvidia-gpu-operator) install drivers, the container toolkit, GPU device plugin, and DCGM monitoring in `nvidia-gpu-operator`. The console dashboard remains in `openshift-config-managed`.
+
+Both operators retain the `stable` channel and automatic install plan approval from `ocp-gpu`. The ClusterPolicy retains CRI-O, the OpenShift Driver Toolkit, automatic driver upgrades, and the existing MIG settings. GPU workloads request `nvidia.com/gpu`; application workloads are migrated separately.
+
+After GitOps sync, verify hardware discovery and GPU capacity on `tr-gpu`:
+
+```bash
+oc get applications openshift-nfd-system nvidia-gpu-operator-system -n openshift-gitops
+oc get csv -n openshift-nfd
+oc get nodefeaturediscovery nfd-instance -n openshift-nfd
+oc get pods -n openshift-nfd
+oc get csv -n nvidia-gpu-operator
+oc get clusterpolicy gpu-cluster-policy
+oc get pods -n nvidia-gpu-operator
+oc get nodes -l feature.node.kubernetes.io/pci-10de.present=true
+oc get node tr-gpu -o jsonpath='{.status.allocatable.nvidia\.com/gpu}{"\n"}'
+```
+
+The manifests were moved out of `ocp-gpu`. Its ApplicationSets use `applicationsSync: create-update`, so this move does not delete old Applications or uninstall operators on any surviving old cluster. Retire those separately if that cluster is still running.
+
 ## Application Catalog
 
 | Application | Namespace | URL | Purpose | Notable Features |
@@ -172,7 +195,7 @@ See [Dev Spaces configuration](system/openshift-devspaces/README.md) for verific
 
 ## Staged Migration
 
-The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, API/ingress certificates, Discord alerting, the NFS CSI driver, LVM Storage, the Dev Spaces operator, Dev Spaces configuration, and Tailscale egress. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
+The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, API/ingress certificates, Discord alerting, the NFS CSI driver, LVM Storage, the Dev Spaces operator, Dev Spaces configuration, Tailscale egress, OpenShift NFD, and the NVIDIA GPU Operator. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
 
 Use the retained [ocp-gpu configuration](../ocp-gpu/README.md) as migration source material. Review each component's hostnames, namespaces, storage, secrets, and node placement before enabling it. Old management manifests remain available in Git history.
 

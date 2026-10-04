@@ -23,6 +23,8 @@ spec:
       - path: kubernetes/ocp-mgmt/system/openshift-lvm-storage
       - path: kubernetes/ocp-mgmt/system/openshift-devspaces
       - path: kubernetes/ocp-mgmt/system/tailscale
+      - path: kubernetes/ocp-mgmt/system/openshift-nfd
+      - path: kubernetes/ocp-mgmt/system/nvidia-gpu-operator
   ignoreApplicationDifferences:
     - jsonPointers:
       # Allow automated sync policy to be disabled manually.
@@ -101,7 +103,7 @@ spec:
       syncPolicy:
         syncOptions: []
     {{ end }}
-    {{- if or (eq .path.basename "openshift-operators") (eq .path.basename "openshift-devspaces") (eq .path.basename "openshift-lvm-storage") }}
+    {{- if or (eq .path.basename "openshift-operators") (eq .path.basename "openshift-devspaces") (eq .path.basename "openshift-lvm-storage") (eq .path.basename "openshift-nfd") (eq .path.basename "nvidia-gpu-operator") }}
     spec:
       destination:
         namespace: {{.path.basename}}
