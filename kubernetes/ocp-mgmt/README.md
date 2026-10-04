@@ -21,7 +21,7 @@ Recreated management cluster with a minimal GitOps foundation. Workloads from th
 - **External Secrets Operator**: Bitwarden CLI backend and the `bitwarden-login`, `bitwarden-fields`, and `bitwarden-notes` ClusterSecretStores.
 - **Administrator access**: HTPasswd `admin` user, `cluster-admins` group, OpenShift OAuth for Argo CD, and an `ocp-mgmt` console banner.
 
-No application workloads are enabled. Local/block storage, GPU/NFD operators, virtualization, ACM, DevSpaces, Tailscale, AAP, and other applications are deferred. Certificate automation is enabled as the first migration stage after bootstrap. This bootstrap does not change node roles, labels, taints, disks, or machine configuration.
+Dev Spaces is enabled for cloud development. Local/block storage, GPU/NFD operators, virtualization, ACM, Tailscale, AAP, and other applications are deferred. Certificate automation is enabled as the first migration stage after bootstrap. This bootstrap does not change node roles, labels, taints, disks, or machine configuration.
 
 ## Initial Setup
 
@@ -74,7 +74,7 @@ oc get pods -n external-secrets-system
 oc get route cluster-argocd-server -n openshift-gitops
 ```
 
-Core bootstrap Applications: `openshift-gitops-config`, `external-secrets-system`, and `htpass-admin-system`. The certificate migration adds `cert-manager-operator-system`, `cert-manager-system`, `openshift-ingress-system`, and `openshift-apiserver-system`. Discord alerting adds `openshift-monitoring-system`, and NFS provisioning adds `csi-driver-nfs-system`. Sign in to Argo CD through OpenShift OAuth as `admin`.
+Core bootstrap Applications: `openshift-gitops-config`, `external-secrets-system`, and `htpass-admin-system`. The certificate migration adds `cert-manager-operator-system`, `cert-manager-system`, `openshift-ingress-system`, and `openshift-apiserver-system`. Discord alerting adds `openshift-monitoring-system`, NFS provisioning adds `csi-driver-nfs-system`, and Dev Spaces adds `openshift-operators-system` and `openshift-devspaces-system`. Sign in to Argo CD through OpenShift OAuth as `admin`.
 
 The script retains `kubeadmin`. After confirming `admin` login and cluster-admin access, remove the installer account manually:
 
@@ -152,9 +152,17 @@ The non-default `qnap-nvme` and `qnap-mass` StorageClasses dynamically provision
 
 See [QNAP NFS storage](system/csi-driver-nfs/README.md) for export prerequisites, an example claim, and operational details.
 
+## Application Catalog
+
+| Application | Namespace | URL | Purpose | Notable Features |
+|-------------|-----------|-----|---------|-----------------|
+| OpenShift Dev Spaces | openshift-devspaces | [devspaces.apps.ocp-mgmt.rh-lab.morey.tech](https://devspaces.apps.ocp-mgmt.rh-lab.morey.tech) | Cloud development environments | Per-workspace QNAP NVMe storage, Open VSX, Bitwarden-backed credentials |
+
+See [Dev Spaces configuration](system/openshift-devspaces/README.md) for verification, the required GitHub OAuth callback update, and deferred Tailscale dependency.
+
 ## Staged Migration
 
-The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, API/ingress certificates, Discord alerting, and the NFS CSI driver. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
+The system ApplicationSet explicitly includes ESO, administrator authentication, cert-manager and its operator, API/ingress certificates, Discord alerting, the NFS CSI driver, the Dev Spaces operator, and Dev Spaces configuration. New system components require an explicit directory entry in `openshift-gitops-config/system-appset.yaml`. The application ApplicationSet and old application manifests have been removed; add application discovery when the first workload is ready to migrate.
 
 Use the retained [ocp-gpu configuration](../ocp-gpu/README.md) as migration source material. Review each component's hostnames, namespaces, storage, secrets, and node placement before enabling it. Old management manifests remain available in Git history.
 
