@@ -1,10 +1,10 @@
-# OpenShift Cluster: ocp-gpu
+# OpenShift Cluster: ocp-gpu (Retired)
 
-NVIDIA GPU-accelerated cluster for AI/ML workloads and inference servers.
+**This cluster is no longer running.** Its former node, `tr-gpu`, is now a worker in [ocp-mgmt](../ocp-mgmt/README.md). No deployments remain running on `ocp-gpu`; migration work does not require preserving or cleaning up deployments on the retired cluster.
 
-OpenShift NFD and NVIDIA GPU Operator manifests have moved to [ocp-mgmt](../ocp-mgmt/README.md#nvidia-gpu-support), where `tr-gpu` is now a worker. GPU procedures below describe the former cluster setup.
+The manifests and procedures below are retained as historical reference and migration source material. The listed endpoints and applications are no longer active. OpenShift NFD and NVIDIA GPU Operator manifests have moved to [ocp-mgmt](../ocp-mgmt/README.md#nvidia-gpu-support).
 
-## Cluster Information
+## Historical Cluster Information
 
 - **API Endpoint**: `https://api.ocp-gpu.rh-lab.morey.tech:6443`
 - **Console**: `https://console-openshift-console.apps.ocp-gpu.rh-lab.morey.tech`
@@ -17,7 +17,7 @@ OpenShift NFD and NVIDIA GPU Operator manifests have moved to [ocp-mgmt](../ocp-
 oc login -u admin --server=https://api.ocp-gpu.rh-lab.morey.tech:6443
 ```
 
-## Deployed Applications
+## Former Applications
 
 | Application | Namespace | URL | Purpose | Notable Features |
 |-------------|-----------|-----|---------|-----------------|
@@ -44,7 +44,7 @@ oc login -u admin --server=https://api.ocp-gpu.rh-lab.morey.tech:6443
 
 ### NVIDIA GPU Support
 
-This cluster includes NVIDIA GPUs for accelerated AI/ML workloads.
+This cluster previously provided NVIDIA GPUs for accelerated AI/ML workloads. The GPU node now belongs to `ocp-mgmt`.
 
 **GPU Operator**:
 - Automatically installs NVIDIA drivers

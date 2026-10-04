@@ -179,7 +179,7 @@ oc get nodes -l feature.node.kubernetes.io/pci-10de.present=true
 oc get node tr-gpu -o jsonpath='{.status.allocatable.nvidia\.com/gpu}{"\n"}'
 ```
 
-The manifests were moved out of `ocp-gpu`. Its ApplicationSets use `applicationsSync: create-update`, so this move does not delete old Applications or uninstall operators on any surviving old cluster. Retire those separately if that cluster is still running.
+The manifests were moved out of the retired `ocp-gpu` cluster. That cluster is no longer running, and its former node, `tr-gpu`, now belongs to `ocp-mgmt`. There are no running deployments on `ocp-gpu` to preserve or uninstall.
 
 ## Application Catalog
 
