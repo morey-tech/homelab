@@ -1,63 +1,38 @@
-# Claude Code Agent Workflow
+# Agent Workflow
 
-This document describes the standard workflow for implementing features and fixes using Claude Code in this repository.
+This document describes the standard workflow for coding agents implementing changes in this repository.
 
-## Issue-to-PR Workflow
+## Human Review and Local Commit Workflow
 
-### 1. Create GitHub Issue
-Document the problem with:
-- Problem description
-- Impact on workflow
-- Current workaround (if any)
-- Proposed solution (high-level)
+### 1. Implement Changes
+
+Work directly on `main` by default. Do not create a branch, GitHub issue, or pull request unless explicitly requested. Preserve unrelated changes in the working tree.
+
+### 2. Validate Changes
+
+- Run checks appropriate to the change.
+- Verify functionality, including cluster testing when applicable and available.
+- Report test results and any validation that could not be completed.
+
+### 3. Stop for Human Review Before Committing
+
+After implementing and validating the changes, group them into a proposed sequence of semantic commits, each covering one logical purpose. Leave changes uncommitted and summarize the changes, validation results, and proposed commit breakdown for human review. Wait for explicit approval to commit; a request to implement a change is not approval to commit it.
+
+### 4. Commit After Approval
+
+After human review and explicit approval, create the approved local commits:
+
+- Split changes into semantic commits by logical purpose, such as a feature, a bug fix, or an independent documentation update. Keep implementation and its directly related tests or documentation together; do not split mechanically by file or combine unrelated changes.
+- Stage only the reviewed files or hunks for each commit, preserving unrelated working tree changes. Each commit should be coherent and independently understandable, with dependencies ordered first.
+- Use Conventional Commit messages in the form `type(scope): description`, with an optional scope. Common types include `feat`, `fix`, `docs`, `refactor`, `test`, `build`, `ci`, and `chore`.
+- Write a concise, imperative description, for example `feat(devspaces): persist Codex state` or `docs: clarify agent commit workflow`. Mark breaking changes with `!` after the type/scope or a `BREAKING CHANGE:` footer explaining the impact.
+
+### 5. Leave Push to the Human
+
+The human manually pushes the commits to `main`. Agents must not push automatically. Report the local commits and leave this command for the human to run:
 
 ```bash
-gh issue create --title "feat: description" --label "enhancement" --body "..."
-```
-
-### 2. Comment with Proposed Solution
-Add a detailed comment to the issue with:
-- Technical approach
-- Configuration changes required
-- Expected outcome
-- References to documentation
-
-```bash
-gh issue comment <issue-number> --body "..."
-```
-
-### 3. Create Feature Branch
-```bash
-git checkout -b feat/<feature-name>
-# or for fixes:
-git checkout -b fix/<fix-name>
-```
-
-### 4. Implement Changes
-Make the necessary code/configuration changes.
-
-### 5. Create Pull Request
-```bash
-gh pr create --title "feat: description" --body "..."
-```
-
-Link to the issue with `Closes #<issue-number>` in the PR body.
-
-### 6. Test Changes
-- Apply changes to the cluster for testing
-- Verify functionality works as expected
-- Document test results
-
-### 7. Comment Test Results
-Add a comment to the issue or PR with:
-- What was tested
-- Test outcomes
-- Any issues encountered and how they were resolved
-
-### 8. Merge PR
-After successful testing:
-```bash
-gh pr merge <pr-number> --squash --delete-branch
+git push origin main
 ```
 
 ---
@@ -176,7 +151,7 @@ Root README (Architecture + Navigation)
 3. **Document** URLs from route/ingress configurations
 4. **Update** READMEs starting with root, then clusters
 5. **Validate** all links work and commands are accurate
-6. **Commit** with message: `docs: restructure README hierarchy for better navigation`
+6. **Stop for human review** before committing; after explicit approval, commit with message: `docs: restructure README hierarchy for better navigation`. Leave the push to `main` to the human.
 
 ### Content to Preserve
 
