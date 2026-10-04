@@ -13,7 +13,7 @@ This configuration copies the former [ocp-gpu Dev Spaces setup](../../../ocp-gpu
 | Claude Code | `claude-code-api-key` ClusterExternalSecret injects `ANTHROPIC_API_KEY` into namespaces labelled `app.kubernetes.io/component: workspaces-namespace` |
 | Getting started | `morey-tech/homelab` repository sample |
 
-The [NFS configuration](../csi-driver-nfs/README.md) retains workspace data after claim deletion. The requested 5Gi does not impose an NFS directory quota. A StorageClass is explicitly selected because neither management StorageClass is default. Nested container capabilities are disabled: enabling them sets `hostUsers: false`, and QNAP NFS fails the required ID-mapped mount with `mount_setattr /projects: Invalid argument`. Use storage that supports ID-mapped mounts before enabling nested containers.
+The [NFS configuration](../csi-driver-nfs/README.md) retains workspace data after claim deletion. The requested 5Gi does not impose an NFS directory quota. A StorageClass is explicitly selected because neither management StorageClass is default. Nested container capabilities are disabled: enabling them sets `hostUsers: false`, and the node Linux NFS client does not support the required ID-mapped mount, failing with `mount_setattr /projects: Invalid argument`. Use storage that supports ID-mapped mounts before enabling nested containers. See [Kubernetes user namespace limitations](https://kubernetes.io/docs/concepts/workloads/pods/user-namespaces/).
 
 ## GitHub OAuth callback
 
