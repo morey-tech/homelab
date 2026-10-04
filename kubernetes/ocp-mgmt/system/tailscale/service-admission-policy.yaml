@@ -1,0 +1,49 @@
+# The operator provisions tailnet devices for any Service carrying tailscale.com/*
+# metadata or loadBalancerClass: tailscale, tagged with whatever tailscale.com/tags
+# requests from tags it owns. Restrict that to tailscale-system so namespace owners
+# (e.g. Dev Spaces users) cannot request their own tailnet proxies or identities.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: tailscale-services-operator-namespace-only
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - tailscale-system
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["services"]
+  matchConditions:
+    # Let finalizer removal complete for Services being deleted.
+    - name: not-being-deleted
+      expression: "!has(object.metadata.deletionTimestamp)"
+  validations:
+    - expression: "!has(object.metadata.annotations) || !object.metadata.annotations.exists(k, k.startsWith('tailscale.com/'))"
+      messageExpression: "'tailscale.com/* annotations on Services are only allowed in namespace tailscale-system'"
+      reason: Forbidden
+    - expression: "!has(object.metadata.labels) || !object.metadata.labels.exists(k, k.startsWith('tailscale.com/'))"
+      messageExpression: "'tailscale.com/* labels on Services are only allowed in namespace tailscale-system'"
+      reason: Forbidden
+    - expression: "!has(object.spec.loadBalancerClass) || object.spec.loadBalancerClass != 'tailscale'"
+      messageExpression: "'loadBalancerClass tailscale is only allowed in namespace tailscale-system'"
+      reason: Forbidden
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: tailscale-services-operator-namespace-only
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  policyName: tailscale-services-operator-namespace-only
+  validationActions:
+    - Deny

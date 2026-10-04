@@ -1,0 +1,29 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  namespace: tailscale-system
+  name: operator-oauth
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-login
+    kind: ClusterSecretStore
+  target:
+    name: operator-oauth
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  data:
+    - secretKey: client_id
+      remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+        key: dc0d1390-23c7-4968-8844-b4d0010f5cb4
+        property: username
+    - secretKey: client_secret
+      remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+        key: dc0d1390-23c7-4968-8844-b4d0010f5cb4
+        property: password
