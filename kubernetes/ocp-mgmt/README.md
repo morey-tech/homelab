@@ -156,9 +156,9 @@ See [QNAP NFS storage](system/csi-driver-nfs/README.md) for export prerequisites
 
 | Application | Namespace | URL | Purpose | Notable Features |
 |-------------|-----------|-----|---------|-----------------|
-| OpenShift Dev Spaces | openshift-devspaces | [devspaces.apps.ocp-mgmt.rh-lab.morey.tech](https://devspaces.apps.ocp-mgmt.rh-lab.morey.tech) | Cloud development environments | Per-workspace QNAP NVMe storage, Open VSX, Bitwarden-backed credentials, Roo Code |
+| OpenShift Dev Spaces | openshift-devspaces | [devspaces.apps.ocp-mgmt.rh-lab.morey.tech](https://devspaces.apps.ocp-mgmt.rh-lab.morey.tech) | Cloud development environments | Per-workspace QNAP NVMe storage, Open VSX, Bitwarden-backed credentials |
 
-See [Dev Spaces configuration](system/openshift-devspaces/README.md) for verification, the required GitHub OAuth callback update, and deferred Tailscale/inference dependencies.
+See [Dev Spaces configuration](system/openshift-devspaces/README.md) for verification, the required GitHub OAuth callback update, and deferred Tailscale dependency.
 
 ## Staged Migration
 

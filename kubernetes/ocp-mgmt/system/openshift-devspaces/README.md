@@ -11,7 +11,6 @@ This configuration copies the former [ocp-gpu Dev Spaces setup](../../../ocp-gpu
 | Storage | One 5Gi `qnap-nvme` PVC per workspace; persistent user home disabled |
 | GitHub OAuth | `github-oauth-config` ExternalSecret from Bitwarden item `4afc34a2-53be-4b9b-b46c-b3a70008d238` via `bitwarden-login` |
 | Claude Code | `claude-code-api-key` ClusterExternalSecret injects `ANTHROPIC_API_KEY` into namespaces labelled `app.kubernetes.io/component: workspaces-namespace` |
-| Roo Code | Copied settings template, generator script, extension recommendation and automatic settings import; Claude selected for every mode |
 | Getting started | `morey-tech/homelab` repository sample |
 
 The [NFS configuration](../csi-driver-nfs/README.md) retains workspace data after claim deletion. The requested 5Gi does not impose an NFS directory quota. A StorageClass is explicitly selected because neither management StorageClass is default.
@@ -31,7 +30,6 @@ See the [Red Hat configuration reference](https://docs.redhat.com/en/documentati
 ## Deferred dependencies
 
 - **OCP Home access:** The source `ocp-home-kubeconfig` ConfigMap is omitted because its Tailscale egress Service is not deployed on ocp-mgmt. Migrate Tailscale and its tailnet policy before adding that workspace mount. Workspaces retain their local ocp-mgmt kubeconfig.
-- **Local inference:** The copied Roo Code vLLM profile still references the old `ocp-gpu` inference route. It is not selected by default; update its endpoint when inference is migrated.
 
 ## GitOps and verification
 
@@ -50,4 +48,4 @@ oc get clusterexternalsecret claude-code-api-key
 oc get pvc -n admin-devspaces
 ```
 
-Open the dashboard through OpenShift OAuth, create a homelab workspace, and verify its PVC uses `qnap-nvme`. Check editor settings and secret injection without printing credentials.
+Open the dashboard through OpenShift OAuth, create a homelab workspace, and verify its PVC uses `qnap-nvme`. Check secret injection without printing credentials.
