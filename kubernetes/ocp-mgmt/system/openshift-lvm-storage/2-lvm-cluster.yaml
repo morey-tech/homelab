@@ -1,0 +1,41 @@
+# https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/storage/persistent-storage-using-local-storage
+apiVersion: lvm.topolvm.io/v1alpha1
+kind: LVMCluster
+metadata:
+  name: lvm-nvme
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    # Wait for OLM's CRD; require explicit approval before pruning storage.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=confirm
+spec:
+  storage:
+    deviceClasses:
+      - name: vg-nvme
+        default: false
+        fstype: xfs
+        nodeSelector:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - ms-02
+                    - ms-04
+                    - tr-gpu
+        deviceSelector:
+          # One serial-pinned 2 TB disk per selected node. Never auto-discover.
+          # optionalPaths permits the other nodes' disk IDs to be absent.
+          optionalPaths:
+            # ms-02
+            - /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNU0XA10188H
+            # ms-04
+            - /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNU0XA10170M
+            # tr-gpu: exclude WD SN750 serial 20530C800438.
+            - /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNU0XA10179T
+          # Authorized destruction of legacy data on these selected devices.
+          # tr-gpu's old VG spans both disks; its old data is disposable.
+          forceWipeDevicesAndDestroyAllData: true
+        thinPoolConfig:
+          name: thin-pool
+          sizePercent: 90
+          overprovisionRatio: 1
