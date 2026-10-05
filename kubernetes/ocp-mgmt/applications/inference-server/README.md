@@ -1,6 +1,6 @@
 # KServe inference on ocp-mgmt
 
-OpenShift AI manages `local-llm` through KServe's Standard deployment mode (formerly RawDeployment). A NVIDIA vLLM ServingRuntime runs one replica on `tr-gpu`'s 24 GiB RTX 3090. Qwen3-4B-Instruct-2507 replaces the initial Qwen3-0.6B validation model; context stays at 4,096 tokens until the new model's GPU memory headroom is measured.
+OpenShift AI manages `local-llm` through KServe's Standard deployment mode (formerly RawDeployment). A NVIDIA vLLM ServingRuntime runs one replica on `tr-gpu`'s 24 GiB RTX 3090. Qwen3-4B-Instruct-2507 uses a configured 32,768-token context, increased from the initial 4,096-token baseline after measuring KV-cache headroom. Long-context load validation remains a post-rollout check.
 
 | Setting | Value |
 |---------|-------|
@@ -11,7 +11,7 @@ OpenShift AI manages `local-llm` through KServe's Standard deployment mode (form
 | Runtime | OpenShift AI 3.5.1 NVIDIA vLLM image, pinned by digest |
 | Hardware | `tr-gpu-3090` profile, one `nvidia.com/gpu` |
 | CPU / system RAM | Requests 2 CPU / 8 GiB RAM; limits 2 CPU / 16 GiB RAM |
-| Context / concurrency | 4,096 tokens / 2 sequences |
+| Context / concurrency | 32,768 tokens (input + output) / 2 sequences |
 | Scaling | Fixed one replica; KServe autoscaler class `none` |
 | GPU memory target | 80% |
 | Storage | 50 GiB expandable `models` PVC on `lvms-vg-ai` |
@@ -52,7 +52,7 @@ oc get deployment local-llm-predictor -n inference-server
 oc get hpa local-llm-predictor -n inference-server --ignore-not-found
 ```
 
-After the reviewed model change is committed, pushed, and reconciled by Argo CD, verify the new predictor's `storageUri` and successful startup, then run both client smoke tests. Inspect the new pod's startup memory profile before proposing any context increase:
+After reviewed model or context changes are committed, pushed, and reconciled by Argo CD, verify the new predictor's `storageUri` and successful startup, then run both client smoke tests. Inspect the new pod's startup memory profile:
 
 ```bash
 oc get inferenceservice local-llm -n inference-server -o jsonpath='{.spec.predictor.model.storageUri}{"\n"}'
@@ -60,7 +60,25 @@ oc logs deployment/local-llm-predictor -n inference-server -c kserve-container |
 python kubernetes/ocp-mgmt/applications/anythingllm/scripts/smoke-test.py
 ```
 
-Keep FP16, 80% GPU memory allocation, two concurrent sequences, and AnythingLLM's 4,096-token budget / 1,024-token response limit unchanged for this baseline. vLLM preallocates its KV cache, so GPU free-memory readings alone do not show the available context capacity. The cache token count is shared across concurrent requests, not a per-request context guarantee. The three weight shards total approximately 7.5 GiB; the old model directory remains on the 50 GiB PVC for rollback.
+FP16, 80% GPU memory allocation, two concurrent sequences, and AnythingLLM's 1,024-token response limit remain unchanged. vLLM preallocates its KV cache, so GPU free-memory readings alone do not show the available context capacity. The cache token count is shared across concurrent requests, not a per-request context guarantee. The three weight shards total approximately 7.5 GiB; the old model directory remains on the 50 GiB PVC for rollback.
+
+### 32K context validation
+
+On 2026-10-04, the 4K baseline pod `local-llm-predictor-794b7ffbfc-b9kvq` reported 7.64 GiB of model weights, 10.39 GiB of KV cache, and capacity for 75,632 cached tokens. Two full 32,768-token sequences need 65,536 tokens of cache, leaving approximately 10,096 tokens of capacity in that measured configuration. The pod was healthy with no restarts but had processed no requests; this supports a 32K trial, not a proven load limit. Recheck cache allocation after the context change.
+
+AnythingLLM's total context budget is also 32,768, including the prompt, history, retrieved documents, and up to 1,024 output tokens. Separate Argo CD Applications may reconcile in either order; avoid long chats until both rollouts finish. The predictor uses `Recreate`, so expect brief inference downtime. After GitOps deployment:
+
+```bash
+oc rollout status deployment/local-llm-predictor -n inference-server --timeout=10m
+oc rollout status deployment/anythingllm -n anythingllm --timeout=10m
+python kubernetes/ocp-mgmt/applications/inference-server/scripts/smoke-test.py --long-context
+python kubernetes/ocp-mgmt/applications/anythingllm/scripts/smoke-test.py
+oc logs deployment/local-llm-predictor -n inference-server -c kserve-container | rg -i 'max_seq_len|GPU KV cache size|Maximum concurrency|preempt|out of memory|error'
+```
+
+The opt-in long-context test requires an advertised server limit of at least 32K, counts each synthetic chat prompt with the server tokenizer, and checks actual completion usage against that count. It sends one roughly 31K-token prompt, then two concurrent requests with distinct prefixes, and prints elapsed times. It does not benchmark retrieval quality, force full-length output, or prove both requests were scheduled simultaneously; inspect metrics for KV pressure and preemptions as well. The normal smoke test remains short. Validate a real long conversation in AnythingLLM and check any saved workspace-specific model/context overrides separately.
+
+If memory pressure or latency is unacceptable, lower both `--max-model-len` and `GENERIC_OPEN_AI_MODEL_TOKEN_LIMIT` to 16,384 through Git, retaining the other settings, and repeat the checks. Do not increase GPU allocation or concurrency in the same trial.
 
 ## Startup probe
 

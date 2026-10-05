@@ -185,7 +185,7 @@ The manifests were moved out of the retired `ocp-gpu` cluster. That cluster is n
 
 [OpenShift AI](system/redhat-ods-operator/README.md) provides its dashboard and KServe for model serving on `tr-gpu`. The operator tracks `stable-3.5` with manual InstallPlan approval. Training, pipelines, workbenches, and distributed inference components are disabled. Model data uses the separate `lvms-vg-ai` storage class.
 
-[The inference server](applications/inference-server/README.md) serves Qwen3-4B-Instruct-2507 as `local-llm` using the NVIDIA vLLM runtime managed by KServe. It uses one GPU, a persistent model volume on the WD NVMe, HTTPS token authentication, and a recreate update strategy. Context remains at 4,096 tokens pending measurement of the new model's GPU memory headroom. Its manifests and model revision are managed in Git.
+[The inference server](applications/inference-server/README.md) serves Qwen3-4B-Instruct-2507 as `local-llm` using the NVIDIA vLLM runtime managed by KServe. It uses one GPU, a persistent model volume on the WD NVMe, HTTPS token authentication, and a recreate update strategy. Its configured context is 32,768 tokens with two concurrent sequences and 80% GPU allocation; long-context validation follows GitOps rollout. Its manifests and model revision are managed in Git.
 
 ## Application Catalog
 

@@ -6,7 +6,7 @@
 oc get secret anythingllm-auth -n anythingllm -o jsonpath='{.data.AUTH_TOKEN}' | base64 -d
 ```
 
-Create a workspace and use the preconfigured system model. No external LLM account is required. `local-llm` serves Qwen3-4B-Instruct-2507, a non-thinking model; no `/no_think` suffix is needed. The context remains at 4,096 tokens while GPU memory headroom is measured before testing longer contexts.
+Create a workspace and use the preconfigured system model. No external LLM account is required. `local-llm` serves Qwen3-4B-Instruct-2507, a non-thinking model; no `/no_think` suffix is needed. The configured context is 32,768 tokens, including prompt/history, retrieved documents, and generated output. The response limit remains 1,024 tokens. See the [32K rollout checks](../inference-server/README.md#32k-context-validation); verify both applications have reconciled before sending long prompts.
 
 | Setting | Value |
 |---------|-------|
@@ -14,7 +14,7 @@ Create a workspace and use the preconfigured system model. No external LLM accou
 | Image | OpenShift-compatible `rh-aiservices-bu/anythingllm-workbench:1.9.1`, pinned by digest |
 | Provider / model | Generic OpenAI / `local-llm` |
 | Inference base URL | `https://local-llm-inference-server.apps.ocp-mgmt.rh-lab.morey.tech/v1` |
-| Context / maximum response | 4,096 / 1,024 tokens |
+| Context / maximum response | 32,768 / 1,024 tokens |
 | Embeddings / vector database | Native CPU embeddings / LanceDB |
 | Persistence | 50 GiB RWO PVC on `lvms-vg-ai`, local to `tr-gpu` |
 | Updates | One replica, `Recreate`; brief downtime expected |
