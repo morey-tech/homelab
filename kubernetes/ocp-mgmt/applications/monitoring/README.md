@@ -4,6 +4,8 @@ Grafana, infrastructure Prometheus, Grafana Alloy, and Blackbox Exporter are hos
 
 Grafana queries the existing `ocp-mgmt` Thanos Querier through the provisioned **OCP Management** data source. The [OCP Management Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/ocp-mgmt-overview) dashboard shows node readiness, CPU and memory, operator health, active alerts, and the existing DCGM metrics for the RTX 3090 on `tr-gpu`. It refreshes every 30 seconds with a six-hour default window; append `?kiosk` for a wall display.
 
+The **OCP Home** data source queries the remote cluster's existing Thanos HTTPS route. Its [OCP Home Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/ocp-home-overview) uses the same layout and refresh settings for its single node and Intel GPU. Use the **Cluster dashboards** dropdown to switch clusters. OCP Management remains the default data source.
+
 Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Infrastructure Prometheus still has no scrape jobs (including itself), discovery, recording rules, remote read/write, or enabled ingestion receivers. Alloy contains only logging configuration. Blackbox Exporter defines HTTP and TCP modules but has no callers or targets. No additional ServiceMonitors, PodMonitors, device credentials, or device integrations are installed.
 
 ## OCP Management Metrics
@@ -20,12 +22,12 @@ Both the `monitoring` and `openshift-monitoring-system` Argo CD Applications mus
 
 | State | Meaning |
 |-------|---------|
-| Healthy | All four expected nodes Ready, no unavailable/degraded/failing operators, no critical/warning alerts or progressing operators |
+| Healthy | All expected nodes Ready (4 for management, 1 for home), no unavailable/degraded/failing operators, no critical/warning alerts or progressing operators |
 | Attention | Warning alerts or progressing operators |
 | Unhealthy | Missing/unready expected nodes, unavailable/degraded/failing operators, or critical alerts |
 | Unknown | Required monitoring sources or Watchdog missing, down, or older than 180 seconds; a query error must also be treated as unknown |
 
-Expected nodes are `ms-02`, `ms-03`, `ms-04`, and `tr-gpu`. Edit `NODES` in [the dashboard generator](scripts/build-dashboard.py) when topology changes. The kube-state-metrics **main** endpoint, cluster-version-operator, Prometheus self-scrape, and always-firing Watchdog alert guard the cluster status. Absent warning/critical alert series become zero only when those sources are present. GPU panels show Unknown for missing, down, or stale telemetry. Empty alert/operator tables indicate no problems only when the summary has known data.
+Expected management nodes are `ms-02`, `ms-03`, `ms-04`, and `tr-gpu`; OCP Home expects `ocp-home-01.rh-lab.morey.tech`. The health definition uses each cluster's expected node count (4 or 1). Edit `CLUSTERS` in [the dashboard generator](scripts/build-dashboard.py) when topology changes. The kube-state-metrics **main** endpoint, cluster-version-operator, Prometheus self-scrape, and always-firing Watchdog alert guard the cluster status. Absent warning/critical alert series become zero only when those sources are present. GPU panels show Unknown for missing, down, or stale telemetry. Empty alert/operator tables indicate no problems only when the summary has known data.
 
 ### Token and CA Rotation
 
@@ -34,6 +36,16 @@ This is a manually managed, long-lived service-account token, following the repo
 To rotate through GitOps, change the Secret name in `ocp-mgmt-credentials.yaml` and the matching Grafana environment reference in `grafana.yaml` from `ocp-mgmt-metrics-token-v1` to the next version. Submit both changes for review, commit after approval, and have the human push. Argo CD creates the replacement token, recreates Grafana, and prunes the old Secret, revoking the old token. A brief interruption during reconciliation is expected. Run the verification below after sync. Do not edit token values or delete the live Secret manually.
 
 CA injection updates the ConfigMap automatically, but Grafana's environment and provisioned CA refresh only when its pod is replaced. After service CA rotation, make a reviewed change to the Grafana pod-template annotation `homelab.morey.tech/service-ca-revision` (add it if absent), then push and let GitOps recreate the pod while the old/new CA overlap is available. Never work around a certificate error by disabling TLS verification. A projected-token integration with automatic refresh can replace this manual lifecycle later.
+
+## OCP Home Metrics
+
+The data source connects to `https://thanos-querier-openshift-monitoring.apps.ocp-home.rh-lab.morey.tech` on port 443 over the existing private network. The publicly trusted Route certificate is verified using Grafana's system trust store. No extra CA, Tailscale identity, proxy, or OpenShift API credential is added to Grafana.
+
+[OCP Home's metrics component](../../../ocp-home/system/openshift-monitoring/README.md) owns the dedicated `openshift-monitoring/grafana-ocp-mgmt` service account, versioned token Secret, and namespaced GET-only Role. Management External Secrets reads the token from the password field of Bitwarden login item `762ec6ea-79b5-4e9f-be81-b4dc014da106` into `ocp-home-metrics-token-v1`, refreshing hourly. Grafana consumes that Secret at startup and stores the token as an encrypted data-source field.
+
+**Deploy in two stages:** first deploy the OCP Home identity and put its generated token into the Bitwarden item, then deploy the management data source and dashboard. Allow two minutes for the management Bitwarden cache to sync before deploying the consumer. A missing credential can block Grafana startup; an empty password produces authentication errors. The source README includes exact token retrieval, verification, and rotation steps. No token is transferred or resource applied manually by this repository change.
+
+The dashboard shows readiness for one node, CPU/memory, operator health, warning/critical alerts, and existing Intel iGPU render usage, video-engine-0 usage, frequency, and GPU-only power. Existing alerts are displayed without filtering out cluster problems. If the remote monitoring data disappears, status becomes Unknown or the panel reports a query error; zero metrics must not be interpreted as healthy. Cluster history remains subject to OCP Home's retention and availability.
 
 ## Services and Storage
 
@@ -54,7 +66,7 @@ Combined requests are 475 millicores and 1,696 MiB; limits are 2 CPU and 4,224 M
 
 ## Access and Credentials
 
-The Grafana Route uses edge TLS with the cluster wildcard certificate and redirects HTTP to HTTPS. Anonymous access and sign-up are disabled. External Secrets generates a 48-character initial admin password once and retains the Secret independently of the ExternalSecret. No Bitwarden entry is required for this phase.
+The Grafana Route uses edge TLS with the cluster wildcard certificate and redirects HTTP to HTTPS. Anonymous access and sign-up are disabled. External Secrets generates a 48-character initial admin password once and retains the Secret independently of the ExternalSecret. The Grafana admin credential does not depend on Bitwarden; the OCP Home data-source credential does.
 
 After GitOps deployment, retrieve the initial password and sign in as `admin`:
 
@@ -75,11 +87,12 @@ Render locally before review:
 ```bash
 kustomize build kubernetes/ocp-mgmt/applications/monitoring
 kustomize build kubernetes/ocp-mgmt/system/openshift-monitoring
+kustomize build kubernetes/ocp-home/system/openshift-monitoring
 python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/build-dashboard.py
 python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/test-dashboard.py
 ```
 
-The tests require Python 3.12+, PyYAML, and `promtool` on PATH. They exercise healthy, warning, critical, missing/unready nodes, operator failure/progression, failed sources, missing Watchdog, and stale/absent metrics, and check that the committed dashboard matches its generator. Edit the generator and regenerate JSON together.
+The tests require Python 3.12+, PyYAML, and `promtool` on PATH. They exercise both cluster topologies, including healthy, warning, critical, missing/unready nodes, operator failure/progression, failed sources, missing Watchdog, stale/absent metrics, and literal DNS-name matching. They also check that both committed dashboards match the generator and use the correct data source. Edit the generator and regenerate both JSON files together.
 
 Commit only after human review and leave the push to the human. After the approved commit is pushed, let Argo CD reconcile it; do not apply local manifests or create test Jobs for validation.
 
@@ -102,10 +115,10 @@ Confirm all claims are Bound to local NVMe and pods run on `ms-02` or `ms-04`. V
 ```bash
 oc auth can-i get prometheuses.monitoring.coreos.com/k8s --subresource=api \
   -n openshift-monitoring --as=system:serviceaccount:monitoring:ocp-mgmt-metrics
-python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/check-ocp-mgmt.py
+python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/check-cluster.py
 ```
 
-The read-only script uses the generated Grafana admin password in memory, verifies the provisioned data source and dashboard, and queries through Grafana. Set `GRAFANA_PASSWORD` in the environment if the initial admin password has been changed. Confirm visually that four node series and GPU telemetry appear on the overview, with no panel errors. These checks require the approved changes to have deployed through GitOps.
+The read-only script uses the generated Grafana admin password in memory from the `logged-user` management context, verifies both provisioned data sources and dashboards, and queries through Grafana's proxy and panel-plugin endpoints. Use `--cluster ocp-mgmt` or `--cluster ocp-home` to check one cluster. Set `GRAFANA_PASSWORD` in the environment if the initial admin password has been changed. Confirm visually that the management overview has four node series, the home overview has one, and each has its respective GPU telemetry without panel errors. These checks require the approved changes to have deployed through GitOps.
 
 Infrastructure Prometheus should remain empty. In a separate terminal, forward it:
 
@@ -124,6 +137,6 @@ Expected results are empty `activeTargets`, `droppedTargets`, and query `result`
 
 ## Later Collection Phases
 
-Add the OCP Home data source and infrastructure collection in separate reviewed changes. Enable scoped backend NetworkPolicy rules and Prometheus's remote-write receiver only when a defined Alloy pipeline needs them. SNMP targets, device credentials, reachability targets, Loki, and log collection remain outside this phase.
+Add infrastructure collection in separate reviewed changes. Enable scoped backend NetworkPolicy rules and Prometheus's remote-write receiver only when a defined Alloy pipeline needs them. SNMP targets, device credentials, reachability targets, Loki, and log collection remain outside this phase.
 
 References: [Grafana configuration](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/), [Prometheus retention](https://prometheus.io/docs/prometheus/latest/storage/), [Alloy health endpoints](https://grafana.com/docs/alloy/latest/reference/http/).

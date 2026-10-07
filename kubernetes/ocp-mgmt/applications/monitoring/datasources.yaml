@@ -23,3 +23,22 @@ datasources:
     secureJsonData:
       httpHeaderValue1: Bearer $OCP_MGMT_METRICS_TOKEN
       tlsCACert: $OCP_MGMT_SERVICE_CA
+  - name: OCP Home
+    uid: ocp-home
+    type: prometheus
+    access: proxy
+    url: https://thanos-querier-openshift-monitoring.apps.ocp-home.rh-lab.morey.tech
+    isDefault: false
+    editable: false
+    version: 1
+    jsonData:
+      httpMethod: GET
+      prometheusType: Thanos
+      timeInterval: 30s
+      queryTimeout: 60s
+      timeout: "60"
+      manageAlerts: false
+      httpHeaderName1: Authorization
+      tlsSkipVerify: false
+    secureJsonData:
+      httpHeaderValue1: Bearer $OCP_HOME_METRICS_TOKEN

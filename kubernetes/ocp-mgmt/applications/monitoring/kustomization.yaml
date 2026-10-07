@@ -5,6 +5,7 @@ resources:
   - serviceaccounts.yaml
   - credentials.yaml
   - ocp-mgmt-credentials.yaml
+  - ocp-home-credentials.yaml
   - storage.yaml
   - grafana.yaml
   - prometheus.yaml
@@ -35,3 +36,4 @@ configMapGenerator:
   - name: grafana-dashboards
     files:
       - dashboards/ocp-mgmt.json
+      - dashboards/ocp-home.json
