@@ -94,8 +94,8 @@
       },
       "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. ",
       "gridPos": {
-        "x": 0,
-        "y": 7,
+        "x": 8,
+        "y": 0,
         "w": 8,
         "h": 7
       },
@@ -156,6 +156,89 @@
       "id": 2
     },
     {
+      "title": "OCP Home iGPU usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "Intel iGPU render/3D and video engine 0 utilization, shown separately. Missing, failed, or stale telemetry appears as gaps.",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((igpu_engines_render_3d_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(igpu_engines_render_3d_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) and on() ((max((up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) == 1))",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Render / 3D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "refId": "B",
+          "expr": "((igpu_engines_video_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(igpu_engines_video_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) and on() ((max((up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) == 1))",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Video engine 0",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 3
+    },
+    {
       "title": "OCP Management CPU usage",
       "type": "timeseries",
       "datasource": {
@@ -164,8 +247,8 @@
       },
       "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. ",
       "gridPos": {
-        "x": 8,
-        "y": 0,
+        "x": 0,
+        "y": 7,
         "w": 8,
         "h": 7
       },
@@ -223,7 +306,7 @@
           "sort": "desc"
         }
       },
-      "id": 3
+      "id": 4
     },
     {
       "title": "OCP Management memory usage",
@@ -293,10 +376,80 @@
           "sort": "desc"
         }
       },
-      "id": 4
+      "id": 5
     },
     {
-      "title": "QNAP CPU usage",
+      "title": "tr-gpu \u00b7 RTX 3090 GPU utilization",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Missing/down/stale telemetry displays Unknown.",
+      "gridPos": {
+        "x": 16,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"}) < 180))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+          "instant": false,
+          "range": true,
+          "legendFormat": "tr-gpu \u00b7 GPU 0",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 6
+    },
+    {
+      "title": "qnap-01 CPU usage",
       "type": "timeseries",
       "datasource": {
         "type": "prometheus",
@@ -304,8 +457,8 @@
       },
       "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. ",
       "gridPos": {
-        "x": 16,
-        "y": 0,
+        "x": 0,
+        "y": 14,
         "w": 8,
         "h": 7
       },
@@ -363,10 +516,10 @@
           "sort": "desc"
         }
       },
-      "id": 5
+      "id": 7
     },
     {
-      "title": "QNAP memory usage",
+      "title": "qnap-01 memory usage",
       "type": "timeseries",
       "datasource": {
         "type": "prometheus",
@@ -374,8 +527,8 @@
       },
       "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. 100 \u00d7 (1 \u2212 available / total). Includes only memory unavailable for new workloads; no byte-unit assumption.",
       "gridPos": {
-        "x": 16,
-        "y": 7,
+        "x": 8,
+        "y": 14,
         "w": 8,
         "h": 7
       },
@@ -433,35 +586,35 @@
           "sort": "desc"
         }
       },
-      "id": 6
+      "id": 8
     },
     {
-      "title": "tr-gpu \u00b7 RTX 3090 GPU utilization",
+      "title": "qnap-01 shared-folder usage",
       "type": "timeseries",
       "datasource": {
         "type": "prometheus",
-        "uid": "ocp-mgmt"
+        "uid": "infrastructure"
       },
-      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Missing/down/stale telemetry displays Unknown.",
+      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. ",
       "gridPos": {
-        "x": 0,
+        "x": 16,
         "y": 14,
-        "w": 24,
+        "w": 8,
         "h": 7
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "((DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"}) < 180))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+          "expr": "(100 * ((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) - (sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) / ((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
-          "legendFormat": "tr-gpu \u00b7 GPU 0",
+          "legendFormat": "{{share}}",
           "datasource": {
             "type": "prometheus",
-            "uid": "ocp-mgmt"
+            "uid": "infrastructure"
           },
           "editorMode": "code",
-          "interval": "30s"
+          "interval": "1m"
         }
       ],
       "fieldConfig": {
@@ -503,7 +656,7 @@
           "sort": "desc"
         }
       },
-      "id": 7
+      "id": 9
     }
   ],
   "templating": {
