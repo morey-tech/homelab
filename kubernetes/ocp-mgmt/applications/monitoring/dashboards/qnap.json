@@ -1196,6 +1196,123 @@
         "graphMode": "none",
         "textMode": "auto"
       }
+    },
+    {
+      "id": 20,
+      "title": "Memory breakdown",
+      "type": "timeseries",
+      "description": "Each line is a percentage of total memory. Used, available, free, cache, and buffers are separate NAS-reported counters. These values overlap; do not add or stack them. The MIB does not identify cache as ZFS ARC, so ARC is not inferred from these counters. Missing, failed, or stale telemetry appears as gaps.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 36,
+        "w": 24,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 2,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * (systemUsedMemory{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemUsedMemory{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Used (NAS)",
+          "editorMode": "code",
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * (systemAvailableMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemAvailableMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Available",
+          "editorMode": "code",
+          "interval": "1m"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * (systemFreeMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemFreeMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Free",
+          "editorMode": "code",
+          "interval": "1m"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * (systemCacheMemory{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemCacheMemory{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Cache (NAS)",
+          "editorMode": "code",
+          "interval": "1m"
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * (systemBufferMemory{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemBufferMemory{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Buffers",
+          "editorMode": "code",
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
     }
   ],
   "templating": {

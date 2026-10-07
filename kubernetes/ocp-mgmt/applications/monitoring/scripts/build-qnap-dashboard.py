@@ -20,6 +20,25 @@ def observed(expr):
     return f'({expr}) and on(job, instance) {UP}'
 
 
+MEMORY_DESCRIPTION = (
+    'Each line is a percentage of total memory. Used, available, free, cache, and buffers '
+    'are separate NAS-reported counters. These values overlap; do not add or stack them. '
+    'The MIB does not identify cache as ZFS ARC, so ARC is not inferred from these counters. '
+    'Missing, failed, or stale telemetry appears as gaps.'
+)
+
+
+def memory_targets():
+    total = f'({fresh("systemTotalMem")} > 0)'
+    queries = [(label, f'100 * {fresh(metric)} / {total}') for label, metric in [
+        ('Used (NAS)', 'systemUsedMemory'), ('Available', 'systemAvailableMem'),
+        ('Free', 'systemFreeMem'), ('Cache (NAS)', 'systemCacheMemory'),
+        ('Buffers', 'systemBufferMemory')]]
+    return [{'refId': chr(ord('A') + i), 'datasource': DS, 'expr': observed(expr),
+             'instant': False, 'range': True, 'legendFormat': label, 'editorMode': 'code',
+             'interval': '1m'} for i, (label, expr) in enumerate(queries)]
+
+
 def build():
     panels = []
 
@@ -96,6 +115,11 @@ def build():
     p = add('Power supply', observed(fresh('sysPowerStatus')), 12, 32)
     mapping(p, {-1: ('Failed', 'red'), 0: ('OK', 'green')})
     add('Fan speed', observed(fresh('sysFanSpeed')), 18, 32, unit='rotrpm', legend='{{fan}}')
+    p = add('Memory breakdown', memory_targets()[0]['expr'], 0, 36, 24, 7,
+            'timeseries', 'percent', description=MEMORY_DESCRIPTION)
+    p['targets'] = memory_targets()
+    p['fieldConfig']['defaults']['decimals'] = 2
+    p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'none', 'group': 'A'}
     return {'uid': 'qnap-overview', 'title': 'QNAP Overview', 'schemaVersion': 39, 'version': 1,
             'editable': False, 'tags': ['homelab', 'infrastructure', 'qnap'], 'timezone': 'browser',
             'refresh': '1m', 'time': {'from': 'now-6h', 'to': 'now'}, 'panels': panels,

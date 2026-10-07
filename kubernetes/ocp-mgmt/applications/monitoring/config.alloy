@@ -43,7 +43,7 @@ discovery.relabel "qnap" {
 prometheus.scrape "qnap" {
 	targets         = discovery.relabel.qnap.output
 	scrape_interval = "60s"
-	scrape_timeout  = "45s"
+	scrape_timeout  = "55s"
 	forward_to      = [prometheus.remote_write.infrastructure.receiver]
 }
 

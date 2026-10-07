@@ -30,6 +30,7 @@ External Secrets uses `bitwarden-login` for the username/password and `bitwarden
 | `sharedFolderStatus`, `raidStatus`, `diskStatus` | Device-reported text, retained as labels and shown in tables |
 | `systemCPU_Usage` | CPU usage percentage; live sample returned 18 |
 | `systemTotalMem`, `systemAvailableMem` | MIB does not specify units; dashboard uses their ratio only |
+| `systemUsedMemory`, `systemFreeMem`, `systemCacheMemory`, `systemBufferMemory` | NAS-reported used, free, cache, and buffer counters; shown as percentages of total memory |
 | `sysUptime` | TimeTicks converted from hundredths of a second to seconds |
 | Temperatures, fan speed, power status | Hardware telemetry; live availability must be checked |
 
@@ -39,12 +40,23 @@ The [QNAP dashboard](../dashboards/qnap.json) expects an `infrastructure` Promet
 
 Expected shares from the monitoring plan are `storage-media` and `storage-mass` on pool 1, and `storage-nvme` on pool 2. The MIB does not expose a share-to-pool association in this table: validate these mappings in QNAP before adding mapping labels. Do not infer pool consumption by summing shares; snapshots, reservations, compression, and thin provisioning can affect the two accounts differently.
 
+## Memory Breakdown
+
+The Homelab Overview memory card and the detailed QNAP dashboard's **Memory breakdown** graph show five separate lines: **Used (NAS)**, **Available**, **Free**, **Cache (NAS)**, and **Buffers**. Each counter is divided by total memory and displayed with two decimal places, so small buffer/cache values remain visible. These counters overlap; the graphs are deliberately unstacked and their values must not be summed. Missing counters remain missing rather than being replaced with zero.
+
+The existing **Memory in use** summary remains `100 × (1 − available / total)`. In the live validation sample, the NAS-reported used counter equaled total minus available (about 30%), while free memory was about 11%, cache 1.23%, and buffers 0.06%. Available memory is not the same as free memory.
+
+The supplied MIB has **no explicit ZFS ARC counter**. [QNAP documents ARC separately from used memory in Resource Monitor](https://www.qnap.com/en/how-to/faq/article/why-do-i-receive-an-insufficient-memory-error-when-there-appears-to-be-enough-ram-available), but the MIB does not define its generic cache counter as ARC. This integration neither renames cache as ARC nor estimates ARC from the difference between other counters. Direct ARC collection is deferred to a later NAS metrics or SSH integration.
+
+The four additional counters begin accumulating history after the collector change deploys through GitOps; prior history is not backfilled.
+
 ## Local validation
 
 Regenerate the dashboard:
 
 ```bash
 python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/build-qnap-dashboard.py
+python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/build-overview-dashboard.py
 ```
 
 With the upstream SNMP exporter available:
@@ -63,9 +75,9 @@ python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/test-qnap-dashboard.
 
 A direct SNMPv3 scrape using the Bitwarden credential returned a TS-873A on the expected firmware, two Ready pools, six Ready shares (including all three expected shares), two Ready RAID groups, and nine Good disks. CPU, memory, fan, temperature, power, and uptime metrics were also present. The full scrape took about 31 seconds with 125 packets and no retries.
 
-The deployed Alloy and Prometheus versions also passed a temporary local pipeline test: Alloy collected the live NAS, remote-wrote to local Prometheus, and all 19 dashboard queries returned data with the expected labels. No cluster resources were changed for this validation. Cluster rollout, ExternalSecret reconciliation, and Grafana's panel-plugin queries remain post-deployment checks.
+The deployed Alloy and Prometheus versions also passed a temporary local pipeline test: Alloy collected the live NAS, remote-wrote to local Prometheus, and all 24 queries across 20 panels returned data with the expected labels, including the five memory breakdown series. No cluster resources were changed for this validation. Cluster rollout, ExternalSecret reconciliation, and Grafana's panel-plugin queries remain post-deployment checks.
 
-GETBULK requests with `max_repetitions: 10` timed out; `max_repetitions: 1` completed successfully. Keep the 45-second scrape timeout below the 60-second interval and monitor scrape duration after deployment. Pool 1 reported about 57.86 TB total and 9.73 TB free; pool 2 about 936.30 GB total and 736.02 GB free (decimal units). These are SNMP observations, not a comparison against the NAS UI. Compare the initial dashboard with QNAP's Storage & Snapshots page.
+GETBULK requests with `max_repetitions: 10` timed out; `max_repetitions: 1` completed successfully. The expanded memory scrape exceeded the previous 45-second deadline in local Alloy validation. Keep the 55-second scrape timeout below the 60-second interval and monitor scrape duration after deployment. Pool 1 reported about 57.86 TB total and 9.73 TB free; pool 2 about 936.30 GB total and 736.02 GB free (decimal units). These are SNMP observations, not a comparison against the NAS UI. Compare the initial dashboard with QNAP's Storage & Snapshots page.
 
 ## Credential Rotation
 

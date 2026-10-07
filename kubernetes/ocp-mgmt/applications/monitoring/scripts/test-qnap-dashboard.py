@@ -32,8 +32,8 @@ panels = {p['title']: p['targets'][0]['expr'] for p in dashboard['panels']}
 tests = [
     {'name': 'all dashboard queries parse and missing telemetry remains unknown',
      'interval': '1m', 'input_series': [],
-     'promql_expr_test': [check(expr, [{'labels': '{}', 'value': -1}] if name == 'SNMP collection' else [])
-                          for name, expr in panels.items()]},
+     'promql_expr_test': [check(target['expr'], [{'labels': '{}', 'value': -1}] if panel['title'] == 'SNMP collection' else [])
+                          for panel in dashboard['panels'] for target in panel['targets']]},
     {'name': 'failed scrape hides old successful device metrics', 'interval': '1m',
      'input_series': [sample('up', '1 0'), sample('systemCPU_Usage', '25 _')],
      'promql_expr_test': [check(panels['CPU usage'])]},
@@ -59,6 +59,31 @@ tests = [
      'input_series': [sample('up', '1 1'), sample('systemTotalMem', '1000 1000'), sample('systemAvailableMem', '0 0')],
      'promql_expr_test': [check(panels['Memory in use'], [
          {'labels': '{job="qnap",instance="qnap-01"}', 'value': 100}])]},
+]
+
+memory = qnap.memory_targets()
+memory_values = {'systemUsedMemory': 300, 'systemAvailableMem': 700,
+                 'systemFreeMem': 110, 'systemCacheMemory': 12, 'systemBufferMemory': 0.6}
+memory_base = [sample('systemTotalMem', '1000 1000')] + [sample(name, f'{value} {value}') for name, value in memory_values.items()]
+tests += [
+    {'name': 'memory ratios preserve overlapping counters and small buffer values', 'interval': '1m',
+     'input_series': [sample('up', '1 1')] + memory_base,
+     'promql_expr_test': [check(target['expr'], [{'labels': '{job="qnap",instance="qnap-01"}', 'value': value / 10}])
+                          for target, value in zip(memory, memory_values.values())]},
+    {'name': 'memory breakdown disappears when SNMP fails', 'interval': '1m',
+     'input_series': [sample('up', '1 0')] + memory_base,
+     'promql_expr_test': [check(target['expr']) for target in memory]},
+    {'name': 'missing cache does not become zero', 'interval': '1m',
+     'input_series': [sample('up', '1 1'), sample('systemTotalMem', '1000 1000')],
+     'promql_expr_test': [check(memory[3]['expr'])]},
+    {'name': 'zero total hides all memory ratios', 'interval': '1m',
+     'input_series': [sample('up', '1 1'), sample('systemTotalMem', '0 0')] +
+                     [sample(name, '0 0') for name in memory_values],
+     'promql_expr_test': [check(target['expr']) for target in memory]},
+    {'name': 'fresh scrape cannot revive stale cache counter', 'interval': '1m',
+     'input_series': [sample('up', '1 1 1 1'), sample('systemTotalMem', '1000 1000 1000 1000'),
+                      sample('systemCacheMemory', '12 _ _ _')],
+     'promql_expr_test': [check(memory[3]['expr'], at='3m')]},
 ]
 
 with tempfile.TemporaryDirectory(prefix='qnap-promql-') as directory:

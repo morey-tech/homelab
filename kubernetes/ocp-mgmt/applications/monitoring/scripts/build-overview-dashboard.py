@@ -45,7 +45,13 @@ def build():
         cpu, memory = ('CPU usage', 'Memory in use') if uid == 'infrastructure' else ('Node CPU usage', 'Node memory usage')
         legend = 'qnap-01' if uid == 'infrastructure' else '{{instance}}'
         graph(uid, cpu, title + ' CPU usage', 0, y, legend=legend)
-        graph(uid, memory, title + ' memory usage', 8, y, legend=legend)
+        p = graph(uid, memory, title + ' memory usage', 8, y, legend=legend)
+        if uid == 'infrastructure':
+            p['title'] = 'qnap-01 memory breakdown'
+            p['targets'] = qnap.memory_targets()
+            p['description'] = qnap.MEMORY_DESCRIPTION
+            p['fieldConfig']['defaults']['decimals'] = 2
+            p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'none', 'group': 'A'}
         if uid == 'ocp-home':
             p = graph(uid, 'GPU render utilization', 'OCP Home iGPU usage', 16, y, legend='Render / 3D')
             video = next(p for p in sources[uid]['panels'] if p['title'] == 'GPU video utilization')

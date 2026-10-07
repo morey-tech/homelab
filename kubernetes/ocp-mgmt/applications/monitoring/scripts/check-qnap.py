@@ -34,22 +34,23 @@ def main():
     assert dashboard['meta']['provisioned'], 'QNAP dashboard is not provisioned'
     now = int(time.time() * 1000)
     for panel in dashboard['dashboard']['panels']:
-        query = urllib.parse.urlencode({'query': panel['targets'][0]['expr']})
-        result = request('/api/datasources/proxy/uid/infrastructure/api/v1/query?' + query)
-        assert result['status'] == 'success', panel['title']
-        series = result['data']['result']
-        assert series, panel['title'] + ': missing telemetry'
-        if panel['title'] == 'SNMP collection':
-            assert len(series) == 1 and series[0]['value'][1] == '1', 'SNMP collection failed or is stale'
-        if panel['title'] == 'Pool state':
-            assert {s['metric']['pool_id'] for s in series} == {'1', '2'}, 'Missing expected pool'
-        if panel['title'] == 'Shared-folder status':
-            assert {'storage-media', 'storage-mass', 'storage-nvme'} <= {s['metric']['share'] for s in series}, 'Missing expected share'
-        target = dict(panel['targets'][0], intervalMs=60000, maxDataPoints=360)
-        result = request('/api/ds/query', {'from': str(now - 21600000), 'to': str(now), 'queries': [target]})['results']['A']
-        assert not result.get('error'), (panel['title'], result.get('error'))
-        assert result.get('status', 200) == 200, panel['title']
-        print(f"{panel['title']}: {len(series)} current series; Grafana plugin query passed")
+        for target in panel['targets']:
+            query = urllib.parse.urlencode({'query': target['expr']})
+            result = request('/api/datasources/proxy/uid/infrastructure/api/v1/query?' + query)
+            assert result['status'] == 'success', panel['title']
+            series = result['data']['result']
+            assert series, panel['title'] + ': missing telemetry'
+            if panel['title'] == 'SNMP collection':
+                assert len(series) == 1 and series[0]['value'][1] == '1', 'SNMP collection failed or is stale'
+            if panel['title'] == 'Pool state':
+                assert {s['metric']['pool_id'] for s in series} == {'1', '2'}, 'Missing expected pool'
+            if panel['title'] == 'Shared-folder status':
+                assert {'storage-media', 'storage-mass', 'storage-nvme'} <= {s['metric']['share'] for s in series}, 'Missing expected share'
+            target = dict(target, intervalMs=60000, maxDataPoints=360)
+            result = request('/api/ds/query', {'from': str(now - 21600000), 'to': str(now), 'queries': [target]})['results'][target['refId']]
+            assert not result.get('error'), (panel['title'], result.get('error'))
+            assert result.get('status', 200) == 200, panel['title']
+            print(f"{panel['title']} / {target['refId']}: {len(series)} current series; Grafana plugin query passed")
     print('QNAP data source, provisioned dashboard, and all query paths verified. Review NAS health values and the dashboard visually.')
 
 
