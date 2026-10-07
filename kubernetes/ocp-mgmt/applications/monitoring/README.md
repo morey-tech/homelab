@@ -50,7 +50,7 @@ Each Deployment has one replica. Recreate updates release each ReadWriteOnce vol
 
 Prometheus retention is 30 days or 75 GiB, whichever is reached first, leaving space for the WAL and head data in the 100 GiB claim. Prometheus spells this binary unit `75GB` in its configuration. Alloy's volume reserves space for future component state/write queues; no queue exists until a pipeline is configured. Grafana persists its SQLite database, users, and plugins.
 
-Combined requests are 475 millicores and 1,440 MiB; limits are 2 CPU and 3,712 MiB. Adjust after collection is enabled and actual usage is available.
+Combined requests are 475 millicores and 1,696 MiB; limits are 2 CPU and 4,224 MiB. Grafana requests 512 MiB with a 1 GiB limit after the first dashboard rollout exceeded its previous 512 MiB limit; observed usage after restart was about 409 MiB. Adjust from observed usage as data sources and dashboards grow.
 
 ## Access and Credentials
 
