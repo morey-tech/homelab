@@ -1313,6 +1313,84 @@
           "sort": "desc"
         }
       }
+    },
+    {
+      "id": 21,
+      "title": "CPU breakdown",
+      "type": "timeseries",
+      "description": "Overall utilization is the NAS-reported value. Each processor line is its approximately one-minute non-idle percentage from HOST-RESOURCES-MIB. Processor labels are SNMP device indexes, not physical-core or operating-system CPU numbers. The two sources may use different averaging windows. Missing, failed, or stale telemetry appears as gaps. User/system/I/O-wait counters and load averages were not returned by the SNMP probe.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 24,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((systemCPU_Usage{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemCPU_Usage{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Overall (NAS)",
+          "editorMode": "code",
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((hrProcessorLoad{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(hrProcessorLoad{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Processor {{hrDeviceIndex}}",
+          "editorMode": "code",
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
     }
   ],
   "templating": {

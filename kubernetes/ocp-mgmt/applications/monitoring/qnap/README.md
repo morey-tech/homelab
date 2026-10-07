@@ -20,7 +20,7 @@ External Secrets uses `bitwarden-login` for the username/password and `bitwarden
 
 ## Metric source
 
-[NAS.mib](NAS.mib) is a copy of the MIB supplied from this NAS, with trailing whitespace normalized. The curated [snmp.yml](snmp.yml) module uses `qnap.qutshero` (`1.3.6.1.4.1.55062.2`), not the older QNAP enterprise tree. It requests selected scalars and table columns rather than walking every application and service.
+[NAS.mib](NAS.mib) is a copy of the MIB supplied from this NAS, with trailing whitespace normalized. The curated [snmp.yml](snmp.yml) module uses `qnap.qutshero` (`1.3.6.1.4.1.55062.2`), plus the standard HOST-RESOURCES-MIB processor-load column. It requests selected scalars and table columns rather than walking every application and service.
 
 | Metrics | Interpretation |
 |---------|----------------|
@@ -29,6 +29,7 @@ External Secrets uses `bitwarden-login` for the username/password and `bitwarden
 | `sharedFolderCapacity`, `sharedFolderFreeSize` | Logical shared-folder total/free bytes; distinct from pool accounting |
 | `sharedFolderStatus`, `raidStatus`, `diskStatus` | Device-reported text, retained as labels and shown in tables |
 | `systemCPU_Usage` | CPU usage percentage; live sample returned 18 |
+| `hrProcessorLoad` | Per-logical-processor non-idle percentage, approximately a one-minute average; labeled by SNMP `hrDeviceIndex` |
 | `systemTotalMem`, `systemAvailableMem` | MIB does not specify units; dashboard uses their ratio only |
 | `systemUsedMemory`, `systemFreeMem`, `systemCacheMemory`, `systemBufferMemory` | NAS-reported used, free, cache, and buffer counters; shown as percentages of total memory |
 | `sysUptime` | TimeTicks converted from hundredths of a second to seconds |
@@ -39,6 +40,16 @@ Capacity and memory objects use the MIB's `Counter64` encoding but represent **g
 The [QNAP dashboard](../dashboards/qnap.json) expects an `infrastructure` Prometheus data source and series labeled `job="qnap", instance="qnap-01"`. It separates pool capacity from logical share usage, guards panels with a successful SNMP scrape, and treats samples older than 180 seconds as missing. The collection panel describes collection success, not overall NAS health. Text health values are shown verbatim until live response semantics are verified.
 
 Expected shares from the monitoring plan are `storage-media` and `storage-mass` on pool 1, and `storage-nvme` on pool 2. The MIB does not expose a share-to-pool association in this table: validate these mappings in QNAP before adding mapping labels. Do not infer pool consumption by summing shares; snapshots, reservations, compression, and thin provisioning can affect the two accounts differently.
+
+## CPU Breakdown
+
+The Homelab Overview CPU card and the detailed QNAP dashboard's **CPU breakdown** graph show **Overall (NAS)** plus one line per logical processor. A read-only probe returned eight processors, with SNMP indexes `196608` through `196615`. These are SNMP device indexes, not physical-core counts or OS CPU numbers. Each line is independently scaled from 0–100%; the lines are not stacked or summed.
+
+The [HOST-RESOURCES-MIB](https://www.net-snmp.org/docs/mibs/HOST-RESOURCES-MIB.txt) defines `hrProcessorLoad` (`1.3.6.1.2.1.25.3.3.1.2`) as a processor's non-idle percentage averaged over approximately one minute. This is a gauge, so no `rate()` is applied. The QNAP overall value may use a different sampling window and need not equal the mean of the processor lines at a given time. All series require successful, fresh SNMP collection; an idle processor remains a valid zero, while missing or stale processors show gaps.
+
+The NAS did not return the probed UCD-SNMP CPU-time counters (user, nice, system, idle, I/O wait, kernel, interrupts, soft IRQ, or steal), nor the standard 1/5/15-minute load-average column, with the current SNMP identity. Those metrics are not added as empty panels or inferred from overall utilization. A NAS exporter or SSH-based collector would be needed to investigate these further, alongside the deferred ARC integration.
+
+The new processor series begin accumulating history after deployment; earlier history is not backfilled.
 
 ## Memory Breakdown
 
@@ -75,7 +86,7 @@ python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/test-qnap-dashboard.
 
 A direct SNMPv3 scrape using the Bitwarden credential returned a TS-873A on the expected firmware, two Ready pools, six Ready shares (including all three expected shares), two Ready RAID groups, and nine Good disks. CPU, memory, fan, temperature, power, and uptime metrics were also present. The full scrape took about 31 seconds with 125 packets and no retries.
 
-The deployed Alloy and Prometheus versions also passed a temporary local pipeline test: Alloy collected the live NAS, remote-wrote to local Prometheus, and all 24 queries across 20 panels returned data with the expected labels, including the five memory breakdown series. No cluster resources were changed for this validation. Cluster rollout, ExternalSecret reconciliation, and Grafana's panel-plugin queries remain post-deployment checks.
+The deployed Alloy and Prometheus versions also passed a temporary local pipeline test: Alloy collected the live NAS, remote-wrote to local Prometheus, and all 26 queries across 21 panels returned data with the expected labels, including the five memory breakdown series and eight logical-processor CPU series. No cluster resources were changed for this validation. Cluster rollout, ExternalSecret reconciliation, and Grafana's panel-plugin queries remain post-deployment checks.
 
 GETBULK requests with `max_repetitions: 10` timed out; `max_repetitions: 1` completed successfully. The expanded memory scrape exceeded the previous 45-second deadline in local Alloy validation. Keep the 55-second scrape timeout below the 60-second interval and monitor scrape duration after deployment. Pool 1 reported about 57.86 TB total and 9.73 TB free; pool 2 about 936.30 GB total and 736.02 GB free (decimal units). These are SNMP observations, not a comparison against the NAS UI. Compare the initial dashboard with QNAP's Storage & Snapshots page.
 

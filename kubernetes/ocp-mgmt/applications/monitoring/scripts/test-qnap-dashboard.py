@@ -62,6 +62,22 @@ tests = [
 ]
 
 memory = qnap.memory_targets()
+processor = qnap.cpu_targets()[1]['expr']
+tests += [
+    {'name': 'logical processors retain independent percentages including idle CPUs', 'interval': '1m',
+     'input_series': [sample('up', '1 1'),
+                      sample('hrProcessorLoad', '0 0', 'hrDeviceIndex="196608"'),
+                      sample('hrProcessorLoad', '95 95', 'hrDeviceIndex="196609"')],
+     'promql_expr_test': [check(processor, [
+         {'labels': 'hrProcessorLoad{job="qnap",instance="qnap-01",hrDeviceIndex="196608"}', 'value': 0},
+         {'labels': 'hrProcessorLoad{job="qnap",instance="qnap-01",hrDeviceIndex="196609"}', 'value': 95}])]},
+    {'name': 'processor samples are hidden after failed scrape', 'interval': '1m',
+     'input_series': [sample('up', '1 0'), sample('hrProcessorLoad', '95 95', 'hrDeviceIndex="196608"')],
+     'promql_expr_test': [check(processor)]},
+    {'name': 'stale processor samples are not revived by a healthy scrape', 'interval': '1m',
+     'input_series': [sample('up', '1 1 1 1'), sample('hrProcessorLoad', '95 _ _ _', 'hrDeviceIndex="196608"')],
+     'promql_expr_test': [check(processor, at='3m')]},
+]
 memory_values = {'systemUsedMemory': 300, 'systemAvailableMem': 700,
                  'systemFreeMem': 110, 'systemCacheMemory': 12, 'systemBufferMemory': 0.6}
 memory_base = [sample('systemTotalMem', '1000 1000')] + [sample(name, f'{value} {value}') for name, value in memory_values.items()]

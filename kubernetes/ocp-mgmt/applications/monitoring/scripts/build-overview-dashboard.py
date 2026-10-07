@@ -44,7 +44,12 @@ def build():
                           (14, 'infrastructure', 'qnap-01')]:
         cpu, memory = ('CPU usage', 'Memory in use') if uid == 'infrastructure' else ('Node CPU usage', 'Node memory usage')
         legend = 'qnap-01' if uid == 'infrastructure' else '{{instance}}'
-        graph(uid, cpu, title + ' CPU usage', 0, y, legend=legend)
+        p = graph(uid, cpu, title + ' CPU usage', 0, y, legend=legend)
+        if uid == 'infrastructure':
+            p['title'] = 'qnap-01 CPU breakdown'
+            p['targets'] = qnap.cpu_targets()
+            p['description'] = qnap.CPU_DESCRIPTION
+            p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'none', 'group': 'A'}
         p = graph(uid, memory, title + ' memory usage', 8, y, legend=legend)
         if uid == 'infrastructure':
             p['title'] = 'qnap-01 memory breakdown'

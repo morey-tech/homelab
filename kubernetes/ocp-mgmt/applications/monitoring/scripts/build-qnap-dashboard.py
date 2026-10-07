@@ -20,6 +20,23 @@ def observed(expr):
     return f'({expr}) and on(job, instance) {UP}'
 
 
+CPU_DESCRIPTION = (
+    'Overall utilization is the NAS-reported value. Each processor line is its '
+    'approximately one-minute non-idle percentage from HOST-RESOURCES-MIB. '
+    'Processor labels are SNMP device indexes, not physical-core or operating-system CPU numbers. '
+    'The two sources may use different averaging windows. Missing, failed, or stale telemetry appears as gaps. '
+    'User/system/I/O-wait counters and load averages were not returned by the SNMP probe.'
+)
+
+
+def cpu_targets():
+    return [{'refId': ref, 'datasource': DS, 'expr': observed(fresh(metric)),
+             'instant': False, 'range': True, 'legendFormat': label, 'editorMode': 'code',
+             'interval': '1m'} for ref, metric, label in [
+        ('A', 'systemCPU_Usage', 'Overall (NAS)'),
+        ('B', 'hrProcessorLoad', 'Processor {{hrDeviceIndex}}')]]
+
+
 MEMORY_DESCRIPTION = (
     'Each line is a percentage of total memory. Used, available, free, cache, and buffers '
     'are separate NAS-reported counters. These values overlap; do not add or stack them. '
@@ -119,6 +136,10 @@ def build():
             'timeseries', 'percent', description=MEMORY_DESCRIPTION)
     p['targets'] = memory_targets()
     p['fieldConfig']['defaults']['decimals'] = 2
+    p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'none', 'group': 'A'}
+    p = add('CPU breakdown', cpu_targets()[0]['expr'], 0, 43, 24, 7,
+            'timeseries', 'percent', description=CPU_DESCRIPTION)
+    p['targets'] = cpu_targets()
     p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'none', 'group': 'A'}
     return {'uid': 'qnap-overview', 'title': 'QNAP Overview', 'schemaVersion': 39, 'version': 1,
             'editable': False, 'tags': ['homelab', 'infrastructure', 'qnap'], 'timezone': 'browser',
