@@ -1,0 +1,5 @@
+// Foundation only. Add collection and forwarding components in a later phase.
+logging {
+  level  = "info"
+  format = "logfmt"
+}

@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+resources:
+  - serviceaccounts.yaml
+  - credentials.yaml
+  - storage.yaml
+  - grafana.yaml
+  - prometheus.yaml
+  - alloy.yaml
+  - blackbox-exporter.yaml
+  - services.yaml
+  - route.yaml
+  - networkpolicy.yaml
+configMapGenerator:
+  - name: grafana-config
+    files:
+      - grafana.ini
+  - name: prometheus-config
+    files:
+      - prometheus.yml
+  - name: alloy-config
+    files:
+      - config.alloy
+  - name: blackbox-exporter-config
+    files:
+      - blackbox.yml

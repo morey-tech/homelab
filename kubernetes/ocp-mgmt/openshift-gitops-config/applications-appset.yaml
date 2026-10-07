@@ -15,6 +15,7 @@ spec:
         directories:
           - path: kubernetes/ocp-mgmt/applications/inference-server
           - path: kubernetes/ocp-mgmt/applications/anythingllm
+          - path: kubernetes/ocp-mgmt/applications/monitoring
   ignoreApplicationDifferences:
     - jsonPointers:
         - /spec/syncPolicy/automated

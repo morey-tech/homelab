@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+storage:
+  tsdb:
+    retention:
+      time: 30d
+      size: 75GB
+
+# Foundation only: no self-scrapes, discovery, rules, or remote integrations.
+scrape_configs: []
+rule_files: []
