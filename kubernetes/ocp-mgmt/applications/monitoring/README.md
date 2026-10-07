@@ -2,6 +2,14 @@
 
 Grafana, infrastructure Prometheus, Grafana Alloy, and Blackbox Exporter are hosted in the `monitoring` namespace on `ocp-mgmt`. The application ApplicationSet explicitly enables this directory.
 
+The [Homelab Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/homelab-overview) combines CPU and memory graphs for OCP Home, OCP Management, and QNAP, plus RTX 3090 GPU utilization on `tr-gpu`. Each system has a column with CPU above memory; the GPU graph spans the bottom row. Cluster graphs show one line per node, and QNAP shows `qnap-01`. All seven panels use percentage scales, a shared six-hour window, and a 30-second dashboard refresh (QNAP samples arrive every 60 seconds). Missing telemetry appears as gaps. The dashboard reuses the existing data sources and guarded queries; it does not copy cluster metrics into infrastructure Prometheus. Use the **Homelab dashboards** dropdown to open the detailed dashboards, or append `?kiosk` for a wall display.
+
+Regenerate the shared overview after changing a source dashboard's utilization queries:
+
+```bash
+python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/build-overview-dashboard.py
+```
+
 Grafana queries the existing `ocp-mgmt` Thanos Querier through the provisioned **OCP Management** data source. The [OCP Management Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/ocp-mgmt-overview) dashboard shows node readiness, CPU and memory, operator health, active alerts, and the existing DCGM metrics for the RTX 3090 on `tr-gpu`. It refreshes every 30 seconds with a six-hour default window; append `?kiosk` for a wall display.
 
 The **OCP Home** data source queries the remote cluster's existing Thanos HTTPS route. Its [OCP Home Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/ocp-home-overview) uses the same layout and refresh settings for its single node and Intel GPU. Use the **Cluster dashboards** dropdown to switch clusters. OCP Management remains the default data source.

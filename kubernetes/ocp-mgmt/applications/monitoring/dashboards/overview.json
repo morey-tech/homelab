@@ -1,0 +1,524 @@
+{
+  "uid": "homelab-overview",
+  "title": "Homelab Overview",
+  "tags": [
+    "homelab",
+    "overview"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "title": "OCP Home CPU usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. ",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",mode=\"idle\"}[5m])))) and on(instance) ((up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{instance}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 1
+    },
+    {
+      "title": "OCP Home memory usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. ",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(100 * (1 - node_memory_MemAvailable_bytes{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"} / node_memory_MemTotal_bytes{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"})) and on(instance) ((up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{instance}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 2
+    },
+    {
+      "title": "OCP Management CPU usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. ",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\",mode=\"idle\"}[5m])))) and on(instance) ((up{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{instance}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 3
+    },
+    {
+      "title": "OCP Management memory usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. ",
+      "gridPos": {
+        "x": 8,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(100 * (1 - node_memory_MemAvailable_bytes{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\"} / node_memory_MemTotal_bytes{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\"})) and on(instance) ((up{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{instance}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 4
+    },
+    {
+      "title": "QNAP CPU usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. ",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((systemCPU_Usage{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemCPU_Usage{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "qnap-01",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "editorMode": "code",
+          "interval": "1m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 5
+    },
+    {
+      "title": "QNAP memory usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. 100 \u00d7 (1 \u2212 available / total). Includes only memory unavailable for new workloads; no byte-unit assumption.",
+      "gridPos": {
+        "x": 16,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(100 * (1 - (systemAvailableMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemAvailableMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "qnap-01",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "editorMode": "code",
+          "interval": "1m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 6
+    },
+    {
+      "title": "tr-gpu \u00b7 RTX 3090 GPU utilization",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Missing/down/stale telemetry displays Unknown.",
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"}) < 180))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+          "instant": false,
+          "range": true,
+          "legendFormat": "tr-gpu \u00b7 GPU 0",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 7
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Homelab dashboards",
+      "type": "dashboards",
+      "tags": [
+        "homelab"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ]
+}
