@@ -75,6 +75,12 @@ ocp-home/
 
 ## Cluster-Specific Features
 
+### Central Grafana Monitoring
+
+[The Grafana metrics identity](system/openshift-monitoring/README.md) grants the management-cluster Grafana read-only access to the existing Thanos API. The [OCP Home overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/ocp-home-overview) covers `ocp-home-01.rh-lab.morey.tech`, operators, alerts, and existing Intel GPU telemetry. Metrics retain their existing storage and retention on OCP Home.
+
+Deploy the identity and populate the dedicated Bitwarden token item before enabling the management data source; see the component README for the two-stage rollout and rotation procedure.
+
 ### Intel GPU Support
 
 This cluster includes hardware GPU acceleration using Intel i915 GPUs.

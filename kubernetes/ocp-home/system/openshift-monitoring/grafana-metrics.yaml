@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grafana-ocp-mgmt
+automountServiceAccountToken: false
+---
+# The token controller populates this Secret after GitOps deployment.
+# Copy its token into the dedicated Bitwarden login item's password field.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-ocp-mgmt-token-v1
+  annotations:
+    kubernetes.io/service-account.name: grafana-ocp-mgmt
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: grafana-metrics-reader
+rules:
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - prometheuses/api
+    resourceNames:
+      - k8s
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: grafana-metrics-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: grafana-metrics-reader
+subjects:
+  - kind: ServiceAccount
+    name: grafana-ocp-mgmt
+    namespace: openshift-monitoring
