@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""Check dashboard reproducibility, PromQL, and telemetry-loss behavior."""
+import importlib.util
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+import yaml
+
+sys.dont_write_bytecode = True
+ROOT = Path(__file__).resolve().parents[1]
+spec = importlib.util.spec_from_file_location('qnap', ROOT / 'scripts/build-qnap-dashboard.py')
+qnap = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(qnap)
+dashboard = qnap.build()
+assert json.loads((ROOT / 'dashboards/qnap.json').read_text()) == dashboard
+
+
+def sample(metric, values, labels=''):
+    extra = ',' + labels if labels else ''
+    return {'series': f'{metric}{{{qnap.LABELS}{extra}}}', 'values': values}
+
+
+def check(expr, expected=None, at='1m'):
+    return {'expr': expr, 'eval_time': at, 'exp_samples': expected or []}
+
+
+panels = {p['title']: p['targets'][0]['expr'] for p in dashboard['panels']}
+tests = [
+    {'name': 'all dashboard queries parse and missing telemetry remains unknown',
+     'interval': '1m', 'input_series': [],
+     'promql_expr_test': [check(expr, [{'labels': '{}', 'value': -1}] if name == 'SNMP collection' else [])
+                          for name, expr in panels.items()]},
+    {'name': 'failed scrape hides old successful device metrics', 'interval': '1m',
+     'input_series': [sample('up', '1 0'), sample('systemCPU_Usage', '25 _')],
+     'promql_expr_test': [check(panels['CPU usage'])]},
+    {'name': 'stopped collector does not show old values or collecting status', 'interval': '1m',
+     'input_series': [sample('up', '1 _ _ _'), sample('systemCPU_Usage', '25 _ _ _')],
+     'promql_expr_test': [check(panels['CPU usage'], at='3m'),
+                          check(panels['SNMP collection'], [{'labels': '{}', 'value': -1}], at='3m')]},
+    {'name': 'successful scrape cannot revive stale individual metrics', 'interval': '1m',
+     'input_series': [sample('up', '1 1 1 1'), sample('systemCPU_Usage', '25 _ _ _')],
+     'promql_expr_test': [check(panels['CPU usage'], at='3m')]},
+    {'name': 'zero total memory is unavailable rather than infinite', 'interval': '1m',
+     'input_series': [sample('up', '1 1'), sample('systemTotalMem', '0 0'), sample('systemAvailableMem', '0 0')],
+     'promql_expr_test': [check(panels['Memory in use'])]},
+    {'name': 'pool arithmetic uses bytes and retains pool identity', 'interval': '1m',
+     'input_series': [sample('up', '1 1'),
+                      sample('storagepoolCapacity', '1000 1000', 'pool_id="1",storagepoolIndex="1"'),
+                      sample('storagepoolFreeSize', '250 250', 'pool_id="1",storagepoolIndex="1"')],
+     'promql_expr_test': [check(panels['Pool used capacity'], [
+         {'labels': '{job="qnap",instance="qnap-01",pool_id="1",storagepoolIndex="1"}', 'value': 750}]),
+         check(panels['Pool usage'], [
+         {'labels': '{job="qnap",instance="qnap-01",pool_id="1",storagepoolIndex="1"}', 'value': 75}])]},
+    {'name': 'zero available memory means fully used', 'interval': '1m',
+     'input_series': [sample('up', '1 1'), sample('systemTotalMem', '1000 1000'), sample('systemAvailableMem', '0 0')],
+     'promql_expr_test': [check(panels['Memory in use'], [
+         {'labels': '{job="qnap",instance="qnap-01"}', 'value': 100}])]},
+]
+
+with tempfile.TemporaryDirectory(prefix='qnap-promql-') as directory:
+    path = Path(directory) / 'tests.yml'
+    path.write_text(yaml.safe_dump({'rule_files': [], 'evaluation_interval': '1m', 'tests': tests}))
+    subprocess.run([os.environ.get('PROMTOOL', 'promtool'), 'test', 'rules', str(path)], check=True)
+print(f'Validated {len(dashboard["panels"])} panels and {len(tests)} telemetry scenarios.')

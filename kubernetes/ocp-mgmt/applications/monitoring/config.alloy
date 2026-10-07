@@ -1,5 +1,54 @@
-// Foundation only. Add collection and forwarding components in a later phase.
 logging {
-  level  = "info"
-  format = "logfmt"
+	level  = "info"
+	format = "logfmt"
+}
+
+// Projected Secret updates are picked up without a pod restart. Mark the
+// complete auth document secret so Alloy's UI does not expose credentials.
+local.file "qnap_auth" {
+	filename       = "/etc/alloy-secrets/qnap/snmp-auth.yml"
+	is_secret      = true
+	detector       = "poll"
+	poll_frequency = "1m"
+}
+
+local.file "qnap_module" {
+	filename = "/etc/alloy/qnap-snmp.yml"
+}
+
+prometheus.exporter.snmp "qnap" {
+	config = local.file.qnap_auth.content + "\n" + local.file.qnap_module.content
+
+	target "qnap_01" {
+		address = "192.168.6.20"
+		module  = "qnap_qutshero"
+		auth    = "qnap_v3"
+	}
+}
+
+discovery.relabel "qnap" {
+	targets = prometheus.exporter.snmp.qnap.targets
+
+	rule {
+		target_label = "job"
+		replacement  = "qnap"
+	}
+
+	rule {
+		target_label = "instance"
+		replacement  = "qnap-01"
+	}
+}
+
+prometheus.scrape "qnap" {
+	targets         = discovery.relabel.qnap.output
+	scrape_interval = "60s"
+	scrape_timeout  = "45s"
+	forward_to      = [prometheus.remote_write.infrastructure.receiver]
+}
+
+prometheus.remote_write "infrastructure" {
+	endpoint {
+		url = "http://prometheus.monitoring.svc:9090/api/v1/write"
+	}
 }

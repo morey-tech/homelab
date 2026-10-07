@@ -1,0 +1,290 @@
+# Curated from NAS.mib supplied with QuTS hero h5.2.9.3499.
+# Capacity and memory Counter64 objects are gauges: never apply rate().
+# Memory units are unspecified in the MIB; use the available/total ratio only.
+# sysUptime is TimeTicks (hundredths of a second), exported as seconds.
+modules:
+  qnap_qutshero:
+    walk:
+    - 1.3.6.1.4.1.55062.2.10.2.1.2
+    - 1.3.6.1.4.1.55062.2.10.2.1.4
+    - 1.3.6.1.4.1.55062.2.10.2.1.7
+    - 1.3.6.1.4.1.55062.2.10.2.1.8
+    - 1.3.6.1.4.1.55062.2.10.2.1.9
+    - 1.3.6.1.4.1.55062.2.10.5.1.2
+    - 1.3.6.1.4.1.55062.2.10.5.1.3
+    - 1.3.6.1.4.1.55062.2.10.5.1.4
+    - 1.3.6.1.4.1.55062.2.10.5.1.5
+    - 1.3.6.1.4.1.55062.2.10.5.1.7
+    - 1.3.6.1.4.1.55062.2.10.7.1.2
+    - 1.3.6.1.4.1.55062.2.10.7.1.3
+    - 1.3.6.1.4.1.55062.2.10.7.1.4
+    - 1.3.6.1.4.1.55062.2.10.7.1.5
+    - 1.3.6.1.4.1.55062.2.10.9.1.2
+    - 1.3.6.1.4.1.55062.2.10.9.1.3
+    - 1.3.6.1.4.1.55062.2.10.9.1.4
+    - 1.3.6.1.4.1.55062.2.10.9.1.5
+    - 1.3.6.1.4.1.55062.2.12.9.1.2
+    - 1.3.6.1.4.1.55062.2.12.9.1.3
+    get:
+    - 1.3.6.1.4.1.55062.2.10.1.0
+    - 1.3.6.1.4.1.55062.2.10.4.0
+    - 1.3.6.1.4.1.55062.2.10.6.0
+    - 1.3.6.1.4.1.55062.2.10.8.0
+    - 1.3.6.1.4.1.55062.2.12.12.0
+    - 1.3.6.1.4.1.55062.2.12.13.0
+    - 1.3.6.1.4.1.55062.2.12.15.0
+    - 1.3.6.1.4.1.55062.2.12.10.0
+    - 1.3.6.1.4.1.55062.2.12.11.0
+    - 1.3.6.1.4.1.55062.2.12.19.0
+    - 1.3.6.1.4.1.55062.2.12.3.0
+    - 1.3.6.1.4.1.55062.2.12.6.0
+    - 1.3.6.1.4.1.55062.2.12.21.0
+    # Small GETBULK responses avoid table-walk timeouts on this firmware.
+    max_repetitions: 1
+    retries: 1
+    timeout: 5s
+    metrics:
+    - name: diskCount
+      oid: 1.3.6.1.4.1.55062.2.10.1
+      type: gauge
+      help: diskCount from QuTS hero QTS-MIB.
+    - name: raidCount
+      oid: 1.3.6.1.4.1.55062.2.10.4
+      type: gauge
+      help: raidCount from QuTS hero QTS-MIB.
+    - name: storagepoolCount
+      oid: 1.3.6.1.4.1.55062.2.10.6
+      type: gauge
+      help: storagepoolCount from QuTS hero QTS-MIB.
+    - name: sharedFolderCount
+      oid: 1.3.6.1.4.1.55062.2.10.8
+      type: gauge
+      help: sharedFolderCount from QuTS hero QTS-MIB.
+    - name: systemCPU_Usage
+      oid: 1.3.6.1.4.1.55062.2.12.12
+      type: gauge
+      help: systemCPU-Usage from QuTS hero QTS-MIB.
+    - name: systemTotalMem
+      oid: 1.3.6.1.4.1.55062.2.12.13
+      type: gauge
+      help: systemTotalMem from QuTS hero QTS-MIB.
+    - name: systemAvailableMem
+      oid: 1.3.6.1.4.1.55062.2.12.15
+      type: gauge
+      help: systemAvailableMem from QuTS hero QTS-MIB.
+    - name: cpuTemperature
+      oid: 1.3.6.1.4.1.55062.2.12.10
+      type: gauge
+      help: cpuTemperature from QuTS hero QTS-MIB.
+    - name: systemTemperature
+      oid: 1.3.6.1.4.1.55062.2.12.11
+      type: gauge
+      help: systemTemperature from QuTS hero QTS-MIB.
+    - name: sysPowerStatus
+      oid: 1.3.6.1.4.1.55062.2.12.19
+      type: gauge
+      help: sysPowerStatus from QuTS hero QTS-MIB.
+    - name: systemModel
+      oid: 1.3.6.1.4.1.55062.2.12.3
+      type: DisplayString
+      help: systemModel from QuTS hero QTS-MIB.
+    - name: firmwareVersion
+      oid: 1.3.6.1.4.1.55062.2.12.6
+      type: DisplayString
+      help: firmwareVersion from QuTS hero QTS-MIB.
+    - name: sysUptime
+      oid: 1.3.6.1.4.1.55062.2.12.21
+      type: gauge
+      help: sysUptime from QuTS hero QTS-MIB.
+      scale: 0.01
+    - name: storagepoolCapacity
+      oid: 1.3.6.1.4.1.55062.2.10.7.1.3
+      type: gauge
+      help: storagepoolCapacity from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: storagepoolIndex
+        type: gauge
+      lookups:
+      - labels:
+        - storagepoolIndex
+        labelname: pool_id
+        oid: 1.3.6.1.4.1.55062.2.10.7.1.2
+        type: gauge
+    - name: storagepoolFreeSize
+      oid: 1.3.6.1.4.1.55062.2.10.7.1.4
+      type: gauge
+      help: storagepoolFreeSize from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: storagepoolIndex
+        type: gauge
+      lookups:
+      - labels:
+        - storagepoolIndex
+        labelname: pool_id
+        oid: 1.3.6.1.4.1.55062.2.10.7.1.2
+        type: gauge
+    - name: storagepoolStatus
+      oid: 1.3.6.1.4.1.55062.2.10.7.1.5
+      type: gauge
+      help: storagepoolStatus from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: storagepoolIndex
+        type: gauge
+      lookups:
+      - labels:
+        - storagepoolIndex
+        labelname: pool_id
+        oid: 1.3.6.1.4.1.55062.2.10.7.1.2
+        type: gauge
+    - name: sharedFolderCapacity
+      oid: 1.3.6.1.4.1.55062.2.10.9.1.3
+      type: gauge
+      help: sharedFolderCapacity from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: sharedFolderIndex
+        type: gauge
+      lookups:
+      - labels:
+        - sharedFolderIndex
+        labelname: share
+        oid: 1.3.6.1.4.1.55062.2.10.9.1.2
+        type: DisplayString
+    - name: sharedFolderFreeSize
+      oid: 1.3.6.1.4.1.55062.2.10.9.1.4
+      type: gauge
+      help: sharedFolderFreeSize from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: sharedFolderIndex
+        type: gauge
+      lookups:
+      - labels:
+        - sharedFolderIndex
+        labelname: share
+        oid: 1.3.6.1.4.1.55062.2.10.9.1.2
+        type: DisplayString
+    - name: sharedFolderStatus
+      oid: 1.3.6.1.4.1.55062.2.10.9.1.5
+      type: DisplayString
+      help: sharedFolderStatus from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: sharedFolderIndex
+        type: gauge
+      lookups:
+      - labels:
+        - sharedFolderIndex
+        labelname: share
+        oid: 1.3.6.1.4.1.55062.2.10.9.1.2
+        type: DisplayString
+    - name: diskStatus
+      oid: 1.3.6.1.4.1.55062.2.10.2.1.7
+      type: DisplayString
+      help: diskStatus from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: diskIndex
+        type: gauge
+      lookups:
+      - labels:
+        - diskIndex
+        labelname: disk_id
+        oid: 1.3.6.1.4.1.55062.2.10.2.1.2
+        type: gauge
+      - labels:
+        - diskIndex
+        labelname: model
+        oid: 1.3.6.1.4.1.55062.2.10.2.1.4
+        type: DisplayString
+    - name: diskTemperature
+      oid: 1.3.6.1.4.1.55062.2.10.2.1.8
+      type: gauge
+      help: diskTemperature from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: diskIndex
+        type: gauge
+      lookups:
+      - labels:
+        - diskIndex
+        labelname: disk_id
+        oid: 1.3.6.1.4.1.55062.2.10.2.1.2
+        type: gauge
+      - labels:
+        - diskIndex
+        labelname: model
+        oid: 1.3.6.1.4.1.55062.2.10.2.1.4
+        type: DisplayString
+    - name: diskCapacity
+      oid: 1.3.6.1.4.1.55062.2.10.2.1.9
+      type: gauge
+      help: diskCapacity from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: diskIndex
+        type: gauge
+      lookups:
+      - labels:
+        - diskIndex
+        labelname: disk_id
+        oid: 1.3.6.1.4.1.55062.2.10.2.1.2
+        type: gauge
+      - labels:
+        - diskIndex
+        labelname: model
+        oid: 1.3.6.1.4.1.55062.2.10.2.1.4
+        type: DisplayString
+    - name: raidStatus
+      oid: 1.3.6.1.4.1.55062.2.10.5.1.4
+      type: DisplayString
+      help: raidStatus from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: raidIndex
+        type: gauge
+      lookups:
+      - labels:
+        - raidIndex
+        labelname: raid_id
+        oid: 1.3.6.1.4.1.55062.2.10.5.1.2
+        type: gauge
+      - labels:
+        - raidIndex
+        labelname: raid_name
+        oid: 1.3.6.1.4.1.55062.2.10.5.1.3
+        type: DisplayString
+      - labels:
+        - raidIndex
+        labelname: raid_level
+        oid: 1.3.6.1.4.1.55062.2.10.5.1.7
+        type: DisplayString
+    - name: raidCapacity
+      oid: 1.3.6.1.4.1.55062.2.10.5.1.5
+      type: gauge
+      help: raidCapacity from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: raidIndex
+        type: gauge
+      lookups:
+      - labels:
+        - raidIndex
+        labelname: raid_id
+        oid: 1.3.6.1.4.1.55062.2.10.5.1.2
+        type: gauge
+      - labels:
+        - raidIndex
+        labelname: raid_name
+        oid: 1.3.6.1.4.1.55062.2.10.5.1.3
+        type: DisplayString
+      - labels:
+        - raidIndex
+        labelname: raid_level
+        oid: 1.3.6.1.4.1.55062.2.10.5.1.7
+        type: DisplayString
+    - name: sysFanSpeed
+      oid: 1.3.6.1.4.1.55062.2.12.9.1.3
+      type: gauge
+      help: sysFanSpeed from QuTS hero QTS-MIB.
+      indexes:
+      - labelname: sysFanIndex
+        type: gauge
+      lookups:
+      - labels:
+        - sysFanIndex
+        labelname: fan
+        oid: 1.3.6.1.4.1.55062.2.12.9.1.2
+        type: DisplayString

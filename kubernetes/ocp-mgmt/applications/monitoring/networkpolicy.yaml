@@ -1,5 +1,5 @@
-# Only Grafana is reachable through the OpenShift router. Internal APIs have
-# no ingress clients yet; add scoped rules with the future collection setup.
+# Only Grafana is reachable through the OpenShift router. Prometheus accepts
+# internal ingestion from Alloy and queries from Grafana in this namespace.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -28,3 +28,25 @@ spec:
       ports:
         - protocol: TCP
           port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prometheus-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: prometheus
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: alloy
+        - podSelector:
+            matchLabels:
+              app: grafana
+      ports:
+        - protocol: TCP
+          port: 9090

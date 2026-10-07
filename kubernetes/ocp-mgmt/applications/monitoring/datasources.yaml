@@ -1,6 +1,21 @@
 apiVersion: 1
 prune: true
 datasources:
+  - name: Infrastructure
+    uid: infrastructure
+    type: prometheus
+    access: proxy
+    url: http://prometheus.monitoring.svc:9090
+    isDefault: false
+    editable: false
+    version: 1
+    jsonData:
+      httpMethod: POST
+      prometheusType: Prometheus
+      timeInterval: 60s
+      queryTimeout: 60s
+      timeout: "60"
+      manageAlerts: false
   - name: OCP Management
     uid: ocp-mgmt
     type: prometheus

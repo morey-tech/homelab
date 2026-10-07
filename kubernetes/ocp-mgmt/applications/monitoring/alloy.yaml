@@ -74,6 +74,9 @@ spec:
               readOnly: true
             - name: data
               mountPath: /var/lib/alloy
+            - name: qnap-credentials
+              mountPath: /etc/alloy-secrets/qnap
+              readOnly: true
           args:
             - run
             - --server.http.listen-addr=0.0.0.0:12345
@@ -87,3 +90,6 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: alloy
+        - name: qnap-credentials
+          secret:
+            secretName: qnap-snmp-v1

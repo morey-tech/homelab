@@ -8,6 +8,7 @@ storage:
       time: 30d
       size: 75GB
 
-# Foundation only: no self-scrapes, discovery, rules, or remote integrations.
+# Alloy forwards infrastructure metrics to the remote-write receiver.
+# OpenShift metrics remain in each cluster's existing monitoring stack.
 scrape_configs: []
 rule_files: []

@@ -6,6 +6,7 @@ resources:
   - credentials.yaml
   - ocp-mgmt-credentials.yaml
   - ocp-home-credentials.yaml
+  - qnap-credentials.yaml
   - storage.yaml
   - grafana.yaml
   - prometheus.yaml
@@ -24,6 +25,7 @@ configMapGenerator:
   - name: alloy-config
     files:
       - config.alloy
+      - qnap-snmp.yml=qnap/snmp.yml
   - name: blackbox-exporter-config
     files:
       - blackbox.yml
@@ -37,3 +39,4 @@ configMapGenerator:
     files:
       - dashboards/ocp-mgmt.json
       - dashboards/ocp-home.json
+      - dashboards/qnap.json

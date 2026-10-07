@@ -6,7 +6,7 @@ Grafana queries the existing `ocp-mgmt` Thanos Querier through the provisioned *
 
 The **OCP Home** data source queries the remote cluster's existing Thanos HTTPS route. Its [OCP Home Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/ocp-home-overview) uses the same layout and refresh settings for its single node and Intel GPU. Use the **Cluster dashboards** dropdown to switch clusters. OCP Management remains the default data source.
 
-Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Infrastructure Prometheus still has no scrape jobs (including itself), discovery, recording rules, remote read/write, or enabled ingestion receivers. Alloy contains only logging configuration. Blackbox Exporter defines HTTP and TCP modules but has no callers or targets. No additional ServiceMonitors, PodMonitors, device credentials, or device integrations are installed.
+Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Alloy collects QNAP metrics over SNMPv3 and forwards them to infrastructure Prometheus through its internal remote-write receiver. The **Infrastructure** data source serves the [QNAP Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/qnap-overview) dashboard. Prometheus has no direct scrape jobs or recording rules. Blackbox Exporter defines HTTP and TCP modules but has no callers or targets.
 
 ## OCP Management Metrics
 
@@ -16,7 +16,7 @@ The token controller populates `ocp-mgmt-metrics-token-v1`. Grafana reads the to
 
 ESO generates a separate, stable `grafana-encryption-key` Secret for Grafana's stored credentials. Preserve and back up this key together with the Grafana database; recreating it can make stored encrypted settings unreadable. This phase introduces the key before the first data-source credential is provisioned. If encrypted integrations have been added manually since the foundation deployed, migrate their encryption before changing the key.
 
-Both the `monitoring` and `openshift-monitoring-system` Argo CD Applications must sync this change. They reconcile independently; queries may return 403 until the RoleBinding exists. The platform's existing NetworkPolicy permits authenticated access to Thanos on port 9091, and Grafana already has outbound access. No ingress to the idle infrastructure backends is needed.
+Both the `monitoring` and `openshift-monitoring-system` Argo CD Applications must sync this change. They reconcile independently; queries may return 403 until the RoleBinding exists. The platform's existing NetworkPolicy permits authenticated access to Thanos on port 9091, and Grafana already has outbound access. Cluster data-source queries do not pass through infrastructure Prometheus.
 
 ### Dashboard Status
 
@@ -47,6 +47,14 @@ The data source connects to `https://thanos-querier-openshift-monitoring.apps.oc
 
 The dashboard shows readiness for one node, CPU/memory, operator health, warning/critical alerts, and existing Intel iGPU render usage, video-engine-0 usage, frequency, and GPU-only power. Existing alerts are displayed without filtering out cluster problems. If the remote monitoring data disappears, status becomes Unknown or the panel reports a query error; zero metrics must not be interpreted as healthy. Cluster history remains subject to OCP Home's retention and availability.
 
+## QNAP Metrics
+
+[QNAP collection details](qnap/README.md) cover the supplied QuTS hero MIB, SNMPv3 credentials, capacity semantics, and validation. Alloy polls `192.168.6.20:161` every 60 seconds using HMAC-SHA and CBC-DES (`authPriv`). External Secrets reads Bitwarden item `29df3066-0d03-464d-bf35-b4dc017a372e`; Alloy watches the mounted Secret so credential updates do not require a restart.
+
+Only Alloy and Grafana pods in this namespace may connect to infrastructure Prometheus on port 9090. The NetworkPolicy controls pods and ports, not HTTP paths: either allowed client can reach the receiver and query API. Prometheus has no external Route. Alloy's own API remains ingress-denied, and its existing egress policy permits polling the NAS.
+
+The dashboard shows collection status, uptime, CPU/memory, pool and share capacity, and disk/RAID/hardware health. Pool and share accounting remain separate; absent or stale samples are not treated as healthy. QNAP's Secret is required only by Alloy, so a credential provisioning failure does not block Grafana or its cluster dashboards.
+
 ## Services and Storage
 
 | Service | Image version | Storage | Access |
@@ -60,7 +68,7 @@ All persistent volumes use `lvms-vg-nvme`. Required node affinity limits every w
 
 Each Deployment has one replica. Recreate updates release each ReadWriteOnce volume before starting its replacement. Volumes are node-local and are not replicated: loss of a storage node takes its service offline until the node recovers or data is restored. PVC annotations require confirmation before Argo CD pruning and preserve claims when the Application is deleted. The storage class has a Delete reclaim policy, so manually deleting a PVC can still destroy its data.
 
-Prometheus retention is 30 days or 75 GiB, whichever is reached first, leaving space for the WAL and head data in the 100 GiB claim. Prometheus spells this binary unit `75GB` in its configuration. Alloy's volume reserves space for future component state/write queues; no queue exists until a pipeline is configured. Grafana persists its SQLite database, users, and plugins.
+Prometheus retention is 30 days or 75 GiB, whichever is reached first, leaving space for the WAL and head data in the 100 GiB claim. Prometheus spells this binary unit `75GB` in its configuration. Alloy uses its volume for the remote-write WAL, buffering infrastructure samples when Prometheus is temporarily unavailable. Grafana persists its SQLite database, users, and plugins.
 
 Combined requests are 475 millicores and 1,696 MiB; limits are 2 CPU and 4,224 MiB. Grafana requests 512 MiB with a 1 GiB limit after the first dashboard rollout exceeded its previous 512 MiB limit; observed usage after restart was about 409 MiB. Adjust from observed usage as data sources and dashboards grow.
 
@@ -120,23 +128,23 @@ python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/check-cluster.py
 
 The read-only script uses the generated Grafana admin password in memory from the `logged-user` management context, verifies both provisioned data sources and dashboards, and queries through Grafana's proxy and panel-plugin endpoints. Use `--cluster ocp-mgmt` or `--cluster ocp-home` to check one cluster. Set `GRAFANA_PASSWORD` in the environment if the initial admin password has been changed. Confirm visually that the management overview has four node series, the home overview has one, and each has its respective GPU telemetry without panel errors. These checks require the approved changes to have deployed through GitOps.
 
-Infrastructure Prometheus should remain empty. In a separate terminal, forward it:
+Infrastructure Prometheus receives QNAP samples from Alloy. In a separate terminal, forward it:
 
 ```bash
 oc port-forward -n monitoring service/prometheus 9090:9090
 ```
 
-Then verify both the target list and stored series are empty:
+Then verify the direct target list and the QNAP collection status:
 
 ```bash
 curl --fail --silent --show-error http://localhost:9090/api/v1/targets
-curl --fail --silent --show-error --get http://localhost:9090/api/v1/query --data-urlencode 'query=count({__name__=~".+"})'
+curl --fail --silent --show-error --get http://localhost:9090/api/v1/query --data-urlencode 'query=up{job="qnap",instance="qnap-01"}'
 ```
 
-Expected results are empty `activeTargets`, `droppedTargets`, and query `result` arrays. Alloy's `/-/ready` and Blackbox Exporter's `/-/healthy` endpoints can likewise be checked through port forwarding to ports 12345 and 9115; do not invoke `/probe` during this phase. PVC mount permissions, image startup, Route access, and persistence across a subsequent GitOps rollout must be verified after deployment.
+Expected results are empty `activeTargets` and `droppedTargets` arrays (scraping runs in Alloy), and a QNAP `up` result of `1`. An empty query result or `0` requires investigation; allow two scrape intervals after rollout. Alloy's `/-/ready` and Blackbox Exporter's `/-/healthy` endpoints can likewise be checked through port forwarding to ports 12345 and 9115; do not invoke `/probe` during this phase. PVC mount permissions, image startup, Route access, and persistence across a subsequent GitOps rollout must be verified after deployment.
 
 ## Later Collection Phases
 
-Add infrastructure collection in separate reviewed changes. Enable scoped backend NetworkPolicy rules and Prometheus's remote-write receiver only when a defined Alloy pipeline needs them. SNMP targets, device credentials, reachability targets, Loki, and log collection remain outside this phase.
+Add other NAS devices, reachability targets, network devices, Loki, and log collection in separate reviewed changes. QNAP is currently the only infrastructure collection target.
 
 References: [Grafana configuration](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/), [Prometheus retention](https://prometheus.io/docs/prometheus/latest/storage/), [Alloy health endpoints](https://grafana.com/docs/alloy/latest/reference/http/).

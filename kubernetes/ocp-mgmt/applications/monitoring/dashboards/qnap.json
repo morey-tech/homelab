@@ -1,0 +1,1219 @@
+{
+  "uid": "qnap-overview",
+  "title": "QNAP Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "homelab",
+    "infrastructure",
+    "qnap"
+  ],
+  "timezone": "browser",
+  "refresh": "1m",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "SNMP collection",
+      "type": "stat",
+      "description": "Collection status only, not NAS health. Unknown when telemetry is missing or older than 180 seconds.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Unknown",
+                  "color": "gray"
+                },
+                "0": {
+                  "text": "Failed",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Collecting",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) or on() vector(-1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "NAS uptime",
+      "type": "stat",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((sysUptime{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sysUptime{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "CPU usage",
+      "type": "stat",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((systemCPU_Usage{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemCPU_Usage{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Memory in use",
+      "type": "stat",
+      "description": "100 \u00d7 (1 \u2212 available / total). Includes only memory unavailable for new workloads; no byte-unit assumption.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * (1 - (systemAvailableMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemAvailableMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Pool used capacity",
+      "type": "timeseries",
+      "description": "Pool capacity minus free space reported by QuTS hero. Do not sum share usage to derive this value.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) - (storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Pool {{pool_id}}",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Pool usage",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * ((storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) - (storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) / ((storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Pool {{pool_id}}",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Pool capacity",
+      "type": "stat",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "Pool {{pool_id}}",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 8,
+      "title": "Pool free space",
+      "type": "stat",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 10,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "Pool {{pool_id}}",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 9,
+      "title": "Pool state",
+      "type": "stat",
+      "description": "QuTS hero state codes from NAS.mib; unknown codes remain numeric and are not treated as Ready.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 10,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-4": {
+                  "text": "SED locked",
+                  "color": "red"
+                },
+                "-3": {
+                  "text": "Error",
+                  "color": "red"
+                },
+                "-2": {
+                  "text": "Not ready",
+                  "color": "red"
+                },
+                "-1": {
+                  "text": "Warning",
+                  "color": "yellow"
+                },
+                "0": {
+                  "text": "Ready",
+                  "color": "green"
+                },
+                "1": {
+                  "text": "Resilvering",
+                  "color": "yellow"
+                },
+                "2": {
+                  "text": "Exporting",
+                  "color": "yellow"
+                },
+                "3": {
+                  "text": "Removing",
+                  "color": "yellow"
+                },
+                "4": {
+                  "text": "Scrubbing",
+                  "color": "yellow"
+                },
+                "5": {
+                  "text": "Creating",
+                  "color": "yellow"
+                },
+                "6": {
+                  "text": "SED locking",
+                  "color": "yellow"
+                },
+                "7": {
+                  "text": "SED unlocking",
+                  "color": "yellow"
+                },
+                "8": {
+                  "text": "Stopping",
+                  "color": "yellow"
+                },
+                "9": {
+                  "text": "Stopped",
+                  "color": "yellow"
+                },
+                "10": {
+                  "text": "Starting",
+                  "color": "yellow"
+                },
+                "11": {
+                  "text": "Importing",
+                  "color": "yellow"
+                },
+                "12": {
+                  "text": "Read only",
+                  "color": "yellow"
+                },
+                "13": {
+                  "text": "Pruning",
+                  "color": "yellow"
+                },
+                "14": {
+                  "text": "Tuning",
+                  "color": "yellow"
+                },
+                "255": {
+                  "text": "Unknown",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((storagepoolStatus{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolStatus{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "Pool {{pool_id}}",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 10,
+      "title": "Shared-folder used capacity",
+      "type": "timeseries",
+      "description": "Logical shared-folder capacity minus free space. Allocation, snapshots, and compression can differ from pool accounting.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) - (sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{share}}",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Shared-folder usage",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 14,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * ((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) - (sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) / ((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{share}}",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Shared-folder status",
+      "type": "table",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((sharedFolderStatus{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderStatus{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "share",
+                "sharedFolderStatus"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "RAID status",
+      "type": "table",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((raidStatus{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(raidStatus{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "raid_id",
+                "raid_name",
+                "raid_level",
+                "raidStatus"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Disk status",
+      "type": "table",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((diskStatus{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(diskStatus{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "disk_id",
+                "model",
+                "diskStatus"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Disk temperature",
+      "type": "timeseries",
+      "description": "Negative values are treated as unavailable sensors.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 26,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((diskTemperature{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(diskTemperature{job=\"qnap\",instance=\"qnap-01\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Disk {{disk_id}}",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "title": "CPU temperature",
+      "type": "stat",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((cpuTemperature{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(cpuTemperature{job=\"qnap\",instance=\"qnap-01\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 17,
+      "title": "System temperature",
+      "type": "stat",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 32,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((systemTemperature{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTemperature{job=\"qnap\",instance=\"qnap-01\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 18,
+      "title": "Power supply",
+      "type": "stat",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Failed",
+                  "color": "red"
+                },
+                "0": {
+                  "text": "OK",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((sysPowerStatus{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sysPowerStatus{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 19,
+      "title": "Fan speed",
+      "type": "stat",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 32,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "rotrpm",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((sysFanSpeed{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sysFanSpeed{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{fan}}",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Homelab dashboards",
+      "type": "dashboards",
+      "tags": [
+        "homelab"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ]
+}
