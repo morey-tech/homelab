@@ -195,11 +195,11 @@ The manifests were moved out of the retired `ocp-gpu` cluster. That cluster is n
 | OpenShift AI | redhat-ods-applications | [OpenShift AI dashboard](https://rhods-dashboard-redhat-ods-applications.apps.ocp-mgmt.rh-lab.morey.tech) | Model deployment and monitoring | KServe, RTX 3090 hardware profile, OpenShift authentication |
 | Inference Server | inference-server | [API access](applications/inference-server/README.md#clients) | OpenAI-compatible chat inference | KServe-managed vLLM, Qwen3-4B-Instruct-2507, dedicated NVMe model storage, token authentication |
 | AnythingLLM | anythingllm | [anythingllm.apps.ocp-mgmt.rh-lab.morey.tech](https://anythingllm.apps.ocp-mgmt.rh-lab.morey.tech) | Chat and document workspaces using `local-llm` | Generated UI password, scoped KServe credential, native embeddings, persistent AI NVMe storage |
-| Monitoring | monitoring | [grafana.apps.ocp-mgmt.rh-lab.morey.tech](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech) | Hosted monitoring foundation | Grafana, Prometheus, Alloy, Blackbox Exporter; local NVMe on MS nodes; metric collection disabled |
+| Monitoring | monitoring | [grafana.apps.ocp-mgmt.rh-lab.morey.tech](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech) | Cluster metrics and hosted monitoring services | OCP Management overview via existing Thanos, node/operator/alert/GPU panels, local NVMe; infrastructure collection disabled |
 
 See [Dev Spaces configuration](system/openshift-devspaces/README.md) for verification, the required GitHub OAuth callback update, and [Tailscale access to OCP Home](system/openshift-devspaces/TAILSCALE.md).
 
-See [Monitoring foundation](applications/monitoring/README.md) for service configuration, initial Grafana credentials, and post-GitOps validation. Data sources, dashboards, and metric collection are deferred to a later phase.
+See [Monitoring](applications/monitoring/README.md) for service configuration, Grafana credentials, the OCP Management data source and dashboard, token rotation, and post-GitOps validation. OCP Home and infrastructure collection are deferred to later phases.
 
 ## Tailscale
 

@@ -1,0 +1,1342 @@
+{
+  "uid": "ocp-mgmt-overview",
+  "title": "OCP Management Overview",
+  "tags": [
+    "homelab",
+    "openshift",
+    "ocp-mgmt"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "title": "Cluster health",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Healthy: four expected nodes Ready, no operator problems or critical/warning alerts. Attention: warnings or progressing operators. Unhealthy: missing/unready nodes, unavailable/degraded/failing operators, or critical alerts. Unknown: required monitoring sources or Watchdog missing/down/stale (>180 seconds). Query errors must be treated as unknown.",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(clamp_max(2 * (clamp_max(((sum(max by (node) ((kube_node_status_condition{condition=\"Ready\",status=\"true\",node=~\"ms-02|ms-03|ms-04|tr-gpu\"} and (time() - timestamp(kube_node_status_condition{condition=\"Ready\",status=\"true\",node=~\"ms-02|ms-03|ms-04|tr-gpu\"}) < 180)))) or vector(0)) != bool 4) + ((count(count by (name) (cluster_operator_conditions{condition=\"Available\"} == 0 or cluster_operator_conditions{condition=~\"Degraded|Failing\"} == 1)) or vector(0)) > bool 0) + ((count(ALERTS{alertstate=\"firing\",severity=\"critical\"}) or vector(0)) > bool 0), 1)) + (clamp_max(((count(ALERTS{alertstate=\"firing\",severity=\"warning\"}) or vector(0)) > bool 0) + ((count(cluster_operator_conditions{condition=\"Progressing\"} == 1) or vector(0)) > bool 0), 1)), 2) and on() ((max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1) and on() (max((up{job=\"cluster-version-operator\"} and (time() - timestamp(up{job=\"cluster-version-operator\"}) < 180))) == 1) and on() (max((up{job=\"prometheus-k8s\"} and (time() - timestamp(up{job=\"prometheus-k8s\"}) < 180))) == 1) and on() (max((ALERTS{alertname=\"Watchdog\",alertstate=\"firing\"} and (time() - timestamp(ALERTS{alertname=\"Watchdog\",alertstate=\"firing\"}) < 180))) == 1) and on() (count((cluster_operator_conditions{condition=\"Available\"} and (time() - timestamp(cluster_operator_conditions{condition=\"Available\"}) < 180))) > 0))) or vector(-1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Unknown",
+                  "color": "gray"
+                },
+                "0": {
+                  "text": "Healthy",
+                  "color": "green"
+                },
+                "1": {
+                  "text": "Attention",
+                  "color": "yellow"
+                },
+                "2": {
+                  "text": "Unhealthy",
+                  "color": "red"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 1
+    },
+    {
+      "title": "Ready nodes / 4",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Expected: ms-02, ms-03, ms-04, tr-gpu. Missing node series count as not Ready when kube-state-metrics is healthy.",
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(max by (node) ((kube_node_status_condition{condition=\"Ready\",status=\"true\",node=~\"ms-02|ms-03|ms-04|tr-gpu\"} and (time() - timestamp(kube_node_status_condition{condition=\"Ready\",status=\"true\",node=~\"ms-02|ms-03|ms-04|tr-gpu\"}) < 180)))) or vector(0)) and on() ((max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 4
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 2
+    },
+    {
+      "title": "Operator problems",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Zero is shown only when monitoring sources and the Watchdog heartbeat are available. Operator problems count distinct operators, including the version operator Failing condition.",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((count(count by (name) (cluster_operator_conditions{condition=\"Available\"} == 0 or cluster_operator_conditions{condition=~\"Degraded|Failing\"} == 1)) or vector(0))) and on() ((max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1) and on() (max((up{job=\"cluster-version-operator\"} and (time() - timestamp(up{job=\"cluster-version-operator\"}) < 180))) == 1) and on() (max((up{job=\"prometheus-k8s\"} and (time() - timestamp(up{job=\"prometheus-k8s\"}) < 180))) == 1) and on() (max((ALERTS{alertname=\"Watchdog\",alertstate=\"firing\"} and (time() - timestamp(ALERTS{alertname=\"Watchdog\",alertstate=\"firing\"}) < 180))) == 1) and on() (count((cluster_operator_conditions{condition=\"Available\"} and (time() - timestamp(cluster_operator_conditions{condition=\"Available\"}) < 180))) > 0))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 3
+    },
+    {
+      "title": "Critical alerts",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Zero is shown only when monitoring sources and the Watchdog heartbeat are available. Operator problems count distinct operators, including the version operator Failing condition.",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((count(ALERTS{alertstate=\"firing\",severity=\"critical\"}) or vector(0))) and on() ((max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1) and on() (max((up{job=\"cluster-version-operator\"} and (time() - timestamp(up{job=\"cluster-version-operator\"}) < 180))) == 1) and on() (max((up{job=\"prometheus-k8s\"} and (time() - timestamp(up{job=\"prometheus-k8s\"}) < 180))) == 1) and on() (max((ALERTS{alertname=\"Watchdog\",alertstate=\"firing\"} and (time() - timestamp(ALERTS{alertname=\"Watchdog\",alertstate=\"firing\"}) < 180))) == 1) and on() (count((cluster_operator_conditions{condition=\"Available\"} and (time() - timestamp(cluster_operator_conditions{condition=\"Available\"}) < 180))) > 0))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 4
+    },
+    {
+      "title": "Warning alerts",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Zero is shown only when monitoring sources and the Watchdog heartbeat are available. Operator problems count distinct operators, including the version operator Failing condition.",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((count(ALERTS{alertstate=\"firing\",severity=\"warning\"}) or vector(0))) and on() ((max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1) and on() (max((up{job=\"cluster-version-operator\"} and (time() - timestamp(up{job=\"cluster-version-operator\"}) < 180))) == 1) and on() (max((up{job=\"prometheus-k8s\"} and (time() - timestamp(up{job=\"prometheus-k8s\"}) < 180))) == 1) and on() (max((ALERTS{alertname=\"Watchdog\",alertstate=\"firing\"} and (time() - timestamp(ALERTS{alertname=\"Watchdog\",alertstate=\"firing\"}) < 180))) == 1) and on() (count((cluster_operator_conditions{condition=\"Available\"} and (time() - timestamp(cluster_operator_conditions{condition=\"Available\"}) < 180))) > 0))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 5
+    },
+    {
+      "title": "Source age",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Age of the oldest available core source sample. Missing sources are detected by Cluster health.",
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"} or up{job=\"cluster-version-operator\"} or ALERTS{alertname=\"Watchdog\",alertstate=\"firing\"}))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 90
+              },
+              {
+                "color": "red",
+                "value": 180
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 6
+    },
+    {
+      "title": "Node CPU usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{job=\"node-exporter\",instance=~\"ms-02|ms-03|ms-04|tr-gpu\",mode=\"idle\"}[5m])))) and on(instance) ((up{job=\"node-exporter\",instance=~\"ms-02|ms-03|ms-04|tr-gpu\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ms-02|ms-03|ms-04|tr-gpu\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{instance}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 7
+    },
+    {
+      "title": "Node memory usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(100 * (1 - node_memory_MemAvailable_bytes{job=\"node-exporter\",instance=~\"ms-02|ms-03|ms-04|tr-gpu\"} / node_memory_MemTotal_bytes{job=\"node-exporter\",instance=~\"ms-02|ms-03|ms-04|tr-gpu\"})) and on(instance) ((up{job=\"node-exporter\",instance=~\"ms-02|ms-03|ms-04|tr-gpu\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ms-02|ms-03|ms-04|tr-gpu\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{instance}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 8
+    },
+    {
+      "title": "ms-02 readiness",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 6,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((max((kube_node_status_condition{condition=\"Ready\",status=\"true\",node=\"ms-02\"} and (time() - timestamp(kube_node_status_condition{condition=\"Ready\",status=\"true\",node=\"ms-02\"}) < 180))) or vector(-1))) and on() ((max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Missing",
+                  "color": "red"
+                },
+                "0": {
+                  "text": "Not Ready",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Ready",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 9
+    },
+    {
+      "title": "ms-03 readiness",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 6,
+        "y": 10,
+        "w": 6,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((max((kube_node_status_condition{condition=\"Ready\",status=\"true\",node=\"ms-03\"} and (time() - timestamp(kube_node_status_condition{condition=\"Ready\",status=\"true\",node=\"ms-03\"}) < 180))) or vector(-1))) and on() ((max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Missing",
+                  "color": "red"
+                },
+                "0": {
+                  "text": "Not Ready",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Ready",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 10
+    },
+    {
+      "title": "ms-04 readiness",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 10,
+        "w": 6,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((max((kube_node_status_condition{condition=\"Ready\",status=\"true\",node=\"ms-04\"} and (time() - timestamp(kube_node_status_condition{condition=\"Ready\",status=\"true\",node=\"ms-04\"}) < 180))) or vector(-1))) and on() ((max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Missing",
+                  "color": "red"
+                },
+                "0": {
+                  "text": "Not Ready",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Ready",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 11
+    },
+    {
+      "title": "tr-gpu readiness",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 18,
+        "y": 10,
+        "w": 6,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((max((kube_node_status_condition{condition=\"Ready\",status=\"true\",node=\"tr-gpu\"} and (time() - timestamp(kube_node_status_condition{condition=\"Ready\",status=\"true\",node=\"tr-gpu\"}) < 180))) or vector(-1))) and on() ((max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Missing",
+                  "color": "red"
+                },
+                "0": {
+                  "text": "Not Ready",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Ready",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 12
+    },
+    {
+      "title": "GPU utilization",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Missing/down/stale telemetry displays Unknown.",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 6,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"}) < 180))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 13
+    },
+    {
+      "title": "GPU memory used",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Missing/down/stale telemetry displays Unknown.",
+      "gridPos": {
+        "x": 6,
+        "y": 13,
+        "w": 6,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(100 * (DCGM_FI_DEV_FB_USED{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_FB_USED{hostname=\"tr-gpu\",gpu=\"0\"}) < 180)) / ((DCGM_FI_DEV_FB_USED{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_FB_USED{hostname=\"tr-gpu\",gpu=\"0\"}) < 180)) + (DCGM_FI_DEV_FB_FREE{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_FB_FREE{hostname=\"tr-gpu\",gpu=\"0\"}) < 180)))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 14
+    },
+    {
+      "title": "GPU temperature",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Missing/down/stale telemetry displays Unknown.",
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 6,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((DCGM_FI_DEV_GPU_TEMP{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_GPU_TEMP{hostname=\"tr-gpu\",gpu=\"0\"}) < 180))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 15
+    },
+    {
+      "title": "GPU power",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Missing/down/stale telemetry displays Unknown.",
+      "gridPos": {
+        "x": 18,
+        "y": 13,
+        "w": 6,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((DCGM_FI_DEV_POWER_USAGE{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_POWER_USAGE{hostname=\"tr-gpu\",gpu=\"0\"}) < 180))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "noValue": "Unknown",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "id": 16
+    },
+    {
+      "title": "Active warning and critical alerts",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "An empty table means no active warning/critical alerts only if Cluster health has known data. Watchdog and informational alerts are omitted.",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "ALERTS{alertstate=\"firing\",severity=~\"warning|critical\"}",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "alertname",
+                "severity",
+                "namespace",
+                "node"
+              ]
+            }
+          }
+        }
+      ],
+      "id": 17
+    },
+    {
+      "title": "Operator problems",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-mgmt"
+      },
+      "description": "Available=0 or Degraded/Failing=1. An empty table means no problems only when Cluster health has known data.",
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max by (name, condition) (cluster_operator_conditions{condition=\"Available\"} == 0 or cluster_operator_conditions{condition=~\"Degraded|Failing\"} == 1)",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "name",
+                "condition"
+              ]
+            }
+          }
+        }
+      ],
+      "id": 18
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "OpenShift Console",
+      "type": "link",
+      "url": "https://console-openshift-console.apps.ocp-mgmt.rh-lab.morey.tech",
+      "targetBlank": true
+    },
+    {
+      "title": "OpenShift Alerts",
+      "type": "link",
+      "url": "https://console-openshift-console.apps.ocp-mgmt.rh-lab.morey.tech/monitoring/alerts",
+      "targetBlank": true
+    }
+  ]
+}

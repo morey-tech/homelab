@@ -4,6 +4,7 @@ namespace: monitoring
 resources:
   - serviceaccounts.yaml
   - credentials.yaml
+  - ocp-mgmt-credentials.yaml
   - storage.yaml
   - grafana.yaml
   - prometheus.yaml
@@ -25,3 +26,12 @@ configMapGenerator:
   - name: blackbox-exporter-config
     files:
       - blackbox.yml
+  - name: grafana-datasources
+    files:
+      - datasources.yaml
+  - name: grafana-dashboard-provider
+    files:
+      - dashboard-provider.yaml
+  - name: grafana-dashboards
+    files:
+      - dashboards/ocp-mgmt.json

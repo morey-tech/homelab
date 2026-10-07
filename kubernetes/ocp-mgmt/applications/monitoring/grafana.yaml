@@ -74,6 +74,15 @@ spec:
               readOnly: true
             - name: data
               mountPath: /var/lib/grafana
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+              readOnly: true
+            - name: dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+              readOnly: true
+            - name: dashboards
+              mountPath: /etc/grafana/dashboards
+              readOnly: true
           env:
             - name: GF_PATHS_CONFIG
               value: /etc/grafana/custom/grafana.ini
@@ -82,6 +91,21 @@ spec:
                 secretKeyRef:
                   name: grafana-admin
                   key: password
+            - name: OCP_MGMT_METRICS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ocp-mgmt-metrics-token-v1
+                  key: token
+            - name: GF_SECURITY_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-encryption-key
+                  key: password
+            - name: OCP_MGMT_SERVICE_CA
+              valueFrom:
+                configMapKeyRef:
+                  name: grafana-service-ca
+                  key: service-ca.crt
       volumes:
         - name: config
           configMap:
@@ -89,3 +113,12 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: grafana
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards

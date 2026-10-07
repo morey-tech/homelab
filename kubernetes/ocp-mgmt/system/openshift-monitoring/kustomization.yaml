@@ -3,3 +3,4 @@ kind: Kustomization
 namespace: openshift-monitoring
 resources:
   - alertmanager-external-secret.yaml
+  - grafana-metrics-rbac.yaml
