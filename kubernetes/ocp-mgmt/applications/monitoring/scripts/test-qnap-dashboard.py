@@ -102,6 +102,30 @@ tests += [
      'promql_expr_test': [check(memory[3]['expr'], at='3m')]},
 ]
 
+for title, metric in [('Network receive', 'ifHCInOctets'), ('Network transmit', 'ifHCOutOctets')]:
+    labels = 'ifIndex="4",ifName="eth2"'
+    expected_labels = '{job="qnap",instance="qnap-01",ifIndex="4",ifName="eth2"}'
+    for name, values, expected in [('byte counters become bits per second', '0+6000x5', 800),
+                                   ('idle interfaces remain zero', '0+0x5', 0),
+                                   ('counter resets do not produce negative traffic', '0 6000 12000 0 6000 12000', 600)]:
+        tests.append({'name': title + ': ' + name, 'interval': '1m',
+                      'input_series': [sample('up', '1+0x5'), sample(metric, values, labels)],
+                      'promql_expr_test': [check(panels[title], [{'labels': expected_labels, 'value': expected}], at='5m')]})
+    for name, health, values in [('failed collection hides rates', '1 1 1 1 1 0', '0+6000x5'),
+                                  ('stale counters hide rates despite fresh up', '1+0x5', '0 6000 12000 _ _ _'),
+                                  ('single sample cannot produce a rate', '1+0x5', '_ _ _ _ _ 6000')]:
+        tests.append({'name': title + ': ' + name, 'interval': '1m',
+                      'input_series': [sample('up', health), sample(metric, values, labels)],
+                      'promql_expr_test': [check(panels[title], at='5m')]})
+    tests.append({'name': title + ': include bonds and VLANs but exclude loopback and virtual bridges',
+                  'interval': '1m',
+                  'input_series': [sample('up', '1+0x5')] +
+                                  [sample(metric, '0+6000x5', f'ifIndex="{index}",ifName="{name}"')
+                                   for index, name in [(1, 'lo'), (6, 'bond0'), (12, 'bond0.6'), (13, 'docker0')]],
+                  'promql_expr_test': [check(panels[title], [
+                      {'labels': '{job="qnap",instance="qnap-01",ifIndex="6",ifName="bond0"}', 'value': 800},
+                      {'labels': '{job="qnap",instance="qnap-01",ifIndex="12",ifName="bond0.6"}', 'value': 800}], at='5m')]})
+
 with tempfile.TemporaryDirectory(prefix='qnap-promql-') as directory:
     path = Path(directory) / 'tests.yml'
     path.write_text(yaml.safe_dump({'rule_files': [], 'evaluation_interval': '1m', 'tests': tests}))

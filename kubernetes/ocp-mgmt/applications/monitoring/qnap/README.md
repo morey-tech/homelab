@@ -20,7 +20,7 @@ External Secrets uses `bitwarden-login` for the username/password and `bitwarden
 
 ## Metric source
 
-[NAS.mib](NAS.mib) is a copy of the MIB supplied from this NAS, with trailing whitespace normalized. The curated [snmp.yml](snmp.yml) module uses `qnap.qutshero` (`1.3.6.1.4.1.55062.2`), plus the standard HOST-RESOURCES-MIB processor-load column. It requests selected scalars and table columns rather than walking every application and service.
+[NAS.mib](NAS.mib) is a copy of the MIB supplied from this NAS, with trailing whitespace normalized. The curated [snmp.yml](snmp.yml) module uses `qnap.qutshero` (`1.3.6.1.4.1.55062.2`), plus standard HOST-RESOURCES-MIB processor load and IF-MIB network counters. It requests selected scalars and table columns rather than walking every application and service.
 
 | Metrics | Interpretation |
 |---------|----------------|
@@ -30,6 +30,7 @@ External Secrets uses `bitwarden-login` for the username/password and `bitwarden
 | `sharedFolderStatus`, `raidStatus`, `diskStatus` | Device-reported text, retained as labels and shown in tables |
 | `systemCPU_Usage` | CPU usage percentage; live sample returned 18 |
 | `hrProcessorLoad` | Per-logical-processor non-idle percentage, approximately a one-minute average; labeled by SNMP `hrDeviceIndex` |
+| `ifHCInOctets`, `ifHCOutOctets` | 64-bit received/transmitted byte counters, labeled by `ifIndex` and `ifName`; dashboard converts rates to bits per second |
 | `systemTotalMem`, `systemAvailableMem` | MIB does not specify units; dashboard uses their ratio only |
 | `systemUsedMemory`, `systemFreeMem`, `systemCacheMemory`, `systemBufferMemory` | NAS-reported used, free, cache, and buffer counters; shown as percentages of total memory |
 | `sysUptime` | TimeTicks converted from hundredths of a second to seconds |
@@ -61,6 +62,14 @@ The supplied MIB has **no explicit ZFS ARC counter**. [QNAP documents ARC separa
 
 The four additional counters begin accumulating history after the collector change deploys through GitOps; prior history is not backfilled.
 
+## Network Usage
+
+The QNAP-specific dashboard includes **Network receive** and **Network transmit** graphs. Each uses `8 × rate(counter[5m])` to show a five-minute average in bits per second, automatically scaled to Kbit/s, Mbit/s, or Gbit/s. The [IF-MIB](https://www.net-snmp.org/docs/mibs/IF-MIB.txt) supplies 64-bit octet counters and interface names; these are cumulative counters, unlike the memory gauges.
+
+The graphs show Ethernet ports, bonds, and their VLAN interfaces matching `(eth|bond)[0-9]+([.][0-9]+)?`. The live probe returned `eth0`–`eth3`, `bond0`–`bond3`, `bond0.3`, and `bond0.6`. Each line includes its interface name and SNMP index. Loopback and virtual bridges are excluded from these graphs, although their counters are collected. Do not sum interfaces: the same traffic can pass through a physical port, bond, and VLAN. Lines are not stacked.
+
+Rates require at least two successful scrapes after deployment; no earlier network history is backfilled. Counter resets are handled by `rate()`. Missing or stale counters and failed collection show gaps rather than a false zero. The shared Homelab Overview retains its existing layout.
+
 ## Local validation
 
 Regenerate the dashboard:
@@ -86,7 +95,7 @@ python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/test-qnap-dashboard.
 
 A direct SNMPv3 scrape using the Bitwarden credential returned a TS-873A on the expected firmware, two Ready pools, six Ready shares (including all three expected shares), two Ready RAID groups, and nine Good disks. CPU, memory, fan, temperature, power, and uptime metrics were also present. The full scrape took about 31 seconds with 125 packets and no retries.
 
-The deployed Alloy and Prometheus versions also passed a temporary local pipeline test: Alloy collected the live NAS, remote-wrote to local Prometheus, and all 26 queries across 21 panels returned data with the expected labels, including the five memory breakdown series and eight logical-processor CPU series. No cluster resources were changed for this validation. Cluster rollout, ExternalSecret reconciliation, and Grafana's panel-plugin queries remain post-deployment checks.
+The deployed Alloy and Prometheus versions also passed a temporary local pipeline test: Alloy collected the live NAS, remote-wrote to local Prometheus, and all 28 queries across 23 panels returned data with the expected labels, including the five memory breakdown series, eight logical-processor CPU series, and receive/transmit rates for ten Ethernet, bond, and VLAN interfaces after two successful scrapes. No cluster resources were changed for this validation. Cluster rollout, ExternalSecret reconciliation, and Grafana's panel-plugin queries remain post-deployment checks.
 
 GETBULK requests with `max_repetitions: 10` timed out; `max_repetitions: 1` completed successfully. The expanded memory scrape exceeded the previous 45-second deadline in local Alloy validation. Keep the 55-second scrape timeout below the 60-second interval and monitor scrape duration after deployment. Pool 1 reported about 57.86 TB total and 9.73 TB free; pool 2 about 936.30 GB total and 736.02 GB free (decimal units). These are SNMP observations, not a comparison against the NAS UI. Compare the initial dashboard with QNAP's Storage & Snapshots page.
 

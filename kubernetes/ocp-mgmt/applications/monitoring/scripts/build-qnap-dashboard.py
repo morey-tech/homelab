@@ -56,6 +56,11 @@ def memory_targets():
              'interval': '1m'} for i, (label, expr) in enumerate(queries)]
 
 
+def network_rate(metric):
+    selector = f'{metric}{{{LABELS},ifName=~"(eth|bond)[0-9]+([.][0-9]+)?"}}'
+    return observed(f'(8 * rate({selector}[5m])) and {fresh(metric)}')
+
+
 def build():
     panels = []
 
@@ -141,6 +146,16 @@ def build():
             'timeseries', 'percent', description=CPU_DESCRIPTION)
     p['targets'] = cpu_targets()
     p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'none', 'group': 'A'}
+    for x, direction, metric in [(0, 'receive', 'ifHCInOctets'), (12, 'transmit', 'ifHCOutOctets')]:
+        p = add('Network ' + direction, network_rate(metric), x, 50, 12, 7,
+                'timeseries', 'bps', '{{ifName}} ({{ifIndex}})',
+                'Five-minute average bits per second from 64-bit interface byte counters. '
+                'Shows Ethernet ports, bonds, and their VLANs individually. Do not sum these lines: '
+                'traffic can appear on both a bond and its member ports or VLANs. '
+                'Loopback and virtual bridges are excluded. Requires at least two samples; '
+                'failed or stale collection appears as gaps.')
+        p['targets'][0]['interval'] = '1m'
+        p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'none', 'group': 'A'}
     return {'uid': 'qnap-overview', 'title': 'QNAP Overview', 'schemaVersion': 39, 'version': 1,
             'editable': False, 'tags': ['homelab', 'infrastructure', 'qnap'], 'timezone': 'browser',
             'refresh': '1m', 'time': {'from': 'now-6h', 'to': 'now'}, 'panels': panels,

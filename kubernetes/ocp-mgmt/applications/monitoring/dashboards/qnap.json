@@ -1391,6 +1391,134 @@
           "sort": "desc"
         }
       }
+    },
+    {
+      "id": 22,
+      "title": "Network receive",
+      "type": "timeseries",
+      "description": "Five-minute average bits per second from 64-bit interface byte counters. Shows Ethernet ports, bonds, and their VLANs individually. Do not sum these lines: traffic can appear on both a bond and its member ports or VLANs. Loopback and virtual bridges are excluded. Requires at least two samples; failed or stale collection appears as gaps.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 50,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((8 * rate(ifHCInOctets{job=\"qnap\",instance=\"qnap-01\",ifName=~\"(eth|bond)[0-9]+([.][0-9]+)?\"}[5m])) and (ifHCInOctets{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(ifHCInOctets{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{ifName}} ({{ifIndex}})",
+          "editorMode": "code",
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "title": "Network transmit",
+      "type": "timeseries",
+      "description": "Five-minute average bits per second from 64-bit interface byte counters. Shows Ethernet ports, bonds, and their VLANs individually. Do not sum these lines: traffic can appear on both a bond and its member ports or VLANs. Loopback and virtual bridges are excluded. Requires at least two samples; failed or stale collection appears as gaps.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 50,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((8 * rate(ifHCOutOctets{job=\"qnap\",instance=\"qnap-01\",ifName=~\"(eth|bond)[0-9]+([.][0-9]+)?\"}[5m])) and (ifHCOutOctets{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(ifHCOutOctets{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{ifName}} ({{ifIndex}})",
+          "editorMode": "code",
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
     }
   ],
   "templating": {
