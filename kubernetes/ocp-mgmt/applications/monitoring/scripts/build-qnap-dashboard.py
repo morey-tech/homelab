@@ -164,5 +164,20 @@ def build():
                        'asDropdown': True, 'includeVars': False, 'keepTime': True}]}
 
 
+def provisioned_dashboard():
+    """Parameterize the detailed dashboard; overview queries stay on qnap-01."""
+    dashboard = build()
+    for panel in dashboard['panels']:
+        for target in panel['targets']:
+            target['expr'] = target['expr'].replace('instance="qnap-01"', 'instance="$nas"')
+    dashboard['templating']['list'] = [{
+        'name': 'nas', 'label': 'NAS', 'type': 'custom', 'query': 'qnap-01,qnap-02',
+        'current': {'text': 'qnap-01', 'value': 'qnap-01'},
+        'options': [{'text': name, 'value': name, 'selected': name == 'qnap-01'}
+                    for name in ['qnap-01', 'qnap-02']],
+        'multi': False, 'includeAll': False, 'hide': 0, 'skipUrlSync': False}]
+    return dashboard
+
+
 if __name__ == '__main__':
-    (ROOT / 'dashboards/qnap.json').write_text(json.dumps(build(), indent=2) + '\n')
+    (ROOT / 'dashboards/qnap.json').write_text(json.dumps(provisioned_dashboard(), indent=2) + '\n')

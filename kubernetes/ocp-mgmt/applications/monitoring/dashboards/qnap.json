@@ -68,7 +68,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) or on() vector(-1)",
+          "expr": "(up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) or on() vector(-1)",
           "instant": true,
           "range": false,
           "legendFormat": "",
@@ -121,7 +121,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((sysUptime{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sysUptime{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((sysUptime{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sysUptime{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "",
@@ -174,7 +174,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((systemCPU_Usage{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemCPU_Usage{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((systemCPU_Usage{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemCPU_Usage{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "",
@@ -227,7 +227,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(100 * (1 - (systemAvailableMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemAvailableMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "(100 * (1 - (systemAvailableMem{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemAvailableMem{job=\"qnap\",instance=\"$nas\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "",
@@ -287,7 +287,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) - (storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) - (storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "Pool {{pool_id}}",
@@ -347,7 +347,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(100 * ((storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) - (storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) / ((storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "(100 * ((storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) - (storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180))) / ((storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "Pool {{pool_id}}",
@@ -399,7 +399,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "Pool {{pool_id}}",
@@ -452,7 +452,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "Pool {{pool_id}}",
@@ -592,7 +592,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((storagepoolStatus{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(storagepoolStatus{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((storagepoolStatus{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolStatus{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "Pool {{pool_id}}",
@@ -652,7 +652,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) - (sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) - (sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "{{share}}",
@@ -712,7 +712,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(100 * ((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) - (sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) / ((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "(100 * ((sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) - (sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180))) / ((sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "{{share}}",
@@ -764,7 +764,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((sharedFolderStatus{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderStatus{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((sharedFolderStatus{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderStatus{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "",
@@ -823,7 +823,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((raidStatus{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(raidStatus{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((raidStatus{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(raidStatus{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "",
@@ -884,7 +884,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((diskStatus{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(diskStatus{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((diskStatus{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(diskStatus{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "",
@@ -951,7 +951,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((diskTemperature{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(diskTemperature{job=\"qnap\",instance=\"qnap-01\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((diskTemperature{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(diskTemperature{job=\"qnap\",instance=\"$nas\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "Disk {{disk_id}}",
@@ -1003,7 +1003,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((cpuTemperature{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(cpuTemperature{job=\"qnap\",instance=\"qnap-01\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((cpuTemperature{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(cpuTemperature{job=\"qnap\",instance=\"$nas\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "",
@@ -1056,7 +1056,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((systemTemperature{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTemperature{job=\"qnap\",instance=\"qnap-01\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((systemTemperature{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemTemperature{job=\"qnap\",instance=\"$nas\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "",
@@ -1124,7 +1124,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((sysPowerStatus{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sysPowerStatus{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((sysPowerStatus{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sysPowerStatus{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "",
@@ -1177,7 +1177,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((sysFanSpeed{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sysFanSpeed{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((sysFanSpeed{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sysFanSpeed{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": true,
           "range": false,
           "legendFormat": "{{fan}}",
@@ -1242,7 +1242,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(100 * (systemUsedMemory{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemUsedMemory{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "(100 * (systemUsedMemory{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemUsedMemory{job=\"qnap\",instance=\"$nas\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "Used (NAS)",
@@ -1255,7 +1255,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(100 * (systemAvailableMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemAvailableMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "(100 * (systemAvailableMem{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemAvailableMem{job=\"qnap\",instance=\"$nas\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "Available",
@@ -1268,7 +1268,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(100 * (systemFreeMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemFreeMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "(100 * (systemFreeMem{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemFreeMem{job=\"qnap\",instance=\"$nas\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "Free",
@@ -1281,7 +1281,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(100 * (systemCacheMemory{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemCacheMemory{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "(100 * (systemCacheMemory{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemCacheMemory{job=\"qnap\",instance=\"$nas\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "Cache (NAS)",
@@ -1294,7 +1294,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(100 * (systemBufferMemory{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemBufferMemory{job=\"qnap\",instance=\"qnap-01\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "(100 * (systemBufferMemory{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemBufferMemory{job=\"qnap\",instance=\"$nas\"}) < 180)) / ((systemTotalMem{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemTotalMem{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "Buffers",
@@ -1359,7 +1359,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((systemCPU_Usage{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(systemCPU_Usage{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((systemCPU_Usage{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(systemCPU_Usage{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "Overall (NAS)",
@@ -1372,7 +1372,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((hrProcessorLoad{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(hrProcessorLoad{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((hrProcessorLoad{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(hrProcessorLoad{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "Processor {{hrDeviceIndex}}",
@@ -1436,7 +1436,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((8 * rate(ifHCInOctets{job=\"qnap\",instance=\"qnap-01\",ifName=~\"(eth|bond)[0-9]+([.][0-9]+)?\"}[5m])) and (ifHCInOctets{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(ifHCInOctets{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((8 * rate(ifHCInOctets{job=\"qnap\",instance=\"$nas\",ifName=~\"(eth|bond)[0-9]+([.][0-9]+)?\"}[5m])) and (ifHCInOctets{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(ifHCInOctets{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "{{ifName}} ({{ifIndex}})",
@@ -1500,7 +1500,7 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((8 * rate(ifHCOutOctets{job=\"qnap\",instance=\"qnap-01\",ifName=~\"(eth|bond)[0-9]+([.][0-9]+)?\"}[5m])) and (ifHCOutOctets{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(ifHCOutOctets{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "expr": "((8 * rate(ifHCOutOctets{job=\"qnap\",instance=\"$nas\",ifName=~\"(eth|bond)[0-9]+([.][0-9]+)?\"}[5m])) and (ifHCOutOctets{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(ifHCOutOctets{job=\"qnap\",instance=\"$nas\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)",
           "instant": false,
           "range": true,
           "legendFormat": "{{ifName}} ({{ifIndex}})",
@@ -1522,7 +1522,34 @@
     }
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "nas",
+        "label": "NAS",
+        "type": "custom",
+        "query": "qnap-01,qnap-02",
+        "current": {
+          "text": "qnap-01",
+          "value": "qnap-01"
+        },
+        "options": [
+          {
+            "text": "qnap-01",
+            "value": "qnap-01",
+            "selected": true
+          },
+          {
+            "text": "qnap-02",
+            "value": "qnap-02",
+            "selected": false
+          }
+        ],
+        "multi": false,
+        "includeAll": false,
+        "hide": 0,
+        "skipUrlSync": false
+      }
+    ]
   },
   "annotations": {
     "list": []

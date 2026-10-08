@@ -57,11 +57,11 @@ The dashboard shows readiness for one node, CPU/memory, operator health, warning
 
 ## QNAP Metrics
 
-[QNAP collection details](qnap/README.md) cover the supplied QuTS hero MIB, SNMPv3 credentials, capacity semantics, and validation. Alloy polls `192.168.6.20:161` every 60 seconds using HMAC-SHA and CBC-DES (`authPriv`). External Secrets reads Bitwarden item `29df3066-0d03-464d-bf35-b4dc017a372e`; Alloy watches the mounted Secret so credential updates do not require a restart.
+[QNAP collection details](qnap/README.md) cover the supplied QuTS hero MIB, SNMPv3 credentials, capacity semantics, and validation. Alloy polls `qnap-01` at `192.168.6.20:161` and `qnap-02` at `qnap-02.taile3c3a8.ts.net:161` every 60 seconds using HMAC-SHA and CBC-DES (`authPriv`). External Secrets reads Bitwarden item `29df3066-0d03-464d-bf35-b4dc017a372e`; Alloy watches the mounted Secret so credential updates do not require a restart.
 
 Only Alloy and Grafana pods in this namespace may connect to infrastructure Prometheus on port 9090. The NetworkPolicy controls pods and ports, not HTTP paths: either allowed client can reach the receiver and query API. Prometheus has no external Route. Alloy's own API remains ingress-denied, and its existing egress policy permits polling the NAS.
 
-The dashboard shows collection status, uptime, CPU/memory, pool and share capacity, and disk/RAID/hardware health. Pool and share accounting remain separate; absent or stale samples are not treated as healthy. QNAP's Secret is required only by Alloy, so a credential provisioning failure does not block Grafana or its cluster dashboards.
+The dashboard's **NAS** dropdown switches all panels between `qnap-01` and `qnap-02`, with collection status, uptime, CPU/memory, network traffic, pool and share capacity, and disk/RAID/hardware health. [Open qnap-02 directly](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/qnap-overview?var-nas=qnap-02). Pool and share accounting remain separate; absent or stale samples are not treated as healthy. QNAP's Secret is required only by Alloy, so a credential provisioning failure does not block Grafana or its cluster dashboards.
 
 ## Services and Storage
 
@@ -146,13 +146,13 @@ Then verify the direct target list and the QNAP collection status:
 
 ```bash
 curl --fail --silent --show-error http://localhost:9090/api/v1/targets
-curl --fail --silent --show-error --get http://localhost:9090/api/v1/query --data-urlencode 'query=up{job="qnap",instance="qnap-01"}'
+curl --fail --silent --show-error --get http://localhost:9090/api/v1/query --data-urlencode 'query=up{job="qnap"}'
 ```
 
-Expected results are empty `activeTargets` and `droppedTargets` arrays (scraping runs in Alloy), and a QNAP `up` result of `1`. An empty query result or `0` requires investigation; allow two scrape intervals after rollout. Alloy's `/-/ready` and Blackbox Exporter's `/-/healthy` endpoints can likewise be checked through port forwarding to ports 12345 and 9115; do not invoke `/probe` during this phase. PVC mount permissions, image startup, Route access, and persistence across a subsequent GitOps rollout must be verified after deployment.
+Expected results are empty `activeTargets` and `droppedTargets` arrays (scraping runs in Alloy), and two QNAP `up` results of `1`, labeled `qnap-01` and `qnap-02`. An empty query result or `0` requires investigation; allow two scrape intervals after rollout. Alloy's `/-/ready` and Blackbox Exporter's `/-/healthy` endpoints can likewise be checked through port forwarding to ports 12345 and 9115; do not invoke `/probe` during this phase. PVC mount permissions, image startup, Route access, and persistence across a subsequent GitOps rollout must be verified after deployment.
 
 ## Later Collection Phases
 
-Add other NAS devices, reachability targets, network devices, Loki, and log collection in separate reviewed changes. QNAP is currently the only infrastructure collection target.
+Add other NAS devices, reachability targets, network devices, Loki, and log collection in separate reviewed changes. The two QNAP NAS devices are currently the only infrastructure collection targets.
 
 References: [Grafana configuration](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/), [Prometheus retention](https://prometheus.io/docs/prometheus/latest/storage/), [Alloy health endpoints](https://grafana.com/docs/alloy/latest/reference/http/).

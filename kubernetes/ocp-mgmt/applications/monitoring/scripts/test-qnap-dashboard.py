@@ -16,7 +16,15 @@ spec = importlib.util.spec_from_file_location('qnap', ROOT / 'scripts/build-qnap
 qnap = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(qnap)
 dashboard = qnap.build()
-assert json.loads((ROOT / 'dashboards/qnap.json').read_text()) == dashboard
+provisioned = qnap.provisioned_dashboard()
+assert json.loads((ROOT / 'dashboards/qnap.json').read_text()) == provisioned
+assert not provisioned['templating']['list'][0]['multi']
+assert not provisioned['templating']['list'][0]['includeAll']
+for panel, original in zip(provisioned['panels'], dashboard['panels']):
+    for target, original_target in zip(panel['targets'], original['targets']):
+        assert 'instance="$nas"' in target['expr']
+        assert 'qnap-01' not in target['expr']
+        assert target['expr'].replace('$nas', 'qnap-01') == original_target['expr']
 
 
 def sample(metric, values, labels=''):
@@ -125,6 +133,25 @@ for title, metric in [('Network receive', 'ifHCInOctets'), ('Network transmit', 
                   'promql_expr_test': [check(panels[title], [
                       {'labels': '{job="qnap",instance="qnap-01",ifIndex="6",ifName="bond0"}', 'value': 800},
                       {'labels': '{job="qnap",instance="qnap-01",ifIndex="12",ifName="bond0.6"}', 'value': 800}], at='5m')]})
+
+cpu_template = next(p for p in provisioned['panels'] if p['title'] == 'CPU usage')['targets'][0]['expr']
+tests.append({'name': 'qnap-02 selection returns its own successful metrics', 'interval': '1m',
+              'input_series': [
+                  {'series': 'up{job="qnap",instance="qnap-01"}', 'values': '1 1'},
+                  {'series': 'up{job="qnap",instance="qnap-02"}', 'values': '1 1'},
+                  {'series': 'systemCPU_Usage{job="qnap",instance="qnap-01"}', 'values': '10 10'},
+                  {'series': 'systemCPU_Usage{job="qnap",instance="qnap-02"}', 'values': '90 90'}],
+              'promql_expr_test': [check(cpu_template.replace('$nas', 'qnap-02'), [
+                  {'labels': 'systemCPU_Usage{job="qnap",instance="qnap-02"}', 'value': 90}])]})
+for nas in ['qnap-01', 'qnap-02']:
+    tests.append({'name': nas + ': NAS selection isolates values and scrape health', 'interval': '1m',
+                  'input_series': [
+                      {'series': 'up{job="qnap",instance="qnap-01"}', 'values': '1 1'},
+                      {'series': 'up{job="qnap",instance="qnap-02"}', 'values': '0 0'},
+                      {'series': 'systemCPU_Usage{job="qnap",instance="qnap-01"}', 'values': '10 10'},
+                      {'series': 'systemCPU_Usage{job="qnap",instance="qnap-02"}', 'values': '90 90'}],
+                  'promql_expr_test': [check(cpu_template.replace('$nas', nas),
+                      [{'labels': 'systemCPU_Usage{job="qnap",instance="qnap-01"}', 'value': 10}] if nas == 'qnap-01' else [])]})
 
 with tempfile.TemporaryDirectory(prefix='qnap-promql-') as directory:
     path = Path(directory) / 'tests.yml'

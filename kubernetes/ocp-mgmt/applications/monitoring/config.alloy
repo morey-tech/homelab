@@ -23,6 +23,14 @@ prometheus.exporter.snmp "qnap" {
 		address = "192.168.6.20"
 		module  = "qnap_qutshero"
 		auth    = "qnap_v3"
+		labels  = {nas = "qnap-01"}
+	}
+
+	target "qnap_02" {
+		address = "qnap-02.taile3c3a8.ts.net"
+		module  = "qnap_qutshero"
+		auth    = "qnap_v3"
+		labels  = {nas = "qnap-02"}
 	}
 }
 
@@ -34,9 +42,16 @@ discovery.relabel "qnap" {
 		replacement  = "qnap"
 	}
 
+	// The exporter supplies its own instance label. Assign the NAS identity
+	// afterwards so different targets cannot collapse into the same series.
 	rule {
-		target_label = "instance"
-		replacement  = "qnap-01"
+		source_labels = ["nas"]
+		target_label  = "instance"
+	}
+
+	rule {
+		action = "labeldrop"
+		regex  = "nas"
 	}
 }
 
