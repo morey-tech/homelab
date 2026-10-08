@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Build a shared utilization dashboard using the existing device queries."""
+import copy
 import importlib.util
 import json
 from pathlib import Path
@@ -66,7 +67,18 @@ def build():
         elif uid == 'ocp-mgmt':
             graph(uid, 'GPU utilization', 'tr-gpu · RTX 3090 GPU utilization', 16, y, legend='tr-gpu · GPU 0')
         else:
-            graph(uid, 'Shared-folder usage', 'qnap-01 shared-folder usage', 16, y, legend='{{share}}')
+            p = copy.deepcopy(next(p for p in sources[uid]['panels'] if p['title'] == 'Network receive'))
+            p['id'] = len(panels) + 1
+            p['title'] = 'qnap-01 bond0 network traffic'
+            p['gridPos'] = {'x': 16, 'y': y, 'w': 8, 'h': 7}
+            p['description'] = ('Receive and transmit traffic on qnap-01 bond0 only, in bits per second. '
+                                'Five-minute average rates from 64-bit byte counters. '
+                                'Missing, failed, or stale collection appears as gaps.')
+            p['targets'] = [dict(p['targets'][0], refId=ref, legendFormat=legend,
+                                 expr=qnap.network_rate(metric, interface='bond0'))
+                            for ref, metric, legend in [('A', 'ifHCInOctets', 'Receive'),
+                                                        ('B', 'ifHCOutOctets', 'Transmit')]]
+            panels.append(p)
 
     return {'uid': 'homelab-overview', 'title': 'Homelab Overview',
             'tags': ['homelab', 'overview'], 'schemaVersion': 39, 'version': 1,

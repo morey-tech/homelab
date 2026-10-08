@@ -56,8 +56,8 @@ def memory_targets():
              'interval': '1m'} for i, (label, expr) in enumerate(queries)]
 
 
-def network_rate(metric):
-    selector = f'{metric}{{{LABELS},ifName=~"(eth|bond)[0-9]+([.][0-9]+)?"}}'
+def network_rate(metric, interface='(eth|bond)[0-9]+([.][0-9]+)?'):
+    selector = f'{metric}{{{LABELS},ifName=~{json.dumps(interface)}}}'
     return observed(f'(8 * rate({selector}[5m])) and {fresh(metric)}')
 
 

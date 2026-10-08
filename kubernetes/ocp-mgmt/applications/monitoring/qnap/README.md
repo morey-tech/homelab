@@ -75,7 +75,7 @@ The QNAP-specific dashboard includes **Network receive** and **Network transmit*
 
 The graphs show Ethernet ports, bonds, and their VLAN interfaces matching `(eth|bond)[0-9]+([.][0-9]+)?`. The qnap-01 probe returned `eth0`–`eth3`, `bond0`–`bond3`, `bond0.3`, and `bond0.6`. Each line includes its interface name and SNMP index. Loopback and virtual bridges are excluded from these graphs, although their counters are collected. Do not sum interfaces: the same traffic can pass through a physical port, bond, and VLAN. Lines are not stacked.
 
-Rates require at least two successful scrapes after deployment; no earlier network history is backfilled. Counter resets are handled by `rate()`. Missing or stale counters and failed collection show gaps rather than a false zero. The shared Homelab Overview retains its existing layout.
+Rates require at least two successful scrapes after deployment; no earlier network history is backfilled. Counter resets are handled by `rate()`. Missing or stale counters and failed collection show gaps rather than a false zero. The shared Homelab Overview shows receive and transmit rates for qnap-01 `bond0` together in the third QNAP card, alongside CPU and memory. Pool and shared-folder details remain on the QNAP-specific dashboard.
 
 ## Local validation
 

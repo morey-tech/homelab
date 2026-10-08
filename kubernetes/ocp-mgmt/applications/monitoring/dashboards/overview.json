@@ -662,62 +662,70 @@
       "id": 8
     },
     {
-      "title": "qnap-01 shared-folder usage",
+      "id": 9,
+      "title": "qnap-01 bond0 network traffic",
       "type": "timeseries",
+      "description": "Receive and transmit traffic on qnap-01 bond0 only, in bits per second. Five-minute average rates from 64-bit byte counters. Missing, failed, or stale collection appears as gaps.",
       "datasource": {
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. ",
       "gridPos": {
         "x": 16,
         "y": 14,
         "w": 8,
         "h": 7
       },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "(100 * ((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) - (sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\"}) < 180))) / ((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
-          "instant": false,
-          "range": true,
-          "legendFormat": "{{share}}",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "infrastructure"
-          },
-          "editorMode": "code",
-          "interval": "1m"
-        }
-      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "bps",
           "noValue": "Unknown",
           "decimals": 1,
           "color": {
             "mode": "palette-classic"
           },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
           "min": 0,
-          "max": 100,
           "custom": {
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 10,
-            "spanNulls": false
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
           }
         },
         "overrides": []
       },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((8 * rate(ifHCInOctets{job=\"qnap\",instance=\"qnap-01\",ifName=~\"bond0\"}[5m])) and (ifHCInOctets{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(ifHCInOctets{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Receive",
+          "editorMode": "code",
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((8 * rate(ifHCOutOctets{job=\"qnap\",instance=\"qnap-01\",ifName=~\"bond0\"}[5m])) and (ifHCOutOctets{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(ifHCOutOctets{job=\"qnap\",instance=\"qnap-01\"}) < 180))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Transmit",
+          "editorMode": "code",
+          "interval": "1m"
+        }
+      ],
       "options": {
         "legend": {
           "displayMode": "list",
@@ -728,8 +736,7 @@
           "mode": "multi",
           "sort": "desc"
         }
-      },
-      "id": 9
+      }
     }
   ],
   "templating": {
