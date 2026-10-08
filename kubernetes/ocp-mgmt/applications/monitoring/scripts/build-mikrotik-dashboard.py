@@ -28,6 +28,15 @@ def build(switch='$switch'):
         expr = f'({"8 * " if bits else ""}rate({selector(metric)}[5m])) and {fresh(metric)}'
         return observed(interfaces(expr, kind))
 
+    def named(expr):
+        # Join descriptions after rate/ratio calculations so comment changes do
+        # not reset counters or affect arithmetic. Keep unnamed interfaces too.
+        identity = 'job, instance, ifIndex, ifName'
+        aliases = fresh('ifAlias', 'ifAlias!=""')
+        names = f'label_join({aliases}, "interface", " · ", "ifAlias", "ifName")'
+        fallback = f'label_replace(({expr}), "interface", "$1", "ifName", "(.*)")'
+        return f'(({expr}) * on({identity}) group_left(interface) {names}) or on({identity}) {fallback}'
+
     panels = []
 
     def add(title, queries, x, y, w=12, h=7, unit='short', kind='timeseries', description=''):
@@ -85,20 +94,20 @@ def build(switch='$switch'):
         description='RouterOS health gauges explicitly reporting Celsius, including CPU and SFP temperature sensors.')
     for kind, title, y in [(6, 'Port', 11), (161, 'Bond', 18)]:
         for direction, metric, x in [('receive', 'ifHCInOctets', 0), ('transmit', 'ifHCOutOctets', 12)]:
-            add(title + ' ' + direction, [(rate(metric, kind, bits=True), '{{ifName}}')], x, y, unit='bps',
+            add(title + ' ' + direction, [(named(rate(metric, kind, bits=True)), '{{interface}}')], x, y, unit='bps',
                 description='Five-minute average bits/s per interface. Physical Ethernet ports and bonds are separate; '
                             'do not sum them or the two switches as unique traffic. Bridge and loopback counters are excluded.')
     p = table('Port link status', observed(interfaces(fresh('ifOperStatus'))), 0, 25, ['ifName', 'ifIndex', 'Value'])
     mapping(p, {1: ('Up', 'green'), 2: ('Down', 'yellow'), 3: ('Testing', 'yellow'), 4: ('Unknown', 'gray'),
                 5: ('Dormant', 'yellow'), 6: ('Not present', 'gray'), 7: ('Lower layer down', 'yellow')})
-    add('Port link speed', [(observed(interfaces(f'1000000 * {fresh("ifHighSpeed")}')), '{{ifName}}')],
+    add('Port link speed', [(named(observed(interfaces(f'1000000 * {fresh("ifHighSpeed")}'))), '{{interface}}')],
         12, 25, unit='bps', description='Interface-reported link speed. ifHighSpeed uses millions of bits per second; zero means unknown/unavailable.')
     for direction, metric, x in [('receive', 'ifHCInOctets', 0), ('transmit', 'ifHCOutOctets', 12)]:
         speed = f'(1000000 * ({fresh("ifHighSpeed")} > 0))'
-        add('Port ' + direction + ' utilization', [(f'100 * ({rate(metric, bits=True)}) / {speed}', '{{ifName}}')],
+        add('Port ' + direction + ' utilization', [(named(f'100 * ({rate(metric, bits=True)}) / {speed}'), '{{interface}}')],
             x, 32, unit='percent', description='Per-direction traffic divided by current port speed. Zero or missing link speed shows gaps.')
     for title, rx, tx, x in [('Port errors', 'ifInErrors', 'ifOutErrors', 0), ('Port discards', 'ifInDiscards', 'ifOutDiscards', 12)]:
-        add(title, [(rate(rx), '{{ifName}} RX'), (rate(tx), '{{ifName}} TX')], x, 39, unit='pps',
+        add(title, [(named(rate(rx)), '{{interface}} RX'), (named(rate(tx)), '{{interface}} TX')], x, 39, unit='pps',
             description='Five-minute average packets/s from interface error/discard counters. Counter resets are handled by rate().')
     add('Fan speed', [(observed(fresh('mtxrGaugeValue', 'mtxrGaugeUnit="2"')), '{{mtxrGaugeName}}')], 0, 46, unit='rotrpm')
     p = add('Power supplies', [(observed(fresh('mtxrHlPowerSupplyState')), 'Primary'),

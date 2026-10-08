@@ -46,6 +46,8 @@ The curated [snmp.yml](snmp.yml) collects selected system, IF-MIB, HOST-RESOURCE
 
 Both switches reported 17 Ethernet ports, nine bonds, a bridge, and loopback. Their interface indexes differ. Queries identify ports by type and show names rather than assuming identical indexes across switches. Port and bond counters overlap; summing them or both MLAG peers does not measure unique traffic. Physical-port graphs cover hardware interface traffic without using CPU load as a proxy for switching throughput. The dashboard does not infer MLAG health from link status.
 
+Interface graph legends show the RouterOS comment (`ifAlias`) followed by the interface name, for example `ms-02 member 1 · sfp-sfpplus9`. Empty, missing, or stale aliases fall back to `ifName`. Set interface comments on each switch to identify connected servers; descriptions are joined from existing SNMP metrics by switch and interface, without changing the underlying traffic counters. Keeping the interface name distinguishes ports that share a comment.
+
 Queries require a successful scrape and samples less than 180 seconds old. Missing counters stay missing; idle interfaces remain valid zeros. Rate queries require at least two successful scrapes and handle counter resets. History begins after GitOps deployment.
 
 ## Validation and Deployment

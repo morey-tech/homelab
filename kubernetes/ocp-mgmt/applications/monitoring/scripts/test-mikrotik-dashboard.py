@@ -19,7 +19,8 @@ dashboard = module.build('crs317-a')
 panels = {p['title']: p for p in dashboard['panels']}
 LABELS = 'job="mikrotik",instance="crs317-a"'
 PORT = 'ifIndex="2",ifName="sfp-sfpplus1"'
-PORT_RESULT = '{' + LABELS + ',' + PORT + '}'
+PORT_RESULT = '{' + LABELS + ',' + PORT + ',interface="sfp-sfpplus1"}'
+NAMED_RESULT = '{' + LABELS + ',' + PORT + ',interface="ms-02 member 1 · sfp-sfpplus1"}'
 
 
 def sample(metric, values, extra='', switch='crs317-a'):
@@ -39,10 +40,28 @@ def case(name, series, checks):
 healthy = sample('up', '1+0x5')
 physical = sample('ifType', '6+0x5', PORT)
 traffic = sample('ifHCInOctets', '0+6000x5', PORT)
+alias = sample('ifAlias', '1+0x5', PORT + ',ifAlias="ms-02 member 1"')
 tests = [case('all queries parse and absent telemetry stays unknown', [], [
     {'expr': t['expr'], 'eval_time': '5m', 'exp_samples': [{'labels': '{}', 'value': -1}] if p['title'] == 'SNMP collection' else []}
     for p in dashboard['panels'] for t in p['targets']]),
     case('convert bytes/s to bits/s', [healthy, physical, traffic], [check('Port receive', 800)]),
+    case('alias names traffic without changing values', [healthy, physical, traffic, alias],
+         [check('Port receive', 800, NAMED_RESULT)]),
+    case('empty alias falls back to name', [healthy, physical, traffic,
+         sample('ifAlias', '1+0x5', PORT + ',ifAlias=""')], [check('Port receive', 800)]),
+    case('stale alias falls back without hiding traffic', [healthy, physical, traffic,
+         sample('ifAlias', '1 1 1 _ _ _', PORT + ',ifAlias="old description"')], [check('Port receive', 800)]),
+    case('alias on another switch cannot name this port', [healthy, physical, traffic,
+         sample('ifAlias', '1+0x5', PORT + ',ifAlias="other server"', 'crs317-b')], [check('Port receive', 800)]),
+    case('alias on another interface cannot name this port', [healthy, physical, traffic,
+         sample('ifAlias', '1+0x5', 'ifIndex="3",ifName="sfp-sfpplus2",ifAlias="other server"')], [check('Port receive', 800)]),
+    case('comment change preserves counter history', [healthy, physical, traffic,
+         sample('ifAlias', '1 1 1 stale _ _', PORT + ',ifAlias="old description"'),
+         sample('ifAlias', '_ _ _ 1 1 1', PORT + ',ifAlias="ms-02 member 1"')], [check('Port receive', 800, NAMED_RESULT)]),
+    case('alias preserves utilization arithmetic', [healthy, physical, traffic, alias,
+         sample('ifHighSpeed', '10000+0x5', PORT)], [check('Port receive utilization', .000008, NAMED_RESULT)]),
+    case('bond aliases name server traffic', [healthy, sample('ifType', '161+0x5', PORT), traffic, alias],
+         [check('Port receive'), check('Bond receive', 800, NAMED_RESULT)]),
     case('idle ports remain a valid zero', [healthy, physical, sample('ifHCInOctets', '0+0x5', PORT)], [check('Port receive', 0)]),
     case('handle counter resets', [healthy, physical, sample('ifHCInOctets', '0 6000 12000 0 6000 12000', PORT)], [check('Port receive', 600)]),
     case('failed scrape hides old counters', [sample('up', '1 1 1 1 1 0'), physical, traffic], [check('Port receive')]),
