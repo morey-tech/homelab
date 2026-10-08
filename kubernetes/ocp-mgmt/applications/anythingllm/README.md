@@ -25,7 +25,7 @@ Create a workspace and use the preconfigured system model. No external LLM accou
 
 [ynab-credentials.yaml](ynab-credentials.yaml) reads the **password** field of Bitwarden Login item `1aa42e55-bbd7-4af8-9c28-b4dd00dc69cd` through `bitwarden-login`. Store the [YNAB personal access token](https://api.ynab.com/#personal-access-tokens) in that field; the username is unused. The cluster's External Secrets account must have access to the item, and the Bitwarden serving cache must have synchronized it. Never put the token in Git or the MCP JSON.
 
-External Secrets refreshes `anythingllm-ynab` hourly. The token is projected as a file and read only when the YNAB child process starts; it is not stored in AnythingLLM's environment or persistent MCP configuration. The mount is optional so a missing credential leaves existing chat available, while YNAB fails to start. After token rotation and Secret projection, use **Agent Skills → MCP Servers → Refresh** to restart the MCP process with the new token.
+External Secrets refreshes `anythingllm-ynab` hourly. The token is projected as a file and read only when the YNAB child process starts. The launcher sets `YNAB_API_TOKEN` in that child process because upstream tools check it, in addition to passing the token to the API client. It is not stored in AnythingLLM's parent environment or persistent MCP configuration. The mount is optional so a missing credential leaves existing chat available, while YNAB fails to start. After token rotation and Secret projection, use **Agent Skills → MCP Servers → Refresh** to restart the MCP process with the new token.
 
 The integration follows [AnythingLLM's Docker MCP setup](https://docs.anythingllm.com/mcp-compatibility/docker). On each pod creation, an init container installs the lockfile-pinned npm dependencies into an `emptyDir` and copies a digest-pinned Node 22 binary. AnythingLLM's existing Node 18 runtime is unchanged. Pod startup requires access to Docker Hub and the npm registry; failed installation blocks startup. No separate MCP Service or Route is needed.
 
@@ -50,7 +50,7 @@ Open **Agent Skills → MCP Servers** in AnythingLLM. This starts the configured
 
 ### Local validation
 
-The protocol test uses a fake token, initializes MCP, pings, and lists tools in both modes. It never calls a YNAB tool or API. Use Node 22:
+The protocol test uses a fake token, initializes MCP, pings, and lists tools in both modes. It also invokes `ynab_list_plans` with mocked HTTP responses and verifies token propagation into the API request. It makes no external YNAB API calls. Use Node 22:
 
 ```bash
 node --test kubernetes/ocp-mgmt/applications/anythingllm/scripts/test-mcp-config.cjs

@@ -7,9 +7,12 @@ import { registerAll } from "ynab-mcp-server/dist/registry.js";
 
 export async function startServer(tokenPath = "/var/run/secrets/ynab/YNAB_API_TOKEN") {
   // Read the projected Secret on each MCP start, including after rotation.
-  // Keep the token out of the persisted MCP JSON and process environments.
+  // Keep the token out of the persisted MCP JSON and AnythingLLM's environment.
   const token = fs.readFileSync(tokenPath, "utf8").trim();
   if (!token) throw new Error("YNAB_API_TOKEN is empty");
+  // Some upstream tools check this variable even when the API has a token.
+  // Set it only in this MCP child process, never in the parent application.
+  process.env.YNAB_API_TOKEN = token;
   const server = new McpServer({ name: "ynab-mcp-server", version: "0.4.1" });
   // Upstream 0.4.1's stdio entry point does not pass the readOnly option.
   // Its registry supports it; default to read-only unless explicitly disabled.
