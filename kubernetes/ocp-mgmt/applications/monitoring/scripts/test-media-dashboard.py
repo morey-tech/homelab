@@ -22,14 +22,15 @@ def main():
     dashboard = media.build()
     assert dashboard == json.loads((ROOT / 'dashboards/media.json').read_text()), 'Regenerate media JSON'
     panels = dashboard['panels']
-    assert len(panels) == 34 and len({p['id'] for p in panels}) == 34
+    assert len(panels) == 36 and len({p['id'] for p in panels}) == 36
     occupied = set()
     for panel in panels:
         g = panel['gridPos']
         cells = {(x, y) for x in range(g['x'], g['x']+g['w']) for y in range(g['y'], g['y']+g['h'])}
         assert not cells & occupied, 'Panels overlap'
         occupied |= cells
-        assert panel['datasource']['uid'] == ('infrastructure' if panel['title'].startswith('Plex stream') or panel['title'] == 'Plex current streams' else 'ocp-home')
+        assert panel['datasource']['uid'] == ('infrastructure' if panel['title'] in (
+            'Plex stream history', 'Plex current streams', 'Plex Direct Stream', 'Plex Transcoding') else 'ocp-home')
     assert sum('Shared host network' in p['title'] for p in panels) == 1
     assert not any(p['title'] in ('Plex network', 'SABnzbd network') for p in panels)
 
@@ -89,8 +90,8 @@ def main():
          remove=('container_',), expected=(None, None, None))
 
     # A current stat must not reuse a historical non-null value after a failure.
-    stat = next(p for p in panels if p['title'] == 'Plex current streams')
-    assert stat['targets'][0]['instant'] and not stat['targets'][0]['range']
+    for stat in (p for p in panels if p['type'] == 'stat'):
+        assert stat['targets'][0]['instant'] and not stat['targets'][0]['range']
     stream_metric = 'tautulli_streams{job="tautulli",instance="plex"}'
     stream_up = 'up{job="tautulli",instance="plex"}'
     for name, values, up_values, expected in [

@@ -12,8 +12,8 @@ Plex and SABnzbd occupy the first two rows with CPU and memory graphs. One share
 | Memory | Working-set bytes per pod, summed over application containers. This includes more than RSS and is not a percentage of a limit. |
 | Shared host network | OCP Home `bond0` receive/transmit rates in bits/s, averaged over five minutes. Includes Plex, SABnzbd, and all other host traffic; excludes physical bond members to avoid double counting. |
 | Secondary service network | Five-minute receive/transmit rates in bits/s from each pod's sandbox interfaces, excluding loopback. Host-network pods are excluded. |
-| Plex current streams | Instantaneous Tautulli session count, including paused sessions. Missing, stale, or failed collection displays Unknown rather than the last historical value. |
-| Plex stream history | Total, Direct Play, Direct Stream, and transcoding counts, sampled every 30 seconds. Lines are unstacked because total overlaps the playback types. |
+| Plex stream counts | Adjacent current Total, Direct Stream, and Transcoding counts, including paused sessions. Missing, stale, or failed collection displays Unknown rather than the last historical value. |
+| Plex stream history | Half-row graph beside the three counts showing Total, Direct Play, Direct Stream, and transcoding counts, sampled every 30 seconds. Lines are unstacked because total overlaps the playback types. |
 
 Plex uses `hostNetwork: true`: its cAdvisor network counters include host interfaces and cannot isolate Plex traffic. SABnzbd has dedicated pod counters, but the dashboard intentionally shows the shared host graph once for the two prominent services. Both currently run on the single OCP Home node. Revisit that scope if the cluster expands or their placement changes.
 

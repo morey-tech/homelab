@@ -2228,9 +2228,9 @@
       },
       "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys; the total overlaps the three playback types and is not stacked.",
       "gridPos": {
-        "x": 4,
+        "x": 12,
         "y": 10,
-        "w": 20,
+        "w": 12,
         "h": 5
       },
       "targets": [
@@ -2320,6 +2320,118 @@
           "mode": "multi",
           "sort": "desc"
         }
+      }
+    },
+    {
+      "id": 35,
+      "title": "Plex Direct Stream",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys; the total overlaps the three playback types and is not stacked.",
+      "gridPos": {
+        "x": 4,
+        "y": 10,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((tautulli_streams_direct_stream{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams_direct_stream{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
+          "legendFormat": "Streams",
+          "instant": true,
+          "range": false,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 36,
+      "title": "Plex Transcoding",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys; the total overlaps the three playback types and is not stacked.",
+      "gridPos": {
+        "x": 8,
+        "y": 10,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((tautulli_streams_transcode{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams_transcode{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
+          "legendFormat": "Streams",
+          "instant": true,
+          "range": false,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
       }
     }
   ],
