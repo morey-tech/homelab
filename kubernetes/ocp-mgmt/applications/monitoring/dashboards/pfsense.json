@@ -1,0 +1,1288 @@
+{
+  "uid": "pfsense-overview",
+  "title": "pfSense Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "homelab",
+    "infrastructure",
+    "pfsense"
+  ],
+  "timezone": "browser",
+  "refresh": "1m",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "SNMP collection",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Collection success only, not firewall or gateway health. Samples older than 180 seconds are unknown.",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Unknown",
+                  "color": "gray"
+                },
+                "0": {
+                  "text": "Failed",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Collecting",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) or on() vector(-1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "SNMP uptime",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "NET-SNMP agent uptime; restarts of the service reset this independently of firewall uptime.",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((sysUpTime{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(sysUpTime{job=\"pfsense\",instance=\"pfsense\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "CPU cores",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((ssCpuNumCpus{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(ssCpuNumCpus{job=\"pfsense\",instance=\"pfsense\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Host",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((sysName{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(sysName{job=\"pfsense\",instance=\"pfsense\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "{{sysName}}",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "name"
+      }
+    },
+    {
+      "id": 5,
+      "title": "CPU usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Approximately one-minute non-idle percentage per logical processor and their average.",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "avg by (job, instance) (((hrProcessorLoad{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(hrProcessorLoad{job=\"pfsense\",instance=\"pfsense\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1))",
+          "legendFormat": "Overall",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((hrProcessorLoad{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(hrProcessorLoad{job=\"pfsense\",instance=\"pfsense\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "Processor {{hrDeviceIndex}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Memory usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Physical-memory allocation units used/total as reported by NET-SNMP. Does not identify ZFS ARC separately.",
+      "gridPos": {
+        "x": 8,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * (hrStorageUsed{job=\"pfsense\",instance=\"pfsense\",hrStorageDescr=\"Physical memory\"} and (time() - timestamp(hrStorageUsed{job=\"pfsense\",instance=\"pfsense\",hrStorageDescr=\"Physical memory\"}) < 180)) / ((hrStorageSize{job=\"pfsense\",instance=\"pfsense\",hrStorageDescr=\"Physical memory\"} and (time() - timestamp(hrStorageSize{job=\"pfsense\",instance=\"pfsense\",hrStorageDescr=\"Physical memory\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "Used",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Load average",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "System load over 1, 5, and 15 minutes; this is not a CPU percentage.",
+      "gridPos": {
+        "x": 16,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((laLoadFloat{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(laLoadFloat{job=\"pfsense\",instance=\"pfsense\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "{{laNames}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Physical interface receive",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s from the firewall perspective. Logical interfaces include LAG, VLAN, PPPoE, WireGuard, and Tailscale. Counters overlap across layers; do not sum physical, LAG, VLAN, or tunnel traffic. Aliases fall back to interface names.",
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((8 * rate(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}[5m])) and (ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"} and (time() - timestamp(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((8 * rate(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}[5m])) and (ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"} and (time() - timestamp(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Physical interface transmit",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s from the firewall perspective. Logical interfaces include LAG, VLAN, PPPoE, WireGuard, and Tailscale. Counters overlap across layers; do not sum physical, LAG, VLAN, or tunnel traffic. Aliases fall back to interface names.",
+      "gridPos": {
+        "x": 12,
+        "y": 11,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((8 * rate(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}[5m])) and (ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"} and (time() - timestamp(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((8 * rate(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}[5m])) and (ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"} and (time() - timestamp(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Logical interface receive",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s from the firewall perspective. Logical interfaces include LAG, VLAN, PPPoE, WireGuard, and Tailscale. Counters overlap across layers; do not sum physical, LAG, VLAN, or tunnel traffic. Aliases fall back to interface names.",
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((8 * rate(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((8 * rate(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Logical interface transmit",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s from the firewall perspective. Logical interfaces include LAG, VLAN, PPPoE, WireGuard, and Tailscale. Counters overlap across layers; do not sum physical, LAG, VLAN, or tunnel traffic. Aliases fall back to interface names.",
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((8 * rate(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((8 * rate(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Interface errors",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute interface counter rates. These are not PF rule-block counts; historical totals are not current error rates.",
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((rate(ifInErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifInErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifInErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((rate(ifInErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifInErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifInErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}} RX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((rate(ifOutErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifOutErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifOutErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((rate(ifOutErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifOutErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifOutErrors{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}} TX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "title": "Interface discards",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute interface counter rates. These are not PF rule-block counts; historical totals are not current error rates.",
+      "gridPos": {
+        "x": 12,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((rate(ifInDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifInDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifInDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((rate(ifInDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifInDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifInDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}} RX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((rate(ifOutDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifOutDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifOutDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((rate(ifOutDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}[5m])) and (ifOutDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifOutDiscards{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}} TX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "Interface link status",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "1": {
+                        "text": "Up",
+                        "color": "green"
+                      },
+                      "2": {
+                        "text": "Down",
+                        "color": "yellow"
+                      },
+                      "3": {
+                        "text": "Testing",
+                        "color": "yellow"
+                      },
+                      "4": {
+                        "text": "Unknown",
+                        "color": "gray"
+                      },
+                      "5": {
+                        "text": "Dormant",
+                        "color": "yellow"
+                      },
+                      "6": {
+                        "text": "Not present",
+                        "color": "gray"
+                      },
+                      "7": {
+                        "text": "Lower layer down",
+                        "color": "yellow"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((ifOperStatus{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifOperStatus{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((ifOperStatus{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"} and (time() - timestamp(ifOperStatus{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+|lagg[0-9]+(\\\\.[0-9]+)?|pppoe[0-9]+|tun_wg[0-9]+|tailscale[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m",
+          "format": "table"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "interface",
+                "Value"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Physical link speed",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Interface-reported speed in bits/s, not throughput. Inactive ports may retain a configured speed. LAG/VLAN speeds are excluded because the current agent reports implausible values.",
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((1000000 * (ifHighSpeed{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"} and (time() - timestamp(ifHighSpeed{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(((1000000 * (ifHighSpeed{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"} and (time() - timestamp(ifHighSpeed{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "title": "Filesystem usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Per-filesystem used/total allocation units. ZFS datasets share capacity; do not sum them. Excludes /dev and /var/run.",
+      "gridPos": {
+        "x": 0,
+        "y": 39,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * (hrStorageUsed{job=\"pfsense\",instance=\"pfsense\",hrStorageDescr=~\"/.*\",hrStorageDescr!~\"/dev|/var/run\"} and (time() - timestamp(hrStorageUsed{job=\"pfsense\",instance=\"pfsense\",hrStorageDescr=~\"/.*\",hrStorageDescr!~\"/dev|/var/run\"}) < 180)) / ((hrStorageSize{job=\"pfsense\",instance=\"pfsense\",hrStorageDescr=~\"/.*\",hrStorageDescr!~\"/dev|/var/run\"} and (time() - timestamp(hrStorageSize{job=\"pfsense\",instance=\"pfsense\",hrStorageDescr=~\"/.*\",hrStorageDescr!~\"/dev|/var/run\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "{{hrStorageDescr}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "title": "Memory breakdown",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "UCD memory counters converted from KiB to bytes. Agent accounting categories overlap and are not stacked. Cache is not an explicit ZFS ARC measurement.",
+      "gridPos": {
+        "x": 12,
+        "y": 39,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(1024 * ((memTotalReal{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(memTotalReal{job=\"pfsense\",instance=\"pfsense\"}) < 180)) - (memAvailReal{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(memAvailReal{job=\"pfsense\",instance=\"pfsense\"}) < 180)))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "Used (total \u2212 available)",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(1024 * (memAvailReal{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(memAvailReal{job=\"pfsense\",instance=\"pfsense\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "Available (agent)",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(1024 * (memCached{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(memCached{job=\"pfsense\",instance=\"pfsense\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "Cache (agent)",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(1024 * (memBuffer{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(memBuffer{job=\"pfsense\",instance=\"pfsense\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "Buffers (agent)",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "title": "System information",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 46,
+        "w": 24,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((sysDescr{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(sysDescr{job=\"pfsense\",instance=\"pfsense\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m",
+          "format": "table"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "sysDescr"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Homelab dashboards",
+      "type": "dashboards",
+      "tags": [
+        "homelab"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ]
+}

@@ -16,7 +16,7 @@ The **OCP Home** data source queries the remote cluster's existing Thanos HTTPS 
 
 Both cluster dashboards include **Node network receive** and **Node network transmit** graphs below CPU/memory, using existing node-exporter counters. They show five-minute average bits/s with `node · interface` legends. OCP Home shows `bond0` only, excluding its member ports to avoid duplicate traffic. OCP Management shows each physical Ethernet interface (`en*`/`eth*`) separately, including idle ports, and excludes loopback, wireless, OVS, and overlay interfaces. These are interface rates, not unique cluster-wide traffic totals. Missing/stale counters or failed scrapes show gaps; idle counters remain zero. Interface selection is configured in `CLUSTERS` in [the dashboard generator](scripts/build-dashboard.py); no new metric collection is needed.
 
-Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Alloy collects QNAP and MikroTik metrics over SNMPv3 and forwards them to infrastructure Prometheus through its internal remote-write receiver. The **Infrastructure** data source serves the [QNAP Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/qnap-overview) dashboard. Prometheus has no direct scrape jobs or recording rules. Blackbox Exporter defines HTTP and TCP modules but has no callers or targets.
+Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Alloy collects QNAP, MikroTik, and pfSense metrics over SNMPv3 and forwards them to infrastructure Prometheus through its internal remote-write receiver. The **Infrastructure** data source serves their dashboards. Prometheus has no direct scrape jobs or recording rules. Blackbox Exporter defines HTTP and TCP modules but has no callers or targets.
 
 ## OCP Management Metrics
 
@@ -157,8 +157,12 @@ curl --fail --silent --show-error --get http://localhost:9090/api/v1/query --dat
 
 Expected results are empty `activeTargets` and `droppedTargets` arrays (scraping runs in Alloy), and two QNAP `up` results of `1`, labeled `qnap-01` and `qnap-02`. An empty query result or `0` requires investigation; allow two scrape intervals after rollout. Alloy's `/-/ready` and Blackbox Exporter's `/-/healthy` endpoints can likewise be checked through port forwarding to ports 12345 and 9115; do not invoke `/probe` during this phase. PVC mount permissions, image startup, Route access, and persistence across a subsequent GitOps rollout must be verified after deployment.
 
+## pfSense Metrics
+
+The [pfSense Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/pfsense-overview) shows CPU, physical memory, load, filesystem usage, physical and logical interface traffic, errors/discards, and link status/speed. Alloy polls NET-SNMP on `192.168.6.1:161` using SHA/AES and Bitwarden item `913a8afa-4bfc-4dd5-91b0-b4dd0018d51d`. Legends identify WAN (`ix2`), LAN (`lagg0`), and the confirmed VLANs. Physical/LAG/VLAN/tunnel traffic is kept separate; PF state and rule counters are not exposed by the verified agent. [Collection details](pfsense/README.md) cover credentials, interface labels, limitations, and validation.
+
 ## Later Collection Phases
 
-Add other NAS devices, reachability targets, network devices, Loki, and log collection in separate reviewed changes. Infrastructure collection currently covers the two QNAP NAS devices and two MikroTik RouterOS switches.
+Add other NAS devices, reachability targets, network devices, Loki, and log collection in separate reviewed changes. Infrastructure collection currently covers the two QNAP NAS devices, two MikroTik RouterOS switches, and pfSense.
 
 References: [Grafana configuration](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/), [Prometheus retention](https://prometheus.io/docs/prometheus/latest/storage/), [Alloy health endpoints](https://grafana.com/docs/alloy/latest/reference/http/).

@@ -46,3 +46,6 @@ configMapGenerator:
       - dashboards/qnap.json
       - dashboards/mikrotik.json
       - dashboards/overview.json
+  - name: grafana-pfsense-dashboard
+    files:
+      - dashboards/pfsense.json
