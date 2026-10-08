@@ -17,7 +17,10 @@ BASE = 'https://grafana.apps.ocp-mgmt.rh-lab.morey.tech'
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--local', action='store_true', help='Query local JSON without requiring dashboard deployment')
+    parser.add_argument('--skip-tautulli', action='store_true', help='Defer undeployed stream queries (requires --local)')
     args = parser.parse_args()
+    if args.skip_tautulli and not args.local:
+        parser.error('--skip-tautulli requires --local')
     secret = json.loads(subprocess.check_output([
         'oc', '--context=logged-user', '--request-timeout=15s', '-n', 'monitoring',
         'get', 'secret', 'grafana-admin', '-o', 'json']))
@@ -40,10 +43,14 @@ def main():
     assert request('/api/datasources/uid/ocp-home/health')['status'] == 'OK'
     now = int(time.time() * 1000)
     for panel in dashboard['panels']:
+        if panel['datasource']['uid'] == 'infrastructure' and args.skip_tautulli:
+            print(f"{panel['title']}: deferred until GitOps deployment")
+            continue
         for target in panel['targets']:
-            assert target['datasource']['uid'] == 'ocp-home'
+            uid = target['datasource']['uid']
+            assert uid in ('ocp-home', 'infrastructure')
             query = urllib.parse.urlencode({'query': target['expr']})
-            result = request('/api/datasources/proxy/uid/ocp-home/api/v1/query?' + query)
+            result = request(f'/api/datasources/proxy/uid/{uid}/api/v1/query?' + query)
             assert result['status'] == 'success' and result['data']['result'], f"No current telemetry: {panel['title']}"
         result = request('/api/ds/query', {'from': str(now - 21600000), 'to': str(now),
                          'queries': [dict(t, intervalMs=30000, maxDataPoints=720) for t in panel['targets']]})

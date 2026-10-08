@@ -22,14 +22,14 @@ def main():
     dashboard = media.build()
     assert dashboard == json.loads((ROOT / 'dashboards/media.json').read_text()), 'Regenerate media JSON'
     panels = dashboard['panels']
-    assert len(panels) == 32 and len({p['id'] for p in panels}) == 32
+    assert len(panels) == 34 and len({p['id'] for p in panels}) == 34
     occupied = set()
     for panel in panels:
         g = panel['gridPos']
         cells = {(x, y) for x in range(g['x'], g['x']+g['w']) for y in range(g['y'], g['y']+g['h'])}
         assert not cells & occupied, 'Panels overlap'
         occupied |= cells
-        assert panel['datasource']['uid'] == 'ocp-home'
+        assert panel['datasource']['uid'] == ('infrastructure' if panel['title'].startswith('Plex stream') or panel['title'] == 'Plex current streams' else 'ocp-home')
     assert sum('Shared host network' in p['title'] for p in panels) == 1
     assert not any(p['title'] in ('Plex network', 'SABnzbd network') for p in panels)
 
@@ -87,6 +87,21 @@ def main():
     case('wrong namespace cannot supply app telemetry',
          {k.replace('namespace="sonarr"', 'namespace="radarr"'): v for k, v in base.items() if k.startswith('container_')},
          remove=('container_',), expected=(None, None, None))
+
+    # A current stat must not reuse a historical non-null value after a failure.
+    stat = next(p for p in panels if p['title'] == 'Plex current streams')
+    assert stat['targets'][0]['instant'] and not stat['targets'][0]['range']
+    stream_metric = 'tautulli_streams{job="tautulli",instance="plex"}'
+    stream_up = 'up{job="tautulli",instance="plex"}'
+    for name, values, up_values, expected in [
+        ('active sessions', '3x6', '1x6', 3), ('no sessions', '0x6', '1x6', 0),
+        ('scrape failure', '3x6', '0x6', None), ('stale metric', '3x2 _x4', '1x6', None),
+        ('stale health', '3x6', '1x2 _x4', None), ('missing metric', '_x7', '1x6', None),
+        ('non-numeric response', 'NaN NaN NaN NaN NaN NaN NaN', '1x6', None), ('invalid negative count', '-1x6', '1x6', None)]:
+        cases.append({'name': 'Tautulli '+name, 'interval': '1m',
+                      'input_series': [{'series': stream_metric, 'values': values}, {'series': stream_up, 'values': up_values}],
+                      'promql_expr_test': [{'expr': media.stream_query(), 'eval_time': '6m',
+                          'exp_samples': [] if expected is None else [{'labels': stream_metric, 'value': expected}]}]})
 
     promtool = os.environ.get('PROMTOOL') or shutil.which('promtool')
     if not promtool:

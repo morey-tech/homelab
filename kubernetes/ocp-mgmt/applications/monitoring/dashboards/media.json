@@ -355,7 +355,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 0,
-        "y": 10,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -418,7 +418,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 4,
-        "y": 10,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -481,7 +481,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 8,
-        "y": 10,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -557,7 +557,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 12,
-        "y": 10,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -620,7 +620,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 16,
-        "y": 10,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -683,7 +683,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 20,
-        "y": 10,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -759,7 +759,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 0,
-        "y": 15,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -822,7 +822,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 4,
-        "y": 15,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -885,7 +885,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 8,
-        "y": 15,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -961,7 +961,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 12,
-        "y": 15,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -1024,7 +1024,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 16,
-        "y": 15,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -1087,7 +1087,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 20,
-        "y": 15,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -1163,7 +1163,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 0,
-        "y": 20,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1226,7 +1226,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 4,
-        "y": 20,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1289,7 +1289,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 8,
-        "y": 20,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1365,7 +1365,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 12,
-        "y": 20,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1428,7 +1428,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 16,
-        "y": 20,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1491,7 +1491,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 20,
-        "y": 20,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1567,7 +1567,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 0,
-        "y": 25,
+        "y": 30,
         "w": 4,
         "h": 5
       },
@@ -1630,7 +1630,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 4,
-        "y": 25,
+        "y": 30,
         "w": 4,
         "h": 5
       },
@@ -1693,7 +1693,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 8,
-        "y": 25,
+        "y": 30,
         "w": 4,
         "h": 5
       },
@@ -1769,7 +1769,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 12,
-        "y": 25,
+        "y": 30,
         "w": 4,
         "h": 5
       },
@@ -1832,7 +1832,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 16,
-        "y": 25,
+        "y": 30,
         "w": 4,
         "h": 5
       },
@@ -1895,7 +1895,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 20,
-        "y": 25,
+        "y": 30,
         "w": 4,
         "h": 5
       },
@@ -1971,7 +1971,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 0,
-        "y": 30,
+        "y": 35,
         "w": 4,
         "h": 5
       },
@@ -2034,7 +2034,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 4,
-        "y": 30,
+        "y": 35,
         "w": 4,
         "h": 5
       },
@@ -2097,7 +2097,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 8,
-        "y": 30,
+        "y": 35,
         "w": 4,
         "h": 5
       },
@@ -2147,6 +2147,166 @@
               "group": "A"
             }
           }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 33,
+      "title": "Plex current streams",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys; the total overlaps the three playback types and is not stacked.",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((tautulli_streams{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
+          "legendFormat": "Streams",
+          "instant": true,
+          "range": false,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 34,
+      "title": "Plex stream history",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys; the total overlaps the three playback types and is not stacked.",
+      "gridPos": {
+        "x": 4,
+        "y": 10,
+        "w": 20,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((tautulli_streams{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
+          "legendFormat": "Total",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((tautulli_streams_direct_play{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams_direct_play{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
+          "legendFormat": "Direct Play",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((tautulli_streams_direct_stream{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams_direct_stream{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
+          "legendFormat": "Direct Stream",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((tautulli_streams_transcode{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams_transcode{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
+          "legendFormat": "Transcoding",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "lineInterpolation": "stepAfter"
+          },
+          "decimals": 0
         },
         "overrides": []
       },

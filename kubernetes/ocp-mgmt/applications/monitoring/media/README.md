@@ -1,10 +1,10 @@
 # Media Services
 
-The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/media-services) queries the existing `ocp-home` Thanos data source. Workload GitOps remains in [homelab-private](https://github.com/morey-tech/homelab-private/tree/main/kubernetes/ocp-home/applications); this repository owns Grafana provisioning. No new exporter, credential, or monitoring permissions are required.
+The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/media-services) queries the existing `ocp-home` Thanos data source for pod resources and `infrastructure` for [Tautulli stream counts](../tautulli/README.md). Workload GitOps remains in [homelab-private](https://github.com/morey-tech/homelab-private/tree/main/kubernetes/ocp-home/applications); this repository owns collection and Grafana provisioning.
 
 ## Graphs
 
-Plex and SABnzbd occupy the first two rows with large CPU and memory graphs. One shared host network graph spans those rows. Sonarr, Radarr, Bazarr, Lidarr, Overseerr, Tautulli, Profilarr, Maintainerr, and Cleanuparr follow with smaller graphs, two services per row.
+Plex and SABnzbd occupy the first two rows with CPU and memory graphs. One shared host network graph spans those rows. A compact Plex stream-count row follows, then Sonarr, Radarr, Bazarr, Lidarr, Overseerr, Tautulli, Profilarr, Maintainerr, and Cleanuparr with smaller graphs, two services per row.
 
 | Graph | Meaning |
 |-------|---------|
@@ -12,6 +12,8 @@ Plex and SABnzbd occupy the first two rows with large CPU and memory graphs. One
 | Memory | Working-set bytes per pod, summed over application containers. This includes more than RSS and is not a percentage of a limit. |
 | Shared host network | OCP Home `bond0` receive/transmit rates in bits/s, averaged over five minutes. Includes Plex, SABnzbd, and all other host traffic; excludes physical bond members to avoid double counting. |
 | Secondary service network | Five-minute receive/transmit rates in bits/s from each pod's sandbox interfaces, excluding loopback. Host-network pods are excluded. |
+| Plex current streams | Instantaneous Tautulli session count, including paused sessions. Missing, stale, or failed collection displays Unknown rather than the last historical value. |
+| Plex stream history | Total, Direct Play, Direct Stream, and transcoding counts, sampled every 30 seconds. Lines are unstacked because total overlaps the playback types. |
 
 Plex uses `hostNetwork: true`: its cAdvisor network counters include host interfaces and cannot isolate Plex traffic. SABnzbd has dedicated pod counters, but the dashboard intentionally shows the shared host graph once for the two prominent services. Both currently run on the single OCP Home node. Revisit that scope if the cluster expands or their placement changes.
 
@@ -19,7 +21,7 @@ Queries select Deployment pods in each app's dedicated namespace and identify ea
 
 ## Other available pod statistics
 
-Discovery through the existing OCP Home data source confirmed CPU time, memory working set and RSS, network bytes and errors, filesystem read/write counters, container readiness and restarts, and configured resource requests/limits. Requests and limits exist only where configured. CPU throttling series were absent for SABnzbd, which has no CPU limit. Application information such as Plex sessions/transcodes or SABnzbd queue progress needs separate application telemetry.
+Discovery through the existing OCP Home data source confirmed CPU time, memory working set and RSS, network bytes and errors, filesystem read/write counters, container readiness and restarts, and configured resource requests/limits. Requests and limits exist only where configured. CPU throttling series were absent for SABnzbd, which has no CPU limit. Plex session counts come from the separate Tautulli collector; SABnzbd queue progress still needs application telemetry.
 
 ## Validation
 
@@ -34,6 +36,8 @@ python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/check-media.py --loc
 ```
 
 The read-only check retrieves the Grafana admin credential into memory from the management cluster and tests every local panel query against existing telemetry, including six-hour Grafana range queries. It does not provision the dashboard. A stopped application fails its current-data check, even though the dashboard correctly displays a gap.
+
+Before the Tautulli collector deploys, use `--local --skip-tautulli` to check the existing pod and host queries while explicitly deferring stream panels. Stream history starts at collector deployment; it is not backfilled from Tautulli.
 
 After review, commit, human push, and GitOps reconciliation, verify the provisioned dashboard:
 

@@ -8,6 +8,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.dont_write_bytecode = True
 DS = {'type': 'prometheus', 'uid': 'ocp-home'}
+INFRA = {'type': 'prometheus', 'uid': 'infrastructure'}
 PRIMARY = [('plex', 'Plex'), ('sabnzbd', 'SABnzbd')]
 SECONDARY = [('sonarr', 'Sonarr'), ('radarr', 'Radarr'), ('bazarr', 'Bazarr'),
              ('lidarr', 'Lidarr'), ('overseerr', 'Overseerr'), ('tautulli', 'Tautulli'),
@@ -58,13 +59,19 @@ def network_query(app, direction):
             f'and on(namespace, pod) ({fresh(isolated)} == 1))')
 
 
+def stream_query(metric='tautulli_streams'):
+    selector = f'{metric}{{job="tautulli",instance="plex"}}'
+    up = fresh('up{job="tautulli",instance="plex"}')
+    return f'({fresh(selector)} >= 0) and on(job, instance) ({up} == 1)'
+
+
 def build():
     panels = []
 
-    def graph(title, queries, x, y, w, h, unit, description):
-        p = {'id': len(panels) + 1, 'title': title, 'type': 'timeseries', 'datasource': DS,
+    def graph(title, queries, x, y, w, h, unit, description, datasource=DS):
+        p = {'id': len(panels) + 1, 'title': title, 'type': 'timeseries', 'datasource': datasource,
              'description': description, 'gridPos': {'x': x, 'y': y, 'w': w, 'h': h},
-             'targets': [{'refId': chr(65+i), 'datasource': DS, 'expr': expr, 'legendFormat': legend,
+             'targets': [{'refId': chr(65+i), 'datasource': datasource, 'expr': expr, 'legendFormat': legend,
                           'instant': False, 'range': True, 'interval': '30s', 'editorMode': 'code'}
                          for i, (expr, legend) in enumerate(queries)],
              'fieldConfig': {'defaults': {'unit': unit, 'min': 0, 'noValue': 'Unknown',
@@ -100,7 +107,23 @@ def build():
           'it is not attributable to either app. Plex uses host networking, so its pod counters cannot isolate Plex traffic. '
           'Physical bond members are excluded. Five-minute average bits/s; unavailable or stale telemetry appears as gaps.')
     for i, (app, name) in enumerate(SECONDARY):
-        service(app, name, (i % 2)*12, 10+(i//2)*5, 4, 5)
+        service(app, name, (i % 2)*12, 15+(i//2)*5, 4, 5)
+    description = ('Current Plex sessions reported by Tautulli, including paused sessions. '
+                   'Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. '
+                   'History begins when collection deploys; the total overlaps the three playback types and is not stacked.')
+    p = graph('Plex current streams', [(stream_query(), 'Streams')], 0, 10, 4, 5, 'short', description, INFRA)
+    p['type'] = 'stat'
+    p['targets'][0].update(instant=True, range=False)
+    p['fieldConfig']['defaults']['decimals'] = 0
+    p['fieldConfig']['defaults'].pop('custom')
+    p['options'] = {'reduceOptions': {'calcs': ['lastNotNull'], 'fields': '', 'values': False},
+                    'colorMode': 'value', 'graphMode': 'none', 'textMode': 'auto', 'justifyMode': 'auto'}
+    p = graph('Plex stream history', [(stream_query(metric), label) for metric, label in [
+        ('tautulli_streams', 'Total'), ('tautulli_streams_direct_play', 'Direct Play'),
+        ('tautulli_streams_direct_stream', 'Direct Stream'), ('tautulli_streams_transcode', 'Transcoding')]],
+        4, 10, 20, 5, 'short', description, INFRA)
+    p['fieldConfig']['defaults']['decimals'] = 0
+    p['fieldConfig']['defaults']['custom']['lineInterpolation'] = 'stepAfter'
     return {'uid': 'media-services', 'title': 'Media Services', 'schemaVersion': 39, 'version': 1,
             'editable': False, 'tags': ['homelab', 'ocp-home', 'media'], 'timezone': 'browser',
             'refresh': '30s', 'time': {'from': 'now-6h', 'to': 'now'}, 'panels': panels,

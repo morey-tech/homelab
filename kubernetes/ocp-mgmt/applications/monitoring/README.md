@@ -59,7 +59,7 @@ The dashboard shows readiness for one node, CPU/memory, operator health, warning
 
 ## Media Services
 
-The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/media-services) uses the existing OCP Home data source. Plex and SABnzbd have large CPU and memory graphs beside one shared whole-host `bond0` receive/transmit graph. Smaller CPU, memory, and pod network graphs cover Sonarr, Radarr, Bazarr, Lidarr, Overseerr, Tautulli, Profilarr, Maintainerr, and Cleanuparr. [Metric semantics and validation](media/README.md) explain the host-network limitation and available pod statistics.
+The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/media-services) uses the existing OCP Home data source for resource graphs and infrastructure Prometheus for Plex stream counts. Plex and SABnzbd have CPU and memory graphs beside one shared whole-host `bond0` receive/transmit graph. A current Plex stream count and playback-type history appear below them. Smaller CPU, memory, and pod network graphs cover Sonarr, Radarr, Bazarr, Lidarr, Overseerr, Tautulli, Profilarr, Maintainerr, and Cleanuparr. [Metric semantics and validation](media/README.md) explain the host-network limitation and available pod statistics. [Tautulli collection](tautulli/README.md) documents the API credential and exporter.
 
 ## MikroTik Switch Metrics
 
