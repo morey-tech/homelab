@@ -69,14 +69,26 @@ def build():
             p['description'] = qnap.MEMORY_DESCRIPTION
             p['fieldConfig']['defaults']['decimals'] = 2
             p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'none', 'group': 'A'}
-        if uid == 'ocp-home':
-            p = graph(uid, 'GPU render utilization', 'OCP Home iGPU usage', 16, y, legend='Render / 3D')
-            video = next(p for p in sources[uid]['panels'] if p['title'] == 'GPU video utilization')
-            p['targets'].append(dict(p['targets'][0], refId='B',
-                                     expr=video['targets'][0]['expr'], legendFormat='Video engine 0'))
-            p['description'] = 'Intel iGPU render/3D and video engine 0 utilization, shown separately. Missing, failed, or stale telemetry appears as gaps.'
-        elif uid == 'ocp-mgmt':
-            graph(uid, 'GPU utilization', 'tr-gpu · RTX 3090 GPU utilization', 16, y, legend='tr-gpu · GPU 0')
+        if uid != 'infrastructure':
+            p = copy.deepcopy(next(p for p in sources[uid]['panels'] if p['title'] == 'Node network receive'))
+            p['id'] = len(panels) + 1
+            p['title'] = title + ' network traffic'
+            p['gridPos'] = {'x': 16, 'y': y, 'w': 8, 'h': 7}
+            scope = ('OCP Home bond0 only, excluding member ports.' if uid == 'ocp-home' else
+                     'OCP Management physical Ethernet interfaces summed per node. '
+                     'These are node interface totals, not unique cluster-wide traffic; inter-node traffic appears at both endpoints.')
+            p['description'] = ('Receive and transmit traffic per node in bits per second, averaged over five minutes. '
+                                + scope + ' Missing, failed, or stale telemetry appears as gaps. '
+                                'Interface details are available on the cluster dashboard.')
+            p['targets'] = []
+            for ref, direction, label in [('A', 'receive', 'Receive'), ('B', 'transmit', 'Transmit')]:
+                source = next(p for p in sources[uid]['panels'] if p['title'] == 'Node network ' + direction)
+                query = copy.deepcopy(source['targets'][0])
+                query.update(refId=ref, expr=f'sum by (instance) ({query["expr"]})',
+                             legendFormat='{{instance}} · ' + label, interval='30s')
+                p['targets'].append(query)
+            p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'none', 'group': 'A'}
+            panels.append(p)
         else:
             p = copy.deepcopy(next(p for p in sources[uid]['panels'] if p['title'] == 'Network receive'))
             p['id'] = len(panels) + 1

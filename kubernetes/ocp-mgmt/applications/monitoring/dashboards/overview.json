@@ -156,13 +156,13 @@
       "id": 2
     },
     {
-      "title": "OCP Home iGPU usage",
+      "title": "OCP Home network traffic",
       "type": "timeseries",
       "datasource": {
         "type": "prometheus",
         "uid": "ocp-home"
       },
-      "description": "Intel iGPU render/3D and video engine 0 utilization, shown separately. Missing, failed, or stale telemetry appears as gaps.",
+      "description": "Receive and transmit traffic per node in bits per second, averaged over five minutes. OCP Home bond0 only, excluding member ports. Missing, failed, or stale telemetry appears as gaps. Interface details are available on the cluster dashboard.",
       "gridPos": {
         "x": 16,
         "y": 0,
@@ -172,10 +172,10 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "((igpu_engines_render_3d_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(igpu_engines_render_3d_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) and on() ((max((up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) == 1))",
+          "expr": "sum by (instance) (8 * max by (instance, device) ((rate(node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}[5m]) and (node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"} and (time() - timestamp(node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}) < 180))) and on(job, instance) ((up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"}) < 180)) == 1)))",
           "instant": false,
           "range": true,
-          "legendFormat": "Render / 3D",
+          "legendFormat": "{{instance}} \u00b7 Receive",
           "datasource": {
             "type": "prometheus",
             "uid": "ocp-home"
@@ -185,10 +185,10 @@
         },
         {
           "refId": "B",
-          "expr": "((igpu_engines_video_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(igpu_engines_video_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) and on() ((max((up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) == 1))",
+          "expr": "sum by (instance) (8 * max by (instance, device) ((rate(node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}[5m]) and (node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"} and (time() - timestamp(node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}) < 180))) and on(job, instance) ((up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"}) < 180)) == 1)))",
           "instant": false,
           "range": true,
-          "legendFormat": "Video engine 0",
+          "legendFormat": "{{instance}} \u00b7 Transmit",
           "datasource": {
             "type": "prometheus",
             "uid": "ocp-home"
@@ -199,7 +199,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "bps",
           "noValue": "Unknown",
           "decimals": 1,
           "color": {
@@ -215,12 +215,15 @@
             ]
           },
           "min": 0,
-          "max": 100,
           "custom": {
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 10,
-            "spanNulls": false
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
           }
         },
         "overrides": []
@@ -379,13 +382,13 @@
       "id": 5
     },
     {
-      "title": "tr-gpu \u00b7 RTX 3090 GPU utilization",
+      "title": "OCP Management network traffic",
       "type": "timeseries",
       "datasource": {
         "type": "prometheus",
         "uid": "ocp-mgmt"
       },
-      "description": "Utilization percentage. Missing, failed, or stale source telemetry appears as gaps. Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Missing/down/stale telemetry displays Unknown.",
+      "description": "Receive and transmit traffic per node in bits per second, averaged over five minutes. OCP Management physical Ethernet interfaces summed per node. These are node interface totals, not unique cluster-wide traffic; inter-node traffic appears at both endpoints. Missing, failed, or stale telemetry appears as gaps. Interface details are available on the cluster dashboard.",
       "gridPos": {
         "x": 16,
         "y": 7,
@@ -395,10 +398,23 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "((DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"}) < 180))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+          "expr": "sum by (instance) (8 * max by (instance, device) ((rate(node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\",device=~\"en.*|eth.*\"}[5m]) and (node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\",device=~\"en.*|eth.*\"} and (time() - timestamp(node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\",device=~\"en.*|eth.*\"}) < 180))) and on(job, instance) ((up{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\"}) < 180)) == 1)))",
           "instant": false,
           "range": true,
-          "legendFormat": "tr-gpu \u00b7 GPU 0",
+          "legendFormat": "{{instance}} \u00b7 Receive",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (instance) (8 * max by (instance, device) ((rate(node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\",device=~\"en.*|eth.*\"}[5m]) and (node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\",device=~\"en.*|eth.*\"} and (time() - timestamp(node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\",device=~\"en.*|eth.*\"}) < 180))) and on(job, instance) ((up{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ms\\\\-02|ms\\\\-03|ms\\\\-04|tr\\\\-gpu\"}) < 180)) == 1)))",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{instance}} \u00b7 Transmit",
           "datasource": {
             "type": "prometheus",
             "uid": "ocp-mgmt"
@@ -409,7 +425,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "bps",
           "noValue": "Unknown",
           "decimals": 1,
           "color": {
@@ -425,12 +441,15 @@
             ]
           },
           "min": 0,
-          "max": 100,
           "custom": {
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 10,
-            "spanNulls": false
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
           }
         },
         "overrides": []
