@@ -17,12 +17,30 @@ Work directly on `main` by default. Do not create a branch, GitHub issue, or pul
 
 ### 3. Stop for Human Review Before Committing
 
-After implementing and validating the changes, group them into a proposed sequence of semantic commits, each covering one logical purpose. Leave changes uncommitted and summarize the changes, validation results, and proposed commit breakdown for human review. Wait for explicit approval to commit; a request to implement a change is not approval to commit it.
+After implementing and validating the changes, leave them uncommitted and include a concrete commit proposal in the final response. Propose messages for the completed changes, after reviewing the diff, rather than only describing a commit plan before implementation.
+
+The review summary must include:
+
+- What changed and why.
+- Validation results and any checks deferred until GitOps deployment.
+- An ordered list of proposed semantic commits, giving the exact Conventional Commit message and a brief description of what belongs in each commit. For a single logical change, one proposed commit is sufficient.
+- Whether the changes remain uncommitted and undeployed.
+
+Break distinct changes into separate commits, even when they were implemented in the same session or touch the same files. Group by purpose, not by file type: keep a feature's implementation, generated artifacts, directly related tests, and documentation together. Put dependencies before the changes that use them. Account for task-related changes accumulated across turns; exclude unrelated working tree changes from the proposal.
+
+For example, a session adding a collector, its dashboard, and an independent deployment-retention adjustment could propose:
+
+1. `feat(monitoring): collect pfSense SNMPv3 metrics` — collector configuration, credential references, and SNMP module.
+2. `feat(monitoring): add pfSense dashboard` — dashboard generator and JSON, provisioning, validation, and related documentation.
+3. `chore(monitoring): limit deployment revision history` — ReplicaSet retention settings and their documentation.
+
+Wait for explicit approval to commit; a request to implement a change is not approval to commit it. If additional work changes the scope before approval, update the proposed messages and grouping to reflect the final diff.
 
 ### 4. Commit After Approval
 
 After human review and explicit approval, create the approved local commits:
 
+- Follow the reviewed commit sequence and messages. A request to commit approves the proposed changes; it does not authorize sweeping unrelated working tree changes into those commits.
 - Split changes into semantic commits by logical purpose, such as a feature, a bug fix, or an independent documentation update. Keep implementation and its directly related tests or documentation together; do not split mechanically by file or combine unrelated changes.
 - Stage only the reviewed files or hunks for each commit, preserving unrelated working tree changes. Each commit should be coherent and independently understandable, with dependencies ordered first.
 - Use Conventional Commit messages in the form `type(scope): description`, with an optional scope. Common types include `feat`, `fix`, `docs`, `refactor`, `test`, `build`, `ci`, and `chore`.
