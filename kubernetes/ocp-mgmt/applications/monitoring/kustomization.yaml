@@ -9,6 +9,8 @@ resources:
   - qnap-credentials.yaml
   - mikrotik-credentials.yaml
   - pfsense-credentials.yaml
+  - tautulli-credentials.yaml
+  - tautulli-exporter.yaml
   - storage.yaml
   - grafana.yaml
   - prometheus.yaml
@@ -18,6 +20,9 @@ resources:
   - route.yaml
   - networkpolicy.yaml
 configMapGenerator:
+  - name: tautulli-exporter-config
+    files:
+      - config.yml=tautulli/config.yml
   - name: grafana-config
     files:
       - grafana.ini

@@ -159,6 +159,21 @@ prometheus.scrape "pfsense" {
 	forward_to      = [prometheus.remote_write.infrastructure.receiver]
 }
 
+// Only aggregate counts are exported; API credentials stay in the exporter.
+prometheus.scrape "tautulli" {
+	targets = [{
+		__address__      = "tautulli-exporter.monitoring.svc:7979",
+		__param_module   = "activity",
+		__param_target   = "https://tautulli.apps.ocp-home.rh-lab.morey.tech/api/v2?cmd=get_activity",
+		job              = "tautulli",
+		instance         = "plex",
+	}]
+	metrics_path    = "/probe"
+	scrape_interval = "30s"
+	scrape_timeout  = "20s"
+	forward_to      = [prometheus.remote_write.infrastructure.receiver]
+}
+
 prometheus.remote_write "infrastructure" {
 	endpoint {
 		url = "http://prometheus.monitoring.svc:9090/api/v1/write"

@@ -1,0 +1,25 @@
+modules:
+  activity:
+    http_client_config:
+      follow_redirects: false
+      http_headers:
+        X-Api-Key:
+          files:
+            - /etc/tautulli-secrets/api-key
+    metrics:
+      - name: tautulli_streams
+        help: Current Plex sessions reported by Tautulli, including paused sessions.
+        path: '{.response.data.stream_count}'
+        valuetype: gauge
+      - name: tautulli_streams_direct_play
+        help: Current Plex sessions using Direct Play.
+        path: '{.response.data.stream_count_direct_play}'
+        valuetype: gauge
+      - name: tautulli_streams_direct_stream
+        help: Current Plex sessions using Direct Stream.
+        path: '{.response.data.stream_count_direct_stream}'
+        valuetype: gauge
+      - name: tautulli_streams_transcode
+        help: Current Plex sessions transcoding.
+        path: '{.response.data.stream_count_transcode}'
+        valuetype: gauge

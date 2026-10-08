@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tautulli-exporter
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tautulli-exporter
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: tautulli-exporter
+  template:
+    metadata:
+      annotations:
+        openshift.io/required-scc: restricted-v2
+      labels:
+        app: tautulli-exporter
+    spec:
+      serviceAccountName: tautulli-exporter
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - ms-02
+                      - ms-04
+      containers:
+        - name: exporter
+          image: quay.io/prometheuscommunity/json-exporter:v0.8.0
+          args:
+            - --config.file=/etc/json-exporter/config.yml
+            - --web.listen-address=:7979
+          ports:
+            - name: http
+              containerPort: 7979
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            periodSeconds: 30
+          volumeMounts:
+            - name: config
+              mountPath: /etc/json-exporter
+              readOnly: true
+            - name: credentials
+              mountPath: /etc/tautulli-secrets
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: tautulli-exporter-config
+        - name: credentials
+          secret:
+            secretName: tautulli-api-v1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tautulli-exporter
+spec:
+  selector:
+    app: tautulli-exporter
+  ports:
+    - name: http
+      port: 7979
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tautulli-exporter-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: tautulli-exporter
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: alloy
+      ports:
+        - protocol: TCP
+          port: 7979
