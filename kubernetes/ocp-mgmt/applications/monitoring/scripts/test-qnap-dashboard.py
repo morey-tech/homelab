@@ -153,6 +153,38 @@ for nas in ['qnap-01', 'qnap-02']:
                   'promql_expr_test': [check(cpu_template.replace('$nas', nas),
                       [{'labels': 'systemCPU_Usage{job="qnap",instance="qnap-01"}', 'value': 10}] if nas == 'qnap-01' else [])]})
 
+for title, capacity, free, labels in [
+    ('Pool capacity overview', 'storagepoolCapacity', 'storagepoolFreeSize', 'pool_id="1",storagepoolIndex="1"'),
+    ('Shared-folder capacity overview', 'sharedFolderCapacity', 'sharedFolderFreeSize', 'share="storage-media",sharedFolderIndex="1"'),
+]:
+    for name, total, available, health, at, expected in [
+        ('used and total retain bytes', '1000 1000', '250 250', '1 1', '1m', [750, 1000, 75]),
+        ('empty is valid zero usage', '1000 1000', '1000 1000', '1 1', '1m', [0, 1000, 0]),
+        ('full is valid 100 percent', '1000 1000', '0 0', '1 1', '1m', [1000, 1000, 100]),
+        ('zero total is unknown', '0 0', '0 0', '1 1', '1m', None),
+        ('free exceeding total is unknown', '1000 1000', '1100 1100', '1 1', '1m', None),
+        ('negative free is unknown', '1000 1000', '-1 -1', '1 1', '1m', None),
+        ('failed scrape hides capacity', '1000 1000', '250 250', '1 0', '1m', None),
+        ('missing free is unknown', '1000 1000', '_ _', '1 1', '1m', None),
+        ('stale free is unknown', '1000+0x3', '250 _ _ _', '1+0x3', '3m', None),
+        ('stale total is unknown', '1000 _ _ _', '250+0x3', '1+0x3', '3m', None),
+    ]:
+        values = [] if expected is None else [
+            {'labels': '{' + qnap.LABELS + ',' + labels + ',capacity_stat=' + json.dumps(stat) + '}', 'value': value}
+            for stat, value in zip(['Used', 'Total', 'Used %'], expected)]
+        tests.append({'name': title + ': ' + name, 'interval': '1m',
+                      'input_series': [sample('up', health), sample(capacity, total, labels), sample(free, available, labels)],
+                      'promql_expr_test': [check(panels[title], values, at=at)]})
+    template = next(p for p in provisioned['panels'] if p['title'] == title)['targets'][0]['expr']
+    tests.append({'name': title + ': selected NAS capacity cannot mix with another NAS', 'interval': '1m',
+                  'input_series': [sample('up', '1 1'), sample(capacity, '1000 1000', labels), sample(free, '250 250', labels),
+                      {'series': f'up{{job="qnap",instance="qnap-02"}}', 'values': '1 1'},
+                      {'series': f'{capacity}{{job="qnap",instance="qnap-02",{labels}}}', 'values': '2000 2000'},
+                      {'series': f'{free}{{job="qnap",instance="qnap-02",{labels}}}', 'values': '1000 1000'}],
+                  'promql_expr_test': [check(template.replace('$nas', 'qnap-02'), [
+                      {'labels': '{job="qnap",instance="qnap-02",'+labels+',capacity_stat='+json.dumps(stat)+'}', 'value': value}
+                      for stat, value in [('Used', 1000), ('Total', 2000), ('Used %', 50)]])]})
+
 with tempfile.TemporaryDirectory(prefix='qnap-promql-') as directory:
     path = Path(directory) / 'tests.yml'
     path.write_text(yaml.safe_dump({'rule_files': [], 'evaluation_interval': '1m', 'tests': tests}))

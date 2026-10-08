@@ -258,7 +258,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 4,
+        "y": 11,
         "w": 12,
         "h": 6
       },
@@ -317,7 +317,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 4,
+        "y": 11,
         "w": 12,
         "h": 6
       },
@@ -377,7 +377,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 10,
+        "y": 17,
         "w": 8,
         "h": 4
       },
@@ -430,7 +430,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 10,
+        "y": 17,
         "w": 8,
         "h": 4
       },
@@ -483,7 +483,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 10,
+        "y": 17,
         "w": 8,
         "h": 4
       },
@@ -623,7 +623,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 14,
+        "y": 21,
         "w": 12,
         "h": 6
       },
@@ -682,7 +682,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 14,
+        "y": 21,
         "w": 12,
         "h": 6
       },
@@ -742,7 +742,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 20,
+        "y": 27,
         "w": 12,
         "h": 6
       },
@@ -801,7 +801,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 20,
+        "y": 27,
         "w": 12,
         "h": 6
       },
@@ -862,7 +862,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 26,
+        "y": 33,
         "w": 12,
         "h": 6
       },
@@ -922,7 +922,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 26,
+        "y": 33,
         "w": 12,
         "h": 6
       },
@@ -981,7 +981,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 32,
+        "y": 39,
         "w": 6,
         "h": 4
       },
@@ -1034,7 +1034,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 32,
+        "y": 39,
         "w": 6,
         "h": 4
       },
@@ -1087,7 +1087,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 32,
+        "y": 39,
         "w": 6,
         "h": 4
       },
@@ -1155,7 +1155,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 32,
+        "y": 39,
         "w": 6,
         "h": 4
       },
@@ -1208,7 +1208,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 36,
+        "y": 43,
         "w": 24,
         "h": 7
       },
@@ -1325,7 +1325,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 43,
+        "y": 50,
         "w": 24,
         "h": 7
       },
@@ -1403,7 +1403,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 50,
+        "y": 57,
         "w": 12,
         "h": 7
       },
@@ -1467,7 +1467,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 50,
+        "y": 57,
         "w": 12,
         "h": 7
       },
@@ -1519,6 +1519,320 @@
           "sort": "desc"
         }
       }
+    },
+    {
+      "id": 24,
+      "title": "Pool capacity overview",
+      "type": "table",
+      "description": "Current used and total capacity with a 0\u2013100% usage bar for each item. Used = total minus free. Pool and logical shared-folder accounting differ; do not sum shares to infer pool usage. Missing, stale, failed, zero-total, or inconsistent telemetry is omitted, not shown as empty storage.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "Unknown",
+          "decimals": 2,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Pool"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Used %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "label_replace(((((storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) - (storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180))) and (((storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0) and ((storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) >= 0) and ((storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) <= (storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180))))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)), \"capacity_stat\", \"Used\", \"__name__\", \".*\") or label_replace((((0 + (storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180))) and (((storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0) and ((storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) >= 0) and ((storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) <= (storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180))))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)), \"capacity_stat\", \"Total\", \"__name__\", \".*\") or label_replace(((100 * (((storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) - (storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180))) and (((storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0) and ((storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) >= 0) and ((storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) <= (storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180))))) / ((storagepoolCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(storagepoolCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)), \"capacity_stat\", \"Used %\", \"__name__\", \".*\")",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code",
+          "format": "time_series"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "capacity_stat"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "pool_id",
+                "Used",
+                "Total",
+                "Used %"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "pool_id": 0,
+              "Used": 1,
+              "Total": 2,
+              "Used %": 3
+            },
+            "renameByName": {
+              "pool_id": "Pool"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "title": "Shared-folder capacity overview",
+      "type": "table",
+      "description": "Current used and total capacity with a 0\u2013100% usage bar for each item. Used = total minus free. Pool and logical shared-folder accounting differ; do not sum shares to infer pool usage. Missing, stale, failed, zero-total, or inconsistent telemetry is omitted, not shown as empty storage.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "Unknown",
+          "decimals": 2,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Shared folder"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Used %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "label_replace(((((sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) - (sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180))) and (((sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0) and ((sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) >= 0) and ((sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) <= (sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180))))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)), \"capacity_stat\", \"Used\", \"__name__\", \".*\") or label_replace((((0 + (sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180))) and (((sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0) and ((sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) >= 0) and ((sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) <= (sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180))))) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)), \"capacity_stat\", \"Total\", \"__name__\", \".*\") or label_replace(((100 * (((sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) - (sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180))) and (((sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0) and ((sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) >= 0) and ((sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"$nas\"}) < 180)) <= (sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180))))) / ((sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"$nas\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"qnap\",instance=\"$nas\"} and (time() - timestamp(up{job=\"qnap\",instance=\"$nas\"}) < 180)) == 1)), \"capacity_stat\", \"Used %\", \"__name__\", \".*\")",
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "editorMode": "code",
+          "format": "time_series"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "capacity_stat"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "share",
+                "Used",
+                "Total",
+                "Used %"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "share": 0,
+              "Used": 1,
+              "Total": 2,
+              "Used %": 3
+            },
+            "renameByName": {
+              "share": "Shared folder"
+            }
+          }
+        }
+      ]
     }
   ],
   "templating": {

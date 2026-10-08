@@ -61,6 +61,17 @@ def network_rate(metric, interface='(eth|bond)[0-9]+([.][0-9]+)?'):
     return observed(f'(8 * rate({selector}[5m])) and {fresh(metric)}')
 
 
+def capacity_summary(capacity_metric, free_metric):
+    total, free = fresh(capacity_metric), fresh(free_metric)
+    # Require a coherent pair. Missing/zero/invalid capacity must not look empty.
+    valid = f'({total} > 0) and ({free} >= 0) and ({free} <= {total})'
+    used = f'({total} - {free}) and ({valid})'
+    values = [('Used', used), ('Total', f'(0 + {total}) and ({valid})'),
+              ('Used %', f'100 * ({used}) / ({total} > 0)')]
+    return ' or '.join(f'label_replace(({observed(expr)}), "capacity_stat", {json.dumps(name)}, "__name__", ".*")'
+                       for name, expr in values)
+
+
 def build():
     panels = []
 
@@ -156,6 +167,41 @@ def build():
                 'failed or stale collection appears as gaps.')
         p['targets'][0]['interval'] = '1m'
         p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'none', 'group': 'A'}
+    # Keep existing panel IDs and insert the current capacity summaries below
+    # the health row, before the historical capacity graphs.
+    for p in panels:
+        if p['gridPos']['y'] >= 4:
+            p['gridPos']['y'] += 7
+    for title, capacity, free, identity, label, x in [
+        ('Pool capacity overview', 'storagepoolCapacity', 'storagepoolFreeSize', 'pool_id', 'Pool', 0),
+        ('Shared-folder capacity overview', 'sharedFolderCapacity', 'sharedFolderFreeSize', 'share', 'Shared folder', 12),
+    ]:
+        p = add(title, capacity_summary(capacity, free), x, 4, 12, 7, 'table', 'bytes',
+                description='Current used and total capacity with a 0–100% usage bar for each item. Used = total minus free. '
+                            'Pool and logical shared-folder accounting differ; do not sum shares to infer pool usage. '
+                            'Missing, stale, failed, zero-total, or inconsistent telemetry is omitted, not shown as empty storage.')
+        # Keep labeled instant frames so the explicit transformations work
+        # independently of Prometheus' frontend table-format conversion.
+        p['targets'][0]['format'] = 'time_series'
+        p['transformations'] = [
+            {'id': 'labelsToFields', 'options': {'mode': 'columns', 'valueLabel': 'capacity_stat'}},
+            {'id': 'merge', 'options': {}},
+            {'id': 'filterFieldsByName', 'options': {'include': {'names': [identity, 'Used', 'Total', 'Used %']}}},
+            {'id': 'organize', 'options': {'indexByName': {identity: 0, 'Used': 1, 'Total': 2, 'Used %': 3},
+                                          'renameByName': {identity: label}}},
+        ]
+        p['fieldConfig']['defaults']['decimals'] = 2
+        p['fieldConfig']['overrides'] = [
+            {'matcher': {'id': 'byName', 'options': label}, 'properties': [{'id': 'unit', 'value': 'string'}]},
+            {'matcher': {'id': 'byName', 'options': 'Used %'}, 'properties': [
+                {'id': 'unit', 'value': 'percent'}, {'id': 'decimals', 'value': 1},
+                {'id': 'min', 'value': 0}, {'id': 'max', 'value': 100},
+                {'id': 'color', 'value': {'mode': 'thresholds'}},
+                {'id': 'thresholds', 'value': {'mode': 'absolute', 'steps': [
+                    {'color': 'green', 'value': None}, {'color': 'yellow', 'value': 80}, {'color': 'red', 'value': 90}]}},
+                {'id': 'custom.cellOptions', 'value': {'type': 'gauge', 'mode': 'basic', 'valueDisplayMode': 'text'}},
+            ]},
+        ]
     return {'uid': 'qnap-overview', 'title': 'QNAP Overview', 'schemaVersion': 39, 'version': 1,
             'editable': False, 'tags': ['homelab', 'infrastructure', 'qnap'], 'timezone': 'browser',
             'refresh': '1m', 'time': {'from': 'now-6h', 'to': 'now'}, 'panels': panels,

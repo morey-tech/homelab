@@ -49,6 +49,14 @@ The [QNAP dashboard](../dashboards/qnap.json) expects an `infrastructure` Promet
 
 For qnap-01, expected shares from the monitoring plan are `storage-media` and `storage-mass` on pool 1, and `storage-nvme` on pool 2. `qnap-02` returned one pool, five shares (`Public`, `storage-mass`, `storage-media`, `time-machine`, and `Container`), one RAID group, and eight disks. The MIB does not expose a share-to-pool association in this table: validate these mappings in QNAP before adding mapping labels. Do not infer pool consumption by summing shares; snapshots, reservations, compression, and thin provisioning can affect the two accounts differently.
 
+## Capacity Overview
+
+Two tables below the summary row, **Pool capacity overview** and **Shared-folder capacity overview**, show one row per pool or shared folder for the selected NAS. Each row has **Used**, **Total**, and a horizontal **Used %** gauge. Byte values scale to GiB/TiB with two decimal places; the bar has a fixed 0–100% scale, turning yellow at 80% and red at 90%. These are display thresholds, not new alerts. Existing capacity history graphs remain below the tables.
+
+Used bytes are total minus free. Each row requires fresh total/free samples and a successful scrape; zero totals, negative free space, and free space exceeding total are omitted rather than rendered as empty storage. A genuinely empty allocation displays 0%, and a full allocation displays 100%. Pool and logical shared-folder capacities remain separate; do not sum shares to infer pool consumption.
+
+The panels use labeled instant queries and Grafana's labels-to-fields/merge transformations to keep each item's total, used bytes, and percentage together. Local validation passed 54 QNAP telemetry scenarios, queries for both NAS devices, Grafana 13.2.3 transformations against live frames, and a non-persisting server dry run. Actual provisioned panel rendering remains a post-GitOps check.
+
 ## CPU Breakdown
 
 The detailed QNAP dashboard's **CPU breakdown** graph shows **Overall (NAS)** plus one line per logical processor. The Homelab Overview CPU card initially shows only **Overall (NAS)**, using Grafana's saved legend selection; Ctrl/Cmd-click a processor in the legend to add its line. A read-only probe returned eight processors, with SNMP indexes `196608` through `196615`. These are SNMP device indexes, not physical-core counts or OS CPU numbers. Each line is independently scaled from 0–100%; the lines are not stacked or summed.
