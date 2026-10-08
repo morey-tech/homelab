@@ -117,6 +117,48 @@ prometheus.scrape "mikrotik" {
 	forward_to      = [prometheus.remote_write.infrastructure.receiver]
 }
 
+local.file "pfsense_auth" {
+	filename       = "/etc/alloy-secrets/pfsense/snmp-auth.yml"
+	is_secret      = true
+	detector       = "poll"
+	poll_frequency = "1m"
+}
+
+local.file "pfsense_module" {
+	filename = "/etc/alloy/pfsense-snmp.yml"
+}
+
+prometheus.exporter.snmp "pfsense" {
+	config = local.file.pfsense_auth.content + "\n" + local.file.pfsense_module.content
+
+	target "pfsense" {
+		address = "192.168.6.1:161"
+		module  = "pfsense"
+		auth    = "pfsense_v3"
+	}
+}
+
+discovery.relabel "pfsense" {
+	targets = prometheus.exporter.snmp.pfsense.targets
+
+	rule {
+		target_label = "job"
+		replacement  = "pfsense"
+	}
+
+	rule {
+		target_label = "instance"
+		replacement  = "pfsense"
+	}
+}
+
+prometheus.scrape "pfsense" {
+	targets         = discovery.relabel.pfsense.output
+	scrape_interval = "60s"
+	scrape_timeout  = "30s"
+	forward_to      = [prometheus.remote_write.infrastructure.receiver]
+}
+
 prometheus.remote_write "infrastructure" {
 	endpoint {
 		url = "http://prometheus.monitoring.svc:9090/api/v1/write"

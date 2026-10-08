@@ -8,6 +8,7 @@ resources:
   - ocp-home-credentials.yaml
   - qnap-credentials.yaml
   - mikrotik-credentials.yaml
+  - pfsense-credentials.yaml
   - storage.yaml
   - grafana.yaml
   - prometheus.yaml
@@ -28,6 +29,7 @@ configMapGenerator:
       - config.alloy
       - qnap-snmp.yml=qnap/snmp.yml
       - mikrotik-snmp.yml=mikrotik/snmp.yml
+      - pfsense-snmp.yml=pfsense/snmp.yml
   - name: blackbox-exporter-config
     files:
       - blackbox.yml

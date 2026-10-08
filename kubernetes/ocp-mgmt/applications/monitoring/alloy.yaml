@@ -80,6 +80,9 @@ spec:
             - name: mikrotik-credentials
               mountPath: /etc/alloy-secrets/mikrotik
               readOnly: true
+            - name: pfsense-credentials
+              mountPath: /etc/alloy-secrets/pfsense
+              readOnly: true
           args:
             - run
             - --server.http.listen-addr=0.0.0.0:12345
@@ -99,3 +102,6 @@ spec:
         - name: mikrotik-credentials
           secret:
             secretName: mikrotik-snmp-v1
+        - name: pfsense-credentials
+          secret:
+            secretName: pfsense-snmp-v1
