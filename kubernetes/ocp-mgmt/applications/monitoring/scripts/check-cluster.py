@@ -63,6 +63,13 @@ def main():
             print(f"{panel['title']}: {len(series)} series; values: " + ', '.join(s['value'][1] for s in series))
             if panel['title'] in ('Node CPU usage', 'Node memory usage'):
                 assert {s['metric']['instance'] for s in series} == config['nodes'], 'Missing node telemetry'
+            if panel['title'].startswith('Node network '):
+                assert {s['metric']['instance'] for s in series} == config['nodes'], 'Missing node network telemetry'
+                devices = {s['metric']['device'] for s in series}
+                if cluster == 'ocp-home':
+                    assert devices == {'bond0'}, 'Expected home bond traffic only'
+                else:
+                    assert all(d.startswith(('en', 'eth')) for d in devices), 'Unexpected non-Ethernet interface'
             if panel['title'] == 'Cluster health':
                 assert series and series[0]['value'][1] != '-1', 'Core monitoring data is unknown'
             if panel['title'].startswith('GPU '):

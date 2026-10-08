@@ -14,6 +14,8 @@ Grafana queries the existing `ocp-mgmt` Thanos Querier through the provisioned *
 
 The **OCP Home** data source queries the remote cluster's existing Thanos HTTPS route. Its [OCP Home Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/ocp-home-overview) uses the same layout and refresh settings for its single node and Intel GPU. Use the **Cluster dashboards** dropdown to switch clusters. OCP Management remains the default data source.
 
+Both cluster dashboards include **Node network receive** and **Node network transmit** graphs below CPU/memory, using existing node-exporter counters. They show five-minute average bits/s with `node · interface` legends. OCP Home shows `bond0` only, excluding its member ports to avoid duplicate traffic. OCP Management shows each physical Ethernet interface (`en*`/`eth*`) separately, including idle ports, and excludes loopback, wireless, OVS, and overlay interfaces. These are interface rates, not unique cluster-wide traffic totals. Missing/stale counters or failed scrapes show gaps; idle counters remain zero. Interface selection is configured in `CLUSTERS` in [the dashboard generator](scripts/build-dashboard.py); no new metric collection is needed.
+
 Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Alloy collects QNAP and MikroTik metrics over SNMPv3 and forwards them to infrastructure Prometheus through its internal remote-write receiver. The **Infrastructure** data source serves the [QNAP Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/qnap-overview) dashboard. Prometheus has no direct scrape jobs or recording rules. Blackbox Exporter defines HTTP and TCP modules but has no callers or targets.
 
 ## OCP Management Metrics

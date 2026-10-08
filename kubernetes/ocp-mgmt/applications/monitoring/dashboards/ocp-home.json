@@ -595,7 +595,7 @@
       "description": "",
       "gridPos": {
         "x": 0,
-        "y": 10,
+        "y": 16,
         "w": 24,
         "h": 3
       },
@@ -678,7 +678,7 @@
       "description": "Existing Intel iGPU exporter on OCP Home; video panel covers video engine 0. Missing/down/stale telemetry displays Unknown.",
       "gridPos": {
         "x": 0,
-        "y": 13,
+        "y": 19,
         "w": 6,
         "h": 3
       },
@@ -743,7 +743,7 @@
       "description": "Existing Intel iGPU exporter on OCP Home; video panel covers video engine 0. Missing/down/stale telemetry displays Unknown.",
       "gridPos": {
         "x": 6,
-        "y": 13,
+        "y": 19,
         "w": 6,
         "h": 3
       },
@@ -808,7 +808,7 @@
       "description": "Existing Intel iGPU exporter on OCP Home; video panel covers video engine 0. Missing/down/stale telemetry displays Unknown.",
       "gridPos": {
         "x": 12,
-        "y": 13,
+        "y": 19,
         "w": 6,
         "h": 3
       },
@@ -873,7 +873,7 @@
       "description": "Existing Intel iGPU exporter on OCP Home; video panel covers video engine 0. Missing/down/stale telemetry displays Unknown.",
       "gridPos": {
         "x": 18,
-        "y": 13,
+        "y": 19,
         "w": 6,
         "h": 3
       },
@@ -938,7 +938,7 @@
       "description": "An empty table means no active warning/critical alerts only if Cluster health has known data. Watchdog and informational alerts are omitted.",
       "gridPos": {
         "x": 0,
-        "y": 16,
+        "y": 22,
         "w": 12,
         "h": 6
       },
@@ -1011,7 +1011,7 @@
       "description": "Available=0 or Degraded/Failing=1. An empty table means no problems only when Cluster health has known data.",
       "gridPos": {
         "x": 12,
-        "y": 16,
+        "y": 22,
         "w": 12,
         "h": 6
       },
@@ -1071,6 +1071,142 @@
         }
       ],
       "id": 15
+    },
+    {
+      "title": "Node network receive",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "Five-minute average bits/s per node and interface. bond0 only; its physical members are excluded to avoid counting traffic twice. Rates handle counter resets and require two samples. Failed scrapes or samples older than 180 seconds show gaps; idle interfaces remain zero. No cluster traffic total is inferred.",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "8 * max by (instance, device) ((rate(node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}[5m]) and (node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"} and (time() - timestamp(node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}) < 180))) and on(job, instance) ((up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"}) < 180)) == 1))",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{instance}} \u00b7 {{device}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 16
+    },
+    {
+      "title": "Node network transmit",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "Five-minute average bits/s per node and interface. bond0 only; its physical members are excluded to avoid counting traffic twice. Rates handle counter resets and require two samples. Failed scrapes or samples older than 180 seconds show gaps; idle interfaces remain zero. No cluster traffic total is inferred.",
+      "gridPos": {
+        "x": 12,
+        "y": 10,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "8 * max by (instance, device) ((rate(node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}[5m]) and (node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"} and (time() - timestamp(node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}) < 180))) and on(job, instance) ((up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"}) < 180)) == 1))",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{instance}} \u00b7 {{device}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 17
     }
   ],
   "templating": {

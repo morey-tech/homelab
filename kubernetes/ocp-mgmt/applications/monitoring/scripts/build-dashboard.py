@@ -6,8 +6,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CLUSTERS = {
-    'ocp-mgmt': {'title': 'OCP Management', 'nodes': ('ms-02', 'ms-03', 'ms-04', 'tr-gpu'), 'gpu': 'nvidia'},
-    'ocp-home': {'title': 'OCP Home', 'nodes': ('ocp-home-01.rh-lab.morey.tech',), 'gpu': 'intel'},
+    'ocp-mgmt': {'title': 'OCP Management', 'nodes': ('ms-02', 'ms-03', 'ms-04', 'tr-gpu'),
+                 'gpu': 'nvidia', 'network_devices': 'en.*|eth.*'},
+    'ocp-home': {'title': 'OCP Home', 'nodes': ('ocp-home-01.rh-lab.morey.tech',),
+                 'gpu': 'intel', 'network_devices': 'bond0'},
 }
 
 
@@ -153,6 +155,24 @@ def build(cluster='ocp-mgmt'):
                      'An empty table means no active warning/critical alerts only if Cluster health has known data. Watchdog and informational alerts are omitted.', ['alertname', 'severity', 'namespace', 'node']),
                table('Operator problems', 'max by (name, condition) (cluster_operator_conditions{condition="Available"} == 0 or cluster_operator_conditions{condition=~"Degraded|Failing"} == 1)', 12,
                      'Available=0 or Degraded/Failing=1. An empty table means no problems only when Cluster health has known data.', ['name', 'condition'])]
+    # Keep existing panel IDs while making room below CPU/memory for traffic.
+    for p in panels:
+        if p['gridPos']['y'] >= 10:
+            p['gridPos']['y'] += 6
+    network_filter = node_filter + ',device=~' + json.dumps(config['network_devices'])
+    network_scope = ('bond0 only; its physical members are excluded to avoid counting traffic twice.'
+                     if cluster == 'ocp-home' else
+                     'Physical Ethernet interfaces (en*/eth*) separately, including idle ports; virtual interfaces are excluded.')
+    for direction, x in [('receive', 0), ('transmit', 12)]:
+        counter = f'node_network_{direction}_bytes_total{{{network_filter}}}'
+        expr = (f'8 * max by (instance, device) ((rate({counter}[5m]) and {fresh(counter)}) '
+                f'and on(job, instance) ({node_up}))')
+        p = panel('Node network ' + direction, expr, x, 10, 12, 6, 'timeseries', 'bps',
+                  description='Five-minute average bits/s per node and interface. ' + network_scope +
+                              ' Rates handle counter resets and require two samples. Failed scrapes or samples older than 180 seconds show gaps; idle interfaces remain zero. No cluster traffic total is inferred.')
+        p['fieldConfig']['defaults'].pop('max')
+        p['targets'][0]['legendFormat'] = '{{instance}} · {{device}}'
+        panels.append(p)
     for i, p in enumerate(panels, 1):
         p['id'] = i
         p['datasource']['uid'] = cluster

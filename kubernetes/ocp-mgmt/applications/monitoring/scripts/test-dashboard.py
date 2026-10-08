@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise dashboard status semantics with synthetic series using promtool."""
+"""Exercise dashboard status and network rates with synthetic series using promtool."""
 import importlib.util
 import json
 import shutil
@@ -80,7 +80,56 @@ def cluster_cases(cluster):
     for p in dashboard['panels']:
         assert p['datasource']['uid'] == cluster
         assert all(t['datasource']['uid'] == cluster for t in p['targets'])
+    cases.extend(network_cases(cluster, dashboard))
     return cases
+
+
+def network_cases(cluster, dashboard):
+    node = module.CLUSTERS[cluster]['nodes'][0]
+    device = 'bond0' if cluster == 'ocp-home' else 'enp2s0f0'
+    labels = f'job="node-exporter",instance="{node}"'
+    up = f'up{{{labels}}}'
+    results = []
+    for direction in ('receive', 'transmit'):
+        p = next(p for p in dashboard['panels'] if p['title'] == 'Node network ' + direction)
+        assert p['fieldConfig']['defaults']['unit'] == 'bps'
+        assert 'max' not in p['fieldConfig']['defaults']
+        assert p['targets'][0]['range'] and not p['targets'][0]['instant']
+        metric = f'node_network_{direction}_bytes_total'
+        counter = f'{metric}{{{labels},device="{device}"}}'
+        healthy = {up: '1+0x5', counter: '0+6000x5'}
+
+        def case(name, series, expected):
+            results.append({'name': direction + ': ' + name, 'interval': '1m',
+                            'input_series': [{'series': key, 'values': value} for key, value in series.items()],
+                            'promql_expr_test': [{'expr': p['targets'][0]['expr'], 'eval_time': '5m',
+                                'exp_samples': [{'labels': f'{{instance="{node}",device="{dev}"}}', 'value': value}
+                                                for dev, value in expected.items()]}]})
+
+        case('convert to bits/s', healthy, {device: 800})
+        case('idle remains zero', {**healthy, counter: '0+0x5'}, {device: 0})
+        case('counter resets', {**healthy, counter: '0 6000 12000 0 6000 12000'}, {device: 600})
+        case('failed scrape', {**healthy, up: '1 1 1 1 1 0'}, {})
+        case('stale source', {**healthy, up: '1 1 1 _ _ _'}, {})
+        case('stale counter despite healthy exporter', {**healthy, counter: '0 6000 12000 _ _ _'}, {})
+        case('absent telemetry', {}, {})
+        case('one sample cannot produce a rate', {**healthy, counter: '_ _ _ _ _ 6000'}, {})
+        excluded = ['lo', 'ovs-system', 'genev_sys_6081', 'veth123', 'wlp90s0']
+        if cluster == 'ocp-home':
+            excluded += ['enp2s0f0', 'enp2s0f1']
+        case('exclude overlapping and unrelated interfaces', {
+            **healthy, **{f'{metric}{{{labels},device="{dev}"}}': '0+600000x5' for dev in excluded}
+        }, {device: 800})
+        other_node = node.replace('.', 'x') if cluster == 'ocp-home' else 'unmanaged-node'
+        case('exclude nodes outside this cluster topology', {
+            **healthy, up.replace(node, other_node): '1+0x5',
+            counter.replace(node, other_node): '0+600000x5'
+        }, {device: 800})
+        if cluster == 'ocp-mgmt':
+            case('keep interface rates separate', {
+                **healthy, f'{metric}{{{labels},device="enp2s0f1"}}': '0+12000x5'
+            }, {device: 800, 'enp2s0f1': 1600})
+    return results
 
 
 cases = []
@@ -96,4 +145,4 @@ with tempfile.TemporaryDirectory(prefix='monitoring-promql-') as directory:
     path = Path(directory) / 'tests.yaml'
     path.write_text(yaml.safe_dump({'rule_files': [], 'evaluation_interval': '1m', 'tests': cases}, sort_keys=False))
     subprocess.run([promtool, 'test', 'rules', str(path)], check=True)
-print(f'{len(cases)} dashboard health scenarios passed; generated JSON matches its source.')
+print(f'{len(cases)} dashboard health/network scenarios passed; generated JSON matches its source.')
