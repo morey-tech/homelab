@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ynab": {
+      "command": "/opt/ynab-mcp/node",
+      "args": ["/opt/ynab-mcp/run-ynab.mjs"],
+      "env": {
+        "YNAB_READ_ONLY": "true"
+      }
+    }
+  }
+}

@@ -19,6 +19,51 @@ Create a workspace and use the preconfigured system model. No external LLM accou
 | Persistence | 50 GiB RWO PVC on `lvms-vg-ai`, local to `tr-gpu` |
 | Updates | One replica, `Recreate`; brief downtime expected |
 | UI access | HTTPS, password-protected single-user mode |
+| YNAB MCP | `ynab-mcp-server` 0.4.1 over stdio; read-only tools enabled |
+
+## YNAB MCP
+
+[ynab-credentials.yaml](ynab-credentials.yaml) reads the **password** field of Bitwarden Login item `1aa42e55-bbd7-4af8-9c28-b4dd00dc69cd` through `bitwarden-login`. Store the [YNAB personal access token](https://api.ynab.com/#personal-access-tokens) in that field; the username is unused. The cluster's External Secrets account must have access to the item, and the Bitwarden serving cache must have synchronized it. Never put the token in Git or the MCP JSON.
+
+External Secrets refreshes `anythingllm-ynab` hourly. The token is projected as a file and read only when the YNAB child process starts; it is not stored in AnythingLLM's environment or persistent MCP configuration. The mount is optional so a missing credential leaves existing chat available, while YNAB fails to start. After token rotation and Secret projection, use **Agent Skills → MCP Servers → Refresh** to restart the MCP process with the new token.
+
+The integration follows [AnythingLLM's Docker MCP setup](https://docs.anythingllm.com/mcp-compatibility/docker). On each pod creation, an init container installs the lockfile-pinned npm dependencies into an `emptyDir` and copies a digest-pinned Node 22 binary. AnythingLLM's existing Node 18 runtime is unchanged. Pod startup requires access to Docker Hub and the npm registry; failed installation blocks startup. No separate MCP Service or Route is needed.
+
+The init container merges the Git-managed `ynab` entry into `storage/plugins/anythingllm_mcp_servers.json` on the PVC. Other MCP servers and settings are preserved; malformed saved JSON stops initialization instead of discarding it. Git controls the `ynab` entry: UI removal or edits are replaced on the next pod creation. ConfigMap content changes update the pod template through Kustomize's generated name.
+
+The initial deployment exposes **14 read-only tools** from the [upstream server](https://github.com/calebl/ynab-mcp-server). Transaction creation, updates, deletion, approvals, and budget changes are excluded. Anyone with access to this single-user AnythingLLM instance can invoke the reading tools through an agent against the token's YNAB account. Optional TypeSafe categorization is not enabled. No default plan is configured: use `ynab_list_plans` and specify `planId` when multiple plans are available.
+
+`YNAB_READ_ONLY` is set to `"true"` in [the managed MCP entry](mcp/anythingllm_mcp_servers.json). To enable all 24 read and write tools later, change it to `"false"` and deploy through GitOps. Version 0.4.1's published stdio entry point ignores that environment variable, so [the launcher](mcp/run-ynab.mjs) calls upstream's exported registry with an explicit `readOnly` option. It uses the upstream tool implementations in both modes.
+
+### Use and verify after GitOps rollout
+
+After review, approved local commits, and a human push, let Argo CD reconcile. Check:
+
+```bash
+oc get externalsecret anythingllm-ynab -n anythingllm
+oc wait --for=condition=Ready externalsecret/anythingllm-ynab -n anythingllm --timeout=120s
+oc rollout status deployment/anythingllm -n anythingllm
+oc logs deployment/anythingllm -n anythingllm -c install-ynab-mcp
+```
+
+Open **Agent Skills → MCP Servers** in AnythingLLM. This starts the configured MCPs; they do not start just because the pod is ready. Confirm `ynab` is running and lists 14 tools, including `ynab_list_plans` and `ynab_get_transactions`, with no write tools such as `ynab_create_transaction` or `ynab_delete_transaction`. Configure the workspace's agent to use the existing Generic OpenAI provider and `local-llm`, then ask `@agent List my YNAB plans` to verify credential access with a read operation. Agent tool selection by the local model still needs this live check. Budget data returned by tools enters chat/model context and may be retained in chat history and logs.
+
+### Local validation
+
+The protocol test uses a fake token, initializes MCP, pings, and lists tools in both modes. It never calls a YNAB tool or API. Use Node 22:
+
+```bash
+node --test kubernetes/ocp-mgmt/applications/anythingllm/scripts/test-mcp-config.cjs
+ynab_test_dir=$(mktemp -d)
+cp kubernetes/ocp-mgmt/applications/anythingllm/mcp/package*.json "$ynab_test_dir/"
+cp kubernetes/ocp-mgmt/applications/anythingllm/mcp/run-ynab.mjs "$ynab_test_dir/"
+npm ci --prefix "$ynab_test_dir" --omit=dev --ignore-scripts --no-audit --no-fund
+node kubernetes/ocp-mgmt/applications/anythingllm/scripts/test-ynab-mcp.mjs "$ynab_test_dir"
+rm -rf "$ynab_test_dir"
+kustomize build kubernetes/ocp-mgmt/applications/anythingllm
+```
+
+Secret synchronization, pod initialization under OpenShift's assigned UID, UI discovery, real YNAB reads, and agent tool use are deferred until GitOps deployment.
 
 ## Deployment and verification
 

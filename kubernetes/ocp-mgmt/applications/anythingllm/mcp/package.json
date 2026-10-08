@@ -1,0 +1,8 @@
+{
+  "name": "anythingllm-ynab-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "ynab-mcp-server": "0.4.1"
+  }
+}

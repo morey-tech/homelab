@@ -22,6 +22,38 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        - name: install-ynab-mcp
+          # Supply Node 22 for YNAB without changing AnythingLLM's Node 18 runtime.
+          image: docker.io/library/node:22.22.3-bookworm-slim@sha256:e21fc383b50d5347dc7a9f1cae45b8f4e2f0d39f7ade28e4eef7d2934522b752
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              cp /etc/anythingllm-mcp/package*.json /opt/ynab-mcp/
+              npm ci --prefix /opt/ynab-mcp --cache /tmp/npm-cache --omit=dev --ignore-scripts --no-audit --no-fund
+              cp /usr/local/bin/node /opt/ynab-mcp/node
+              cp /etc/anythingllm-mcp/run-ynab.mjs /opt/ynab-mcp/run-ynab.mjs
+              node /etc/anythingllm-mcp/configure.cjs /opt/app-root/src/anythingllm/storage /etc/anythingllm-mcp/anythingllm_mcp_servers.json
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          volumeMounts:
+            - name: mcp-config
+              mountPath: /etc/anythingllm-mcp
+              readOnly: true
+            - name: ynab-runtime
+              mountPath: /opt/ynab-mcp
+            - name: data
+              mountPath: /opt/app-root/src/anythingllm
       containers:
         - name: anythingllm
           image: quay.io/rh-aiservices-bu/anythingllm-workbench:1.9.1@sha256:06c7575150900239aa12c619a3e7cea271682ad506c8489243d3fb1e981dd2e9
@@ -73,7 +105,24 @@ spec:
             # The workbench launcher symlinks storage, collector data, and .env here.
             - name: data
               mountPath: /opt/app-root/src/anythingllm
+            - name: ynab-runtime
+              mountPath: /opt/ynab-mcp
+              readOnly: true
+            - name: ynab-token
+              mountPath: /var/run/secrets/ynab
+              readOnly: true
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: anythingllm
+        - name: mcp-config
+          configMap:
+            name: anythingllm-mcp
+        - name: ynab-runtime
+          emptyDir:
+            sizeLimit: 512Mi
+        - name: ynab-token
+          secret:
+            secretName: anythingllm-ynab
+            # A missing YNAB credential disables this MCP, not existing chat.
+            optional: true
