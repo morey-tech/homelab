@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""Validate media pod accounting and telemetry failures with synthetic Prometheus series."""
+import importlib.util
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.dont_write_bytecode = True
+spec = importlib.util.spec_from_file_location('media', ROOT / 'scripts/build-media-dashboard.py')
+media = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(media)
+
+
+def main():
+    dashboard = media.build()
+    assert dashboard == json.loads((ROOT / 'dashboards/media.json').read_text()), 'Regenerate media JSON'
+    panels = dashboard['panels']
+    assert len(panels) == 32 and len({p['id'] for p in panels}) == 32
+    occupied = set()
+    for panel in panels:
+        g = panel['gridPos']
+        cells = {(x, y) for x in range(g['x'], g['x']+g['w']) for y in range(g['y'], g['y']+g['h'])}
+        assert not cells & occupied, 'Panels overlap'
+        occupied |= cells
+        assert panel['datasource']['uid'] == 'ocp-home'
+    assert sum('Shared host network' in p['title'] for p in panels) == 1
+    assert not any(p['title'] in ('Plex network', 'SABnzbd network') for p in panels)
+
+    pod = 'sonarr-abcde-12345'
+    pod_labels = f'namespace="sonarr",pod="{pod}"'
+    cadvisor = f'job="kubelet",instance="node:10250",metrics_path="/metrics/cadvisor",{pod_labels}'
+    ksm = f'job="kube-state-metrics",endpoint="https-main",{pod_labels}'
+    cpu = media.resource_query('sonarr', 'container_cpu_usage_seconds_total', True)
+    memory = media.resource_query('sonarr', 'container_memory_working_set_bytes')
+    network = media.network_query('sonarr', 'receive')
+    cadvisor_up = 'up{job="kubelet",instance="node:10250",metrics_path="/metrics/cadvisor"}'
+    ksm_up = 'up{job="kube-state-metrics",endpoint="https-main"}'
+    phase = f'kube_pod_status_phase{{{ksm},phase="Running"}}'
+    info = f'kube_pod_info{{{ksm},host_network="false"}}'
+    base = {cadvisor_up: '1x6', ksm_up: '1x6', phase: '1x6', info: '1x6'}
+    for container, cores, size in [('main', 1, 100), ('sidecar', 0.5, 50), ('POD', 10, 1000), ('', 10, 1000)]:
+        labels = cadvisor + f',container="{container}"'
+        base[f'container_cpu_usage_seconds_total{{{labels}}}'] = f'0+{cores*60}x6'
+        base[f'container_memory_working_set_bytes{{{labels}}}'] = f'{size}x6'
+    # Duplicate scrape series must not double application resource usage.
+    for metric, values in [('container_cpu_usage_seconds_total', '0+60x6'), ('container_memory_working_set_bytes', '100x6')]:
+        base[f'{metric}{{{cadvisor},container="main",replica="other"}}'] = values
+    for interface, container, rate in [('eth0', 'POD', 100), ('net1', 'POD', 50), ('lo', 'POD', 1000), ('eth0', 'main', 1000)]:
+        base[f'container_network_receive_bytes_total{{{cadvisor},container="{container}",interface="{interface}"}}'] = f'0+{rate*60}x6'
+    base[f'container_network_receive_bytes_total{{{cadvisor},container="POD",interface="eth0",replica="other"}}'] = '0+6000x6'
+
+    cases = []
+
+    def case(name, updates=None, remove=(), expected=(1.5, 150, 1200)):
+        series = {k: v for k, v in base.items() if not any(s in k for s in remove)}
+        series.update(updates or {})
+        cases.append({'name': name, 'interval': '1m',
+                      'input_series': [{'series': k, 'values': v} for k, v in series.items()],
+                      'promql_expr_test': [{'expr': expr, 'eval_time': '6m', 'exp_samples': [] if value is None else [
+                          {'labels': '{'+pod_labels+'}', 'value': value}]} for expr, value in zip((cpu, memory, network), expected)]})
+
+    case('sum application containers; deduplicate scrapes; sandbox network; exclude loopback; convert bytes to bits')
+    case('failed pod is excluded', {phase: '0x6'}, expected=(None, None, None))
+    case('failed cAdvisor scrape cannot display cached data', {cadvisor_up: '0x6'}, expected=(None, None, None))
+    case('failed KSM scrape cannot confirm running pods', {ksm_up: '0x6'}, expected=(None, None, None))
+    case('missing running phase', remove=('kube_pod_status_phase',), expected=(None, None, None))
+    case('stale running phase', {phase: '1x2 _x4'}, expected=(None, None, None))
+    case('stale scrape health', {cadvisor_up: '1x2 _x4'}, expected=(None, None, None))
+    case('missing network identity', remove=('kube_pod_info',), expected=(1.5, 150, None))
+    case('host networking must never be attributed to an app',
+         {f'kube_pod_info{{{ksm},host_network="true"}}': '1x6'}, remove=('kube_pod_info',), expected=(1.5, 150, None))
+    case('absent app telemetry is not zero', remove=('container_',), expected=(None, None, None))
+    case('idle network remains zero', {k: '100x6' for k in base if k.startswith('container_network')}, expected=(1.5, 150, 0))
+    case('stale counters in range window cannot imply activity',
+         {k: '0+60x2 _x4' for k in base if k.startswith('container_')}, expected=(None, None, None))
+    case('CPU counter reset handled before aggregation',
+         # The range includes minutes 2..6: 180 seconds of corrected increase
+         # over 240 seconds per container, or 0.75 cores each.
+         {k: '0 60 120 180 0 60 120' for k in base if k.startswith('container_cpu')}, expected=(1.5, 150, 1200))
+    case('wrong namespace cannot supply app telemetry',
+         {k.replace('namespace="sonarr"', 'namespace="radarr"'): v for k, v in base.items() if k.startswith('container_')},
+         remove=('container_',), expected=(None, None, None))
+
+    promtool = os.environ.get('PROMTOOL') or shutil.which('promtool')
+    if not promtool:
+        raise SystemExit('Install promtool or set PROMTOOL to its executable path')
+    with tempfile.TemporaryDirectory(prefix='media-dashboard-test-') as tmp:
+        path = Path(tmp) / 'tests.yaml'
+        path.write_text(yaml.safe_dump({'rule_files': [], 'evaluation_interval': '1m', 'tests': cases}))
+        subprocess.run([promtool, 'test', 'rules', str(path)], check=True)
+    print(f'{len(cases)} synthetic metric cases and dashboard layout passed')
+
+
+if __name__ == '__main__':
+    main()

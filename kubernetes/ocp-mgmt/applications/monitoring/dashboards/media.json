@@ -1,0 +1,2184 @@
+{
+  "uid": "media-services",
+  "title": "Media Services",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "homelab",
+    "ocp-home",
+    "media"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Plex CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) ((rate(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"plex\",pod=~\"plex-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}[5m]) and (container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"plex\",pod=~\"plex-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"plex\",pod=~\"plex-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"plex\",pod=~\"plex-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"plex\",pod=~\"plex-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:cores",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Plex memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) (((container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"plex\",pod=~\"plex-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"plex\",pod=~\"plex-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"plex\",pod=~\"plex-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"plex\",pod=~\"plex-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "SABnzbd CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) ((rate(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sabnzbd\",pod=~\"sabnzbd-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}[5m]) and (container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sabnzbd\",pod=~\"sabnzbd-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sabnzbd\",pod=~\"sabnzbd-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sabnzbd\",pod=~\"sabnzbd-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sabnzbd\",pod=~\"sabnzbd-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:cores",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "SABnzbd memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
+      "gridPos": {
+        "x": 8,
+        "y": 9,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) (((container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sabnzbd\",pod=~\"sabnzbd-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sabnzbd\",pod=~\"sabnzbd-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sabnzbd\",pod=~\"sabnzbd-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sabnzbd\",pod=~\"sabnzbd-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Shared host network \u2014 bond0 (all workloads)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "Shared context for Plex and SABnzbd on OCP Home. Whole-host bond0 receive/transmit traffic includes all workloads; it is not attributable to either app. Plex uses host networking, so its pod counters cannot isolate Plex traffic. Physical bond members are excluded. Five-minute average bits/s; unavailable or stale telemetry appears as gaps.",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 18
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * max by (instance, device) ((rate(node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}[5m]) and (node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"} and (time() - timestamp(node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}) < 180))) and on(job, instance) ((up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"}) < 180)) == 1))",
+          "legendFormat": "{{instance}} \u00b7 Receive",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * max by (instance, device) ((rate(node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}[5m]) and (node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"} and (time() - timestamp(node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}) < 180))) and on(job, instance) ((up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"}) < 180)) == 1))",
+          "legendFormat": "{{instance}} \u00b7 Transmit",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Sonarr CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) ((rate(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}[5m]) and (container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:cores",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Sonarr memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
+      "gridPos": {
+        "x": 4,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) (((container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Sonarr network",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
+      "gridPos": {
+        "x": 8,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Receive",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"sonarr\",pod=~\"sonarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Transmit",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Radarr CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) ((rate(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}[5m]) and (container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:cores",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Radarr memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
+      "gridPos": {
+        "x": 16,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) (((container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Radarr network",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
+      "gridPos": {
+        "x": 20,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Receive",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"radarr\",pod=~\"radarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Transmit",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Bazarr CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) ((rate(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}[5m]) and (container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:cores",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "title": "Bazarr memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
+      "gridPos": {
+        "x": 4,
+        "y": 23,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) (((container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "Bazarr network",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
+      "gridPos": {
+        "x": 8,
+        "y": 23,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Receive",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"bazarr\",pod=~\"bazarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Transmit",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "title": "Lidarr CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
+      "gridPos": {
+        "x": 12,
+        "y": 23,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) ((rate(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}[5m]) and (container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:cores",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "title": "Lidarr memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
+      "gridPos": {
+        "x": 16,
+        "y": 23,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) (((container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "title": "Lidarr network",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
+      "gridPos": {
+        "x": 20,
+        "y": 23,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Receive",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"lidarr\",pod=~\"lidarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Transmit",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "title": "Overseerr CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) ((rate(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}[5m]) and (container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:cores",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "title": "Overseerr memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
+      "gridPos": {
+        "x": 4,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) (((container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 20,
+      "title": "Overseerr network",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
+      "gridPos": {
+        "x": 8,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Receive",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"overseerr\",pod=~\"overseerr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Transmit",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 21,
+      "title": "Tautulli CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
+      "gridPos": {
+        "x": 12,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) ((rate(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}[5m]) and (container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:cores",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 22,
+      "title": "Tautulli memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
+      "gridPos": {
+        "x": 16,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) (((container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "title": "Tautulli network",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
+      "gridPos": {
+        "x": 20,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Receive",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"tautulli\",pod=~\"tautulli-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Transmit",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "title": "Profilarr CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) ((rate(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}[5m]) and (container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:cores",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 25,
+      "title": "Profilarr memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
+      "gridPos": {
+        "x": 4,
+        "y": 33,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) (((container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "title": "Profilarr network",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
+      "gridPos": {
+        "x": 8,
+        "y": 33,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Receive",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"profilarr\",pod=~\"profilarr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Transmit",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 27,
+      "title": "Maintainerr CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
+      "gridPos": {
+        "x": 12,
+        "y": 33,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) ((rate(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}[5m]) and (container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:cores",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 28,
+      "title": "Maintainerr memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
+      "gridPos": {
+        "x": 16,
+        "y": 33,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) (((container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 29,
+      "title": "Maintainerr network",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
+      "gridPos": {
+        "x": 20,
+        "y": 33,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Receive",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"maintainerr\",pod=~\"maintainerr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Transmit",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 30,
+      "title": "Cleanuparr CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) ((rate(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}[5m]) and (container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_cpu_usage_seconds_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:cores",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 31,
+      "title": "Cleanuparr memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
+      "gridPos": {
+        "x": 4,
+        "y": 38,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "sum by (namespace, pod) ((max by (namespace, pod, container) (((container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",container!=\"\",container!=\"POD\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)))",
+          "legendFormat": "{{pod}}",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 32,
+      "title": "Cleanuparr network",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ocp-home"
+      },
+      "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
+      "gridPos": {
+        "x": 8,
+        "y": 38,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Receive",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "expr": "8 * sum by (namespace, pod) ((max by (namespace, pod, interface) ((rate(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}[5m]) and (container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"} and (time() - timestamp(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",container=\"POD\",interface!=\"lo\",interface!=\"\"}) < 180))) and on(job, instance, metrics_path) ((up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"} and (time() - timestamp(up{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\"}) < 180)) == 1))) and on(namespace, pod) ((max by (namespace, pod) ((kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"} and (time() - timestamp(kube_pod_status_phase{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",phase=\"Running\"}) < 180)) == 1)) and on() (max((up{job=\"kube-state-metrics\",endpoint=\"https-main\"} and (time() - timestamp(up{job=\"kube-state-metrics\",endpoint=\"https-main\"}) < 180))) == 1)) and on(namespace, pod) ((kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"} and (time() - timestamp(kube_pod_info{job=\"kube-state-metrics\",endpoint=\"https-main\",namespace=\"cleanuparr\",pod=~\"cleanuparr-[a-z0-9]+-[a-z0-9]+\",host_network=\"false\"}) < 180)) == 1))",
+          "legendFormat": "{{pod}} \u00b7 Transmit",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Homelab dashboards",
+      "type": "dashboards",
+      "tags": [
+        "homelab"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ]
+}

@@ -57,6 +57,10 @@ The data source connects to `https://thanos-querier-openshift-monitoring.apps.oc
 
 The dashboard shows readiness for one node, CPU/memory, operator health, warning/critical alerts, and existing Intel iGPU render usage, video-engine-0 usage, frequency, and GPU-only power. Existing alerts are displayed without filtering out cluster problems. If the remote monitoring data disappears, status becomes Unknown or the panel reports a query error; zero metrics must not be interpreted as healthy. Cluster history remains subject to OCP Home's retention and availability.
 
+## Media Services
+
+The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/media-services) uses the existing OCP Home data source. Plex and SABnzbd have large CPU and memory graphs beside one shared whole-host `bond0` receive/transmit graph. Smaller CPU, memory, and pod network graphs cover Sonarr, Radarr, Bazarr, Lidarr, Overseerr, Tautulli, Profilarr, Maintainerr, and Cleanuparr. [Metric semantics and validation](media/README.md) explain the host-network limitation and available pod statistics.
+
 ## MikroTik Switch Metrics
 
 Alloy collects RouterOS SNMPv3 metrics from `crs317-a` (`192.168.1.15`) and `crs317-b` (`192.168.1.16`) using SHA1/AES and Bitwarden item `b174080a-c3ec-4e7b-9afa-b4dd000e3bbd`. The [MikroTik Switches](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/mikrotik-overview) dashboard has a switch dropdown, per-port and bond traffic, link status/speed, errors/discards, CPU, memory, temperatures, fans, and power status. [Collection details](mikrotik/README.md) cover credentials, metric semantics, and validation.
@@ -102,7 +106,7 @@ NetworkPolicy permits router access to Grafana on port 3000. All other pod ingre
 
 Configuration and dashboard ConfigMaps have Kustomize-generated hashes, so changes roll the associated Deployment through GitOps. The injected service-CA ConfigMap has a stable name and the rotation procedure above applies to it. Images use explicit release tags and are covered by the repository's Renovate configuration.
 
-The OCP Management and pfSense dashboards each have a separate ConfigMap to stay below Kubernetes' apply-annotation size limit. Grafana projects these alongside the other dashboards into the same provisioned directory.
+The OCP Management, pfSense, and Media Services dashboards each have a separate ConfigMap to stay below Kubernetes' apply-annotation size limit. Grafana projects these alongside the other dashboards into the same provisioned directory.
 
 ## Validation and Rollout
 

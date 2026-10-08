@@ -51,3 +51,6 @@ configMapGenerator:
   - name: grafana-pfsense-dashboard
     files:
       - dashboards/pfsense.json
+  - name: grafana-media-dashboard
+    files:
+      - dashboards/media.json
