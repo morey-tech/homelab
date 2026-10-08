@@ -42,4 +42,5 @@ configMapGenerator:
       - dashboards/ocp-mgmt.json
       - dashboards/ocp-home.json
       - dashboards/qnap.json
+      - dashboards/mikrotik.json
       - dashboards/overview.json

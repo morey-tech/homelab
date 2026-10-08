@@ -1,0 +1,1412 @@
+{
+  "uid": "mikrotik-overview",
+  "title": "MikroTik Switches",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "homelab",
+    "infrastructure",
+    "mikrotik"
+  ],
+  "timezone": "browser",
+  "refresh": "1m",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "SNMP collection",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Collection success only, not overall switch health. Telemetry older than 180 seconds is unknown.",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Unknown",
+                  "color": "gray"
+                },
+                "0": {
+                  "text": "Failed",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Collecting",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) or on() vector(-1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "SNMP uptime",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "SNMP agent uptime in seconds; TimeTicks are converted by the collector.",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((sysUpTime{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(sysUpTime{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "RouterOS",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((mtxrLicVersion{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(mtxrLicVersion{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{mtxrLicVersion}}",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "name"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Model",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((mtxrBoardName{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(mtxrBoardName{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{mtxrBoardName}}",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "name"
+      }
+    },
+    {
+      "id": 5,
+      "title": "CPU usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Approximately one-minute non-idle percentage per logical processor. SNMP indexes identify processors.",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((hrProcessorLoad{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(hrProcessorLoad{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "Processor {{hrDeviceIndex}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Memory usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Used/total allocation units for main memory only; excludes the system disk.",
+      "gridPos": {
+        "x": 8,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * (hrStorageUsed{job=\"mikrotik\",instance=\"$switch\",hrStorageDescr=\"main memory\"} and (time() - timestamp(hrStorageUsed{job=\"mikrotik\",instance=\"$switch\",hrStorageDescr=\"main memory\"}) < 180)) / ((hrStorageSize{job=\"mikrotik\",instance=\"$switch\",hrStorageDescr=\"main memory\"} and (time() - timestamp(hrStorageSize{job=\"mikrotik\",instance=\"$switch\",hrStorageDescr=\"main memory\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "Used",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Temperature",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "RouterOS health gauges explicitly reporting Celsius, including CPU and SFP temperature sensors.",
+      "gridPos": {
+        "x": 16,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((mtxrGaugeValue{job=\"mikrotik\",instance=\"$switch\",mtxrGaugeUnit=\"1\"} and (time() - timestamp(mtxrGaugeValue{job=\"mikrotik\",instance=\"$switch\",mtxrGaugeUnit=\"1\"}) < 180))) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{mtxrGaugeName}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Port receive",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s per interface. Physical Ethernet ports and bonds are separate; do not sum them or the two switches as unique traffic. Bridge and loopback counters are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((8 * rate(ifHCInOctets{job=\"mikrotik\",instance=\"$switch\"}[5m])) and (ifHCInOctets{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifHCInOctets{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{ifName}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Port transmit",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s per interface. Physical Ethernet ports and bonds are separate; do not sum them or the two switches as unique traffic. Bridge and loopback counters are excluded.",
+      "gridPos": {
+        "x": 12,
+        "y": 11,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((8 * rate(ifHCOutOctets{job=\"mikrotik\",instance=\"$switch\"}[5m])) and (ifHCOutOctets{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifHCOutOctets{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{ifName}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Bond receive",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s per interface. Physical Ethernet ports and bonds are separate; do not sum them or the two switches as unique traffic. Bridge and loopback counters are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((8 * rate(ifHCInOctets{job=\"mikrotik\",instance=\"$switch\"}[5m])) and (ifHCInOctets{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifHCInOctets{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 161)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{ifName}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Bond transmit",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s per interface. Physical Ethernet ports and bonds are separate; do not sum them or the two switches as unique traffic. Bridge and loopback counters are excluded.",
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((8 * rate(ifHCOutOctets{job=\"mikrotik\",instance=\"$switch\"}[5m])) and (ifHCOutOctets{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifHCOutOctets{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 161)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{ifName}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Port link status",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "1": {
+                        "text": "Up",
+                        "color": "green"
+                      },
+                      "2": {
+                        "text": "Down",
+                        "color": "yellow"
+                      },
+                      "3": {
+                        "text": "Testing",
+                        "color": "yellow"
+                      },
+                      "4": {
+                        "text": "Unknown",
+                        "color": "gray"
+                      },
+                      "5": {
+                        "text": "Dormant",
+                        "color": "yellow"
+                      },
+                      "6": {
+                        "text": "Not present",
+                        "color": "gray"
+                      },
+                      "7": {
+                        "text": "Lower layer down",
+                        "color": "yellow"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((ifOperStatus{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifOperStatus{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m",
+          "format": "table"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "ifName",
+                "ifIndex",
+                "Value"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Port link speed",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Interface-reported link speed. ifHighSpeed uses millions of bits per second; zero means unknown/unavailable.",
+      "gridPos": {
+        "x": 12,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((1000000 * (ifHighSpeed{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifHighSpeed{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{ifName}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "Port receive utilization",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Per-direction traffic divided by current port speed. Zero or missing link speed shows gaps.",
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "100 * ((((8 * rate(ifHCInOctets{job=\"mikrotik\",instance=\"$switch\"}[5m])) and (ifHCInOctets{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifHCInOctets{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)) / (1000000 * ((ifHighSpeed{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifHighSpeed{job=\"mikrotik\",instance=\"$switch\"}) < 180)) > 0))",
+          "legendFormat": "{{ifName}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "title": "Port transmit utilization",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Per-direction traffic divided by current port speed. Zero or missing link speed shows gaps.",
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "100 * ((((8 * rate(ifHCOutOctets{job=\"mikrotik\",instance=\"$switch\"}[5m])) and (ifHCOutOctets{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifHCOutOctets{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)) / (1000000 * ((ifHighSpeed{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifHighSpeed{job=\"mikrotik\",instance=\"$switch\"}) < 180)) > 0))",
+          "legendFormat": "{{ifName}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "title": "Port errors",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average packets/s from interface error/discard counters. Counter resets are handled by rate().",
+      "gridPos": {
+        "x": 0,
+        "y": 39,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((rate(ifInErrors{job=\"mikrotik\",instance=\"$switch\"}[5m])) and (ifInErrors{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifInErrors{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{ifName}} RX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((rate(ifOutErrors{job=\"mikrotik\",instance=\"$switch\"}[5m])) and (ifOutErrors{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifOutErrors{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{ifName}} TX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "title": "Port discards",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average packets/s from interface error/discard counters. Counter resets are handled by rate().",
+      "gridPos": {
+        "x": 12,
+        "y": 39,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((rate(ifInDiscards{job=\"mikrotik\",instance=\"$switch\"}[5m])) and (ifInDiscards{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifInDiscards{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{ifName}} RX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((rate(ifOutDiscards{job=\"mikrotik\",instance=\"$switch\"}[5m])) and (ifOutDiscards{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifOutDiscards{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{ifName}} TX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "title": "Fan speed",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 46,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "rotrpm",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((mtxrGaugeValue{job=\"mikrotik\",instance=\"$switch\",mtxrGaugeUnit=\"2\"} and (time() - timestamp(mtxrGaugeValue{job=\"mikrotik\",instance=\"$switch\",mtxrGaugeUnit=\"2\"}) < 180))) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{mtxrGaugeName}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "title": "Power supplies",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Legacy RouterOS PSU-OK booleans: 1=true, 0=false. Not OK can mean an unpowered supply; it is not proof of hardware failure.",
+      "gridPos": {
+        "x": 12,
+        "y": 46,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Not OK",
+                  "color": "yellow"
+                },
+                "1": {
+                  "text": "OK",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((mtxrHlPowerSupplyState{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(mtxrHlPowerSupplyState{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "Primary",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((mtxrHlBackupPowerSupplyState{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(mtxrHlBackupPowerSupplyState{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "Backup",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 20,
+      "title": "Interface descriptions",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 53,
+        "w": 24,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((ifAlias{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(ifAlias{job=\"mikrotik\",instance=\"$switch\"}) < 180))) and on(job, instance) ((up{job=\"mikrotik\",instance=\"$switch\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m",
+          "format": "table"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "ifName",
+                "ifAlias"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "switch",
+        "label": "Switch",
+        "type": "custom",
+        "query": "crs317-a,crs317-b",
+        "current": {
+          "text": "crs317-a",
+          "value": "crs317-a"
+        },
+        "options": [
+          {
+            "text": "crs317-a",
+            "value": "crs317-a",
+            "selected": true
+          },
+          {
+            "text": "crs317-b",
+            "value": "crs317-b",
+            "selected": false
+          }
+        ],
+        "multi": false,
+        "includeAll": false,
+        "hide": 0,
+        "skipUrlSync": false
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Homelab dashboards",
+      "type": "dashboards",
+      "tags": [
+        "homelab"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ]
+}

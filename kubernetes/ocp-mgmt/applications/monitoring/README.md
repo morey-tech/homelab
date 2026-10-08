@@ -14,7 +14,7 @@ Grafana queries the existing `ocp-mgmt` Thanos Querier through the provisioned *
 
 The **OCP Home** data source queries the remote cluster's existing Thanos HTTPS route. Its [OCP Home Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/ocp-home-overview) uses the same layout and refresh settings for its single node and Intel GPU. Use the **Cluster dashboards** dropdown to switch clusters. OCP Management remains the default data source.
 
-Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Alloy collects QNAP metrics over SNMPv3 and forwards them to infrastructure Prometheus through its internal remote-write receiver. The **Infrastructure** data source serves the [QNAP Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/qnap-overview) dashboard. Prometheus has no direct scrape jobs or recording rules. Blackbox Exporter defines HTTP and TCP modules but has no callers or targets.
+Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Alloy collects QNAP and MikroTik metrics over SNMPv3 and forwards them to infrastructure Prometheus through its internal remote-write receiver. The **Infrastructure** data source serves the [QNAP Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/qnap-overview) dashboard. Prometheus has no direct scrape jobs or recording rules. Blackbox Exporter defines HTTP and TCP modules but has no callers or targets.
 
 ## OCP Management Metrics
 
@@ -54,6 +54,10 @@ The data source connects to `https://thanos-querier-openshift-monitoring.apps.oc
 **Deploy in two stages:** first deploy the OCP Home identity and put its generated token into the Bitwarden item, then deploy the management data source and dashboard. Allow two minutes for the management Bitwarden cache to sync before deploying the consumer. A missing credential can block Grafana startup; an empty password produces authentication errors. The source README includes exact token retrieval, verification, and rotation steps. No token is transferred or resource applied manually by this repository change.
 
 The dashboard shows readiness for one node, CPU/memory, operator health, warning/critical alerts, and existing Intel iGPU render usage, video-engine-0 usage, frequency, and GPU-only power. Existing alerts are displayed without filtering out cluster problems. If the remote monitoring data disappears, status becomes Unknown or the panel reports a query error; zero metrics must not be interpreted as healthy. Cluster history remains subject to OCP Home's retention and availability.
+
+## MikroTik Switch Metrics
+
+Alloy collects RouterOS SNMPv3 metrics from `crs317-a` (`192.168.1.15`) and `crs317-b` (`192.168.1.16`) using SHA1/AES and Bitwarden item `b174080a-c3ec-4e7b-9afa-b4dd000e3bbd`. The [MikroTik Switches](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/mikrotik-overview) dashboard has a switch dropdown, per-port and bond traffic, link status/speed, errors/discards, CPU, memory, temperatures, fans, and power status. [Collection details](mikrotik/README.md) cover credentials, metric semantics, and validation.
 
 ## QNAP Metrics
 
@@ -153,6 +157,6 @@ Expected results are empty `activeTargets` and `droppedTargets` arrays (scraping
 
 ## Later Collection Phases
 
-Add other NAS devices, reachability targets, network devices, Loki, and log collection in separate reviewed changes. The two QNAP NAS devices are currently the only infrastructure collection targets.
+Add other NAS devices, reachability targets, network devices, Loki, and log collection in separate reviewed changes. Infrastructure collection currently covers the two QNAP NAS devices and two MikroTik RouterOS switches.
 
 References: [Grafana configuration](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/), [Prometheus retention](https://prometheus.io/docs/prometheus/latest/storage/), [Alloy health endpoints](https://grafana.com/docs/alloy/latest/reference/http/).
