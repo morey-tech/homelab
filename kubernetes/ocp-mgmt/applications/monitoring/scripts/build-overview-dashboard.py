@@ -49,8 +49,19 @@ def build():
         if uid == 'infrastructure':
             p['title'] = 'qnap-01 CPU breakdown'
             p['targets'] = qnap.cpu_targets()
-            p['description'] = qnap.CPU_DESCRIPTION
+            p['description'] = ('Overall CPU usage is shown by default. Processor series remain available '
+                                'in the legend; Ctrl/Cmd-click a processor to add it to the graph. '
+                                + qnap.CPU_DESCRIPTION)
             p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'none', 'group': 'A'}
+            # Use Grafana's saved legend selection so legend clicks can toggle
+            # processors back on (a plain hideFrom override would keep hiding them).
+            p['fieldConfig']['overrides'].append({
+                '__systemRef': 'hideSeriesFrom',
+                'matcher': {'id': 'byNames', 'options': {
+                    'mode': 'exclude', 'names': ['Overall (NAS)'],
+                    'prefix': 'All except:', 'readOnly': True}},
+                'properties': [{'id': 'custom.hideFrom', 'value': {
+                    'viz': True, 'legend': False, 'tooltip': False}}]})
         p = graph(uid, memory, title + ' memory usage', 8, y, legend=legend)
         if uid == 'infrastructure':
             p['title'] = 'qnap-01 memory breakdown'

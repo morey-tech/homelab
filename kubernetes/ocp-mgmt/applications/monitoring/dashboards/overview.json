@@ -455,7 +455,7 @@
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Overall utilization is the NAS-reported value. Each processor line is its approximately one-minute non-idle percentage from HOST-RESOURCES-MIB. Processor labels are SNMP device indexes, not physical-core or operating-system CPU numbers. The two sources may use different averaging windows. Missing, failed, or stale telemetry appears as gaps. User/system/I/O-wait counters and load averages were not returned by the SNMP probe.",
+      "description": "Overall CPU usage is shown by default. Processor series remain available in the legend; Ctrl/Cmd-click a processor to add it to the graph. Overall utilization is the NAS-reported value. Each processor line is its approximately one-minute non-idle percentage from HOST-RESOURCES-MIB. Processor labels are SNMP device indexes, not physical-core or operating-system CPU numbers. The two sources may use different averaging windows. Missing, failed, or stale telemetry appears as gaps. User/system/I/O-wait counters and load averages were not returned by the SNMP probe.",
       "gridPos": {
         "x": 0,
         "y": 14,
@@ -520,7 +520,32 @@
             }
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "Overall (NAS)"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "viz": true,
+                  "legend": false,
+                  "tooltip": false
+                }
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "legend": {

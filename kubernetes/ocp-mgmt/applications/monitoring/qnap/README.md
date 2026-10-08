@@ -51,7 +51,7 @@ For qnap-01, expected shares from the monitoring plan are `storage-media` and `s
 
 ## CPU Breakdown
 
-The Homelab Overview CPU card and the detailed QNAP dashboard's **CPU breakdown** graph show **Overall (NAS)** plus one line per logical processor. A read-only probe returned eight processors, with SNMP indexes `196608` through `196615`. These are SNMP device indexes, not physical-core counts or OS CPU numbers. Each line is independently scaled from 0–100%; the lines are not stacked or summed.
+The detailed QNAP dashboard's **CPU breakdown** graph shows **Overall (NAS)** plus one line per logical processor. The Homelab Overview CPU card initially shows only **Overall (NAS)**, using Grafana's saved legend selection; Ctrl/Cmd-click a processor in the legend to add its line. A read-only probe returned eight processors, with SNMP indexes `196608` through `196615`. These are SNMP device indexes, not physical-core counts or OS CPU numbers. Each line is independently scaled from 0–100%; the lines are not stacked or summed.
 
 The [HOST-RESOURCES-MIB](https://www.net-snmp.org/docs/mibs/HOST-RESOURCES-MIB.txt) defines `hrProcessorLoad` (`1.3.6.1.2.1.25.3.3.1.2`) as a processor's non-idle percentage averaged over approximately one minute. This is a gauge, so no `rate()` is applied. The QNAP overall value may use a different sampling window and need not equal the mean of the processor lines at a given time. All series require successful, fresh SNMP collection; an idle processor remains a valid zero, while missing or stale processors show gaps.
 
