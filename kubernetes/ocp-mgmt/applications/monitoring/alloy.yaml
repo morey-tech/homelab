@@ -77,6 +77,9 @@ spec:
             - name: qnap-credentials
               mountPath: /etc/alloy-secrets/qnap
               readOnly: true
+            - name: mikrotik-credentials
+              mountPath: /etc/alloy-secrets/mikrotik
+              readOnly: true
           args:
             - run
             - --server.http.listen-addr=0.0.0.0:12345
@@ -93,3 +96,6 @@ spec:
         - name: qnap-credentials
           secret:
             secretName: qnap-snmp-v1
+        - name: mikrotik-credentials
+          secret:
+            secretName: mikrotik-snmp-v1

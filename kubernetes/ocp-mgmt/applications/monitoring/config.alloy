@@ -62,6 +62,61 @@ prometheus.scrape "qnap" {
 	forward_to      = [prometheus.remote_write.infrastructure.receiver]
 }
 
+local.file "mikrotik_auth" {
+	filename       = "/etc/alloy-secrets/mikrotik/snmp-auth.yml"
+	is_secret      = true
+	detector       = "poll"
+	poll_frequency = "1m"
+}
+
+local.file "mikrotik_module" {
+	filename = "/etc/alloy/mikrotik-snmp.yml"
+}
+
+prometheus.exporter.snmp "mikrotik" {
+	config = local.file.mikrotik_auth.content + "\n" + local.file.mikrotik_module.content
+
+	target "crs317_a" {
+		address = "192.168.1.15"
+		module  = "mikrotik_routeros"
+		auth    = "mikrotik_v3"
+		labels  = {switch = "crs317-a"}
+	}
+
+	target "crs317_b" {
+		address = "192.168.1.16"
+		module  = "mikrotik_routeros"
+		auth    = "mikrotik_v3"
+		labels  = {switch = "crs317-b"}
+	}
+}
+
+discovery.relabel "mikrotik" {
+	targets = prometheus.exporter.snmp.mikrotik.targets
+
+	rule {
+		target_label = "job"
+		replacement  = "mikrotik"
+	}
+
+	rule {
+		source_labels = ["switch"]
+		target_label  = "instance"
+	}
+
+	rule {
+		action = "labeldrop"
+		regex  = "switch"
+	}
+}
+
+prometheus.scrape "mikrotik" {
+	targets         = discovery.relabel.mikrotik.output
+	scrape_interval = "60s"
+	scrape_timeout  = "30s"
+	forward_to      = [prometheus.remote_write.infrastructure.receiver]
+}
+
 prometheus.remote_write "infrastructure" {
 	endpoint {
 		url = "http://prometheus.monitoring.svc:9090/api/v1/write"
