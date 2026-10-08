@@ -1456,6 +1456,294 @@
         }
       },
       "id": 20
+    },
+    {
+      "id": 21,
+      "title": "GPU history \u2014 tr-gpu",
+      "type": "row",
+      "collapsed": true,
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 24,
+        "h": 1
+      },
+      "panels": [
+        {
+          "title": "GPU utilization history",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "description": "Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.",
+          "gridPos": {
+            "x": 0,
+            "y": 29,
+            "w": 12,
+            "h": 7
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "((DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_GPU_UTIL{hostname=\"tr-gpu\",gpu=\"0\"}) < 180))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+              "instant": false,
+              "range": true,
+              "legendFormat": "tr-gpu \u00b7 GPU 0",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ocp-mgmt"
+              },
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "noValue": "Unknown",
+              "decimals": 1,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 100,
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 22
+        },
+        {
+          "title": "GPU memory used history",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "description": "Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.",
+          "gridPos": {
+            "x": 12,
+            "y": 29,
+            "w": 12,
+            "h": 7
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "(100 * (DCGM_FI_DEV_FB_USED{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_FB_USED{hostname=\"tr-gpu\",gpu=\"0\"}) < 180)) / ((DCGM_FI_DEV_FB_USED{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_FB_USED{hostname=\"tr-gpu\",gpu=\"0\"}) < 180)) + (DCGM_FI_DEV_FB_FREE{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_FB_FREE{hostname=\"tr-gpu\",gpu=\"0\"}) < 180)))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+              "instant": false,
+              "range": true,
+              "legendFormat": "tr-gpu \u00b7 GPU 0",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ocp-mgmt"
+              },
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "noValue": "Unknown",
+              "decimals": 1,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 100,
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 23
+        },
+        {
+          "title": "GPU temperature history",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "description": "Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.",
+          "gridPos": {
+            "x": 0,
+            "y": 36,
+            "w": 12,
+            "h": 7
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "((DCGM_FI_DEV_GPU_TEMP{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_GPU_TEMP{hostname=\"tr-gpu\",gpu=\"0\"}) < 180))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+              "instant": false,
+              "range": true,
+              "legendFormat": "tr-gpu \u00b7 GPU 0",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ocp-mgmt"
+              },
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "noValue": "Unknown",
+              "decimals": 1,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 24
+        },
+        {
+          "title": "GPU power history",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-mgmt"
+          },
+          "description": "Existing DCGM telemetry for RTX 3090 GPU 0 on tr-gpu. Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.",
+          "gridPos": {
+            "x": 12,
+            "y": 36,
+            "w": 12,
+            "h": 7
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "((DCGM_FI_DEV_POWER_USAGE{hostname=\"tr-gpu\",gpu=\"0\"} and (time() - timestamp(DCGM_FI_DEV_POWER_USAGE{hostname=\"tr-gpu\",gpu=\"0\"}) < 180))) and on() ((max((up{job=\"nvidia-dcgm-exporter\"} and (time() - timestamp(up{job=\"nvidia-dcgm-exporter\"}) < 180))) == 1))",
+              "instant": false,
+              "range": true,
+              "legendFormat": "tr-gpu \u00b7 GPU 0",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ocp-mgmt"
+              },
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "watt",
+              "noValue": "Unknown",
+              "decimals": 1,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 25
+        }
+      ]
     }
   ],
   "templating": {

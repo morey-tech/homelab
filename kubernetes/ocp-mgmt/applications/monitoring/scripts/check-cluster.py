@@ -19,6 +19,14 @@ CLUSTERS = {
 }
 
 
+def query_panels(panels):
+    """Include graphs nested inside collapsed rows, which have no own query."""
+    for panel in panels:
+        if panel.get('targets'):
+            yield panel
+        yield from query_panels(panel.get('panels', []))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cluster', choices=[*CLUSTERS, 'all'], default='all')
@@ -55,7 +63,7 @@ def main():
         print(f'{cluster}: authenticated, TLS-verified Thanos data source healthy')
         dashboard = request(f'/api/dashboards/uid/{cluster}-overview')
         assert dashboard['meta']['provisioned'], 'Dashboard is not provisioned'
-        for panel in dashboard['dashboard']['panels']:
+        for panel in query_panels(dashboard['dashboard']['panels']):
             query = urllib.parse.urlencode({'query': panel['targets'][0]['expr']})
             result = request(f'/api/datasources/proxy/uid/{cluster}/api/v1/query?' + query)
             assert result['status'] == 'success', panel['title']
@@ -75,7 +83,7 @@ def main():
             if panel['title'].startswith('GPU '):
                 assert series, 'GPU telemetry is missing'
         now = int(time.time() * 1000)
-        for panel in dashboard['dashboard']['panels']:
+        for panel in query_panels(dashboard['dashboard']['panels']):
             target = dict(panel['targets'][0], intervalMs=30000, maxDataPoints=720)
             result = request('/api/ds/query', {'from': str(now - 21600000), 'to': str(now), 'queries': [target]})['results']['A']
             assert not result.get('error'), (panel['title'], result.get('error'))

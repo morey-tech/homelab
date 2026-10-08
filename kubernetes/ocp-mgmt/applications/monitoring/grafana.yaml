@@ -131,4 +131,6 @@ spec:
               - configMap:
                   name: grafana-dashboards
               - configMap:
+                  name: grafana-ocp-mgmt-dashboard
+              - configMap:
                   name: grafana-pfsense-dashboard

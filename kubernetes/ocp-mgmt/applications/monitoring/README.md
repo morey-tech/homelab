@@ -10,7 +10,7 @@ Regenerate the shared overview after changing a source dashboard's utilization q
 python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/build-overview-dashboard.py
 ```
 
-Grafana queries the existing `ocp-mgmt` Thanos Querier through the provisioned **OCP Management** data source. The [OCP Management Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/ocp-mgmt-overview) dashboard shows node readiness, CPU and memory, operator health, active alerts, and the existing DCGM metrics for the RTX 3090 on `tr-gpu`. It refreshes every 30 seconds with a six-hour default window; append `?kiosk` for a wall display.
+Grafana queries the existing `ocp-mgmt` Thanos Querier through the provisioned **OCP Management** data source. The [OCP Management Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/ocp-mgmt-overview) dashboard shows node readiness, CPU and memory, operator health, active alerts, and the existing DCGM metrics for the RTX 3090 on `tr-gpu`. Expand **GPU history — tr-gpu** at the bottom to see utilization, memory-used percentage, temperature, and power graphs in a two-by-two layout. This section is collapsed by default and supplements the four current-value cards. The graphs use the dashboard time range and show gaps for missing/down/stale telemetry; temperature and power scales adjust to the data. It refreshes every 30 seconds with a six-hour default window; append `?kiosk` for a wall display.
 
 The **OCP Home** data source queries the remote cluster's existing Thanos HTTPS route. Its [OCP Home Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/ocp-home-overview) uses the same layout and refresh settings for its single node and Intel GPU. Use the **Cluster dashboards** dropdown to switch clusters. OCP Management remains the default data source.
 
@@ -101,6 +101,8 @@ Store the password in Bitwarden. This secret bootstraps the database only: editi
 NetworkPolicy permits router access to Grafana on port 3000. All other pod ingress is denied, including access from other pods in this namespace. Backend Services are ClusterIP only and can be inspected by an authorized administrator using port forwarding. No backend is exposed through a Route. Egress is unchanged; a later collection change must add explicit ingress rules between the intended clients and backends.
 
 Configuration and dashboard ConfigMaps have Kustomize-generated hashes, so changes roll the associated Deployment through GitOps. The injected service-CA ConfigMap has a stable name and the rotation procedure above applies to it. Images use explicit release tags and are covered by the repository's Renovate configuration.
+
+The OCP Management and pfSense dashboards each have a separate ConfigMap to stay below Kubernetes' apply-annotation size limit. Grafana projects these alongside the other dashboards into the same provisioned directory.
 
 ## Validation and Rollout
 

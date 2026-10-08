@@ -41,11 +41,13 @@ configMapGenerator:
       - dashboard-provider.yaml
   - name: grafana-dashboards
     files:
-      - dashboards/ocp-mgmt.json
       - dashboards/ocp-home.json
       - dashboards/qnap.json
       - dashboards/mikrotik.json
       - dashboards/overview.json
+  - name: grafana-ocp-mgmt-dashboard
+    files:
+      - dashboards/ocp-mgmt.json
   - name: grafana-pfsense-dashboard
     files:
       - dashboards/pfsense.json

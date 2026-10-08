@@ -178,6 +178,20 @@ def build(cluster='ocp-mgmt'):
         p['datasource']['uid'] = cluster
         for query in p['targets']:
             query['datasource']['uid'] = cluster
+    if cluster == 'ocp-mgmt':
+        row_y = max(p['gridPos']['y'] + p['gridPos']['h'] for p in panels)
+        row = {'id': len(panels) + 1, 'title': 'GPU history — tr-gpu', 'type': 'row',
+               'collapsed': True, 'gridPos': {'x': 0, 'y': row_y, 'w': 24, 'h': 1}, 'panels': []}
+        for i, (title, expr, unit) in enumerate(gpu_panels):
+            p = panel(title + ' history', guarded(expr, gpu_up), (i % 2) * 12,
+                      row_y + 1 + (i // 2) * 7, 12, 7, 'timeseries', unit,
+                      description=gpu_description + ' Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.')
+            p['id'] = row['id'] + i + 1
+            p['targets'][0]['legendFormat'] = 'tr-gpu · GPU 0'
+            if unit != 'percent':
+                p['fieldConfig']['defaults'].pop('max')
+            row['panels'].append(p)
+        panels.append(row)
     return {'uid': cluster + '-overview', 'title': config['title'] + ' Overview', 'tags': ['homelab', 'openshift', cluster],
             'schemaVersion': 39, 'version': 1, 'editable': False, 'timezone': 'browser', 'refresh': '30s',
             'time': {'from': 'now-6h', 'to': 'now'}, 'panels': panels, 'templating': {'list': []},

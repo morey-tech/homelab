@@ -78,6 +78,19 @@ def cluster_cases(cluster):
              {f'kube_node_status_condition{{condition="Ready",status="true",node="{wrong_node}"}}': 1},
              remove=('kube_node_status_condition',), expected_ready=0)
     for p in dashboard['panels']:
+        if p['type'] == 'row':
+            assert cluster == 'ocp-mgmt' and p['collapsed'] is True
+            assert len(p['panels']) == 4
+            for graph in p['panels']:
+                original = next(s for s in dashboard['panels'] if s['title'] == graph['title'].removesuffix(' history'))
+                assert graph['type'] == 'timeseries'
+                assert graph['targets'][0]['expr'] == original['targets'][0]['expr']
+                assert graph['targets'][0]['range'] and not graph['targets'][0]['instant']
+                assert graph['datasource']['uid'] == graph['targets'][0]['datasource']['uid'] == cluster
+                defaults = graph['fieldConfig']['defaults']
+                assert defaults['unit'] == original['fieldConfig']['defaults']['unit']
+                assert (defaults.get('max') == 100) if defaults['unit'] == 'percent' else ('max' not in defaults)
+            continue
         assert p['datasource']['uid'] == cluster
         assert all(t['datasource']['uid'] == cluster for t in p['targets'])
     cases.extend(network_cases(cluster, dashboard))
