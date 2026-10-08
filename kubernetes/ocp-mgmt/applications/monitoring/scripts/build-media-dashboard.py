@@ -87,7 +87,7 @@ def build():
                   x+2*w, y, w, h, 'bps', base + 'Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.')
 
     for i, (app, name) in enumerate(PRIMARY):
-        service(app, name, 0, i*9, 8, 9)
+        service(app, name, 0, i*5, 8, 5)
     spec = importlib.util.spec_from_file_location('cluster_dashboard', ROOT / 'scripts/build-dashboard.py')
     cluster = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(cluster)
@@ -95,12 +95,12 @@ def build():
     queries = [(next(p for p in host['panels'] if p['title'] == 'Node network ' + direction)['targets'][0]['expr'],
                 '{{instance}} · ' + label)
                for direction, label in [('receive', 'Receive'), ('transmit', 'Transmit')]]
-    graph('Shared host network — bond0 (all workloads)', queries, 16, 0, 8, 18, 'bps',
+    graph('Shared host network — bond0 (all workloads)', queries, 16, 0, 8, 10, 'bps',
           'Shared context for Plex and SABnzbd on OCP Home. Whole-host bond0 receive/transmit traffic includes all workloads; '
           'it is not attributable to either app. Plex uses host networking, so its pod counters cannot isolate Plex traffic. '
           'Physical bond members are excluded. Five-minute average bits/s; unavailable or stale telemetry appears as gaps.')
     for i, (app, name) in enumerate(SECONDARY):
-        service(app, name, (i % 2)*12, 18+(i//2)*5, 4, 5)
+        service(app, name, (i % 2)*12, 10+(i//2)*5, 4, 5)
     return {'uid': 'media-services', 'title': 'Media Services', 'schemaVersion': 39, 'version': 1,
             'editable': False, 'tags': ['homelab', 'ocp-home', 'media'], 'timezone': 'browser',
             'refresh': '30s', 'time': {'from': 'now-6h', 'to': 'now'}, 'panels': panels,

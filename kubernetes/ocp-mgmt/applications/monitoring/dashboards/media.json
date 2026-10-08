@@ -29,7 +29,7 @@
         "x": 0,
         "y": 0,
         "w": 8,
-        "h": 9
+        "h": 5
       },
       "targets": [
         {
@@ -92,7 +92,7 @@
         "x": 8,
         "y": 0,
         "w": 8,
-        "h": 9
+        "h": 5
       },
       "targets": [
         {
@@ -153,9 +153,9 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 0,
-        "y": 9,
+        "y": 5,
         "w": 8,
-        "h": 9
+        "h": 5
       },
       "targets": [
         {
@@ -216,9 +216,9 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 8,
-        "y": 9,
+        "y": 5,
         "w": 8,
-        "h": 9
+        "h": 5
       },
       "targets": [
         {
@@ -281,7 +281,7 @@
         "x": 16,
         "y": 0,
         "w": 8,
-        "h": 18
+        "h": 10
       },
       "targets": [
         {
@@ -355,7 +355,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 0,
-        "y": 18,
+        "y": 10,
         "w": 4,
         "h": 5
       },
@@ -418,7 +418,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 4,
-        "y": 18,
+        "y": 10,
         "w": 4,
         "h": 5
       },
@@ -481,7 +481,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 8,
-        "y": 18,
+        "y": 10,
         "w": 4,
         "h": 5
       },
@@ -557,7 +557,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 12,
-        "y": 18,
+        "y": 10,
         "w": 4,
         "h": 5
       },
@@ -620,7 +620,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 16,
-        "y": 18,
+        "y": 10,
         "w": 4,
         "h": 5
       },
@@ -683,7 +683,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 20,
-        "y": 18,
+        "y": 10,
         "w": 4,
         "h": 5
       },
@@ -759,7 +759,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 0,
-        "y": 23,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -822,7 +822,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 4,
-        "y": 23,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -885,7 +885,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 8,
-        "y": 23,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -961,7 +961,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 12,
-        "y": 23,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -1024,7 +1024,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 16,
-        "y": 23,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -1087,7 +1087,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 20,
-        "y": 23,
+        "y": 15,
         "w": 4,
         "h": 5
       },
@@ -1163,7 +1163,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 0,
-        "y": 28,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -1226,7 +1226,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 4,
-        "y": 28,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -1289,7 +1289,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 8,
-        "y": 28,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -1365,7 +1365,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 12,
-        "y": 28,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -1428,7 +1428,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 16,
-        "y": 28,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -1491,7 +1491,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 20,
-        "y": 28,
+        "y": 20,
         "w": 4,
         "h": 5
       },
@@ -1567,7 +1567,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 0,
-        "y": 33,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1630,7 +1630,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 4,
-        "y": 33,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1693,7 +1693,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 8,
-        "y": 33,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1769,7 +1769,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 12,
-        "y": 33,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1832,7 +1832,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 16,
-        "y": 33,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1895,7 +1895,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 20,
-        "y": 33,
+        "y": 25,
         "w": 4,
         "h": 5
       },
@@ -1971,7 +1971,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute CPU usage in cores (1 = one fully utilized core), summed across application containers. Sandbox and parent cgroup metrics are excluded.",
       "gridPos": {
         "x": 0,
-        "y": 38,
+        "y": 30,
         "w": 4,
         "h": 5
       },
@@ -2034,7 +2034,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
         "x": 4,
-        "y": 38,
+        "y": 30,
         "w": 4,
         "h": 5
       },
@@ -2097,7 +2097,7 @@
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.",
       "gridPos": {
         "x": 8,
-        "y": 38,
+        "y": 30,
         "w": 4,
         "h": 5
       },
