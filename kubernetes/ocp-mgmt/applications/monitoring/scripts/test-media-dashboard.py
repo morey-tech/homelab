@@ -30,7 +30,7 @@ def main():
     assert {p['title'] for p in rows[0]['panels']} == {
         name + suffix for _, name in media.SECONDARY for suffix in (' CPU', ' memory', ' network')}
     panels = list(checker.query_panels(dashboard['panels']))
-    assert len(panels) == 40 and len({p['id'] for p in panels}) == 40
+    assert len(panels) == 41 and len({p['id'] for p in panels}) == 41
     assert rows[0]['id'] not in {p['id'] for p in panels}
     occupied = set()
     for panel in panels:
@@ -40,14 +40,22 @@ def main():
         occupied |= cells
         assert panel['datasource']['uid'] == ('infrastructure' if panel['title'] in (
             'Plex stream history', 'Direct Play', 'Direct Stream', 'Transcoding', 'SAB remaining',
-            'Plex bandwidth estimates', 'Media share used', 'SAB download speed') else 'ocp-home')
+            'Plex bandwidth estimates', 'Media share used', 'SAB download speed', 'Episodes', 'Movies') else 'ocp-home')
     assert max(p['gridPos']['y'] + p['gridPos']['h'] for p in dashboard['panels'] if p['type'] != 'row') == 19
     assert not any(p['title'] in ('Total', 'WAN est.', 'WAN traffic — pfSense and Plex') for p in panels)
     assert all(0 <= p['gridPos']['x'] < p['gridPos']['x'] + p['gridPos']['w'] <= 24 for p in panels)
     header = rows[0]['gridPos']
     assert not occupied & {(x, header['y']) for x in range(24)}
-    assert sum('Shared host network' in p['title'] for p in panels) == 1
+    assert sum('Shared host network' in p['title'] for p in panels) == 0
     assert not any(p['title'] in ('Plex network', 'SABnzbd network') for p in panels)
+
+    by_title = {p['title']: p for p in panels}
+    assert by_title['Plex bandwidth estimates']['gridPos'] == {'x': 16, 'y': 5, 'w': 8, 'h': 7}
+    for title in ('Plex CPU', 'Plex memory'):
+        assert by_title[title]['gridPos']['y'] == 5 and by_title[title]['gridPos']['h'] == 7
+    for title, x in [('Episodes', 16), ('Movies', 20)]:
+        assert by_title[title]['gridPos'] == {'x': x, 'y': 12, 'w': 4, 'h': 7}
+    assert not {5, 33} & {p['id'] for p in panels}, 'Retired panel IDs must remain unused'
 
     pod = 'sonarr-abcde-12345'
     pod_labels = f'namespace="sonarr",pod="{pod}"'
@@ -170,6 +178,37 @@ def main():
         cases.append({'name': 'Media share '+name, 'interval': '1m', 'input_series': series,
                       'promql_expr_test': [{'expr': media.media_share_query(), 'eval_time': '6m',
                           'exp_samples': [] if expected is None else [{'labels': '{'+labels+'}', 'value': expected}]}]})
+
+    # Inventory uses a slower scrape cadence than activity metrics. Select the
+    # correct library hierarchy and bound reuse of cached data to 15 minutes.
+    for kind, metric, section, library_type in [('episodes', 'children', '2', 'show'),
+                                               ('movies', 'items', '1', 'movie')]:
+        labels = f'job="tautulli_libraries",instance="plex",section_id="{section}",type="{library_type}"'
+        count = f'tautulli_library_{metric}{{{labels}}}'
+        active = f'tautulli_library_active{{{labels}}}'
+        health = 'up{job="tautulli_libraries",instance="plex"}'
+        for name, values, active_values, up_values, eval_time, expected in [
+            ('sparse cached count', '123 _x4 125', '1 _x4 1', '1 _x4 1', '11m', 125),
+            ('empty library', '0', '1', '1', '6m', 0),
+            ('latest scrape failed', '123', '1', '1 _x4 0', '6m', None),
+            ('missing count', '_', '1', '1', '6m', None),
+            ('missing health', '123', '1', '_', '6m', None),
+            ('inactive library', '123', '0', '1', '6m', None),
+            ('missing active status', '123', '_', '1', '6m', None),
+            ('expired count', '123', '1 _x14 1', '1 _x14 1', '16m', None),
+            ('expired health', '123 _x14 125', '1 _x14 1', '1', '16m', None),
+            ('invalid count', 'NaN', '1', '1', '6m', None),
+            ('negative count', '-1', '1', '1', '6m', None),
+        ]:
+            series = [{'series': count, 'values': values}, {'series': active, 'values': active_values},
+                      {'series': health, 'values': up_values}]
+            for decoy in [count.replace(f'section_id="{section}"', 'section_id="99"'),
+                          count.replace(f'type="{library_type}"', 'type="artist"'),
+                          count.replace('_'+metric+'{', '_parents{')]:
+                series.append({'series': decoy, 'values': '9999x16'})
+            cases.append({'name': kind+' '+name, 'interval': '1m', 'input_series': series,
+                          'promql_expr_test': [{'expr': media.library_query(kind), 'eval_time': eval_time,
+                              'exp_samples': [] if expected is None else [{'labels': count, 'value': expected}]}]})
 
     promtool = os.environ.get('PROMTOOL') or shutil.which('promtool')
     if not promtool:

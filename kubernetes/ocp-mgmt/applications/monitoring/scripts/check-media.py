@@ -25,7 +25,7 @@ def query_panels(panels):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--local', action='store_true', help='Query local JSON without requiring dashboard deployment')
-    parser.add_argument('--skip-tautulli', action='store_true', help='Defer undeployed stream queries (requires --local)')
+    parser.add_argument('--skip-tautulli', action='store_true', help='Defer undeployed Tautulli queries (requires --local)')
     parser.add_argument('--skip-sabnzbd', action='store_true', help='Defer undeployed SAB queries (requires --local)')
     args = parser.parse_args()
     if args.skip_sabnzbd and not args.local:
@@ -55,7 +55,7 @@ def main():
     now = int(time.time() * 1000)
     for panel in query_panels(dashboard['panels']):
         targets = [t for t in panel['targets'] if not (
-            (args.skip_tautulli and 'job="tautulli"' in t['expr']) or
+            (args.skip_tautulli and any(f'job="{job}"' in t['expr'] for job in ('tautulli', 'tautulli_libraries'))) or
             (args.skip_sabnzbd and 'job="sabnzbd"' in t['expr']))]
         if len(targets) != len(panel['targets']):
             print(f"{panel['title']}: Requested collector queries deferred until GitOps deployment")

@@ -329,7 +329,7 @@
         "x": 16,
         "y": 0,
         "w": 8,
-        "h": 7
+        "h": 5
       },
       "targets": [
         {
@@ -581,29 +581,29 @@
       }
     },
     {
-      "id": 5,
-      "title": "Shared host network \u2014 bond0 (all workloads)",
+      "id": 40,
+      "title": "Plex bandwidth estimates",
       "type": "timeseries",
       "datasource": {
         "type": "prometheus",
-        "uid": "ocp-home"
+        "uid": "infrastructure"
       },
-      "description": "Shared context for Plex and SABnzbd on OCP Home. Whole-host bond0 receive/transmit traffic includes all workloads; it is not attributable to either app. Plex uses host networking, so its pod counters cannot isolate Plex traffic. Physical bond members are excluded. Five-minute average bits/s; unavailable or stale telemetry appears as gaps.",
+      "description": "Tautulli estimates of bandwidth reserved for remote (WAN) and local (LAN) Plex sessions. Not measured interface traffic. Polled every 30 seconds; kbps converted to Mbps. Missing, failed, or stale collection appears as gaps.",
       "gridPos": {
         "x": 16,
-        "y": 7,
+        "y": 5,
         "w": 8,
-        "h": 6
+        "h": 7
       },
       "targets": [
         {
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "ocp-home"
+            "uid": "infrastructure"
           },
-          "expr": "8 * max by (instance, device) ((rate(node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}[5m]) and (node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"} and (time() - timestamp(node_network_receive_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}) < 180))) and on(job, instance) ((up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"}) < 180)) == 1))",
-          "legendFormat": "{{instance}} \u00b7 Receive",
+          "expr": "(((tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)) / 1000",
+          "legendFormat": "WAN estimate",
           "instant": false,
           "range": true,
           "interval": "30s",
@@ -613,10 +613,10 @@
           "refId": "B",
           "datasource": {
             "type": "prometheus",
-            "uid": "ocp-home"
+            "uid": "infrastructure"
           },
-          "expr": "8 * max by (instance, device) ((rate(node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}[5m]) and (node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"} and (time() - timestamp(node_network_transmit_bytes_total{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\",device=~\"bond0\"}) < 180))) and on(job, instance) ((up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"} and (time() - timestamp(up{job=\"node-exporter\",instance=~\"ocp\\\\-home\\\\-01\\\\.rh\\\\-lab\\\\.morey\\\\.tech\"}) < 180)) == 1))",
-          "legendFormat": "{{instance}} \u00b7 Transmit",
+          "expr": "(((tautulli_lan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_lan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)) / 1000",
+          "legendFormat": "LAN estimate",
           "instant": false,
           "range": true,
           "interval": "30s",
@@ -625,7 +625,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "bps",
+          "unit": "suffix:Mbps",
           "min": 0,
           "noValue": "Unknown",
           "color": {
@@ -640,9 +640,41 @@
               "mode": "none",
               "group": "A"
             }
-          }
+          },
+          "decimals": 2
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "WAN estimate"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#B877D9"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "LAN estimate"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#56D9D1"
+                }
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "legend": {
@@ -849,19 +881,19 @@
       }
     },
     {
-      "id": 40,
-      "title": "Plex bandwidth estimates",
-      "type": "timeseries",
+      "id": 43,
+      "title": "Episodes",
+      "type": "stat",
       "datasource": {
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Tautulli estimates of bandwidth reserved for remote (WAN) and local (LAN) Plex sessions. Not measured interface traffic. Polled every 30 seconds; kbps converted to Mbps. Missing, failed, or stale collection appears as gaps.",
+      "description": "Tautulli cached library inventory: episode count from TV Shows (section 2), including specials. Library items, not plays or files. Polled every five minutes; Tautulli cache refresh may add delay. Latest sample is retained for up to 15 minutes. Inactive libraries, failed collection, or missing/expired inventory show Unknown.",
       "gridPos": {
         "x": 16,
-        "y": 13,
-        "w": 8,
-        "h": 6
+        "y": 12,
+        "w": 4,
+        "h": 7
       },
       "targets": [
         {
@@ -870,90 +902,96 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(((tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)) / 1000",
-          "legendFormat": "WAN estimate",
-          "instant": false,
-          "range": true,
-          "interval": "30s",
-          "editorMode": "code"
-        },
-        {
-          "refId": "B",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "infrastructure"
-          },
-          "expr": "(((tautulli_lan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_lan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)) / 1000",
-          "legendFormat": "LAN estimate",
-          "instant": false,
-          "range": true,
-          "interval": "30s",
+          "expr": "((last_over_time(tautulli_library_children{job=\"tautulli_libraries\",instance=\"plex\",section_id=\"2\",type=\"show\"}[15m]) >= 0) and (last_over_time(tautulli_library_active{job=\"tautulli_libraries\",instance=\"plex\",section_id=\"2\",type=\"show\"}[15m]) == 1)) and on(job, instance) (last_over_time(up{job=\"tautulli_libraries\",instance=\"plex\"}[15m]) == 1)",
+          "legendFormat": "Episodes",
+          "instant": true,
+          "range": false,
+          "interval": "5m",
           "editorMode": "code"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "suffix:Mbps",
+          "unit": "short",
           "min": 0,
           "noValue": "Unknown",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#73BF69"
           },
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 10,
-            "spanNulls": false,
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            }
-          },
-          "decimals": 2
+          "decimals": 0
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "WAN estimate"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "#B877D9"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "LAN estimate"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "#56D9D1"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "options": {
-        "legend": {
-          "showLegend": true,
-          "placement": "bottom",
-          "displayMode": "list"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 44,
+      "title": "Movies",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Tautulli cached library inventory: movie count from Movies (section 1). Library items, not plays or files. Polled every five minutes; Tautulli cache refresh may add delay. Latest sample is retained for up to 15 minutes. Inactive libraries, failed collection, or missing/expired inventory show Unknown.",
+      "gridPos": {
+        "x": 20,
+        "y": 12,
+        "w": 4,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((last_over_time(tautulli_library_items{job=\"tautulli_libraries\",instance=\"plex\",section_id=\"1\",type=\"movie\"}[15m]) >= 0) and (last_over_time(tautulli_library_active{job=\"tautulli_libraries\",instance=\"plex\",section_id=\"1\",type=\"movie\"}[15m]) == 1)) and on(job, instance) (last_over_time(up{job=\"tautulli_libraries\",instance=\"plex\"}[15m]) == 1)",
+          "legendFormat": "Movies",
+          "instant": true,
+          "range": false,
+          "interval": "5m",
+          "editorMode": "code"
         }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#B877D9"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
       }
     },
     {

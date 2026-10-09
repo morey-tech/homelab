@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Build pod resource graphs for the OCP Home media services."""
 import json
-import importlib.util
 from pathlib import Path
 import sys
 
@@ -71,6 +70,20 @@ def bandwidth_query(scope):
     return f'({stream_query(f"tautulli_{scope}_bandwidth_kilobits_per_second")}) / 1000'
 
 
+def library_query(kind):
+    metric, section, library_type = {
+        'episodes': ('children', '2', 'show'),
+        'movies': ('items', '1', 'movie'),
+    }[kind]
+    labels = f'job="tautulli_libraries",instance="plex",section_id="{section}",type="{library_type}"'
+    # Inventory is scraped every five minutes; retain its latest cached sample
+    # for at most 15 minutes, including across Prometheus's default lookback.
+    count = f'last_over_time(tautulli_library_{metric}{{{labels}}}[15m])'
+    active = f'last_over_time(tautulli_library_active{{{labels}}}[15m])'
+    up = 'last_over_time(up{job="tautulli_libraries",instance="plex"}[15m])'
+    return f'(({count} >= 0) and ({active} == 1)) and on(job, instance) ({up} == 1)'
+
+
 def sab_query(metric, scale=1):
     selector = f'{metric}{{job="sabnzbd",instance="sabnzbd"}}'
     up = fresh('up{job="sabnzbd",instance="sabnzbd"}')
@@ -88,9 +101,11 @@ def media_share_query():
 
 def build():
     panels = []
+    next_id = 1
 
     def graph(title, queries, x, y, w, h, unit, description, datasource=DS):
-        p = {'id': len(panels) + 1, 'title': title, 'type': 'timeseries', 'datasource': datasource,
+        nonlocal next_id
+        p = {'id': next_id, 'title': title, 'type': 'timeseries', 'datasource': datasource,
              'description': description, 'gridPos': {'x': x, 'y': y, 'w': w, 'h': h},
              'targets': [{'refId': chr(65+i), 'datasource': datasource, 'expr': expr, 'legendFormat': legend,
                           'instant': False, 'range': True, 'interval': '30s', 'editorMode': 'code'}
@@ -103,6 +118,7 @@ def build():
         if title in RESOURCE_COLORS:
             p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': RESOURCE_COLORS[title]}
         panels.append(p)
+        next_id += 1
         return p
 
     def service(app, name, x, y, w, h):
@@ -118,17 +134,7 @@ def build():
 
     for i, (app, name) in enumerate(PRIMARY):
         service(app, name, 0, 5+i*7, 8 if app == 'plex' else 5, 7)
-    spec = importlib.util.spec_from_file_location('cluster_dashboard', ROOT / 'scripts/build-dashboard.py')
-    cluster = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(cluster)
-    host = cluster.build('ocp-home')
-    queries = [(next(p for p in host['panels'] if p['title'] == 'Node network ' + direction)['targets'][0]['expr'],
-                '{{instance}} · ' + label)
-               for direction, label in [('receive', 'Receive'), ('transmit', 'Transmit')]]
-    graph('Shared host network — bond0 (all workloads)', queries, 16, 7, 8, 6, 'bps',
-          'Shared context for Plex and SABnzbd on OCP Home. Whole-host bond0 receive/transmit traffic includes all workloads; '
-          'it is not attributable to either app. Plex uses host networking, so its pod counters cannot isolate Plex traffic. '
-          'Physical bond members are excluded. Five-minute average bits/s; unavailable or stale telemetry appears as gaps.')
+    next_id = 6  # Retire shared-host panel ID 5; preserve secondary panel IDs.
     for i, (app, name) in enumerate(SECONDARY):
         service(app, name, (i % 2)*12, 19+(i//2)*5, 4, 5)
     description = ('Current Plex sessions reported by Tautulli, including paused sessions. '
@@ -149,7 +155,7 @@ def build():
     p = graph('Plex stream history', [(stream_query(metric), label) for metric, label in [
         ('tautulli_streams_direct_play', 'Direct Play'),
         ('tautulli_streams_direct_stream', 'Direct Stream'), ('tautulli_streams_transcode', 'Transcoding')]],
-        16, 0, 8, 7, 'short', description, INFRA)
+        16, 0, 8, 5, 'short', description, INFRA)
     p['id'] = 34
     p['fieldConfig']['defaults']['decimals'] = 0
     p['fieldConfig']['defaults']['custom']['lineInterpolation'] = 'stepAfter'
@@ -179,7 +185,7 @@ def build():
                                        color={'mode': 'fixed', 'fixedColor': '#FF9830'})
     p = graph('Plex bandwidth estimates', [(bandwidth_query('wan'), 'WAN estimate'),
                                           (bandwidth_query('lan'), 'LAN estimate')],
-              16, 13, 8, 6, 'suffix:Mbps',
+              16, 5, 8, 7, 'suffix:Mbps',
               'Tautulli estimates of bandwidth reserved for remote (WAN) and local (LAN) Plex sessions. '
               'Not measured interface traffic. Polled every 30 seconds; kbps converted to Mbps. '
               'Missing, failed, or stale collection appears as gaps.', INFRA)
@@ -208,6 +214,19 @@ def build():
               'Missing, failed, or stale collection appears as gaps.', INFRA)
     p['id'] = 42
     p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': '#F2CC0C'}
+    for kind, title, panel_id, x, color in [('episodes', 'Episodes', 43, 16, '#73BF69'),
+                                          ('movies', 'Movies', 44, 20, '#B877D9')]:
+        p = stream_stat(title, 'tautulli_streams', x)
+        p.update(id=panel_id, gridPos={'x': x, 'y': 12, 'w': 4, 'h': 7})
+        p['description'] = (
+            'Tautulli cached library inventory: ' +
+            ('episode count from TV Shows (section 2), including specials.' if kind == 'episodes' else
+             'movie count from Movies (section 1).') +
+            ' Library items, not plays or files. Polled every five minutes; Tautulli cache refresh may add delay. '
+            'Latest sample is retained for up to 15 minutes. Inactive libraries, failed collection, '
+            'or missing/expired inventory show Unknown.')
+        p['targets'][0].update(expr=library_query(kind), legendFormat=title, interval='5m')
+        p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': color}
     panels = [p for p in panels if p['gridPos']['y'] < 19] + [row]
     panels.sort(key=lambda p: (p['gridPos']['y'], p['gridPos']['x']))
     return {'uid': 'media-services', 'title': 'Media Services', 'schemaVersion': 39, 'version': 1,

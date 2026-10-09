@@ -59,7 +59,7 @@ The dashboard shows readiness for one node, CPU/memory, operator health, warning
 
 ## Media Services
 
-The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/media-services) combines Plex playback counts/history, Tautulli WAN/LAN bandwidth estimates, `qnap-01` media-share capacity, SAB download speed/remaining work, and Plex/SAB CPU and memory. Shared OCP Home `bond0` traffic is shown once. The visible layout stays within 19 grid rows; secondary media services remain collapsed below it. [Metric semantics and validation](media/README.md) explain the host-network limitation and the difference between estimates and measured traffic. [Tautulli collection](tautulli/README.md) and [SAB collection](sabnzbd/README.md) document the API credentials and exporters.
+The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/media-services) combines Plex playback counts/history, Tautulli WAN/LAN bandwidth estimates, `qnap-01` media-share capacity, SAB download speed/remaining work, and Plex/SAB CPU and memory. Plex bandwidth sits alongside its CPU and memory graphs; episode and movie count cards use Tautulli cached library inventory. The visible layout stays within 19 grid rows; secondary media services remain collapsed below it. [Metric semantics and validation](media/README.md) explain the host-network limitation and the difference between estimates and measured traffic. [Tautulli collection](tautulli/README.md) and [SAB collection](sabnzbd/README.md) document the API credentials and exporters.
 
 ## Network Stack
 
