@@ -123,6 +123,8 @@ def build():
         p['fieldConfig']['defaults'].pop('custom')
         if title in STREAM_COLORS:
             p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': STREAM_COLORS[title]}
+        elif title == 'Total':
+            p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': '#FF73BF'}
         p['options'] = {'reduceOptions': {'calcs': ['lastNotNull'], 'fields': '', 'values': False},
                         'colorMode': 'value', 'graphMode': 'none', 'textMode': 'auto', 'justifyMode': 'auto'}
 

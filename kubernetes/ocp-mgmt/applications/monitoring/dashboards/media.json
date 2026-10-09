@@ -2201,7 +2201,8 @@
           "min": 0,
           "noValue": "Unknown",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#FF73BF"
           },
           "decimals": 0
         },
