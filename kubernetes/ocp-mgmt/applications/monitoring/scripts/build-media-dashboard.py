@@ -120,7 +120,7 @@ def build():
         p['options'] = {'reduceOptions': {'calcs': ['lastNotNull'], 'fields': '', 'values': False},
                         'colorMode': 'value', 'graphMode': 'none', 'textMode': 'auto', 'justifyMode': 'auto'}
 
-    stream_stat('Plex current streams', 'tautulli_streams', 0)
+    stream_stat('Total', 'tautulli_streams', 0)
     p = graph('Plex stream history', [(stream_query(metric), label) for metric, label in [
         ('tautulli_streams_direct_play', 'Direct Play'),
         ('tautulli_streams_direct_stream', 'Direct Stream'), ('tautulli_streams_transcode', 'Transcoding')]],
@@ -130,9 +130,9 @@ def build():
     p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'normal', 'group': 'A'}
     p['fieldConfig']['defaults']['custom']['fillOpacity'] = 60
     # Append new panels to preserve the existing total and history panel IDs.
-    stream_stat('Plex Direct Stream', 'tautulli_streams_direct_stream', 6)
-    stream_stat('Plex Transcoding', 'tautulli_streams_transcode', 9)
-    stream_stat('Plex Direct Play', 'tautulli_streams_direct_play', 3)
+    stream_stat('Direct Stream', 'tautulli_streams_direct_stream', 6)
+    stream_stat('Transcoding', 'tautulli_streams_transcode', 9)
+    stream_stat('Direct Play', 'tautulli_streams_direct_play', 3)
     return {'uid': 'media-services', 'title': 'Media Services', 'schemaVersion': 39, 'version': 1,
             'editable': False, 'tags': ['homelab', 'ocp-home', 'media'], 'timezone': 'browser',
             'refresh': '30s', 'time': {'from': 'now-6h', 'to': 'now'}, 'panels': panels,

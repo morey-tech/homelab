@@ -30,7 +30,7 @@ def main():
         assert not cells & occupied, 'Panels overlap'
         occupied |= cells
         assert panel['datasource']['uid'] == ('infrastructure' if panel['title'] in (
-            'Plex stream history', 'Plex current streams', 'Plex Direct Play', 'Plex Direct Stream', 'Plex Transcoding') else 'ocp-home')
+            'Plex stream history', 'Total', 'Direct Play', 'Direct Stream', 'Transcoding') else 'ocp-home')
     assert sum('Shared host network' in p['title'] for p in panels) == 1
     assert not any(p['title'] in ('Plex network', 'SABnzbd network') for p in panels)
 

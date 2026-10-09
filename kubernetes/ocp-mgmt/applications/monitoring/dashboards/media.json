@@ -2164,7 +2164,7 @@
     },
     {
       "id": 33,
-      "title": "Plex current streams",
+      "title": "Total",
       "type": "stat",
       "datasource": {
         "type": "prometheus",
@@ -2311,7 +2311,7 @@
     },
     {
       "id": 35,
-      "title": "Plex Direct Stream",
+      "title": "Direct Stream",
       "type": "stat",
       "datasource": {
         "type": "prometheus",
@@ -2367,7 +2367,7 @@
     },
     {
       "id": 36,
-      "title": "Plex Transcoding",
+      "title": "Transcoding",
       "type": "stat",
       "datasource": {
         "type": "prometheus",
@@ -2423,7 +2423,7 @@
     },
     {
       "id": 37,
-      "title": "Plex Direct Play",
+      "title": "Direct Play",
       "type": "stat",
       "datasource": {
         "type": "prometheus",
