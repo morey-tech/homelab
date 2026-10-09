@@ -1,6 +1,13 @@
-# Tautulli stream collection
+# Tautulli collection
 
-The `tautulli-exporter` Deployment runs the [Prometheus JSON exporter](https://github.com/prometheus-community/json_exporter) v0.8.0 on OCP Management. Alloy probes it every 30 seconds with a 20-second scrape timeout and forwards the four aggregate gauges into infrastructure Prometheus (`job="tautulli", instance="plex"`). It requests `get_activity` from [Tautulli](https://tautulli.apps.ocp-home.rh-lab.morey.tech/home) over verified HTTPS.
+The `tautulli-exporter` Deployment runs the [Prometheus JSON exporter](https://github.com/prometheus-community/json_exporter) v0.8.0 on OCP Management. Alloy probes read-only [Tautulli](https://tautulli.apps.ocp-home.rh-lab.morey.tech/home) APIs over verified HTTPS through the exporter and forwards metrics to infrastructure Prometheus. All jobs use `instance="plex"`. Activity remains on `job="tautulli"` so existing dashboards continue to work.
+
+| Job | API command | Interval | Timeout |
+|-----|-------------|----------|---------|
+| `tautulli` | `get_activity` | 30 seconds | 20 seconds |
+| `tautulli_connection` | `server_status` | 60 seconds | 20 seconds |
+| `tautulli_libraries` | `get_libraries` | 5 minutes | 30 seconds |
+| `tautulli_server` | `get_server_info` | 5 minutes | 20 seconds |
 
 | Metric | API field |
 |--------|-----------|
@@ -8,8 +15,37 @@ The `tautulli-exporter` Deployment runs the [Prometheus JSON exporter](https://g
 | `tautulli_streams_direct_play` | `stream_count_direct_play` |
 | `tautulli_streams_direct_stream` | `stream_count_direct_stream` |
 | `tautulli_streams_transcode` | `stream_count_transcode` |
+| `tautulli_wan_bandwidth_kilobits_per_second` | `wan_bandwidth` |
+| `tautulli_lan_bandwidth_kilobits_per_second` | `lan_bandwidth` |
+| `tautulli_total_bandwidth_kilobits_per_second` | `total_bandwidth` |
+| `tautulli_plex_connected` | `connected` (1/0) |
+| `tautulli_library_items` | `count` |
+| `tautulli_library_parents` | `parent_count` |
+| `tautulli_library_children` | `child_count` |
+| `tautulli_library_active` | `is_active` (1/0) |
+| `tautulli_plex_pass` | `pms_plexpass` (1/0), with `version` and `platform` labels |
 
 Counts represent current sessions, including paused sessions, rather than only sessions actively playing. No user names, media titles, or session identifiers are exported. Historical metrics begin at deployment and use infrastructure Prometheus retention; existing Tautulli history is not imported.
+
+WAN bandwidth is Plex's estimated reserved bandwidth for remote sessions in **kbps**, not measured traffic. The dashboard divides by 1000 to display **Mbps**. The value is a gauge, so no rate calculation is applied. Missing data stays unknown; an explicit zero means no estimated WAN demand. [Tautulli source](https://github.com/Tautulli/Tautulli/blob/master/plexpy/common.py) documents the field units.
+
+Library gauges use only `section_id` and `type` labels; library names and last-played titles are not exported. Item/parent/child counts describe a hierarchy, not disjoint totals: movies use items; television libraries use shows/seasons/episodes; music libraries use artists/albums/tracks. Null or unavailable levels are omitted rather than exported as zero. `get_libraries` returns the whole cached inventory without pagination; it does not trigger a library scan. Counts can decrease when media is removed, so these are gauges, not counters.
+
+Plex connection status measures Tautulli's reported connection to Plex. A failed scrape is unknown, not disconnected. Plex Pass and version/platform metadata describe configuration; they do not prove Plex is reachable. Use the connection job for that.
+
+Only the WAN estimate is added to the current dashboard. The other metrics are collected for future bandwidth, availability, inventory-growth, and upgrade panels. Session-state counts and hardware-transcoding counts require aggregation of individual sessions beyond this JSON exporter configuration; they remain uncollected.
+
+## Querying slow metrics
+
+For five-minute library/server jobs, do not reuse the activity dashboard's 180-second freshness cutoff. Use a lookback and explicit freshness allowance that accommodate their cadence, such as 15 minutes. Otherwise instant queries can show gaps before the next scrape, even when collection is healthy. For example, current library item counts guarded by successful recent collection:
+
+```promql
+last_over_time(tautulli_library_items{job="tautulli_libraries"}[15m])
+and on(job, instance)
+(last_over_time(up{job="tautulli_libraries"}[15m]) == 1)
+```
+
+Check missing metric series as well as `up`: a successful HTTP response without the expected data produces no corresponding gauge. Seven activity series, one connection series, library-dependent inventory series, and one server-metadata series were observed during discovery (19 total for the three current libraries).
 
 ## Authentication and access
 
@@ -30,7 +66,7 @@ oc kustomize kubernetes/ocp-mgmt/applications/monitoring > /tmp/monitoring.yaml
 oc --context=logged-user apply --dry-run=server -f /tmp/monitoring.yaml
 ```
 
-The fixture test covers header authentication, numeric/string counts, zero sessions, API errors, missing fields, HTTP failures, and credential-file rotation. It uses only fake credentials and local loopback servers.
+The fixture test covers all four modules: header authentication, numeric/string counts and bandwidth, zero sessions, invalid/missing values, boolean connection states, multiple library types and null hierarchy levels, version labels, API/HTTP failures, and credential-file rotation. It uses only fake credentials and local loopback servers.
 
 After review, commit, human push, and GitOps reconciliation:
 
@@ -40,4 +76,4 @@ oc --context=logged-user -n monitoring rollout status deployment/tautulli-export
 oc --context=logged-user -n monitoring rollout status deployment/alloy
 ```
 
-Verify all four gauges and `up{job="tautulli",instance="plex"}` in Grafana's infrastructure data source. Exporter `/metrics` readiness checks only the exporter process; it does not confirm Tautulli authentication or Plex connectivity. The API credential, cluster network path, Secret reconciliation, and ongoing collection must be checked after deployment.
+Verify the documented gauges and `up{job=~"tautulli.*",instance="plex"}` in Grafana's infrastructure data source. Exporter `/metrics` readiness checks only the exporter process; it does not confirm Tautulli authentication or Plex connectivity. The API credential, cluster network path, Secret reconciliation, and ongoing collection must be checked after deployment.

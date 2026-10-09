@@ -1,6 +1,6 @@
 modules:
   activity:
-    http_client_config:
+    http_client_config: &tautulli_http
       follow_redirects: false
       http_headers:
         X-Api-Key:
@@ -22,4 +22,49 @@ modules:
       - name: tautulli_streams_transcode
         help: Current Plex sessions transcoding.
         path: '{.response.data.stream_count_transcode}'
+        valuetype: gauge
+      - name: tautulli_wan_bandwidth_kilobits_per_second
+        help: Plex estimated reserved WAN bandwidth in kilobits per second, not measured traffic.
+        path: '{.response.data.wan_bandwidth}'
+        valuetype: gauge
+      - name: tautulli_lan_bandwidth_kilobits_per_second
+        help: Plex estimated reserved LAN bandwidth in kilobits per second, not measured traffic.
+        path: '{.response.data.lan_bandwidth}'
+        valuetype: gauge
+      - name: tautulli_total_bandwidth_kilobits_per_second
+        help: Plex estimated reserved total bandwidth in kilobits per second, not measured traffic.
+        path: '{.response.data.total_bandwidth}'
+        valuetype: gauge
+  connection:
+    http_client_config: *tautulli_http
+    metrics:
+      - name: tautulli_plex_connected
+        help: Whether Tautulli reports a connection to Plex (1 connected, 0 disconnected).
+        path: '{.response.data.connected}'
+        valuetype: gauge
+  libraries:
+    http_client_config: *tautulli_http
+    metrics:
+      - name: tautulli_library
+        help: Tautulli cached library inventory; item hierarchy depends on library type.
+        type: object
+        path: '{.response.data[*]}'
+        labels:
+          section_id: '{.section_id}'
+          type: '{.section_type}'
+        values:
+          items: '{.count}'
+          parents: '{.parent_count}'
+          children: '{.child_count}'
+          active: '{.is_active}'
+        valuetype: gauge
+  server:
+    http_client_config: *tautulli_http
+    metrics:
+      - name: tautulli_plex_pass
+        help: Plex Pass availability (1 enabled, 0 disabled), with server version and platform metadata.
+        path: '{.response.data.pms_plexpass}'
+        labels:
+          version: '{.response.data.pms_version}'
+          platform: '{.response.data.pms_platform}'
         valuetype: gauge
