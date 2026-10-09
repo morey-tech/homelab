@@ -138,3 +138,5 @@ spec:
                   name: grafana-media-dashboard
               - configMap:
                   name: grafana-unifi-dashboard
+              - configMap:
+                  name: grafana-network-stack-dashboard

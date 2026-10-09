@@ -69,3 +69,6 @@ configMapGenerator:
   - name: grafana-unifi-dashboard
     files:
       - dashboards/unifi.json
+  - name: grafana-network-stack-dashboard
+    files:
+      - dashboards/network-stack.json

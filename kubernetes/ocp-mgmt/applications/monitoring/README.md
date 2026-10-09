@@ -61,6 +61,22 @@ The dashboard shows readiness for one node, CPU/memory, operator health, warning
 
 The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/media-services) combines Plex playback counts/history, Tautulli WAN/LAN bandwidth estimates, `qnap-01` media-share capacity, SAB download speed/remaining work, and Plex/SAB CPU and memory. Shared OCP Home `bond0` traffic is shown once. The visible layout stays within 19 grid rows; secondary media services remain collapsed below it. [Metric semantics and validation](media/README.md) explain the host-network limitation and the difference between estimates and measured traffic. [Tautulli collection](tautulli/README.md) and [SAB collection](sabnzbd/README.md) document the API credentials and exporters.
 
+## Network Stack
+
+The [Network Stack dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/network-stack) follows physical rack order: **pfSense → crs317-b → crs317-a → USW Enterprise 48 PoE**. Each device has one compact row, with **Send / TX on the left** and **Receive / RX on the right**. Directions are relative to the device. Compare port aliases across link endpoints to follow traffic; the rack order alone does not imply a serial forwarding path.
+
+Each graph shows physical Ethernet ports separately, with alias/name legends, five-minute average bits/s, a shared six-hour window and crosshair, and a one-minute refresh. LAG and VLAN counters are excluded to avoid double counting. Axes autoscale independently; compare numeric rates when matching traffic between ports. Idle ports remain visible at zero, while missing, failed, or stale collection produces gaps. Panel links open the corresponding detailed device dashboard. Existing SNMP collection and the Infrastructure data source supply all metrics.
+
+Regenerate after changing the source device traffic queries. Validate local queries against existing metrics before deployment:
+
+```bash
+python3.12 kubernetes/ocp-mgmt/applications/monitoring/scripts/build-network-stack-dashboard.py
+python3.12 kubernetes/ocp-mgmt/applications/monitoring/scripts/test-network-stack-dashboard.py
+python3.12 kubernetes/ocp-mgmt/applications/monitoring/scripts/check-network-stack.py --local
+```
+
+After the approved commits are pushed and GitOps reconciles, run `check-network-stack.py` without `--local` to verify provisioning as well. Review the layout in Grafana. The dashboard has a separate generated ConfigMap projected into Grafana's dashboard directory.
+
 ## MikroTik Switch Metrics
 
 Alloy collects RouterOS SNMPv3 metrics from `crs317-a` (`192.168.1.15`) and `crs317-b` (`192.168.1.16`) using SHA1/AES and Bitwarden item `b174080a-c3ec-4e7b-9afa-b4dd000e3bbd`. The [MikroTik Switches](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/mikrotik-overview) dashboard has a switch dropdown, per-port and bond traffic, link status/speed, errors/discards, CPU, memory, temperatures, fans, and power status. [Collection details](mikrotik/README.md) cover credentials, metric semantics, and validation.

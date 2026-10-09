@@ -1,0 +1,597 @@
+{
+  "uid": "network-stack",
+  "title": "Network Stack",
+  "description": "Physical rack order. Send on the left, receive on the right; directions are device-relative.",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "homelab",
+    "infrastructure",
+    "network"
+  ],
+  "timezone": "browser",
+  "refresh": "1m",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "pfSense \u2014 Send / TX",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Send / TX from pfSense\u2019s perspective. One line per physical Ethernet port, using the interface alias where available. Five-minute average bits/s. LAG and VLAN counters are excluded to avoid counting the same traffic twice. Rack order does not imply a single forwarding path; compare aliases at each link\u2019s endpoints. Axes autoscale independently. Missing, failed, or stale telemetry appears as gaps.",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((8 * rate(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}[5m])) and (ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"} and (time() - timestamp(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((8 * rate(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}[5m])) and (ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"} and (time() - timestamp(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "links": [
+        {
+          "title": "Open pfSense dashboard",
+          "url": "/d/pfsense-overview"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "pfSense \u2014 Receive / RX",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Receive / RX from pfSense\u2019s perspective. One line per physical Ethernet port, using the interface alias where available. Five-minute average bits/s. LAG and VLAN counters are excluded to avoid counting the same traffic twice. Rack order does not imply a single forwarding path; compare aliases at each link\u2019s endpoints. Axes autoscale independently. Missing, failed, or stale telemetry appears as gaps.",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((8 * rate(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}[5m])) and (ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"} and (time() - timestamp(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((8 * rate(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}[5m])) and (ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"} and (time() - timestamp(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"(igc|ix)[0-9]+\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "links": [
+        {
+          "title": "Open pfSense dashboard",
+          "url": "/d/pfsense-overview"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "crs317-b \u2014 Send / TX",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Send / TX from crs317-b\u2019s perspective. One line per physical Ethernet port, using the interface alias where available. Five-minute average bits/s. LAG and VLAN counters are excluded to avoid counting the same traffic twice. Rack order does not imply a single forwarding path; compare aliases at each link\u2019s endpoints. Axes autoscale independently. Missing, failed, or stale telemetry appears as gaps.",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((8 * rate(ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-b\"}[5m])) and (ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-b\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"crs317-b\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"crs317-b\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"mikrotik\",instance=\"crs317-b\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"mikrotik\",instance=\"crs317-b\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((8 * rate(ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-b\"}[5m])) and (ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-b\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"crs317-b\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"crs317-b\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "links": [
+        {
+          "title": "Open crs317-b dashboard",
+          "url": "/d/mikrotik-overview?var-switch=crs317-b"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "crs317-b \u2014 Receive / RX",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Receive / RX from crs317-b\u2019s perspective. One line per physical Ethernet port, using the interface alias where available. Five-minute average bits/s. LAG and VLAN counters are excluded to avoid counting the same traffic twice. Rack order does not imply a single forwarding path; compare aliases at each link\u2019s endpoints. Axes autoscale independently. Missing, failed, or stale telemetry appears as gaps.",
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((8 * rate(ifHCInOctets{job=\"mikrotik\",instance=\"crs317-b\"}[5m])) and (ifHCInOctets{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(ifHCInOctets{job=\"mikrotik\",instance=\"crs317-b\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"crs317-b\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"crs317-b\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"mikrotik\",instance=\"crs317-b\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"mikrotik\",instance=\"crs317-b\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((8 * rate(ifHCInOctets{job=\"mikrotik\",instance=\"crs317-b\"}[5m])) and (ifHCInOctets{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(ifHCInOctets{job=\"mikrotik\",instance=\"crs317-b\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"crs317-b\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"crs317-b\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"crs317-b\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "links": [
+        {
+          "title": "Open crs317-b dashboard",
+          "url": "/d/mikrotik-overview?var-switch=crs317-b"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "crs317-a \u2014 Send / TX",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Send / TX from crs317-a\u2019s perspective. One line per physical Ethernet port, using the interface alias where available. Five-minute average bits/s. LAG and VLAN counters are excluded to avoid counting the same traffic twice. Rack order does not imply a single forwarding path; compare aliases at each link\u2019s endpoints. Axes autoscale independently. Missing, failed, or stale telemetry appears as gaps.",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((8 * rate(ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-a\"}[5m])) and (ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-a\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"crs317-a\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"crs317-a\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"mikrotik\",instance=\"crs317-a\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"mikrotik\",instance=\"crs317-a\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((8 * rate(ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-a\"}[5m])) and (ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(ifHCOutOctets{job=\"mikrotik\",instance=\"crs317-a\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"crs317-a\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"crs317-a\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "links": [
+        {
+          "title": "Open crs317-a dashboard",
+          "url": "/d/mikrotik-overview?var-switch=crs317-a"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "crs317-a \u2014 Receive / RX",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Receive / RX from crs317-a\u2019s perspective. One line per physical Ethernet port, using the interface alias where available. Five-minute average bits/s. LAG and VLAN counters are excluded to avoid counting the same traffic twice. Rack order does not imply a single forwarding path; compare aliases at each link\u2019s endpoints. Axes autoscale independently. Missing, failed, or stale telemetry appears as gaps.",
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((8 * rate(ifHCInOctets{job=\"mikrotik\",instance=\"crs317-a\"}[5m])) and (ifHCInOctets{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(ifHCInOctets{job=\"mikrotik\",instance=\"crs317-a\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"crs317-a\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"crs317-a\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"mikrotik\",instance=\"crs317-a\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"mikrotik\",instance=\"crs317-a\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((8 * rate(ifHCInOctets{job=\"mikrotik\",instance=\"crs317-a\"}[5m])) and (ifHCInOctets{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(ifHCInOctets{job=\"mikrotik\",instance=\"crs317-a\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(ifType{job=\"mikrotik\",instance=\"crs317-a\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"mikrotik\",instance=\"crs317-a\"} and (time() - timestamp(up{job=\"mikrotik\",instance=\"crs317-a\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "links": [
+        {
+          "title": "Open crs317-a dashboard",
+          "url": "/d/mikrotik-overview?var-switch=crs317-a"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "USW Enterprise 48 PoE \u2014 Send / TX",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Send / TX from USW Enterprise 48 PoE\u2019s perspective. One line per physical Ethernet port, using the interface alias where available. Five-minute average bits/s. LAG and VLAN counters are excluded to avoid counting the same traffic twice. Rack order does not imply a single forwarding path; compare aliases at each link\u2019s endpoints. Axes autoscale independently. Missing, failed, or stale telemetry appears as gaps.",
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((8 * rate(ifHCOutOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}[5m])) and (ifHCOutOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(ifHCOutOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(up{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"usw-enterprise-48-poe\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"usw-enterprise-48-poe\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((8 * rate(ifHCOutOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}[5m])) and (ifHCOutOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(ifHCOutOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(up{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "links": [
+        {
+          "title": "Open USW Enterprise 48 PoE dashboard",
+          "url": "/d/unifi-overview?var-switch=usw-enterprise-48-poe"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "USW Enterprise 48 PoE \u2014 Receive / RX",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Receive / RX from USW Enterprise 48 PoE\u2019s perspective. One line per physical Ethernet port, using the interface alias where available. Five-minute average bits/s. LAG and VLAN counters are excluded to avoid counting the same traffic twice. Rack order does not imply a single forwarding path; compare aliases at each link\u2019s endpoints. Axes autoscale independently. Missing, failed, or stale telemetry appears as gaps.",
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((8 * rate(ifHCInOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}[5m])) and (ifHCInOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(ifHCInOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(up{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"usw-enterprise-48-poe\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"usw-enterprise-48-poe\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((8 * rate(ifHCInOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}[5m])) and (ifHCInOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(ifHCInOctets{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"usw-enterprise-48-poe\"} and (time() - timestamp(up{job=\"unifi\",instance=\"usw-enterprise-48-poe\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "links": [
+        {
+          "title": "Open USW Enterprise 48 PoE dashboard",
+          "url": "/d/unifi-overview?var-switch=usw-enterprise-48-poe"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Homelab dashboards",
+      "type": "dashboards",
+      "tags": [
+        "homelab"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ]
+}
