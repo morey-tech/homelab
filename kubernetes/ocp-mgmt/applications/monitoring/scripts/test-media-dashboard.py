@@ -22,7 +22,7 @@ def main():
     dashboard = media.build()
     assert dashboard == json.loads((ROOT / 'dashboards/media.json').read_text()), 'Regenerate media JSON'
     panels = dashboard['panels']
-    assert len(panels) == 36 and len({p['id'] for p in panels}) == 36
+    assert len(panels) == 37 and len({p['id'] for p in panels}) == 37
     occupied = set()
     for panel in panels:
         g = panel['gridPos']
@@ -30,7 +30,7 @@ def main():
         assert not cells & occupied, 'Panels overlap'
         occupied |= cells
         assert panel['datasource']['uid'] == ('infrastructure' if panel['title'] in (
-            'Plex stream history', 'Plex current streams', 'Plex Direct Stream', 'Plex Transcoding') else 'ocp-home')
+            'Plex stream history', 'Plex current streams', 'Plex Direct Play', 'Plex Direct Stream', 'Plex Transcoding') else 'ocp-home')
     assert sum('Shared host network' in p['title'] for p in panels) == 1
     assert not any(p['title'] in ('Plex network', 'SABnzbd network') for p in panels)
 

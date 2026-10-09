@@ -110,9 +110,9 @@ def build():
         service(app, name, (i % 2)*12, 15+(i//2)*5, 4, 5)
     description = ('Current Plex sessions reported by Tautulli, including paused sessions. '
                    'Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. '
-                   'History begins when collection deploys; the total overlaps the three playback types and is not stacked.')
+                   'History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.')
     def stream_stat(title, metric, x):
-        p = graph(title, [(stream_query(metric), 'Streams')], x, 10, 4, 5, 'short', description, INFRA)
+        p = graph(title, [(stream_query(metric), 'Streams')], x, 10, 3, 5, 'short', description, INFRA)
         p['type'] = 'stat'
         p['targets'][0].update(instant=True, range=False)
         p['fieldConfig']['defaults']['decimals'] = 0
@@ -122,14 +122,17 @@ def build():
 
     stream_stat('Plex current streams', 'tautulli_streams', 0)
     p = graph('Plex stream history', [(stream_query(metric), label) for metric, label in [
-        ('tautulli_streams', 'Total'), ('tautulli_streams_direct_play', 'Direct Play'),
+        ('tautulli_streams_direct_play', 'Direct Play'),
         ('tautulli_streams_direct_stream', 'Direct Stream'), ('tautulli_streams_transcode', 'Transcoding')]],
         12, 10, 12, 5, 'short', description, INFRA)
     p['fieldConfig']['defaults']['decimals'] = 0
     p['fieldConfig']['defaults']['custom']['lineInterpolation'] = 'stepAfter'
+    p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'normal', 'group': 'A'}
+    p['fieldConfig']['defaults']['custom']['fillOpacity'] = 60
     # Append new panels to preserve the existing total and history panel IDs.
-    stream_stat('Plex Direct Stream', 'tautulli_streams_direct_stream', 4)
-    stream_stat('Plex Transcoding', 'tautulli_streams_transcode', 8)
+    stream_stat('Plex Direct Stream', 'tautulli_streams_direct_stream', 6)
+    stream_stat('Plex Transcoding', 'tautulli_streams_transcode', 9)
+    stream_stat('Plex Direct Play', 'tautulli_streams_direct_play', 3)
     return {'uid': 'media-services', 'title': 'Media Services', 'schemaVersion': 39, 'version': 1,
             'editable': False, 'tags': ['homelab', 'ocp-home', 'media'], 'timezone': 'browser',
             'refresh': '30s', 'time': {'from': 'now-6h', 'to': 'now'}, 'panels': panels,

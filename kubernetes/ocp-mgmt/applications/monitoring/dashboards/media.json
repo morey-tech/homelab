@@ -2170,11 +2170,11 @@
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys; the total overlaps the three playback types and is not stacked.",
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.",
       "gridPos": {
         "x": 0,
         "y": 10,
-        "w": 4,
+        "w": 3,
         "h": 5
       },
       "targets": [
@@ -2226,7 +2226,7 @@
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys; the total overlaps the three playback types and is not stacked.",
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.",
       "gridPos": {
         "x": 12,
         "y": 10,
@@ -2240,19 +2240,6 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "((tautulli_streams{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
-          "legendFormat": "Total",
-          "instant": false,
-          "range": true,
-          "interval": "30s",
-          "editorMode": "code"
-        },
-        {
-          "refId": "B",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "infrastructure"
-          },
           "expr": "((tautulli_streams_direct_play{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams_direct_play{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
           "legendFormat": "Direct Play",
           "instant": false,
@@ -2261,7 +2248,7 @@
           "editorMode": "code"
         },
         {
-          "refId": "C",
+          "refId": "B",
           "datasource": {
             "type": "prometheus",
             "uid": "infrastructure"
@@ -2274,7 +2261,7 @@
           "editorMode": "code"
         },
         {
-          "refId": "D",
+          "refId": "C",
           "datasource": {
             "type": "prometheus",
             "uid": "infrastructure"
@@ -2298,10 +2285,10 @@
           "custom": {
             "drawStyle": "line",
             "lineWidth": 2,
-            "fillOpacity": 10,
+            "fillOpacity": 60,
             "spanNulls": false,
             "stacking": {
-              "mode": "none",
+              "mode": "normal",
               "group": "A"
             },
             "lineInterpolation": "stepAfter"
@@ -2330,11 +2317,11 @@
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys; the total overlaps the three playback types and is not stacked.",
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.",
       "gridPos": {
-        "x": 4,
+        "x": 6,
         "y": 10,
-        "w": 4,
+        "w": 3,
         "h": 5
       },
       "targets": [
@@ -2386,11 +2373,11 @@
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys; the total overlaps the three playback types and is not stacked.",
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.",
       "gridPos": {
-        "x": 8,
+        "x": 9,
         "y": 10,
-        "w": 4,
+        "w": 3,
         "h": 5
       },
       "targets": [
@@ -2401,6 +2388,62 @@
             "uid": "infrastructure"
           },
           "expr": "((tautulli_streams_transcode{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams_transcode{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
+          "legendFormat": "Streams",
+          "instant": true,
+          "range": false,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 37,
+      "title": "Plex Direct Play",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.",
+      "gridPos": {
+        "x": 3,
+        "y": 10,
+        "w": 3,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((tautulli_streams_direct_play{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams_direct_play{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
           "legendFormat": "Streams",
           "instant": true,
           "range": false,
