@@ -51,18 +51,21 @@ def main():
     assert request('/api/datasources/uid/ocp-home/health')['status'] == 'OK'
     now = int(time.time() * 1000)
     for panel in query_panels(dashboard['panels']):
-        if panel['datasource']['uid'] == 'infrastructure' and args.skip_tautulli:
-            print(f"{panel['title']}: deferred until GitOps deployment")
+        targets = [t for t in panel['targets'] if not (
+            args.skip_tautulli and 'job="tautulli"' in t['expr'])]
+        if len(targets) != len(panel['targets']):
+            print(f"{panel['title']}: Tautulli queries deferred until GitOps deployment")
+        if not targets:
             continue
-        for target in panel['targets']:
+        for target in targets:
             uid = target['datasource']['uid']
             assert uid in ('ocp-home', 'infrastructure')
             query = urllib.parse.urlencode({'query': target['expr']})
             result = request(f'/api/datasources/proxy/uid/{uid}/api/v1/query?' + query)
             assert result['status'] == 'success' and result['data']['result'], f"No current telemetry: {panel['title']}"
         result = request('/api/ds/query', {'from': str(now - 21600000), 'to': str(now),
-                         'queries': [dict(t, intervalMs=30000, maxDataPoints=720) for t in panel['targets']]})
-        for target in panel['targets']:
+                         'queries': [dict(t, intervalMs=30000, maxDataPoints=720) for t in targets]})
+        for target in targets:
             data = result['results'][target['refId']]
             assert not data.get('error') and data.get('status', 200) == 200, panel['title']
             assert any(any(v is not None for v in values)

@@ -71,6 +71,12 @@ def wan_query():
     return f'({stream_query("tautulli_wan_bandwidth_kilobits_per_second")}) / 1000'
 
 
+def pfsense_wan_query(metric):
+    selector = f'{metric}{{job="pfsense",instance="pfsense",ifName="ix2"}}'
+    up = fresh('up{job="pfsense",instance="pfsense"}')
+    return f'(8 * rate({selector}[5m]) / 1000000 and {fresh(selector)}) and on(job, instance) ({up} == 1)'
+
+
 def build():
     panels = []
 
@@ -110,7 +116,7 @@ def build():
     queries = [(next(p for p in host['panels'] if p['title'] == 'Node network ' + direction)['targets'][0]['expr'],
                 '{{instance}} · ' + label)
                for direction, label in [('receive', 'Receive'), ('transmit', 'Transmit')]]
-    graph('Shared host network — bond0 (all workloads)', queries, 16, 7, 8, 10, 'bps',
+    graph('Shared host network — bond0 (all workloads)', queries, 16, 7, 8, 6, 'bps',
           'Shared context for Plex and SABnzbd on OCP Home. Whole-host bond0 receive/transmit traffic includes all workloads; '
           'it is not attributable to either app. Plex uses host networking, so its pod counters cannot isolate Plex traffic. '
           'Physical bond members are excluded. Five-minute average bits/s; unavailable or stale telemetry appears as gaps.')
@@ -165,6 +171,23 @@ def build():
     p['targets'][0].update(expr=wan_query(), legendFormat='WAN estimate')
     p['fieldConfig']['defaults'].update(unit='suffix:Mbps', decimals=2,
                                        color={'mode': 'fixed', 'fixedColor': '#B877D9'})
+    next_id = max(row['id'], *(p['id'] for p in panels)) + 1
+    p = graph('WAN traffic — pfSense and Plex', [
+        (pfsense_wan_query('ifHCOutOctets'), 'WAN upload'),
+        (pfsense_wan_query('ifHCInOctets'), 'WAN download'),
+        (wan_query(), 'Plex WAN estimate')], 16, 13, 8, 6, 'suffix:Mbps',
+        'Measured pfSense WAN traffic on ix2: transmit = upload, receive = download. '
+        'Five-minute average Mbps from 64-bit byte counters, covering all internet traffic. '
+        'Plex is Tautulli\'s current estimated reserved WAN bandwidth, sampled every 30 seconds; '
+        'it is not measured Plex traffic. These independently collected series are not stacked or subtracted. '
+        'Failed or stale sources appear as gaps; other healthy sources remain visible.', INFRA)
+    p['id'] = next_id
+    p['fieldConfig']['defaults']['decimals'] = 2
+    p['fieldConfig']['overrides'] = [
+        {'matcher': {'id': 'byName', 'options': label},
+         'properties': [{'id': 'color', 'value': {'mode': 'fixed', 'fixedColor': color}}]}
+        for label, color in [('WAN upload', '#5794F2'), ('WAN download', '#73BF69'),
+                             ('Plex WAN estimate', '#B877D9')]]
     panels = [p for p in panels if p['gridPos']['y'] < 19] + [row]
     panels.sort(key=lambda p: (p['gridPos']['y'], p['gridPos']['x']))
     return {'uid': 'media-services', 'title': 'Media Services', 'schemaVersion': 39, 'version': 1,

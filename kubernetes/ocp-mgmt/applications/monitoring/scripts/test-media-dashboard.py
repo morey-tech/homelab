@@ -30,7 +30,7 @@ def main():
     assert {p['title'] for p in rows[0]['panels']} == {
         name + suffix for _, name in media.SECONDARY for suffix in (' CPU', ' memory', ' network')}
     panels = list(checker.query_panels(dashboard['panels']))
-    assert len(panels) == 38 and len({p['id'] for p in panels}) == 38
+    assert len(panels) == 39 and len({p['id'] for p in panels}) == 39
     assert rows[0]['id'] not in {p['id'] for p in panels}
     occupied = set()
     for panel in panels:
@@ -39,7 +39,8 @@ def main():
         assert not cells & occupied, 'Panels overlap'
         occupied |= cells
         assert panel['datasource']['uid'] == ('infrastructure' if panel['title'] in (
-            'Plex stream history', 'Total', 'Direct Play', 'Direct Stream', 'Transcoding', 'WAN est.') else 'ocp-home')
+            'Plex stream history', 'Total', 'Direct Play', 'Direct Stream', 'Transcoding', 'WAN est.',
+            'WAN traffic — pfSense and Plex') else 'ocp-home')
     header = rows[0]['gridPos']
     assert not occupied & {(x, header['y']) for x in range(24)}
     assert sum('Shared host network' in p['title'] for p in panels) == 1
@@ -125,6 +126,23 @@ def main():
                       'input_series': [{'series': wan_metric, 'values': values}, {'series': stream_up, 'values': up_values}],
                       'promql_expr_test': [{'expr': media.wan_query(), 'eval_time': '6m',
                           'exp_samples': [] if expected is None else [{'labels': '{job="tautulli",instance="plex"}', 'value': expected}]}]})
+
+    # WAN octet rates use only ix2, in the firewall's upload/download direction.
+    for name, values, up_values, expected in [
+        ('bytes to Mbps', '0+60000000x6', '1x6', 8), ('idle', '0x6', '1x6', 0),
+        ('counter reset', '0 60000000 120000000 180000000 0 60000000 120000000', '1x6', 6),
+        ('failed scrape', '0+60000000x6', '0x6', None), ('missing WAN', '_x7', '1x6', None),
+        ('stale counter', '0+60000000x2 _x4', '1x6', None),
+        ('stale health', '0+60000000x6', '1x2 _x4', None)]:
+        series = [{'series': 'up{job="pfsense",instance="pfsense"}', 'values': up_values}]
+        exprs = []
+        for metric in ('ifHCOutOctets', 'ifHCInOctets'):
+            series += [{'series': metric+'{job="pfsense",instance="pfsense",ifName="ix2"}', 'values': values},
+                       {'series': metric+'{job="pfsense",instance="pfsense",ifName="lagg0"}', 'values': '0+120000000x6'}]
+            exprs.append({'expr': media.pfsense_wan_query(metric), 'eval_time': '6m',
+                          'exp_samples': [] if expected is None else [{
+                              'labels': '{job="pfsense",instance="pfsense",ifName="ix2"}', 'value': expected}]})
+        cases.append({'name': 'pfSense WAN '+name, 'interval': '1m', 'input_series': series, 'promql_expr_test': exprs})
 
     promtool = os.environ.get('PROMTOOL') or shutil.which('promtool')
     if not promtool:

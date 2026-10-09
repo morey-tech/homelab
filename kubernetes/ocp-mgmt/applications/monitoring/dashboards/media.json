@@ -578,7 +578,7 @@
         "x": 16,
         "y": 7,
         "w": 8,
-        "h": 10
+        "h": 6
       },
       "targets": [
         {
@@ -756,6 +756,142 @@
           }
         },
         "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 40,
+      "title": "WAN traffic \u2014 pfSense and Plex",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Measured pfSense WAN traffic on ix2: transmit = upload, receive = download. Five-minute average Mbps from 64-bit byte counters, covering all internet traffic. Plex is Tautulli's current estimated reserved WAN bandwidth, sampled every 30 seconds; it is not measured Plex traffic. These independently collected series are not stacked or subtracted. Failed or stale sources appear as gaps; other healthy sources remain visible.",
+      "gridPos": {
+        "x": 16,
+        "y": 13,
+        "w": 8,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(8 * rate(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"}[5m]) / 1000000 and (ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"} and (time() - timestamp(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "WAN upload",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(8 * rate(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"}[5m]) / 1000000 and (ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"} and (time() - timestamp(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "WAN download",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)) / 1000",
+          "legendFormat": "Plex WAN estimate",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:Mbps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "WAN upload"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "WAN download"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#73BF69"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Plex WAN estimate"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#B877D9"
+                }
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "legend": {

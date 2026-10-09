@@ -4,7 +4,7 @@ The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d
 
 ## Graphs
 
-Four stream-count cards and a WAN estimate card occupy the top left. Stacked stream history sits at the top right, two grid units taller than the cards. Plex and SABnzbd CPU and memory graphs start immediately below the cards; the shorter shared host network graph sits below stream history. Below them are Sonarr, Radarr, Bazarr, Lidarr, Overseerr, Tautulli, Profilarr, Maintainerr, and Cleanuparr with smaller graphs, two services per row, inside **Secondary media services**, collapsed by default. Expand that section to view them; Plex, SABnzbd, shared host traffic, and stream counts/history remain visible.
+Four stream-count cards and a WAN estimate card occupy the top left. Stacked stream history sits at the top right, two grid units taller than the cards. Plex and SABnzbd CPU and memory graphs start immediately below the cards. The right column stacks stream history, shared host traffic, and WAN traffic in panels of 7, 6, and 6 grid units, fitting above the collapsed secondary section. Below them are Sonarr, Radarr, Bazarr, Lidarr, Overseerr, Tautulli, Profilarr, Maintainerr, and Cleanuparr with smaller graphs, two services per row, inside **Secondary media services**, collapsed by default. Expand that section to view them; Plex, SABnzbd, shared host traffic, and stream counts/history remain visible.
 
 | Graph | Meaning |
 |-------|---------|
@@ -14,6 +14,7 @@ Four stream-count cards and a WAN estimate card occupy the top left. Stacked str
 | Secondary service network | Five-minute receive/transmit rates in bits/s from each pod's sandbox interfaces, excluding loopback. Host-network pods are excluded. |
 | Plex stream counts | Adjacent current Total, Direct Play, Direct Stream, and Transcoding counts, including paused sessions. Missing, stale, or failed collection displays Unknown rather than the last historical value. |
 | Plex stream history | Right-hand graph beside the four counts and WAN estimate showing stacked Direct Play, Direct Stream, and Transcoding counts, sampled every 30 seconds. Total is omitted from the graph to avoid counting sessions twice. |
+| WAN traffic | Unstacked pfSense WAN upload/download on `ix2` (five-minute averages) alongside the current Plex WAN estimate, all in Mbps. pfSense covers all internet traffic; the Plex estimate is not an attributed subset to subtract or stack. Each source has its own freshness and scrape-health checks. |
 | WAN est. | Current Plex estimated reserved bandwidth for remote sessions in Mbps, shown to two decimals. This is not measured WAN traffic. Missing, failed, or stale collection displays Unknown. |
 
 Plex uses `hostNetwork: true`: its cAdvisor network counters include host interfaces and cannot isolate Plex traffic. SABnzbd has dedicated pod counters, but the dashboard intentionally shows the shared host graph once for the two prominent services. Both currently run on the single OCP Home node. Revisit that scope if the cluster expands or their placement changes.
@@ -38,7 +39,7 @@ python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/check-media.py --loc
 
 The read-only check retrieves the Grafana admin credential into memory from the management cluster and tests every local panel query against existing telemetry, including six-hour Grafana range queries. It does not provision the dashboard. A stopped application fails its current-data check, even though the dashboard correctly displays a gap.
 
-Before the Tautulli collector deploys (or while the new WAN metric is pending rollout), use `--local --skip-tautulli` to check the existing pod and host queries while explicitly deferring stream panels. Stream history starts at collector deployment; it is not backfilled from Tautulli.
+Before the Tautulli collector deploys (or while the new WAN metric is pending rollout), use `--local --skip-tautulli` to check pod, host, and pfSense queries while explicitly deferring Tautulli queries, including the estimate within the WAN graph. Stream history starts at collector deployment; it is not backfilled from Tautulli.
 
 After review, commit, human push, and GitOps reconciliation, verify the provisioned dashboard:
 
