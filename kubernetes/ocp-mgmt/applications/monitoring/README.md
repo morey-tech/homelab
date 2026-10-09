@@ -16,7 +16,7 @@ The **OCP Home** data source queries the remote cluster's existing Thanos HTTPS 
 
 Both cluster dashboards include **Node network receive** and **Node network transmit** graphs below CPU/memory, using existing node-exporter counters. They show five-minute average bits/s with `node · interface` legends. OCP Home shows `bond0` only, excluding its member ports to avoid duplicate traffic. OCP Management shows each physical Ethernet interface (`en*`/`eth*`) separately, including idle ports, and excludes loopback, wireless, OVS, and overlay interfaces. These are interface rates, not unique cluster-wide traffic totals. Missing/stale counters or failed scrapes show gaps; idle counters remain zero. Interface selection is configured in `CLUSTERS` in [the dashboard generator](scripts/build-dashboard.py); no new metric collection is needed.
 
-Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Alloy collects QNAP, MikroTik, and pfSense metrics over SNMPv3 and forwards them to infrastructure Prometheus through its internal remote-write receiver. The **Infrastructure** data source serves their dashboards. Prometheus has no direct scrape jobs or recording rules. Blackbox Exporter defines HTTP and TCP modules but has no callers or targets.
+Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Alloy collects QNAP, MikroTik, UniFi, and pfSense metrics over SNMPv3 and forwards them to infrastructure Prometheus through its internal remote-write receiver. The **Infrastructure** data source serves their dashboards. Prometheus has no direct scrape jobs or recording rules. Blackbox Exporter defines HTTP and TCP modules but has no callers or targets.
 
 ## OCP Management Metrics
 
@@ -64,6 +64,10 @@ The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d
 ## MikroTik Switch Metrics
 
 Alloy collects RouterOS SNMPv3 metrics from `crs317-a` (`192.168.1.15`) and `crs317-b` (`192.168.1.16`) using SHA1/AES and Bitwarden item `b174080a-c3ec-4e7b-9afa-b4dd000e3bbd`. The [MikroTik Switches](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/mikrotik-overview) dashboard has a switch dropdown, per-port and bond traffic, link status/speed, errors/discards, CPU, memory, temperatures, fans, and power status. [Collection details](mikrotik/README.md) cover credentials, metric semantics, and validation.
+
+## UniFi Switch Metrics
+
+Alloy polls `192.168.1.10:161` (USW Enterprise 48 PoE) using SNMPv3 SHA/AES credentials from Bitwarden item `9773aa8d-9fcf-4a05-9152-b4de00156fda`. [Collection details](unifi/README.md) cover setup, verified metrics, and validation.
 
 ## QNAP Metrics
 
@@ -170,6 +174,6 @@ The [pfSense Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/pfsense
 
 ## Later Collection Phases
 
-Add other NAS devices, reachability targets, network devices, Loki, and log collection in separate reviewed changes. Infrastructure collection currently covers the two QNAP NAS devices, two MikroTik RouterOS switches, and pfSense.
+Add other NAS devices, reachability targets, network devices, Loki, and log collection in separate reviewed changes. Infrastructure collection currently covers the two QNAP NAS devices, two MikroTik RouterOS switches, one UniFi switch, and pfSense.
 
 References: [Grafana configuration](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/), [Prometheus retention](https://prometheus.io/docs/prometheus/latest/storage/), [Alloy health endpoints](https://grafana.com/docs/alloy/latest/reference/http/).

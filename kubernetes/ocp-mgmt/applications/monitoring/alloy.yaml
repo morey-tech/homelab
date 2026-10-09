@@ -81,6 +81,9 @@ spec:
             - name: mikrotik-credentials
               mountPath: /etc/alloy-secrets/mikrotik
               readOnly: true
+            - name: unifi-credentials
+              mountPath: /etc/alloy-secrets/unifi
+              readOnly: true
             - name: pfsense-credentials
               mountPath: /etc/alloy-secrets/pfsense
               readOnly: true
@@ -106,3 +109,6 @@ spec:
         - name: pfsense-credentials
           secret:
             secretName: pfsense-snmp-v1
+        - name: unifi-credentials
+          secret:
+            secretName: unifi-snmp-v1

@@ -117,6 +117,48 @@ prometheus.scrape "mikrotik" {
 	forward_to      = [prometheus.remote_write.infrastructure.receiver]
 }
 
+local.file "unifi_auth" {
+	filename       = "/etc/alloy-secrets/unifi/snmp-auth.yml"
+	is_secret      = true
+	detector       = "poll"
+	poll_frequency = "1m"
+}
+
+local.file "unifi_module" {
+	filename = "/etc/alloy/unifi-snmp.yml"
+}
+
+prometheus.exporter.snmp "unifi" {
+	config = local.file.unifi_auth.content + "\n" + local.file.unifi_module.content
+
+	target "unifi" {
+		address = "192.168.1.10:161"
+		module  = "unifi_switch"
+		auth    = "unifi_v3"
+	}
+}
+
+discovery.relabel "unifi" {
+	targets = prometheus.exporter.snmp.unifi.targets
+
+	rule {
+		target_label = "job"
+		replacement  = "unifi"
+	}
+
+	rule {
+		target_label = "instance"
+		replacement  = "usw-enterprise-48-poe"
+	}
+}
+
+prometheus.scrape "unifi" {
+	targets         = discovery.relabel.unifi.output
+	scrape_interval = "60s"
+	scrape_timeout  = "30s"
+	forward_to      = [prometheus.remote_write.infrastructure.receiver]
+}
+
 local.file "pfsense_auth" {
 	filename       = "/etc/alloy-secrets/pfsense/snmp-auth.yml"
 	is_secret      = true
