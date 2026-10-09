@@ -115,7 +115,8 @@
           "min": 0,
           "noValue": "Unknown",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#B877D9"
           },
           "custom": {
             "drawStyle": "line",
@@ -178,7 +179,8 @@
           "min": 0,
           "noValue": "Unknown",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#FF9830"
           },
           "custom": {
             "drawStyle": "line",
@@ -241,7 +243,8 @@
           "min": 0,
           "noValue": "Unknown",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#56D9D1"
           },
           "custom": {
             "drawStyle": "line",
@@ -2295,7 +2298,53 @@
           },
           "decimals": 0
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Direct Play"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#73BF69"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Direct Stream"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FADE2A"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Transcoding"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "legend": {
@@ -2345,7 +2394,8 @@
           "min": 0,
           "noValue": "Unknown",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#FADE2A"
           },
           "decimals": 0
         },
@@ -2401,7 +2451,8 @@
           "min": 0,
           "noValue": "Unknown",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#5794F2"
           },
           "decimals": 0
         },
@@ -2457,7 +2508,8 @@
           "min": 0,
           "noValue": "Unknown",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#73BF69"
           },
           "decimals": 0
         },

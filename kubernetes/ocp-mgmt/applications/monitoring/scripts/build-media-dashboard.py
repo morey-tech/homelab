@@ -9,6 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.dont_write_bytecode = True
 DS = {'type': 'prometheus', 'uid': 'ocp-home'}
 INFRA = {'type': 'prometheus', 'uid': 'infrastructure'}
+STREAM_COLORS = {'Direct Play': '#73BF69', 'Direct Stream': '#FADE2A', 'Transcoding': '#5794F2'}
+RESOURCE_COLORS = {'Plex memory': '#B877D9', 'SABnzbd CPU': '#FF9830', 'SABnzbd memory': '#56D9D1'}
 PRIMARY = [('plex', 'Plex'), ('sabnzbd', 'SABnzbd')]
 SECONDARY = [('sonarr', 'Sonarr'), ('radarr', 'Radarr'), ('bazarr', 'Bazarr'),
              ('lidarr', 'Lidarr'), ('overseerr', 'Overseerr'), ('tautulli', 'Tautulli'),
@@ -79,6 +81,8 @@ def build():
                  'fillOpacity': 10, 'spanNulls': False, 'stacking': {'mode': 'none', 'group': 'A'}}}, 'overrides': []},
              'options': {'legend': {'showLegend': True, 'placement': 'bottom', 'displayMode': 'list'},
                          'tooltip': {'mode': 'multi', 'sort': 'desc'}}}
+        if title in RESOURCE_COLORS:
+            p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': RESOURCE_COLORS[title]}
         panels.append(p)
         return p
 
@@ -117,6 +121,8 @@ def build():
         p['targets'][0].update(instant=True, range=False)
         p['fieldConfig']['defaults']['decimals'] = 0
         p['fieldConfig']['defaults'].pop('custom')
+        if title in STREAM_COLORS:
+            p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': STREAM_COLORS[title]}
         p['options'] = {'reduceOptions': {'calcs': ['lastNotNull'], 'fields': '', 'values': False},
                         'colorMode': 'value', 'graphMode': 'none', 'textMode': 'auto', 'justifyMode': 'auto'}
 
@@ -129,6 +135,10 @@ def build():
     p['fieldConfig']['defaults']['custom']['lineInterpolation'] = 'stepAfter'
     p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'normal', 'group': 'A'}
     p['fieldConfig']['defaults']['custom']['fillOpacity'] = 60
+    p['fieldConfig']['overrides'] = [
+        {'matcher': {'id': 'byName', 'options': label},
+         'properties': [{'id': 'color', 'value': {'mode': 'fixed', 'fixedColor': color}}]}
+        for label, color in STREAM_COLORS.items()]
     # Append new panels to preserve the existing total and history panel IDs.
     stream_stat('Direct Stream', 'tautulli_streams_direct_stream', 6)
     stream_stat('Transcoding', 'tautulli_streams_transcode', 9)
