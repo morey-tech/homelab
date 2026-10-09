@@ -1554,6 +1554,34 @@
               {
                 "id": "unit",
                 "value": "string"
+              },
+              {
+                "id": "custom.width",
+                "value": 55
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Used"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 92
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 96
               }
             ]
           },
@@ -1634,7 +1662,13 @@
       ],
       "options": {
         "showHeader": true,
-        "cellHeight": "sm"
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Used",
+            "desc": true
+          }
+        ]
       },
       "transformations": [
         {
@@ -1711,6 +1745,34 @@
               {
                 "id": "unit",
                 "value": "string"
+              },
+              {
+                "id": "custom.width",
+                "value": 122
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Used"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 96
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 96
               }
             ]
           },
@@ -1791,7 +1853,13 @@
       ],
       "options": {
         "showHeader": true,
-        "cellHeight": "sm"
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Used",
+            "desc": true
+          }
+        ]
       },
       "transformations": [
         {

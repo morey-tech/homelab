@@ -172,9 +172,9 @@ def build():
     for p in panels:
         if p['gridPos']['y'] >= 4:
             p['gridPos']['y'] += 7
-    for title, capacity, free, identity, label, x in [
-        ('Pool capacity overview', 'storagepoolCapacity', 'storagepoolFreeSize', 'pool_id', 'Pool', 0),
-        ('Shared-folder capacity overview', 'sharedFolderCapacity', 'sharedFolderFreeSize', 'share', 'Shared folder', 12),
+    for title, capacity, free, identity, label, x, widths in [
+        ('Pool capacity overview', 'storagepoolCapacity', 'storagepoolFreeSize', 'pool_id', 'Pool', 0, (50, 84, 87)),
+        ('Shared-folder capacity overview', 'sharedFolderCapacity', 'sharedFolderFreeSize', 'share', 'Shared folder', 12, (111, 87, 87)),
     ]:
         p = add(title, capacity_summary(capacity, free), x, 4, 12, 7, 'table', 'bytes',
                 description='Current used and total capacity with a 0–100% usage bar for each item. Used = total minus free. '
@@ -191,8 +191,16 @@ def build():
                                           'renameByName': {identity: label}}},
         ]
         p['fieldConfig']['defaults']['decimals'] = 2
+        p['options']['sortBy'] = [{'displayName': 'Used', 'desc': True}]
+        # Add 10% to the widths fitted in Grafana; the bar fills the rest.
         p['fieldConfig']['overrides'] = [
-            {'matcher': {'id': 'byName', 'options': label}, 'properties': [{'id': 'unit', 'value': 'string'}]},
+            {'matcher': {'id': 'byName', 'options': label}, 'properties': [
+                {'id': 'unit', 'value': 'string'},
+                {'id': 'custom.width', 'value': round(widths[0] * 1.1)},
+            ]},
+            *[{'matcher': {'id': 'byName', 'options': name},
+               'properties': [{'id': 'custom.width', 'value': round(width * 1.1)}]}
+              for name, width in zip(['Used', 'Total'], widths[1:])],
             {'matcher': {'id': 'byName', 'options': 'Used %'}, 'properties': [
                 {'id': 'unit', 'value': 'percent'}, {'id': 'decimals', 'value': 1},
                 {'id': 'min', 'value': 0}, {'id': 'max', 'value': 100},
