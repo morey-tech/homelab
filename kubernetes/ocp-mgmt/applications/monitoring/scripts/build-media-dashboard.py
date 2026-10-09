@@ -98,7 +98,7 @@ def build():
                   x+2*w, y, w, h, 'bps', base + 'Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.')
 
     for i, (app, name) in enumerate(PRIMARY):
-        service(app, name, 0, 7+i*7, 8, 7)
+        service(app, name, 0, 5+i*7, 8, 7)
     spec = importlib.util.spec_from_file_location('cluster_dashboard', ROOT / 'scripts/build-dashboard.py')
     cluster = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(cluster)
@@ -106,17 +106,17 @@ def build():
     queries = [(next(p for p in host['panels'] if p['title'] == 'Node network ' + direction)['targets'][0]['expr'],
                 '{{instance}} · ' + label)
                for direction, label in [('receive', 'Receive'), ('transmit', 'Transmit')]]
-    graph('Shared host network — bond0 (all workloads)', queries, 16, 7, 8, 12, 'bps',
+    graph('Shared host network — bond0 (all workloads)', queries, 16, 5, 8, 12, 'bps',
           'Shared context for Plex and SABnzbd on OCP Home. Whole-host bond0 receive/transmit traffic includes all workloads; '
           'it is not attributable to either app. Plex uses host networking, so its pod counters cannot isolate Plex traffic. '
           'Physical bond members are excluded. Five-minute average bits/s; unavailable or stale telemetry appears as gaps.')
     for i, (app, name) in enumerate(SECONDARY):
-        service(app, name, (i % 2)*12, 21+(i//2)*5, 4, 5)
+        service(app, name, (i % 2)*12, 19+(i//2)*5, 4, 5)
     description = ('Current Plex sessions reported by Tautulli, including paused sessions. '
                    'Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. '
                    'History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.')
     def stream_stat(title, metric, x):
-        p = graph(title, [(stream_query(metric), 'Streams')], x, 0, 3, 7, 'short', description, INFRA)
+        p = graph(title, [(stream_query(metric), 'Streams')], x, 0, 3, 5, 'short', description, INFRA)
         p['type'] = 'stat'
         p['targets'][0].update(instant=True, range=False)
         p['fieldConfig']['defaults']['decimals'] = 0
@@ -132,7 +132,7 @@ def build():
     p = graph('Plex stream history', [(stream_query(metric), label) for metric, label in [
         ('tautulli_streams_direct_play', 'Direct Play'),
         ('tautulli_streams_direct_stream', 'Direct Stream'), ('tautulli_streams_transcode', 'Transcoding')]],
-        12, 0, 12, 7, 'short', description, INFRA)
+        12, 0, 12, 5, 'short', description, INFRA)
     p['fieldConfig']['defaults']['decimals'] = 0
     p['fieldConfig']['defaults']['custom']['lineInterpolation'] = 'stepAfter'
     p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'normal', 'group': 'A'}
@@ -145,13 +145,13 @@ def build():
     stream_stat('Direct Stream', 'tautulli_streams_direct_stream', 6)
     stream_stat('Transcoding', 'tautulli_streams_transcode', 9)
     stream_stat('Direct Play', 'tautulli_streams_direct_play', 3)
-    secondary_panels = [p for p in panels if p['gridPos']['y'] >= 21]
+    secondary_panels = [p for p in panels if p['gridPos']['y'] >= 19]
     for p in secondary_panels:
         p['gridPos']['y'] += 1  # Leave room for the collapsible row header.
     row = {'id': len(panels) + 1, 'title': 'Secondary media services', 'type': 'row',
-           'collapsed': True, 'gridPos': {'x': 0, 'y': 21, 'w': 24, 'h': 1},
+           'collapsed': True, 'gridPos': {'x': 0, 'y': 19, 'w': 24, 'h': 1},
            'panels': secondary_panels}
-    panels = [p for p in panels if p['gridPos']['y'] < 21] + [row]
+    panels = [p for p in panels if p['gridPos']['y'] < 19] + [row]
     panels.sort(key=lambda p: (p['gridPos']['y'], p['gridPos']['x']))
     return {'uid': 'media-services', 'title': 'Media Services', 'schemaVersion': 39, 'version': 1,
             'editable': False, 'tags': ['homelab', 'ocp-home', 'media'], 'timezone': 'browser',
