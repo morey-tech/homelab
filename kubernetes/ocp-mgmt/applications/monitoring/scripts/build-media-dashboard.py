@@ -67,6 +67,10 @@ def stream_query(metric='tautulli_streams'):
     return f'({fresh(selector)} >= 0) and on(job, instance) ({up} == 1)'
 
 
+def wan_query():
+    return f'({stream_query("tautulli_wan_bandwidth_kilobits_per_second")}) / 1000'
+
+
 def build():
     panels = []
 
@@ -106,7 +110,7 @@ def build():
     queries = [(next(p for p in host['panels'] if p['title'] == 'Node network ' + direction)['targets'][0]['expr'],
                 '{{instance}} · ' + label)
                for direction, label in [('receive', 'Receive'), ('transmit', 'Transmit')]]
-    graph('Shared host network — bond0 (all workloads)', queries, 16, 5, 8, 12, 'bps',
+    graph('Shared host network — bond0 (all workloads)', queries, 16, 7, 8, 10, 'bps',
           'Shared context for Plex and SABnzbd on OCP Home. Whole-host bond0 receive/transmit traffic includes all workloads; '
           'it is not attributable to either app. Plex uses host networking, so its pod counters cannot isolate Plex traffic. '
           'Physical bond members are excluded. Five-minute average bits/s; unavailable or stale telemetry appears as gaps.')
@@ -127,12 +131,13 @@ def build():
             p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': '#FF73BF'}
         p['options'] = {'reduceOptions': {'calcs': ['lastNotNull'], 'fields': '', 'values': False},
                         'colorMode': 'value', 'graphMode': 'none', 'textMode': 'auto', 'justifyMode': 'auto'}
+        return p
 
     stream_stat('Total', 'tautulli_streams', 0)
     p = graph('Plex stream history', [(stream_query(metric), label) for metric, label in [
         ('tautulli_streams_direct_play', 'Direct Play'),
         ('tautulli_streams_direct_stream', 'Direct Stream'), ('tautulli_streams_transcode', 'Transcoding')]],
-        12, 0, 12, 5, 'short', description, INFRA)
+        16, 0, 8, 7, 'short', description, INFRA)
     p['fieldConfig']['defaults']['decimals'] = 0
     p['fieldConfig']['defaults']['custom']['lineInterpolation'] = 'stepAfter'
     p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'normal', 'group': 'A'}
@@ -151,6 +156,15 @@ def build():
     row = {'id': len(panels) + 1, 'title': 'Secondary media services', 'type': 'row',
            'collapsed': True, 'gridPos': {'x': 0, 'y': 19, 'w': 24, 'h': 1},
            'panels': secondary_panels}
+    p = stream_stat('WAN est.', 'tautulli_wan_bandwidth_kilobits_per_second', 12)
+    p['id'] = row['id'] + 1  # Preserve the collapsed row's existing ID.
+    p['gridPos']['w'] = 4
+    p['description'] = ('Plex estimated reserved WAN bandwidth for current remote sessions, not measured traffic. '
+                        'Tautulli reports kbps; this card divides by 1000 to show Mbps. Polled every 30 seconds. '
+                        'Missing, failed, or stale collection displays Unknown; an explicit zero remains zero.')
+    p['targets'][0].update(expr=wan_query(), legendFormat='WAN estimate')
+    p['fieldConfig']['defaults'].update(unit='suffix:Mbps', decimals=2,
+                                       color={'mode': 'fixed', 'fixedColor': '#B877D9'})
     panels = [p for p in panels if p['gridPos']['y'] < 19] + [row]
     panels.sort(key=lambda p: (p['gridPos']['y'], p['gridPos']['x']))
     return {'uid': 'media-services', 'title': 'Media Services', 'schemaVersion': 39, 'version': 1,

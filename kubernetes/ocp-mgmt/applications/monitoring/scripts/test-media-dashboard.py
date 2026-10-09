@@ -30,7 +30,7 @@ def main():
     assert {p['title'] for p in rows[0]['panels']} == {
         name + suffix for _, name in media.SECONDARY for suffix in (' CPU', ' memory', ' network')}
     panels = list(checker.query_panels(dashboard['panels']))
-    assert len(panels) == 37 and len({p['id'] for p in panels}) == 37
+    assert len(panels) == 38 and len({p['id'] for p in panels}) == 38
     assert rows[0]['id'] not in {p['id'] for p in panels}
     occupied = set()
     for panel in panels:
@@ -39,7 +39,7 @@ def main():
         assert not cells & occupied, 'Panels overlap'
         occupied |= cells
         assert panel['datasource']['uid'] == ('infrastructure' if panel['title'] in (
-            'Plex stream history', 'Total', 'Direct Play', 'Direct Stream', 'Transcoding') else 'ocp-home')
+            'Plex stream history', 'Total', 'Direct Play', 'Direct Stream', 'Transcoding', 'WAN est.') else 'ocp-home')
     header = rows[0]['gridPos']
     assert not occupied & {(x, header['y']) for x in range(24)}
     assert sum('Shared host network' in p['title'] for p in panels) == 1
@@ -114,6 +114,17 @@ def main():
                       'input_series': [{'series': stream_metric, 'values': values}, {'series': stream_up, 'values': up_values}],
                       'promql_expr_test': [{'expr': media.stream_query(), 'eval_time': '6m',
                           'exp_samples': [] if expected is None else [{'labels': stream_metric, 'value': expected}]}]})
+
+    wan_metric = 'tautulli_wan_bandwidth_kilobits_per_second{job="tautulli",instance="plex"}'
+    for name, values, up_values, expected in [
+        ('kbps to Mbps', '31253x6', '1x6', 31.253), ('zero WAN demand', '0x6', '1x6', 0),
+        ('failed scrape', '31253x6', '0x6', None), ('missing value', '_x7', '1x6', None),
+        ('stale value', '31253x2 _x4', '1x6', None), ('stale health', '31253x6', '1x2 _x4', None),
+        ('negative value', '-1x6', '1x6', None), ('invalid value', 'NaN NaN NaN NaN NaN NaN NaN', '1x6', None)]:
+        cases.append({'name': 'WAN '+name, 'interval': '1m',
+                      'input_series': [{'series': wan_metric, 'values': values}, {'series': stream_up, 'values': up_values}],
+                      'promql_expr_test': [{'expr': media.wan_query(), 'eval_time': '6m',
+                          'exp_samples': [] if expected is None else [{'labels': '{job="tautulli",instance="plex"}', 'value': expected}]}]})
 
     promtool = os.environ.get('PROMTOOL') or shutil.which('promtool')
     if not promtool:

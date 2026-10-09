@@ -245,6 +245,63 @@
       }
     },
     {
+      "id": 39,
+      "title": "WAN est.",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Plex estimated reserved WAN bandwidth for current remote sessions, not measured traffic. Tautulli reports kbps; this card divides by 1000 to show Mbps. Polled every 30 seconds. Missing, failed, or stale collection displays Unknown; an explicit zero remains zero.",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)) / 1000",
+          "legendFormat": "WAN estimate",
+          "instant": true,
+          "range": false,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:Mbps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#B877D9"
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      }
+    },
+    {
       "id": 34,
       "title": "Plex stream history",
       "type": "timeseries",
@@ -254,10 +311,10 @@
       },
       "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.",
       "gridPos": {
-        "x": 12,
+        "x": 16,
         "y": 0,
-        "w": 12,
-        "h": 5
+        "w": 8,
+        "h": 7
       },
       "targets": [
         {
@@ -519,9 +576,9 @@
       "description": "Shared context for Plex and SABnzbd on OCP Home. Whole-host bond0 receive/transmit traffic includes all workloads; it is not attributable to either app. Plex uses host networking, so its pod counters cannot isolate Plex traffic. Physical bond members are excluded. Five-minute average bits/s; unavailable or stale telemetry appears as gaps.",
       "gridPos": {
         "x": 16,
-        "y": 5,
+        "y": 7,
         "w": 8,
-        "h": 12
+        "h": 10
       },
       "targets": [
         {
