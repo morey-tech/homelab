@@ -145,6 +145,13 @@ def build():
     stream_stat('Direct Stream', 'tautulli_streams_direct_stream', 6)
     stream_stat('Transcoding', 'tautulli_streams_transcode', 9)
     stream_stat('Direct Play', 'tautulli_streams_direct_play', 3)
+    secondary_panels = [p for p in panels if p['gridPos']['y'] >= 15]
+    for p in secondary_panels:
+        p['gridPos']['y'] += 1  # Leave room for the collapsible row header.
+    row = {'id': len(panels) + 1, 'title': 'Secondary media services', 'type': 'row',
+           'collapsed': True, 'gridPos': {'x': 0, 'y': 15, 'w': 24, 'h': 1},
+           'panels': secondary_panels}
+    panels = [p for p in panels if p['gridPos']['y'] < 15] + [row]
     return {'uid': 'media-services', 'title': 'Media Services', 'schemaVersion': 39, 'version': 1,
             'editable': False, 'tags': ['homelab', 'ocp-home', 'media'], 'timezone': 'browser',
             'refresh': '30s', 'time': {'from': 'now-6h', 'to': 'now'}, 'panels': panels,

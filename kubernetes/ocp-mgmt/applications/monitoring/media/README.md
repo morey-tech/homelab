@@ -4,7 +4,7 @@ The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d
 
 ## Graphs
 
-Plex and SABnzbd occupy the first two rows with CPU and memory graphs. One shared host network graph spans those rows. A compact Plex stream-count row follows, then Sonarr, Radarr, Bazarr, Lidarr, Overseerr, Tautulli, Profilarr, Maintainerr, and Cleanuparr with smaller graphs, two services per row.
+Plex and SABnzbd occupy the first two rows with CPU and memory graphs. One shared host network graph spans those rows. A compact Plex stream-count row follows, then Sonarr, Radarr, Bazarr, Lidarr, Overseerr, Tautulli, Profilarr, Maintainerr, and Cleanuparr with smaller graphs, two services per row, inside **Secondary media services**, collapsed by default. Expand that section to view them; Plex, SABnzbd, shared host traffic, and stream counts/history remain visible.
 
 | Graph | Meaning |
 |-------|---------|

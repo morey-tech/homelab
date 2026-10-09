@@ -16,13 +16,22 @@ sys.dont_write_bytecode = True
 spec = importlib.util.spec_from_file_location('media', ROOT / 'scripts/build-media-dashboard.py')
 media = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(media)
+spec = importlib.util.spec_from_file_location('check_media', ROOT / 'scripts/check-media.py')
+checker = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(checker)
 
 
 def main():
     dashboard = media.build()
     assert dashboard == json.loads((ROOT / 'dashboards/media.json').read_text()), 'Regenerate media JSON'
-    panels = dashboard['panels']
+    rows = [p for p in dashboard['panels'] if p['type'] == 'row']
+    assert len(rows) == 1 and rows[0]['collapsed'] is True
+    assert len(rows[0]['panels']) == 3 * len(media.SECONDARY)
+    assert {p['title'] for p in rows[0]['panels']} == {
+        name + suffix for _, name in media.SECONDARY for suffix in (' CPU', ' memory', ' network')}
+    panels = list(checker.query_panels(dashboard['panels']))
     assert len(panels) == 37 and len({p['id'] for p in panels}) == 37
+    assert rows[0]['id'] not in {p['id'] for p in panels}
     occupied = set()
     for panel in panels:
         g = panel['gridPos']
@@ -31,6 +40,8 @@ def main():
         occupied |= cells
         assert panel['datasource']['uid'] == ('infrastructure' if panel['title'] in (
             'Plex stream history', 'Total', 'Direct Play', 'Direct Stream', 'Transcoding') else 'ocp-home')
+    header = rows[0]['gridPos']
+    assert not occupied & {(x, header['y']) for x in range(24)}
     assert sum('Shared host network' in p['title'] for p in panels) == 1
     assert not any(p['title'] in ('Plex network', 'SABnzbd network') for p in panels)
 

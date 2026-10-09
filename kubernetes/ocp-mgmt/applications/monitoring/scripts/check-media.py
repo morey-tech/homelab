@@ -14,6 +14,14 @@ ROOT = Path(__file__).resolve().parents[1]
 BASE = 'https://grafana.apps.ocp-mgmt.rh-lab.morey.tech'
 
 
+def query_panels(panels):
+    """Include query panels nested inside collapsed dashboard rows."""
+    for panel in panels:
+        if panel.get('targets'):
+            yield panel
+        yield from query_panels(panel.get('panels', []))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--local', action='store_true', help='Query local JSON without requiring dashboard deployment')
@@ -42,7 +50,7 @@ def main():
         assert dashboard['panels'] == expected['panels'], 'Deployed panels differ from local JSON'
     assert request('/api/datasources/uid/ocp-home/health')['status'] == 'OK'
     now = int(time.time() * 1000)
-    for panel in dashboard['panels']:
+    for panel in query_panels(dashboard['panels']):
         if panel['datasource']['uid'] == 'infrastructure' and args.skip_tautulli:
             print(f"{panel['title']}: deferred until GitOps deployment")
             continue
