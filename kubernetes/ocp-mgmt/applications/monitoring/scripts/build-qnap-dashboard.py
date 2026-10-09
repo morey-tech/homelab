@@ -191,7 +191,7 @@ def build():
                                           'renameByName': {identity: label}}},
         ]
         p['fieldConfig']['defaults']['decimals'] = 2
-        p['options']['sortBy'] = [{'displayName': 'Used', 'desc': True}]
+        p['options']['sortBy'] = [{'displayName': 'Used %', 'desc': True}]
         # Add 10% to the widths fitted in Grafana; the bar fills the rest.
         p['fieldConfig']['overrides'] = [
             {'matcher': {'id': 'byName', 'options': label}, 'properties': [

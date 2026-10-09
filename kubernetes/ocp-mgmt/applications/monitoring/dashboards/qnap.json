@@ -1665,7 +1665,7 @@
         "cellHeight": "sm",
         "sortBy": [
           {
-            "displayName": "Used",
+            "displayName": "Used %",
             "desc": true
           }
         ]
@@ -1856,7 +1856,7 @@
         "cellHeight": "sm",
         "sortBy": [
           {
-            "displayName": "Used",
+            "displayName": "Used %",
             "desc": true
           }
         ]
