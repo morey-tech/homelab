@@ -67,14 +67,23 @@ def stream_query(metric='tautulli_streams'):
     return f'({fresh(selector)} >= 0) and on(job, instance) ({up} == 1)'
 
 
-def wan_query():
-    return f'({stream_query("tautulli_wan_bandwidth_kilobits_per_second")}) / 1000'
+def bandwidth_query(scope):
+    return f'({stream_query(f"tautulli_{scope}_bandwidth_kilobits_per_second")}) / 1000'
 
 
-def pfsense_wan_query(metric):
-    selector = f'{metric}{{job="pfsense",instance="pfsense",ifName="ix2"}}'
-    up = fresh('up{job="pfsense",instance="pfsense"}')
-    return f'(8 * rate({selector}[5m]) / 1000000 and {fresh(selector)}) and on(job, instance) ({up} == 1)'
+def sab_query(metric, scale=1):
+    selector = f'{metric}{{job="sabnzbd",instance="sabnzbd"}}'
+    up = fresh('up{job="sabnzbd",instance="sabnzbd"}')
+    return f'(({fresh(selector)} >= 0) * {scale}) and on(job, instance) ({up} == 1)'
+
+
+def media_share_query():
+    labels = 'job="qnap",instance="qnap-01",share="storage-media"'
+    total = fresh(f'sharedFolderCapacity{{{labels}}}')
+    free = fresh(f'sharedFolderFreeSize{{{labels}}}')
+    up = fresh('up{job="qnap",instance="qnap-01"}')
+    valid = f'({total} > 0) and ({free} >= 0) and ({free} <= {total})'
+    return f'(100 * ({total} - {free}) / {total} and ({valid})) and on(job, instance) ({up} == 1)'
 
 
 def build():
@@ -108,7 +117,7 @@ def build():
                   x+2*w, y, w, h, 'bps', base + 'Five-minute receive/transmit rates in bits/s from pod sandbox interfaces, excluding loopback. Host-network pods are excluded to prevent attributing host traffic to the application.')
 
     for i, (app, name) in enumerate(PRIMARY):
-        service(app, name, 0, 5+i*7, 8, 7)
+        service(app, name, 0, 5+i*7, 8 if app == 'plex' else 5, 7)
     spec = importlib.util.spec_from_file_location('cluster_dashboard', ROOT / 'scripts/build-dashboard.py')
     cluster = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(cluster)
@@ -124,7 +133,7 @@ def build():
         service(app, name, (i % 2)*12, 19+(i//2)*5, 4, 5)
     description = ('Current Plex sessions reported by Tautulli, including paused sessions. '
                    'Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. '
-                   'History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.')
+                   'History begins when collection deploys. The three playback types are stacked; their combined height gives total sessions.')
     def stream_stat(title, metric, x):
         p = graph(title, [(stream_query(metric), 'Streams')], x, 0, 3, 5, 'short', description, INFRA)
         p['type'] = 'stat'
@@ -133,17 +142,15 @@ def build():
         p['fieldConfig']['defaults'].pop('custom')
         if title in STREAM_COLORS:
             p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': STREAM_COLORS[title]}
-        elif title == 'Total':
-            p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': '#FF73BF'}
         p['options'] = {'reduceOptions': {'calcs': ['lastNotNull'], 'fields': '', 'values': False},
                         'colorMode': 'value', 'graphMode': 'none', 'textMode': 'auto', 'justifyMode': 'auto'}
         return p
 
-    stream_stat('Total', 'tautulli_streams', 0)
     p = graph('Plex stream history', [(stream_query(metric), label) for metric, label in [
         ('tautulli_streams_direct_play', 'Direct Play'),
         ('tautulli_streams_direct_stream', 'Direct Stream'), ('tautulli_streams_transcode', 'Transcoding')]],
         16, 0, 8, 7, 'short', description, INFRA)
+    p['id'] = 34
     p['fieldConfig']['defaults']['decimals'] = 0
     p['fieldConfig']['defaults']['custom']['lineInterpolation'] = 'stepAfter'
     p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'normal', 'group': 'A'}
@@ -152,42 +159,55 @@ def build():
         {'matcher': {'id': 'byName', 'options': label},
          'properties': [{'id': 'color', 'value': {'mode': 'fixed', 'fixedColor': color}}]}
         for label, color in STREAM_COLORS.items()]
-    # Append new panels to preserve the existing total and history panel IDs.
-    stream_stat('Direct Stream', 'tautulli_streams_direct_stream', 6)
-    stream_stat('Transcoding', 'tautulli_streams_transcode', 9)
-    stream_stat('Direct Play', 'tautulli_streams_direct_play', 3)
+    # Preserve IDs for existing panels; retired Total panel ID 33 stays unused.
+    stream_stat('Direct Stream', 'tautulli_streams_direct_stream', 3)['id'] = 35
+    stream_stat('Transcoding', 'tautulli_streams_transcode', 6)['id'] = 36
+    stream_stat('Direct Play', 'tautulli_streams_direct_play', 0)['id'] = 37
     secondary_panels = [p for p in panels if p['gridPos']['y'] >= 19]
     for p in secondary_panels:
         p['gridPos']['y'] += 1  # Leave room for the collapsible row header.
-    row = {'id': len(panels) + 1, 'title': 'Secondary media services', 'type': 'row',
+    row = {'id': 38, 'title': 'Secondary media services', 'type': 'row',
            'collapsed': True, 'gridPos': {'x': 0, 'y': 19, 'w': 24, 'h': 1},
            'panels': secondary_panels}
-    p = stream_stat('WAN est.', 'tautulli_wan_bandwidth_kilobits_per_second', 12)
-    p['id'] = row['id'] + 1  # Preserve the collapsed row's existing ID.
-    p['gridPos']['w'] = 4
-    p['description'] = ('Plex estimated reserved WAN bandwidth for current remote sessions, not measured traffic. '
-                        'Tautulli reports kbps; this card divides by 1000 to show Mbps. Polled every 30 seconds. '
-                        'Missing, failed, or stale collection displays Unknown; an explicit zero remains zero.')
-    p['targets'][0].update(expr=wan_query(), legendFormat='WAN estimate')
-    p['fieldConfig']['defaults'].update(unit='suffix:Mbps', decimals=2,
-                                       color={'mode': 'fixed', 'fixedColor': '#B877D9'})
-    next_id = max(row['id'], *(p['id'] for p in panels)) + 1
-    p = graph('WAN traffic — pfSense and Plex', [
-        (pfsense_wan_query('ifHCOutOctets'), 'WAN upload'),
-        (pfsense_wan_query('ifHCInOctets'), 'WAN download'),
-        (wan_query(), 'Plex WAN estimate')], 16, 13, 8, 6, 'suffix:Mbps',
-        'Measured pfSense WAN traffic on ix2: transmit = upload, receive = download. '
-        'Five-minute average Mbps from 64-bit byte counters, covering all internet traffic. '
-        'Plex is Tautulli\'s current estimated reserved WAN bandwidth, sampled every 30 seconds; '
-        'it is not measured Plex traffic. These independently collected series are not stacked or subtracted. '
-        'Failed or stale sources appear as gaps; other healthy sources remain visible.', INFRA)
-    p['id'] = next_id
+    p = stream_stat('SAB remaining', 'tautulli_streams', 9)
+    p['id'] = 39
+    p['description'] = ('Bytes left to download across the SABnzbd queue, including queued/paused work. '
+                        'Excludes repair, unpacking, and import work. API MiB is converted to bytes. '
+                        'Missing, stale, or failed telemetry shows Unknown, not an empty queue.')
+    p['targets'][0].update(expr=sab_query('sabnzbd_queue_remaining_mebibytes', 1048576), legendFormat='Remaining')
+    p['fieldConfig']['defaults'].update(unit='bytes', decimals=1,
+                                       color={'mode': 'fixed', 'fixedColor': '#FF9830'})
+    p = graph('Plex bandwidth estimates', [(bandwidth_query('wan'), 'WAN estimate'),
+                                          (bandwidth_query('lan'), 'LAN estimate')],
+              16, 13, 8, 6, 'suffix:Mbps',
+              'Tautulli estimates of bandwidth reserved for remote (WAN) and local (LAN) Plex sessions. '
+              'Not measured interface traffic. Polled every 30 seconds; kbps converted to Mbps. '
+              'Missing, failed, or stale collection appears as gaps.', INFRA)
+    p['id'] = 40
     p['fieldConfig']['defaults']['decimals'] = 2
     p['fieldConfig']['overrides'] = [
         {'matcher': {'id': 'byName', 'options': label},
          'properties': [{'id': 'color', 'value': {'mode': 'fixed', 'fixedColor': color}}]}
-        for label, color in [('WAN upload', '#5794F2'), ('WAN download', '#73BF69'),
-                             ('Plex WAN estimate', '#B877D9')]]
+        for label, color in [('WAN estimate', '#B877D9'), ('LAN estimate', '#56D9D1')]]
+    p = graph('Media share used', [(media_share_query(), 'storage-media')], 12, 0, 4, 5, 'percent',
+              'qnap-01 storage-media logical shared-folder used percentage: (total minus free) / total. '
+              'Includes snapshots/allocation according to NAS reporting; not pool usage. '
+              'Missing, invalid, stale, or failed telemetry shows Unknown.', INFRA)
+    p['id'] = 41
+    p['type'] = 'gauge'
+    p['targets'][0].update(instant=True, range=False)
+    p['fieldConfig']['defaults'].pop('custom')
+    p['fieldConfig']['defaults'].update(max=100, decimals=1, color={'mode': 'thresholds'},
+        thresholds={'mode': 'absolute', 'steps': [{'color': 'green', 'value': None},
+                    {'color': 'yellow', 'value': 80}, {'color': 'red', 'value': 90}]})
+    p['options'] = {'reduceOptions': {'calcs': ['lastNotNull'], 'fields': '', 'values': False},
+                    'showThresholdLabels': False, 'showThresholdMarkers': True}
+    p = graph('SAB download speed', [(sab_query('sabnzbd_download_kibibytes_per_second', 1024), 'Download')],
+              10, 12, 6, 7, 'Bps', 'SABnzbd application download speed, sampled every 30 seconds. '
+              'API KiB/s is converted to bytes/s. Not total host traffic or unpacking speed. '
+              'Missing, failed, or stale collection appears as gaps.', INFRA)
+    p['id'] = 42
+    p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': '#F2CC0C'}
     panels = [p for p in panels if p['gridPos']['y'] < 19] + [row]
     panels.sort(key=lambda p: (p['gridPos']['y'], p['gridPos']['x']))
     return {'uid': 'media-services', 'title': 'Media Services', 'schemaVersion': 39, 'version': 1,

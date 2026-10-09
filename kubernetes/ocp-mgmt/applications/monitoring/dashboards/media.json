@@ -17,63 +17,6 @@
   },
   "panels": [
     {
-      "id": 33,
-      "title": "Total",
-      "type": "stat",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "infrastructure"
-      },
-      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.",
-      "gridPos": {
-        "x": 0,
-        "y": 0,
-        "w": 3,
-        "h": 5
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "infrastructure"
-          },
-          "expr": "((tautulli_streams{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_streams{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)",
-          "legendFormat": "Streams",
-          "instant": true,
-          "range": false,
-          "interval": "30s",
-          "editorMode": "code"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "min": 0,
-          "noValue": "Unknown",
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#FF73BF"
-          },
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "none",
-        "textMode": "auto",
-        "justifyMode": "auto"
-      }
-    },
-    {
       "id": 37,
       "title": "Direct Play",
       "type": "stat",
@@ -81,9 +24,9 @@
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.",
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; their combined height gives total sessions.",
       "gridPos": {
-        "x": 3,
+        "x": 0,
         "y": 0,
         "w": 3,
         "h": 5
@@ -138,9 +81,9 @@
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.",
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; their combined height gives total sessions.",
       "gridPos": {
-        "x": 6,
+        "x": 3,
         "y": 0,
         "w": 3,
         "h": 5
@@ -195,9 +138,9 @@
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.",
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; their combined height gives total sessions.",
       "gridPos": {
-        "x": 9,
+        "x": 6,
         "y": 0,
         "w": 3,
         "h": 5
@@ -246,17 +189,17 @@
     },
     {
       "id": 39,
-      "title": "WAN est.",
+      "title": "SAB remaining",
       "type": "stat",
       "datasource": {
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Plex estimated reserved WAN bandwidth for current remote sessions, not measured traffic. Tautulli reports kbps; this card divides by 1000 to show Mbps. Polled every 30 seconds. Missing, failed, or stale collection displays Unknown; an explicit zero remains zero.",
+      "description": "Bytes left to download across the SABnzbd queue, including queued/paused work. Excludes repair, unpacking, and import work. API MiB is converted to bytes. Missing, stale, or failed telemetry shows Unknown, not an empty queue.",
       "gridPos": {
-        "x": 12,
+        "x": 9,
         "y": 0,
-        "w": 4,
+        "w": 3,
         "h": 5
       },
       "targets": [
@@ -266,8 +209,8 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(((tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)) / 1000",
-          "legendFormat": "WAN estimate",
+          "expr": "(((sabnzbd_queue_remaining_mebibytes{job=\"sabnzbd\",instance=\"sabnzbd\"} and (time() - timestamp(sabnzbd_queue_remaining_mebibytes{job=\"sabnzbd\",instance=\"sabnzbd\"}) < 180)) >= 0) * 1048576) and on(job, instance) ((up{job=\"sabnzbd\",instance=\"sabnzbd\"} and (time() - timestamp(up{job=\"sabnzbd\",instance=\"sabnzbd\"}) < 180)) == 1)",
+          "legendFormat": "Remaining",
           "instant": true,
           "range": false,
           "interval": "30s",
@@ -276,14 +219,14 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "suffix:Mbps",
+          "unit": "bytes",
           "min": 0,
           "noValue": "Unknown",
           "color": {
             "mode": "fixed",
-            "fixedColor": "#B877D9"
+            "fixedColor": "#FF9830"
           },
-          "decimals": 2
+          "decimals": 1
         },
         "overrides": []
       },
@@ -302,6 +245,78 @@
       }
     },
     {
+      "id": 41,
+      "title": "Media share used",
+      "type": "gauge",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "qnap-01 storage-media logical shared-folder used percentage: (total minus free) / total. Includes snapshots/allocation according to NAS reporting; not pool usage. Missing, invalid, stale, or failed telemetry shows Unknown.",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(100 * ((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"}) < 180)) - (sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"}) < 180))) / (sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"}) < 180)) and (((sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"}) < 180)) > 0) and ((sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"}) < 180)) >= 0) and ((sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"} and (time() - timestamp(sharedFolderFreeSize{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"}) < 180)) <= (sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"} and (time() - timestamp(sharedFolderCapacity{job=\"qnap\",instance=\"qnap-01\",share=\"storage-media\"}) < 180))))) and on(job, instance) ((up{job=\"qnap\",instance=\"qnap-01\"} and (time() - timestamp(up{job=\"qnap\",instance=\"qnap-01\"}) < 180)) == 1)",
+          "legendFormat": "storage-media",
+          "instant": true,
+          "range": false,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "thresholds"
+          },
+          "max": 100,
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      }
+    },
+    {
       "id": 34,
       "title": "Plex stream history",
       "type": "timeseries",
@@ -309,7 +324,7 @@
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; total is shown only as a current count.",
+      "description": "Current Plex sessions reported by Tautulli, including paused sessions. Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. History begins when collection deploys. The three playback types are stacked; their combined height gives total sessions.",
       "gridPos": {
         "x": 16,
         "y": 0,
@@ -653,7 +668,7 @@
       "gridPos": {
         "x": 0,
         "y": 12,
-        "w": 8,
+        "w": 5,
         "h": 7
       },
       "targets": [
@@ -715,9 +730,9 @@
       },
       "description": "OCP Home deployment pods; each line identifies a pod. Only fresh metrics for running pods with healthy monitoring sources are included. Missing data appears as gaps. Container memory working set in bytes, summed per pod. This is not RSS or a percentage of a configured memory limit.",
       "gridPos": {
-        "x": 8,
+        "x": 5,
         "y": 12,
-        "w": 8,
+        "w": 5,
         "h": 7
       },
       "targets": [
@@ -770,14 +785,78 @@
       }
     },
     {
-      "id": 40,
-      "title": "WAN traffic \u2014 pfSense and Plex",
+      "id": 42,
+      "title": "SAB download speed",
       "type": "timeseries",
       "datasource": {
         "type": "prometheus",
         "uid": "infrastructure"
       },
-      "description": "Measured pfSense WAN traffic on ix2: transmit = upload, receive = download. Five-minute average Mbps from 64-bit byte counters, covering all internet traffic. Plex is Tautulli's current estimated reserved WAN bandwidth, sampled every 30 seconds; it is not measured Plex traffic. These independently collected series are not stacked or subtracted. Failed or stale sources appear as gaps; other healthy sources remain visible.",
+      "description": "SABnzbd application download speed, sampled every 30 seconds. API KiB/s is converted to bytes/s. Not total host traffic or unpacking speed. Missing, failed, or stale collection appears as gaps.",
+      "gridPos": {
+        "x": 10,
+        "y": 12,
+        "w": 6,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((sabnzbd_download_kibibytes_per_second{job=\"sabnzbd\",instance=\"sabnzbd\"} and (time() - timestamp(sabnzbd_download_kibibytes_per_second{job=\"sabnzbd\",instance=\"sabnzbd\"}) < 180)) >= 0) * 1024) and on(job, instance) ((up{job=\"sabnzbd\",instance=\"sabnzbd\"} and (time() - timestamp(up{job=\"sabnzbd\",instance=\"sabnzbd\"}) < 180)) == 1)",
+          "legendFormat": "Download",
+          "instant": false,
+          "range": true,
+          "interval": "30s",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#F2CC0C"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "list"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 40,
+      "title": "Plex bandwidth estimates",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Tautulli estimates of bandwidth reserved for remote (WAN) and local (LAN) Plex sessions. Not measured interface traffic. Polled every 30 seconds; kbps converted to Mbps. Missing, failed, or stale collection appears as gaps.",
       "gridPos": {
         "x": 16,
         "y": 13,
@@ -791,8 +870,8 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(8 * rate(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"}[5m]) / 1000000 and (ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"} and (time() - timestamp(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
-          "legendFormat": "WAN upload",
+          "expr": "(((tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)) / 1000",
+          "legendFormat": "WAN estimate",
           "instant": false,
           "range": true,
           "interval": "30s",
@@ -804,21 +883,8 @@
             "type": "prometheus",
             "uid": "infrastructure"
           },
-          "expr": "(8 * rate(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"}[5m]) / 1000000 and (ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"} and (time() - timestamp(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=\"ix2\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
-          "legendFormat": "WAN download",
-          "instant": false,
-          "range": true,
-          "interval": "30s",
-          "editorMode": "code"
-        },
-        {
-          "refId": "C",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "infrastructure"
-          },
-          "expr": "(((tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_wan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)) / 1000",
-          "legendFormat": "Plex WAN estimate",
+          "expr": "(((tautulli_lan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(tautulli_lan_bandwidth_kilobits_per_second{job=\"tautulli\",instance=\"plex\"}) < 180)) >= 0) and on(job, instance) ((up{job=\"tautulli\",instance=\"plex\"} and (time() - timestamp(up{job=\"tautulli\",instance=\"plex\"}) < 180)) == 1)) / 1000",
+          "legendFormat": "LAN estimate",
           "instant": false,
           "range": true,
           "interval": "30s",
@@ -849,37 +915,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "WAN upload"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "#5794F2"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "WAN download"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "#73BF69"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Plex WAN estimate"
+              "options": "WAN estimate"
             },
             "properties": [
               {
@@ -887,6 +923,21 @@
                 "value": {
                   "mode": "fixed",
                   "fixedColor": "#B877D9"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "LAN estimate"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#56D9D1"
                 }
               }
             ]

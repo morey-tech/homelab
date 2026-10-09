@@ -33,7 +33,7 @@ Library gauges use only `section_id` and `type` labels; library names and last-p
 
 Plex connection status measures Tautulli's reported connection to Plex. A failed scrape is unknown, not disconnected. Plex Pass and version/platform metadata describe configuration; they do not prove Plex is reachable. Use the connection job for that.
 
-Only the WAN estimate is added to the current dashboard. The other metrics are collected for future bandwidth, availability, inventory-growth, and upgrade panels. Session-state counts and hardware-transcoding counts require aggregation of individual sessions beyond this JSON exporter configuration; they remain uncollected.
+The media dashboard graphs WAN and LAN bandwidth estimates alongside playback-type counts and stacked history. Total sessions remain collected, but the graph stack replaces the total count card. Other metrics are collected for future availability, inventory-growth, and upgrade panels. Session-state counts and hardware-transcoding counts require aggregation of individual sessions beyond this JSON exporter configuration; they remain uncollected.
 
 ## Querying slow metrics
 

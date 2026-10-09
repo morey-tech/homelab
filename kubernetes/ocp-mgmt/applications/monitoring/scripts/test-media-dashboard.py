@@ -30,7 +30,7 @@ def main():
     assert {p['title'] for p in rows[0]['panels']} == {
         name + suffix for _, name in media.SECONDARY for suffix in (' CPU', ' memory', ' network')}
     panels = list(checker.query_panels(dashboard['panels']))
-    assert len(panels) == 39 and len({p['id'] for p in panels}) == 39
+    assert len(panels) == 40 and len({p['id'] for p in panels}) == 40
     assert rows[0]['id'] not in {p['id'] for p in panels}
     occupied = set()
     for panel in panels:
@@ -39,8 +39,11 @@ def main():
         assert not cells & occupied, 'Panels overlap'
         occupied |= cells
         assert panel['datasource']['uid'] == ('infrastructure' if panel['title'] in (
-            'Plex stream history', 'Total', 'Direct Play', 'Direct Stream', 'Transcoding', 'WAN est.',
-            'WAN traffic — pfSense and Plex') else 'ocp-home')
+            'Plex stream history', 'Direct Play', 'Direct Stream', 'Transcoding', 'SAB remaining',
+            'Plex bandwidth estimates', 'Media share used', 'SAB download speed') else 'ocp-home')
+    assert max(p['gridPos']['y'] + p['gridPos']['h'] for p in dashboard['panels'] if p['type'] != 'row') == 19
+    assert not any(p['title'] in ('Total', 'WAN est.', 'WAN traffic — pfSense and Plex') for p in panels)
+    assert all(0 <= p['gridPos']['x'] < p['gridPos']['x'] + p['gridPos']['w'] <= 24 for p in panels)
     header = rows[0]['gridPos']
     assert not occupied & {(x, header['y']) for x in range(24)}
     assert sum('Shared host network' in p['title'] for p in panels) == 1
@@ -102,7 +105,7 @@ def main():
          remove=('container_',), expected=(None, None, None))
 
     # A current stat must not reuse a historical non-null value after a failure.
-    for stat in (p for p in panels if p['type'] == 'stat'):
+    for stat in (p for p in panels if p['type'] in ('stat', 'gauge')):
         assert stat['targets'][0]['instant'] and not stat['targets'][0]['range']
     stream_metric = 'tautulli_streams{job="tautulli",instance="plex"}'
     stream_up = 'up{job="tautulli",instance="plex"}'
@@ -124,25 +127,49 @@ def main():
         ('negative value', '-1x6', '1x6', None), ('invalid value', 'NaN NaN NaN NaN NaN NaN NaN', '1x6', None)]:
         cases.append({'name': 'WAN '+name, 'interval': '1m',
                       'input_series': [{'series': wan_metric, 'values': values}, {'series': stream_up, 'values': up_values}],
-                      'promql_expr_test': [{'expr': media.wan_query(), 'eval_time': '6m',
+                      'promql_expr_test': [{'expr': media.bandwidth_query('wan'), 'eval_time': '6m',
                           'exp_samples': [] if expected is None else [{'labels': '{job="tautulli",instance="plex"}', 'value': expected}]}]})
 
-    # WAN octet rates use only ix2, in the firewall's upload/download direction.
-    for name, values, up_values, expected in [
-        ('bytes to Mbps', '0+60000000x6', '1x6', 8), ('idle', '0x6', '1x6', 0),
-        ('counter reset', '0 60000000 120000000 180000000 0 60000000 120000000', '1x6', 6),
-        ('failed scrape', '0+60000000x6', '0x6', None), ('missing WAN', '_x7', '1x6', None),
-        ('stale counter', '0+60000000x2 _x4', '1x6', None),
-        ('stale health', '0+60000000x6', '1x2 _x4', None)]:
-        series = [{'series': 'up{job="pfsense",instance="pfsense"}', 'values': up_values}]
-        exprs = []
-        for metric in ('ifHCOutOctets', 'ifHCInOctets'):
-            series += [{'series': metric+'{job="pfsense",instance="pfsense",ifName="ix2"}', 'values': values},
-                       {'series': metric+'{job="pfsense",instance="pfsense",ifName="lagg0"}', 'values': '0+120000000x6'}]
-            exprs.append({'expr': media.pfsense_wan_query(metric), 'eval_time': '6m',
-                          'exp_samples': [] if expected is None else [{
-                              'labels': '{job="pfsense",instance="pfsense",ifName="ix2"}', 'value': expected}]})
-        cases.append({'name': 'pfSense WAN '+name, 'interval': '1m', 'input_series': series, 'promql_expr_test': exprs})
+    cases.append({'name': 'LAN and WAN estimates remain distinct', 'interval': '1m',
+                  'input_series': [{'series': stream_up, 'values': '1x6'},
+                      {'series': wan_metric, 'values': '1000x6'},
+                      {'series': wan_metric.replace('_wan_', '_lan_'), 'values': '2000x6'}],
+                  'promql_expr_test': [{'expr': media.bandwidth_query(scope), 'eval_time': '6m',
+                      'exp_samples': [{'labels': '{job="tautulli",instance="plex"}', 'value': value}]}
+                      for scope, value in [('wan', 1), ('lan', 2)]]})
+    for metric, scale, value in [('sabnzbd_download_kibibytes_per_second', 1024, 2048),
+                                 ('sabnzbd_queue_remaining_mebibytes', 1048576, 2097152)]:
+        labels = '{job="sabnzbd",instance="sabnzbd"}'
+        for name, values, health, expected in [
+            ('binary units', '2x6', '1x6', value), ('idle', '0x6', '1x6', 0),
+            ('failed scrape', '2x6', '0x6', None), ('missing metric', '_x7', '1x6', None),
+            ('stale metric', '2x2 _x4', '1x6', None), ('stale health', '2x6', '1x2 _x4', None),
+            ('negative', '-1x6', '1x6', None), ('invalid', 'NaN NaN NaN NaN NaN NaN NaN', '1x6', None)]:
+            cases.append({'name': metric+' '+name, 'interval': '1m',
+                          'input_series': [{'series': metric+labels, 'values': values},
+                                           {'series': 'up'+labels, 'values': health}],
+                          'promql_expr_test': [{'expr': media.sab_query(metric, scale), 'eval_time': '6m',
+                              'exp_samples': [] if expected is None else [{'labels': labels, 'value': expected}]}]})
+    labels = 'job="qnap",instance="qnap-01",share="storage-media",sharedFolderIndex="1"'
+    for name, total, free, health, expected in [
+        ('used ratio', '1000x6', '250x6', '1x6', 75), ('empty share', '1000x6', '1000x6', '1x6', 0),
+        ('full share', '1000x6', '0x6', '1x6', 100), ('zero capacity', '0x6', '0x6', '1x6', None),
+        ('inconsistent capacity', '1000x6', '1100x6', '1x6', None),
+        ('negative free', '1000x6', '-1x6', '1x6', None),
+        ('stale capacity', '1000x2 _x4', '250x6', '1x6', None),
+        ('missing free', '1000x6', '_x7', '1x6', None),
+        ('stale free', '1000x6', '250x2 _x4', '1x6', None),
+        ('failed scrape', '1000x6', '250x6', '0x6', None),
+        ('stale scrape health', '1000x6', '250x6', '1x2 _x4', None)]:
+        series = [{'series': 'sharedFolderCapacity{'+labels+'}', 'values': total},
+                  {'series': 'sharedFolderFreeSize{'+labels+'}', 'values': free},
+                  {'series': 'up{job="qnap",instance="qnap-01"}', 'values': health}]
+        for decoy in [labels.replace('qnap-01', 'qnap-02'), labels.replace('storage-media', 'storage-mass')]:
+            series += [{'series': 'sharedFolderCapacity{'+decoy+'}', 'values': '100x6'},
+                       {'series': 'sharedFolderFreeSize{'+decoy+'}', 'values': '10x6'}]
+        cases.append({'name': 'Media share '+name, 'interval': '1m', 'input_series': series,
+                      'promql_expr_test': [{'expr': media.media_share_query(), 'eval_time': '6m',
+                          'exp_samples': [] if expected is None else [{'labels': '{'+labels+'}', 'value': expected}]}]})
 
     promtool = os.environ.get('PROMTOOL') or shutil.which('promtool')
     if not promtool:
