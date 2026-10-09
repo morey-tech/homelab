@@ -12,6 +12,8 @@ resources:
   - pfsense-credentials.yaml
   - tautulli-credentials.yaml
   - tautulli-exporter.yaml
+  - sabnzbd-credentials.yaml
+  - sabnzbd-exporter.yaml
   - storage.yaml
   - grafana.yaml
   - prometheus.yaml
@@ -21,6 +23,9 @@ resources:
   - route.yaml
   - networkpolicy.yaml
 configMapGenerator:
+  - name: sabnzbd-exporter-config
+    files:
+      - config.yml=sabnzbd/config.yml
   - name: tautulli-exporter-config
     files:
       - config.yml=tautulli/config.yml

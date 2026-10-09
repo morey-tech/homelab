@@ -1,0 +1,28 @@
+modules:
+  queue:
+    http_client_config:
+      follow_redirects: false
+    headers:
+      Content-Type: application/x-www-form-urlencoded
+    body:
+      # The key stays out of scrape URLs and metric labels. One job is enough;
+      # the top-level speed/remaining/job-count fields describe the full queue.
+      content: 'mode=queue&output=json&limit=1&apikey={{ env "SABNZBD_API_KEY" | urlquery }}'
+      templatize: true
+    metrics:
+      - name: sabnzbd_download_kibibytes_per_second
+        help: Current application download speed in KiB/s from queue.kbpersec.
+        path: '{.queue.kbpersec}'
+        valuetype: gauge
+      - name: sabnzbd_queue_remaining_mebibytes
+        help: Remaining download work in MiB, including queued and paused downloads; excludes post-processing.
+        path: '{.queue.mbleft}'
+        valuetype: gauge
+      - name: sabnzbd_queue_jobs
+        help: Number of jobs in the full download queue, including paused jobs.
+        path: '{.queue.noofslots_total}'
+        valuetype: gauge
+      - name: sabnzbd_queue_paused
+        help: Whether the overall download queue is paused (1 paused, 0 unpaused).
+        path: '{.queue.paused}'
+        valuetype: gauge

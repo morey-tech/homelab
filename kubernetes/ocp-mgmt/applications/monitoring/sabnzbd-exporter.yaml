@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sabnzbd-exporter
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sabnzbd-exporter
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: sabnzbd-exporter
+  template:
+    metadata:
+      annotations:
+        openshift.io/required-scc: restricted-v2
+      labels:
+        app: sabnzbd-exporter
+    spec:
+      serviceAccountName: sabnzbd-exporter
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - ms-02
+                      - ms-04
+      containers:
+        - name: exporter
+          image: quay.io/prometheuscommunity/json-exporter:v0.8.0
+          args:
+            - --config.file=/etc/json-exporter/config.yml
+            - --web.listen-address=:7979
+          ports:
+            - name: http
+              containerPort: 7979
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            periodSeconds: 30
+          env:
+            - name: SABNZBD_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sabnzbd-api-v1
+                  key: api-key
+          volumeMounts:
+            - name: config
+              mountPath: /etc/json-exporter
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: sabnzbd-exporter-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sabnzbd-exporter
+spec:
+  selector:
+    app: sabnzbd-exporter
+  ports:
+    - name: http
+      port: 7979
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sabnzbd-exporter-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: sabnzbd-exporter
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: alloy
+      ports:
+        - protocol: TCP
+          port: 7979

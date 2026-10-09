@@ -264,3 +264,18 @@ prometheus.remote_write "infrastructure" {
 		url = "http://prometheus.monitoring.svc:9090/api/v1/write"
 	}
 }
+
+// SAB API key is injected into the exporter's POST body, never the scrape URL.
+prometheus.scrape "sabnzbd" {
+	targets = [{
+		__address__      = "sabnzbd-exporter.monitoring.svc:7979",
+		__param_module   = "queue",
+		__param_target   = "https://sabnzbd.apps.ocp-home.rh-lab.morey.tech/api",
+		job              = "sabnzbd",
+		instance         = "sabnzbd",
+	}]
+	metrics_path    = "/probe"
+	scrape_interval = "30s"
+	scrape_timeout  = "20s"
+	forward_to      = [prometheus.remote_write.infrastructure.receiver]
+}
