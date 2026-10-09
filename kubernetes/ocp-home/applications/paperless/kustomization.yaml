@@ -27,6 +27,10 @@ helmCharts:
       PAPERLESS_TIME_ZONE: America/New_York
       PAPERLESS_OCR_LANGUAGE: eng
       PAPERLESS_CONSUMER_POLLING: 60
+      # Allow up to 10 minutes for ScanSnap SMB uploads to finish on the NFS share.
+      # Consume once size and mtime match across two checks 10 seconds apart.
+      PAPERLESS_CONSUMER_POLLING_RETRY_COUNT: 60
+      PAPERLESS_CONSUMER_POLLING_DELAY: 10
       PAPERLESS_REDIS: redis://paperless-valkey:6379
       PAPERLESS_OCR_USER_ARGS: '{"invalidate_digital_signatures": true}'  # https://github.com/paperless-ngx/paperless-ngx/discussions/4047#discussion-5544405
       PAPERLESS_URL: https://paperless.apps.ocp-home.rh-lab.morey.tech  # Set https explicitly, defaults to http due to no TLS on ingress config.
