@@ -67,7 +67,7 @@ Alloy collects RouterOS SNMPv3 metrics from `crs317-a` (`192.168.1.15`) and `crs
 
 ## UniFi Switch Metrics
 
-Alloy polls `192.168.1.10:161` (USW Enterprise 48 PoE) using SNMPv3 SHA/AES credentials from Bitwarden item `9773aa8d-9fcf-4a05-9152-b4de00156fda`. [Collection details](unifi/README.md) cover setup, verified metrics, and validation.
+Alloy polls `192.168.1.10:161` (USW Enterprise 48 PoE) using SNMPv3 SHA/AES credentials from Bitwarden item `9773aa8d-9fcf-4a05-9152-b4de00156fda`. The [UniFi Switches](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/unifi-overview) dashboard shows physical-port and aggregation traffic separately, alias-based legends, link state/speed, utilization, errors/discards, uptime, and firmware. [Collection details](unifi/README.md) cover setup, verified metrics, unsupported health/PoE counters, and validation.
 
 ## QNAP Metrics
 

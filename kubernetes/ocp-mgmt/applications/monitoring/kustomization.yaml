@@ -61,3 +61,6 @@ configMapGenerator:
   - name: grafana-media-dashboard
     files:
       - dashboards/media.json
+  - name: grafana-unifi-dashboard
+    files:
+      - dashboards/unifi.json

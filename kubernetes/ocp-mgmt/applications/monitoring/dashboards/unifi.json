@@ -1,0 +1,1020 @@
+{
+  "uid": "unifi-overview",
+  "title": "UniFi Switches",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "homelab",
+    "infrastructure",
+    "unifi"
+  ],
+  "timezone": "browser",
+  "refresh": "1m",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "SNMP collection",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Collection success only, not overall switch health. Telemetry older than 180 seconds is unknown.",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Unknown",
+                  "color": "gray"
+                },
+                "0": {
+                  "text": "Failed",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Collecting",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) or on() vector(-1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "SNMP uptime",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "SNMP agent uptime in seconds; TimeTicks are converted by the collector.",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((sysUpTime{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(sysUpTime{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Device / firmware",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Device-reported model, firmware, and operating system.",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((sysDescr{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(sysDescr{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "{{sysDescr}}",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "name"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Port receive",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s per interface. Physical Ethernet ports and aggregation interfaces are separate; do not sum them as unique traffic. Bridge and loopback counters are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((8 * rate(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCInOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((8 * rate(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCInOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Port transmit",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s per interface. Physical Ethernet ports and aggregation interfaces are separate; do not sum them as unique traffic. Bridge and loopback counters are excluded.",
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((8 * rate(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCOutOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((8 * rate(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCOutOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "LAG receive",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s per interface. Physical Ethernet ports and aggregation interfaces are separate; do not sum them as unique traffic. Bridge and loopback counters are excluded.",
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((8 * rate(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCInOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 161)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((8 * rate(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCInOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 161)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "LAG transmit",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average bits/s per interface. Physical Ethernet ports and aggregation interfaces are separate; do not sum them as unique traffic. Bridge and loopback counters are excluded.",
+      "gridPos": {
+        "x": 12,
+        "y": 11,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((8 * rate(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCOutOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 161)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((8 * rate(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCOutOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 161)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Port link status",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "1": {
+                        "text": "Up",
+                        "color": "green"
+                      },
+                      "2": {
+                        "text": "Down",
+                        "color": "yellow"
+                      },
+                      "3": {
+                        "text": "Testing",
+                        "color": "yellow"
+                      },
+                      "4": {
+                        "text": "Unknown",
+                        "color": "gray"
+                      },
+                      "5": {
+                        "text": "Dormant",
+                        "color": "yellow"
+                      },
+                      "6": {
+                        "text": "Not present",
+                        "color": "gray"
+                      },
+                      "7": {
+                        "text": "Lower layer down",
+                        "color": "yellow"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((ifOperStatus{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifOperStatus{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((ifOperStatus{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifOperStatus{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m",
+          "format": "table"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "interface",
+                "ifName",
+                "ifIndex",
+                "Value"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Port link speed",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Interface-reported link speed. ifHighSpeed uses millions of bits per second; zero means unknown/unavailable.",
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((1000000 * (ifHighSpeed{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHighSpeed{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace((((1000000 * (ifHighSpeed{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHighSpeed{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Port receive utilization",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Per-direction traffic divided by current port speed. Zero or missing link speed shows gaps.",
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((100 * ((((8 * rate(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCInOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) / (1000000 * ((ifHighSpeed{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHighSpeed{job=\"unifi\",instance=\"$switch\"}) < 180)) > 0))) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace((100 * ((((8 * rate(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCInOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCInOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) / (1000000 * ((ifHighSpeed{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHighSpeed{job=\"unifi\",instance=\"$switch\"}) < 180)) > 0))), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Port transmit utilization",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Per-direction traffic divided by current port speed. Zero or missing link speed shows gaps.",
+      "gridPos": {
+        "x": 12,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((100 * ((((8 * rate(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCOutOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) / (1000000 * ((ifHighSpeed{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHighSpeed{job=\"unifi\",instance=\"$switch\"}) < 180)) > 0))) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace((100 * ((((8 * rate(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifHCOutOctets{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHCOutOctets{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) / (1000000 * ((ifHighSpeed{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifHighSpeed{job=\"unifi\",instance=\"$switch\"}) < 180)) > 0))), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Port errors",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average packets/s from interface error/discard counters. Counter resets are handled by rate().",
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((rate(ifInErrors{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifInErrors{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifInErrors{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((rate(ifInErrors{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifInErrors{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifInErrors{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}} RX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((rate(ifOutErrors{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifOutErrors{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifOutErrors{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((rate(ifOutErrors{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifOutErrors{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifOutErrors{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}} TX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "title": "Port discards",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute average packets/s from interface error/discard counters. Counter resets are handled by rate().",
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((rate(ifInDiscards{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifInDiscards{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifInDiscards{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((rate(ifInDiscards{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifInDiscards{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifInDiscards{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}} RX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "(((((rate(ifOutDiscards{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifOutDiscards{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifOutDiscards{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(((((rate(ifOutDiscards{job=\"unifi\",instance=\"$switch\"}[5m])) and (ifOutDiscards{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifOutDiscards{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance, ifIndex) ((ifType{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifType{job=\"unifi\",instance=\"$switch\"}) < 180)) == 6)) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\")",
+          "legendFormat": "{{interface}} TX",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "Interface descriptions",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 39,
+        "w": 24,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Unknown",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((ifAlias{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(ifAlias{job=\"unifi\",instance=\"$switch\"}) < 180))) and on(job, instance) ((up{job=\"unifi\",instance=\"$switch\"} and (time() - timestamp(up{job=\"unifi\",instance=\"$switch\"}) < 180)) == 1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "interval": "1m",
+          "format": "table"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "ifName",
+                "ifAlias"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "switch",
+        "label": "Switch",
+        "type": "custom",
+        "query": "usw-enterprise-48-poe",
+        "current": {
+          "text": "usw-enterprise-48-poe",
+          "value": "usw-enterprise-48-poe"
+        },
+        "options": [
+          {
+            "text": "usw-enterprise-48-poe",
+            "value": "usw-enterprise-48-poe",
+            "selected": true
+          }
+        ],
+        "multi": false,
+        "includeAll": false,
+        "hide": 0,
+        "skipUrlSync": false
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "UniFi Network",
+      "type": "link",
+      "url": "https://unifi.home.morey.tech:11443/",
+      "targetBlank": true
+    },
+    {
+      "title": "Homelab dashboards",
+      "type": "dashboards",
+      "tags": [
+        "homelab"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ]
+}

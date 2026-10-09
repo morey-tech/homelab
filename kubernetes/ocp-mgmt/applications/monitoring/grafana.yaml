@@ -136,3 +136,5 @@ spec:
                   name: grafana-pfsense-dashboard
               - configMap:
                   name: grafana-media-dashboard
+              - configMap:
+                  name: grafana-unifi-dashboard

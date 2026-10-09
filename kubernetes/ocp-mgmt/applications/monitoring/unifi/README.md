@@ -16,22 +16,44 @@ The curated [SNMP module](snmp.yml) walks IF-MIB columns and reads SNMPv2-MIB id
 
 Standard HOST-RESOURCES-MIB processor/memory tables, UCD-SNMP CPU/memory scalars, and POWER-ETHERNET-MIB PoE status/power objects returned no data on this firmware. These are probe limitations, not a claim that all vendor OIDs or the controller API lack these metrics. CPU, memory, temperature, and PoE panels remain deferred until a supported source is verified.
 
+## Dashboard
+
+Open [UniFi Switches](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/unifi-overview). The **Switch** dropdown isolates one device and is ready for additional targets. The Homelab dashboards menu links it to existing dashboards.
+
+| Panels | Interpretation |
+|--------|----------------|
+| Collection, uptime, device/firmware | Scrape health, SNMP agent uptime in seconds, and reported identity; collection success is not overall device health |
+| Port receive/transmit | Five-minute average bits/s from 64-bit counters on physical ports |
+| LAG receive/transmit | Aggregation counters displayed separately; do not sum with member ports as unique traffic |
+| Port link status/speed | Physical interface state and reported speed; speed is converted from Mbit/s to bits/s |
+| Port utilization | Directional traffic divided by positive link speed; zero/missing speed gives gaps |
+| Errors/discards | Five-minute packet rates, by direction and physical port |
+| Interface descriptions | All interface names and configured aliases |
+
+Graph legends use `ifAlias · ifName`, such as `ocp-home · 0/13`, with an interface-name fallback for empty/missing/stale aliases. Alias changes do not reset traffic-counter history. Every query requires successful collection and samples less than 180 seconds old. Missing telemetry is Unknown or gaps; actual idle ports remain zero. Traffic is measured from the switch's perspective: receive enters the port, transmit leaves it.
+
 ## Validation and Deployment
 
 ```bash
+python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/build-unifi-dashboard.py
+python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/test-unifi-dashboard.py
 snmp_exporter --config.file=kubernetes/ocp-mgmt/applications/monitoring/unifi/snmp.yml --dry-run
 alloy validate kubernetes/ocp-mgmt/applications/monitoring/config.alloy
 oc kustomize kubernetes/ocp-mgmt/applications/monitoring > /tmp/monitoring.yaml
 oc --context=logged-user apply --dry-run=server -f /tmp/monitoring.yaml
 ```
 
-The authenticated read-only probe verified 52 physical ports and 26 aggregation interfaces. Module parsing, full Alloy validation, Kustomize rendering, and the non-persisting server dry run passed. A temporary local Alloy → Prometheus run collected counters and rates after two scrapes. No cluster resources were changed.
+Tests require PyYAML and `promtool` on PATH (or set `PROMTOOL`). They check generated JSON, layout, direction-specific counters, alias fallback, device isolation, counter resets, freshness, scrape failures, and zero link-speed handling.
+
+Local validation passed 22 synthetic telemetry scenarios, module parsing, full Alloy validation, Kustomize rendering, and the non-persisting server dry run. A temporary local Alloy → Prometheus run authenticated to the switch and returned data for all 16 dashboard queries, including rates after two scrapes, 52 physical ports, and 26 aggregation interfaces. No cluster resources were changed.
 
 After review, commit, human push, and Argo CD reconciliation:
 
 ```bash
 oc --context=logged-user -n monitoring get externalsecret unifi-snmp-v1
 oc --context=logged-user -n monitoring rollout status deployment/alloy
+oc --context=logged-user -n monitoring rollout status deployment/grafana
+python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/check-unifi.py
 ```
 
-Actual Alloy-to-switch connectivity and ExternalSecret reconciliation remain post-deployment checks.
+Allow two scrape intervals before checking traffic rates. The checker verifies the provisioned dashboard, source health, all 52 physical ports, aggregation interfaces, and each Grafana query path. Actual Alloy-to-switch connectivity, ExternalSecret reconciliation, and visual verification remain post-deployment checks.
