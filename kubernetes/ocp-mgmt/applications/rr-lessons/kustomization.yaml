@@ -3,23 +3,4 @@ kind: Kustomization
 namespace: rr-lessons
 resources:
   - namespace.yaml
-  - serviceaccount.yaml
-  - credentials.yaml
-  - storage.yaml
-  - cronjob.yaml
-configMapGenerator:
-  - name: rr-lessons-script
-    files:
-      - lessons.py
-      - prompt.txt
-      - sync-transcripts.sh
-  - name: rr-lessons-config
-    literals:
-      - LLM_BASE_URL=https://local-llm-inference-server.apps.ocp-mgmt.rh-lab.morey.tech/v1
-      - LLM_MODEL=local-llm
-      - LESSON_TIMEZONE=America/Toronto
-      - ALLOW_DUPLICATE_LESSONS=true
-      - STATE_DIR=/data
-      - TRANSCRIPT_CACHE_DIR=/transcripts
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONUNBUFFERED=1
+  - daily-lessons
