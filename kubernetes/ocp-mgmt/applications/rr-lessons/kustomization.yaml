@@ -18,6 +18,7 @@ configMapGenerator:
       - LLM_BASE_URL=https://local-llm-inference-server.apps.ocp-mgmt.rh-lab.morey.tech/v1
       - LLM_MODEL=local-llm
       - LESSON_TIMEZONE=America/Toronto
+      - ALLOW_DUPLICATE_LESSONS=true
       - STATE_DIR=/data
       - TRANSCRIPT_CACHE_DIR=/transcripts
       - PYTHONDONTWRITEBYTECODE=1
