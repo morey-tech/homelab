@@ -187,8 +187,16 @@ def generate(excerpt, history, feedback=None):
     word_count = len(quote.split())
     if not 5 <= word_count <= MAX_EVIDENCE_WORDS:
         reject(f"Evidence has {word_count} words; expected 5-{MAX_EVIDENCE_WORDS}")
-    if quote not in " ".join(excerpt["text"].split()):
-        reject("Evidence does not match a verbatim source passage")
+    source = " ".join(excerpt["text"].split())
+    if quote not in source:
+        # Models often capitalize a quotation taken from the middle of a sentence.
+        # Restore the source letter only when the entire remaining quote matches.
+        source_quote = quote[0].lower() + quote[1:]
+        if quote[0].isupper() and len(source_quote) <= 350 and source_quote in source:
+            lesson["evidence"] = source_quote
+            log("Restored source capitalization at the start of evidence")
+        else:
+            reject("Evidence does not match a verbatim source passage")
     if any(re.search(r"https?://", value) for value in lesson.values() if isinstance(value, str)):
         reject("Model supplied an unexpected link; omit URLs")
     log(f"Lesson fields and source quotation validated ({word_count} evidence words, "

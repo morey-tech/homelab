@@ -90,6 +90,33 @@ class LessonsTest(unittest.TestCase):
         with patch.object(lessons, "request", return_value=self.model_response({"skip": True})):
             self.assertIsNone(lessons.generate(self.excerpt, {}))
 
+    def test_sentence_initial_capitalization_restores_exact_source_quote(self):
+        evidence = ("Your value is not that you know how to build a portfolio with maximum diversification "
+                    "on the efficient frontier. It's that you're going to be there and offer the comfort "
+                    "and report that people need at a very acute event like that")
+        original = evidence[0].lower() + evidence[1:]
+        source = "When you work with the surviving spouse, you quickly realize " + original + ", but also on a much larger scale."
+        transcript = "## Episode 42\n\n" + source
+        output = io.StringIO()
+        with patch.object(lessons, "read_transcripts", return_value=(transcript, "a" * 40)), \
+                patch.object(lessons, "request", return_value=self.model_response(
+                    self.lesson | {"evidence": evidence})) as request, contextlib.redirect_stdout(output):
+            entry = lessons.prepare({}, self.day)
+        request.assert_called_once()
+        self.assertIn(f"> {original}", entry["payload"]["embeds"][0]["description"])
+        self.assertIn("Restored source capitalization", output.getvalue())
+        self.assertNotIn("Rejected model output:", output.getvalue())
+
+    def test_capitalization_correction_does_not_allow_other_changes(self):
+        source = "Remember that your plan should consider US taxes and investment costs."
+        for evidence in ("Your plan should consider us taxes and investment costs.",
+                         "Your plan should consider US taxes, and investment costs.",
+                         "Your plan should consider US fees and investment costs."):
+            with self.subTest(evidence=evidence), patch.object(
+                    lessons, "request", return_value=self.model_response(self.lesson | {"evidence": evidence})):
+                with self.assertRaisesRegex(lessons.LessonValidationError, "Evidence does not match"):
+                    lessons.generate(self.excerpt | {"text": source}, {})
+
     def test_rejection_logs_original_model_content_and_reason(self):
         cases = [
             (json.dumps(self.lesson | {"evidence": "These words do not appear in the source passage"}, indent=2), "stop"),
