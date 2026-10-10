@@ -24,6 +24,7 @@ from zoneinfo import ZoneInfo
 REPO = "morey-tech/rr-scraper"
 TOKEN_PATH = "/var/run/secrets/inference/token"
 MAX_EXCERPT = 12000
+MAX_EVIDENCE_WORDS = 60
 PROMPT = Path(__file__).with_name("prompt.txt").read_text()
 
 
@@ -142,7 +143,8 @@ def generate(excerpt, history, feedback=None):
         messages.append({"role": "system", "content":
                          f"The previous response failed validation: {feedback}. "
                          "Return a complete corrected lesson JSON object. For evidence, copy a continuous "
-                         "5-25 word span directly from transcript_excerpt, preserving every word and "
+                         "short span directly from transcript_excerpt, aiming for 5-25 words "
+                         f"(maximum {MAX_EVIDENCE_WORDS} words and 350 characters), preserving every word and "
                          "punctuation mark. Do not add quotation marks, ellipses, or paraphrase it."})
     log(f"Generating lesson with {len(recent)} recent titles for context")
     response = json.loads(request(os.environ["LLM_BASE_URL"].rstrip("/") + "/chat/completions",
@@ -174,13 +176,15 @@ def generate(excerpt, history, feedback=None):
             raise LessonValidationError(f"Invalid lesson field: {field}; expected 1-{maximum} characters")
         lesson[field] = lesson[field].strip()
     quote = " ".join(lesson["evidence"].split())
-    if not 5 <= len(quote.split()) <= 25:
-        raise LessonValidationError(f"Evidence has {len(quote.split())} words; expected 5-25")
+    word_count = len(quote.split())
+    if not 5 <= word_count <= MAX_EVIDENCE_WORDS:
+        raise LessonValidationError(f"Evidence has {word_count} words; expected 5-{MAX_EVIDENCE_WORDS}")
     if quote not in " ".join(excerpt["text"].split()):
         raise LessonValidationError("Evidence does not match a verbatim source passage")
     if any(re.search(r"https?://", value) for value in lesson.values() if isinstance(value, str)):
         raise LessonValidationError("Model supplied an unexpected link; omit URLs")
-    log("Lesson fields and source quotation validated")
+    log(f"Lesson fields and source quotation validated ({word_count} evidence words, "
+        f"{len(lesson['evidence'])} characters)")
     return lesson
 
 

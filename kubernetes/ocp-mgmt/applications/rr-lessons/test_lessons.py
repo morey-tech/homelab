@@ -90,6 +90,48 @@ class LessonsTest(unittest.TestCase):
         with patch.object(lessons, "request", return_value=self.model_response({"skip": True})):
             self.assertIsNone(lessons.generate(self.excerpt, {}))
 
+    def test_quotes_above_prompt_target_do_not_need_correction(self):
+        for count in (28, 31):
+            evidence = " ".join(f"w{i}" for i in range(count))
+            # Match across source whitespace without rewriting the returned quote.
+            transcript = "## Episode 42\n\n" + (evidence.replace(" ", "\n") + "\n\n") * 5
+            with self.subTest(words=count), patch.object(
+                    lessons, "read_transcripts", return_value=(transcript, "a" * 40)), \
+                    patch.object(lessons, "request", return_value=self.model_response(
+                        self.lesson | {"evidence": evidence})) as request:
+                entry = lessons.prepare({}, self.day)
+            request.assert_called_once()
+            self.assertIn(f"> {evidence}", entry["payload"]["embeds"][0]["description"])
+
+    def test_evidence_word_and_character_limits(self):
+        for count in (4, 5, 25, 60, 61):
+            evidence = " ".join(f"w{i}" for i in range(count))
+            with self.subTest(words=count), patch.object(
+                    lessons, "request", return_value=self.model_response(self.lesson | {"evidence": evidence})):
+                excerpt = self.excerpt | {"text": evidence}
+                if 5 <= count <= 60:
+                    self.assertEqual(lessons.generate(excerpt, {})["evidence"], evidence)
+                else:
+                    with self.assertRaisesRegex(lessons.LessonValidationError, "expected 5-60"):
+                        lessons.generate(excerpt, {})
+        for size in (350, 351):
+            evidence = "word " * 59 + "x" * (size - 295)
+            with self.subTest(characters=size), patch.object(
+                    lessons, "request", return_value=self.model_response(self.lesson | {"evidence": evidence})):
+                excerpt = self.excerpt | {"text": evidence}
+                if size == 350:
+                    self.assertEqual(lessons.generate(excerpt, {})["evidence"], evidence)
+                else:
+                    with self.assertRaisesRegex(lessons.LessonValidationError, "Invalid lesson field: evidence"):
+                        lessons.generate(excerpt, {})
+
+    def test_long_quote_must_match_in_full(self):
+        source = " ".join(f"w{i}" for i in range(31))
+        evidence = " ".join(source.split()[:25]) + " invented ending not in the source"
+        with patch.object(lessons, "request", return_value=self.model_response(self.lesson | {"evidence": evidence})):
+            with self.assertRaisesRegex(lessons.LessonValidationError, "Evidence does not match"):
+                lessons.generate(self.excerpt | {"text": source}, {})
+
     def test_invalid_evidence_retries_same_passage_with_feedback(self):
         invalid = self.lesson | {"evidence": "These words do not appear in this source passage"}
         transcript = "## Episode 42\n\n" + (self.excerpt["text"] + "\n\n") * 5
