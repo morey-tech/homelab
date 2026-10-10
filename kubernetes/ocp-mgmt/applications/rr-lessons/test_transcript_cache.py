@@ -25,6 +25,9 @@ class TranscriptCacheTest(unittest.TestCase):
         (self.origin / "transcripts").mkdir()
         self.source = self.origin / "transcripts/all.md"
         self.source.write_text("## Episode 1\n\n" + "An educational transcript. " * 30)
+        self.groups = self.origin / "transcripts/groups_of_20"
+        self.groups.mkdir()
+        (self.groups / "episodes_00001_to_00001.md").write_text(self.source.read_text())
         (self.origin / "unrelated.txt").write_text("Not checked out")
         self.commit()
         self.env = os.environ | {"TRANSCRIPT_CACHE_DIR": str(self.cache),
@@ -58,6 +61,8 @@ class TranscriptCacheTest(unittest.TestCase):
         self.assertIn("unchanged", self.sync().stdout)
         self.assertEqual(snapshot.stat().st_mtime_ns, before)
         self.source.write_text(self.source.read_text() + "\n## Episode 2\nNew material.\n")
+        (self.groups / "episodes_00001_to_00001.md").unlink()
+        (self.groups / "episodes_00001_to_00002.md").write_text(self.source.read_text())
         second_revision = self.commit()
         self.sync()
         self.assertEqual(revision.read_text().strip(), second_revision)
@@ -65,6 +70,19 @@ class TranscriptCacheTest(unittest.TestCase):
         self.assertEqual(snapshot.read_text(), self.source.read_text())
         self.assertEqual((self.cache / "repository.git/objects").stat().st_ino, object_store_inode)
         self.assertTrue((self.cache / "repository.git/shallow").exists())
+        index = (self.cache / "episode-headings.txt").read_text()
+        self.assertIn(f"{second_revision}:transcripts/groups_of_20/episodes_00001_to_00002.md:1:## Episode 1", index)
+        self.assertNotIn("episodes_00001_to_00001.md", index)
+
+    def test_existing_cache_gains_group_index_without_upstream_change(self):
+        self.sync()
+        (self.cache / "episode-headings.txt").unlink()
+        revision = (self.cache / "revision").read_text()
+        self.sync()
+        self.assertEqual((self.cache / "revision").read_text(), revision)
+        with patch.dict(os.environ, self.env):
+            self.assertTrue(lessons.transcript_url(1, revision.strip()).endswith(
+                "episodes_00001_to_00001.md?plain=1#L1"))
 
     def test_failed_fetch_preserves_cache_but_fails_init(self):
         self.sync()

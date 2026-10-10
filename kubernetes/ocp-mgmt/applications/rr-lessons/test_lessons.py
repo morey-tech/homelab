@@ -24,9 +24,14 @@ class LessonsTest(unittest.TestCase):
             "STATE_DIR": str(self.directory), "LLM_TOKEN_FILE": str(self.token),
             "LLM_BASE_URL": "https://llm.test/v1", "LESSON_TIMEZONE": "America/Toronto",
             "DISCORD_WEBHOOK_URL": "https://discord.com/api/webhooks/123/test-secret",
+            "TRANSCRIPT_CACHE_DIR": str(self.directory),
         })
         self.env.start()
         self.addCleanup(self.env.stop)
+        (self.directory / "episode-headings.txt").write_text(
+            f"{'a' * 40}:transcripts/groups_of_20/episodes_00041_to_00060.md:57:## Episode 42\n"
+            f"{'a' * 40}:transcripts/groups_of_20/episodes_00081_to_00101.md:7500:## Episode 101\n"
+            f"{'a' * 40}:transcripts/groups_of_20/episodes_00102_to_00123.md:1:## Episode 102\n")
         self.path = self.directory / "history.json"
         self.day = datetime.now(ZoneInfo("America/Toronto")).date().isoformat()
         self.excerpt = {"episode": 42, "key": "42:abc", "start": 3, "end": 9,
@@ -88,8 +93,25 @@ class LessonsTest(unittest.TestCase):
         payload = lessons.make_payload(self.lesson, self.excerpt, "a" * 40, self.day)
         self.assertEqual(payload["allowed_mentions"], {"parse": []})
         self.assertIn("/blob/" + "a" * 40, payload["embeds"][0]["url"])
-        self.assertTrue(payload["embeds"][0]["url"].endswith("#L3-L9"))
+        source = payload["embeds"][0]["url"]
+        self.assertTrue(source.endswith("/transcripts/groups_of_20/episodes_00041_to_00060.md?plain=1#L57"))
+        self.assertIn(f"[Episode transcript]({source})", payload["embeds"][0]["fields"][0]["value"])
+        self.assertNotIn("all.md", json.dumps(payload))
         self.assertIn("**Reflect**", payload["embeds"][0]["description"])
+
+    def test_group_links_use_real_ranges_across_missing_episode_numbers(self):
+        self.assertTrue(lessons.transcript_url(101, "a" * 40).endswith(
+            "episodes_00081_to_00101.md?plain=1#L7500"))
+        self.assertTrue(lessons.transcript_url(102, "a" * 40).endswith(
+            "episodes_00102_to_00123.md?plain=1#L1"))
+        with self.assertRaises(lessons.LessonError):
+            lessons.transcript_url(999, "a" * 40)
+
+    def test_ambiguous_group_does_not_emit_broken_link(self):
+        with (self.directory / "episode-headings.txt").open("a") as handle:
+            handle.write(f"{'a' * 40}:transcripts/groups_of_20/episodes_00040_to_00059.md:23:## Episode 42\n")
+        with self.assertRaises(lessons.LessonError):
+            lessons.transcript_url(42, "a" * 40)
 
     def test_webhook_wait_preserves_thread_and_rejects_other_hosts(self):
         value = lessons.webhook_url(os.environ["DISCORD_WEBHOOK_URL"] + "?thread_id=456&wait=false")
