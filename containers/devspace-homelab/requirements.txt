@@ -1,6 +1,6 @@
-ansible==13.4.0
-ansible-lint==26.3.0
-black==26.3.1
+ansible==13.8.0
+ansible-lint==26.9.0
+black==26.10.1
 proxmoxer==2.3.0
-requests==2.33.0
+requests==2.34.2
 yamllint==1.38.0
