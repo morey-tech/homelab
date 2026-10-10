@@ -90,6 +90,39 @@ class LessonsTest(unittest.TestCase):
         with patch.object(lessons, "request", return_value=self.model_response({"skip": True})):
             self.assertIsNone(lessons.generate(self.excerpt, {}))
 
+    def test_invalid_evidence_retries_same_passage_with_feedback(self):
+        invalid = self.lesson | {"evidence": "These words do not appear in this source passage"}
+        transcript = "## Episode 42\n\n" + (self.excerpt["text"] + "\n\n") * 5
+        with patch.object(lessons, "read_transcripts", return_value=(transcript, "a" * 40)), \
+                patch.object(lessons, "request", side_effect=[self.model_response(invalid), self.model_response()]) as request:
+            entry = lessons.prepare({}, self.day)
+        self.assertEqual(entry["status"], "prepared")
+        self.assertEqual(request.call_count, 2)
+        first = request.call_args_list[0].kwargs["payload"]["messages"]
+        second = request.call_args_list[1].kwargs["payload"]["messages"]
+        self.assertEqual(first[1], second[1])
+        self.assertIn("Evidence does not match", second[-1]["content"])
+        self.assertIn(self.lesson["evidence"], entry["payload"]["embeds"][0]["description"])
+
+    def test_exhausted_validation_retries_never_post_or_consume_day(self):
+        invalid = self.lesson | {"evidence": "These words do not appear in this source passage"}
+        transcript = "## Episode 42\n\n" + (self.excerpt["text"] + "\n\n") * 5
+        with patch.object(lessons, "read_transcripts", return_value=(transcript, "a" * 40)), \
+                patch.object(lessons, "request", return_value=self.model_response(invalid)) as request:
+            with self.assertRaisesRegex(lessons.LessonError, "three generation attempts"):
+                lessons.run()
+        self.assertEqual(request.call_count, 3)
+        self.assertTrue(all(call.kwargs["service"] == "Inference" for call in request.call_args_list))
+        self.assertFalse(self.path.exists())
+
+    def test_inference_http_failure_is_not_a_validation_retry(self):
+        transcript = "## Episode 42\n\n" + (self.excerpt["text"] + "\n\n") * 5
+        with patch.object(lessons, "read_transcripts", return_value=(transcript, "a" * 40)), \
+                patch.object(lessons, "request", side_effect=lessons.LessonError("Inference request failed")) as request:
+            with self.assertRaisesRegex(lessons.LessonError, "Inference request failed"):
+                lessons.prepare({}, self.day)
+        request.assert_called_once()
+
     def test_payload_has_pinned_source_and_disables_mentions(self):
         payload = lessons.make_payload(self.lesson, self.excerpt, "a" * 40, self.day)
         self.assertEqual(payload["allowed_mentions"], {"parse": []})

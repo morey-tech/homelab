@@ -18,7 +18,8 @@ Return only a JSON object with these five string fields:
 - takeaway: one practical action or way of thinking, about 30-50 words
 - reflection: one question to check understanding or apply the concept
 - evidence: an exact, continuous quote of 5-25 words from the excerpt that supports
-  the main lesson; preserve the original wording
+  the main lesson; copy the words and punctuation directly without adding outer
+  quotation marks, ellipses, or paraphrasing; count the words before returning it
 
 Keep the complete lesson under 300 words and avoid Markdown links. If the excerpt
 has no substantive teachable concept, return {"skip": true} instead of inventing one.

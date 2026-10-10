@@ -31,6 +31,10 @@ class LessonError(Exception):
     pass
 
 
+class LessonValidationError(LessonError):
+    """Model output can be corrected without repeating transport failures."""
+
+
 def log(message, *, stream=None):
     timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     print(f"{timestamp} {message}", file=stream or sys.stdout, flush=True)
@@ -128,16 +132,23 @@ def choose(candidates, history, day):
     return random.Random(day).choice([item for item in candidates if rank(item) == best])
 
 
-def generate(excerpt, history):
+def generate(excerpt, history, feedback=None):
     recent = [history[day]["title"] for day in sorted(history)[-14:]]
     user = json.dumps({"episode": excerpt["episode"], "recent_titles": recent,
                        "transcript_excerpt": excerpt["text"]}, ensure_ascii=False)
     token = Path(os.environ.get("LLM_TOKEN_FILE", TOKEN_PATH)).read_text().strip()
+    messages = [{"role": "system", "content": PROMPT}, {"role": "user", "content": user}]
+    if feedback:
+        messages.append({"role": "system", "content":
+                         f"The previous response failed validation: {feedback}. "
+                         "Return a complete corrected lesson JSON object. For evidence, copy a continuous "
+                         "5-25 word span directly from transcript_excerpt, preserving every word and "
+                         "punctuation mark. Do not add quotation marks, ellipses, or paraphrase it."})
     log(f"Generating lesson with {len(recent)} recent titles for context")
     response = json.loads(request(os.environ["LLM_BASE_URL"].rstrip("/") + "/chat/completions",
                                   token=token, service="Inference", payload={
         "model": os.environ.get("LLM_MODEL", "local-llm"),
-        "messages": [{"role": "system", "content": PROMPT}, {"role": "user", "content": user}],
+        "messages": messages,
         "temperature": 0.5, "max_tokens": 1000,
         "response_format": {"type": "json_object"},
     }))
@@ -148,20 +159,27 @@ def generate(excerpt, history):
     if counts:
         log(f"Inference token usage: {counts}")
     if choice.get("finish_reason") != "stop":
-        raise LessonError("Model response did not finish normally")
-    lesson = json.loads(choice["message"]["content"])
+        raise LessonValidationError("Model response did not finish normally; keep the lesson shorter")
+    try:
+        lesson = json.loads(choice["message"]["content"])
+    except (json.JSONDecodeError, TypeError):
+        raise LessonValidationError("Model response is not valid JSON") from None
+    if not isinstance(lesson, dict):
+        raise LessonValidationError("Model response must be a JSON object")
     if lesson.get("skip") is True:
         return None
     for field, maximum in (("title", 100), ("explanation", 2300), ("takeaway", 650),
                            ("reflection", 350), ("evidence", 350)):
         if not isinstance(lesson.get(field), str) or not 1 <= len(lesson[field].strip()) <= maximum:
-            raise LessonError(f"Invalid lesson field: {field}")
+            raise LessonValidationError(f"Invalid lesson field: {field}; expected 1-{maximum} characters")
         lesson[field] = lesson[field].strip()
     quote = " ".join(lesson["evidence"].split())
-    if not 5 <= len(quote.split()) <= 25 or quote not in " ".join(excerpt["text"].split()):
-        raise LessonError("Lesson evidence is not a short verbatim source passage")
+    if not 5 <= len(quote.split()) <= 25:
+        raise LessonValidationError(f"Evidence has {len(quote.split())} words; expected 5-25")
+    if quote not in " ".join(excerpt["text"].split()):
+        raise LessonValidationError("Evidence does not match a verbatim source passage")
     if any(re.search(r"https?://", value) for value in lesson.values() if isinstance(value, str)):
-        raise LessonError("Model supplied an unexpected link")
+        raise LessonValidationError("Model supplied an unexpected link; omit URLs")
     log("Lesson fields and source quotation validated")
     return lesson
 
@@ -229,21 +247,31 @@ def prepare(history, day, transcript_file=None):
         text, commit = read_transcripts()
     candidates = excerpts(text)
     log(f"Indexed {len(candidates)} passages across {len({item['episode'] for item in candidates})} episodes")
-    # Try another passage if the model recognizes an intro or housekeeping segment.
+    # Correct invalid output on the same passage; skip housekeeping passages.
+    excerpt, feedback = None, None
     for attempt in range(3):
-        excerpt = choose(candidates, history, f"{day}:{attempt}")
+        if excerpt is None:
+            excerpt = choose(candidates, history, f"{day}:{attempt}")
         log(f"Generation attempt {attempt + 1}/3: episode {excerpt['episode']}, "
             f"all.md lines {excerpt['start']}-{excerpt['end']}, {len(excerpt['text'])} characters")
-        lesson = generate(excerpt, history)
+        try:
+            lesson = generate(excerpt, history, feedback=feedback)
+        except LessonValidationError as exc:
+            log(f"Generation attempt {attempt + 1}/3 rejected: {exc}")
+            feedback = str(exc)
+            if attempt < 2:
+                log("Requesting a corrected lesson from the same passage")
+            continue
         if lesson:
             return {"status": "prepared", "episode": excerpt["episode"], "key": excerpt["key"],
                     "title": lesson["title"], "commit": commit,
                     "payload": make_payload(lesson, excerpt, commit, day)}
         log("Model skipped this passage; selecting another")
         candidates.remove(excerpt)
+        excerpt, feedback = None, None
         if not candidates:
             break
-    raise LessonError("No teachable passage found in three attempts")
+    raise LessonError("No valid teachable lesson after three generation attempts")
 
 
 def deliver(history, day, path, url, *, entry_key=None):
