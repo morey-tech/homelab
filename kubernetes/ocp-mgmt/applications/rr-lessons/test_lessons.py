@@ -90,6 +90,41 @@ class LessonsTest(unittest.TestCase):
         with patch.object(lessons, "request", return_value=self.model_response({"skip": True})):
             self.assertIsNone(lessons.generate(self.excerpt, {}))
 
+    def test_rejection_logs_original_model_content_and_reason(self):
+        cases = [
+            (json.dumps(self.lesson | {"evidence": "These words do not appear in the source passage"}, indent=2), "stop"),
+            (json.dumps(self.lesson | {"evidence": "Too short"}), "stop"),
+            (json.dumps(self.lesson | {"title": ""}), "stop"),
+            (json.dumps(self.lesson | {"takeaway": "See https://example.com"}), "stop"),
+            ('{\n"title": "Incomplete response', "length"),
+            ('{\n"evidence": "Invalid JSON"', "stop"),
+            ('["Not an object"]', "stop"),
+            (None, "stop"),
+        ]
+        for content, finish_reason in cases:
+            response = json.dumps({"choices": [{"finish_reason": finish_reason,
+                                               "message": {"content": content}}]})
+            output = io.StringIO()
+            with self.subTest(content=content, finish_reason=finish_reason), \
+                    patch.object(lessons, "request", return_value=response), \
+                    contextlib.redirect_stdout(output), self.assertRaises(lessons.LessonValidationError) as error:
+                lessons.generate(self.excerpt, {})
+            records = [line.split("Rejected model output: ", 1)[1]
+                       for line in output.getvalue().splitlines() if "Rejected model output: " in line]
+            self.assertEqual(len(records), 1)
+            self.assertEqual(json.loads(records[0]), {"reason": str(error.exception),
+                                                     "finish_reason": finish_reason, "content": content})
+            for secret in ("test-token", "test-secret", os.environ["DISCORD_WEBHOOK_URL"]):
+                self.assertNotIn(secret, output.getvalue())
+
+    def test_accepted_and_skipped_output_has_no_rejection_diagnostic(self):
+        for result in (self.lesson, {"skip": True}):
+            output = io.StringIO()
+            with self.subTest(result=result), patch.object(lessons, "request", return_value=self.model_response(result)), \
+                    contextlib.redirect_stdout(output):
+                lessons.generate(self.excerpt, {})
+            self.assertNotIn("Rejected model output:", output.getvalue())
+
     def test_quotes_above_prompt_target_do_not_need_correction(self):
         for count in (28, 31):
             evidence = " ".join(f"w{i}" for i in range(count))

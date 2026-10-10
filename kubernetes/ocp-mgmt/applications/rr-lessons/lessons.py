@@ -160,29 +160,37 @@ def generate(excerpt, history, feedback=None):
                        if isinstance(usage.get(key), int))
     if counts:
         log(f"Inference token usage: {counts}")
+
+    def reject(reason):
+        # Encode as one log record, preserving even malformed JSON and newlines.
+        diagnostic = {"reason": reason, "finish_reason": choice.get("finish_reason"),
+                      "content": choice.get("message", {}).get("content")}
+        log("Rejected model output: " + json.dumps(diagnostic, ensure_ascii=False))
+        raise LessonValidationError(reason) from None
+
     if choice.get("finish_reason") != "stop":
-        raise LessonValidationError("Model response did not finish normally; keep the lesson shorter")
+        reject("Model response did not finish normally; keep the lesson shorter")
     try:
         lesson = json.loads(choice["message"]["content"])
     except (json.JSONDecodeError, TypeError):
-        raise LessonValidationError("Model response is not valid JSON") from None
+        reject("Model response is not valid JSON")
     if not isinstance(lesson, dict):
-        raise LessonValidationError("Model response must be a JSON object")
+        reject("Model response must be a JSON object")
     if lesson.get("skip") is True:
         return None
     for field, maximum in (("title", 100), ("explanation", 2300), ("takeaway", 650),
                            ("reflection", 350), ("evidence", 350)):
         if not isinstance(lesson.get(field), str) or not 1 <= len(lesson[field].strip()) <= maximum:
-            raise LessonValidationError(f"Invalid lesson field: {field}; expected 1-{maximum} characters")
+            reject(f"Invalid lesson field: {field}; expected 1-{maximum} characters")
         lesson[field] = lesson[field].strip()
     quote = " ".join(lesson["evidence"].split())
     word_count = len(quote.split())
     if not 5 <= word_count <= MAX_EVIDENCE_WORDS:
-        raise LessonValidationError(f"Evidence has {word_count} words; expected 5-{MAX_EVIDENCE_WORDS}")
+        reject(f"Evidence has {word_count} words; expected 5-{MAX_EVIDENCE_WORDS}")
     if quote not in " ".join(excerpt["text"].split()):
-        raise LessonValidationError("Evidence does not match a verbatim source passage")
+        reject("Evidence does not match a verbatim source passage")
     if any(re.search(r"https?://", value) for value in lesson.values() if isinstance(value, str)):
-        raise LessonValidationError("Model supplied an unexpected link; omit URLs")
+        reject("Model supplied an unexpected link; omit URLs")
     log(f"Lesson fields and source quotation validated ({word_count} evidence words, "
         f"{len(lesson['evidence'])} characters)")
     return lesson
