@@ -17,6 +17,7 @@ from time import monotonic
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 
@@ -245,8 +246,8 @@ def prepare(history, day, transcript_file=None):
     raise LessonError("No teachable passage found in three attempts")
 
 
-def deliver(history, day, path, url):
-    entry = history[day]
+def deliver(history, day, path, url, *, entry_key=None):
+    entry = history[entry_key or day]
     # Persist intent BEFORE posting. An interrupted/ambiguous delivery is never retried.
     entry["status"] = "sending"
     save(path, history)
@@ -260,7 +261,7 @@ def deliver(history, day, path, url):
         f"Discord message ID {response['id']}; history saved")
 
 
-def run(preview=False, transcript_file=None):
+def run(preview=False, transcript_file=None, allow_duplicate=False):
     day = datetime.now(ZoneInfo(os.environ.get("LESSON_TIMEZONE", "America/Toronto"))).date().isoformat()
     directory = Path(os.environ.get("STATE_DIR", "/data"))
     path = directory / "history.json"
@@ -269,42 +270,55 @@ def run(preview=False, transcript_file=None):
         # Keep preview stdout as a single JSON payload for command-line consumers.
         with redirect_stdout(sys.stderr):
             log(f"Previewing lesson for {day}; loaded {len(history)} history entries")
-            entry = history.get(day) or prepare(history, day, transcript_file)
+            entry = (None if allow_duplicate else history.get(day)) or prepare(history, day, transcript_file)
         print(json.dumps(entry["payload"], ensure_ascii=False, indent=2))
         return
     log(f"Starting daily lesson for {day} ({os.environ.get('LESSON_TIMEZONE', 'America/Toronto')})")
+    entry_key = day
+    if allow_duplicate:
+        # A Job's retries share an ID; separate test Jobs can each send a lesson.
+        run_id = os.environ.get("LESSON_RUN_ID") or uuid4().hex
+        if not re.fullmatch(r"[A-Za-z0-9._-]{1,128}", run_id):
+            raise LessonError("Invalid LESSON_RUN_ID")
+        entry_key = f"{day}/test-{run_id}"
+        log(f"Duplicate testing enabled; history entry {entry_key}")
     url = webhook_url(os.environ["DISCORD_WEBHOOK_URL"].strip())
     directory.mkdir(parents=True, exist_ok=True)
     with (directory / "history.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         history = json.loads(path.read_text()) if path.exists() else {}
-        log(f"Acquired history lock; loaded {len(history)} daily entries")
-        if day in history and history[day]["status"] == "sent":
-            print_lesson(history[day], day)
-            log(f"Lesson for {day} already delivered; skipping")
+        log(f"Acquired history lock; loaded {len(history)} history entries")
+        if entry_key in history and history[entry_key]["status"] == "sent":
+            print_lesson(history[entry_key], day)
+            log(f"Lesson for {entry_key} already delivered; skipping")
             return
-        if day in history and history[day]["status"] == "sending":
-            print_lesson(history[day], day)
+        if entry_key in history and history[entry_key]["status"] == "sending":
+            print_lesson(history[entry_key], day)
             raise LessonError("Delivery unconfirmed; inspect Discord and history before any manual retry")
-        if day not in history:
-            history[day] = prepare(history, day)
+        if entry_key not in history:
+            history[entry_key] = prepare(history, day)
+            if allow_duplicate:
+                history[entry_key]["test_run"] = True
             save(path, history)
             log("Saved prepared lesson to history")
         else:
             log("Reusing prepared lesson from history")
-        print_lesson(history[day], day)
-        deliver(history, day, path, url)
+        print_lesson(history[entry_key], day)
+        deliver(history, day, path, url, entry_key=entry_key)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--preview", action="store_true", help="Generate without posting or changing history")
     parser.add_argument("--transcript-file", help="Local transcript fixture (preview only)")
+    parser.add_argument("--allow-duplicate", action="store_true",
+                        default=os.environ.get("ALLOW_DUPLICATE_LESSONS", "false").lower() == "true",
+                        help="Generate an additional test lesson (or set ALLOW_DUPLICATE_LESSONS=true)")
     args = parser.parse_args()
     if args.transcript_file and not args.preview:
         parser.error("--transcript-file requires --preview")
     try:
-        run(args.preview, args.transcript_file)
+        run(args.preview, args.transcript_file, args.allow_duplicate)
     except LessonError as exc:
         log(f"Lesson job failed: {exc}", stream=sys.stderr)
         return 1

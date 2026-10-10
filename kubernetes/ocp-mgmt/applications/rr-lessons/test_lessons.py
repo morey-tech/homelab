@@ -151,6 +151,56 @@ class LessonsTest(unittest.TestCase):
                 lessons.run()
         request.assert_called_once()
 
+    def test_distinct_test_jobs_send_extra_lessons_and_preserve_daily_history(self):
+        daily = self.entry | {"status": "sent", "message_id": "daily-message"}
+        lessons.save(self.path, {self.day: daily})
+        with patch.object(lessons, "prepare", side_effect=lambda *args: json.loads(json.dumps(self.entry))) as prepare, \
+                patch.object(lessons, "request", return_value='{"id":"test-message"}') as request:
+            with patch.dict(os.environ, {"LESSON_RUN_ID": "test-a"}):
+                lessons.run(allow_duplicate=True)
+                lessons.run(allow_duplicate=True)  # Retrying the same Job does not send twice.
+            with patch.dict(os.environ, {"LESSON_RUN_ID": "test-b"}):
+                lessons.run(allow_duplicate=True)
+            lessons.run()  # The normal daily run still skips today's confirmed delivery.
+        self.assertEqual(request.call_count, 2)
+        self.assertEqual(prepare.call_count, 2)
+        history = json.loads(self.path.read_text())
+        self.assertEqual(history[self.day], daily)
+        self.assertEqual(len(history), 3)
+        for key in (f"{self.day}/test-test-a", f"{self.day}/test-test-b"):
+            self.assertTrue(history[key]["test_run"])
+            self.assertEqual(history[key]["status"], "sent")
+
+    def test_test_lesson_does_not_consume_normal_daily_delivery(self):
+        with patch.object(lessons, "prepare", side_effect=lambda *args: json.loads(json.dumps(self.entry))), \
+                patch.object(lessons, "request", return_value='{"id":"123"}') as request, \
+                patch.dict(os.environ, {"LESSON_RUN_ID": "test-a"}):
+            lessons.run(allow_duplicate=True)
+            self.assertNotIn(self.day, json.loads(self.path.read_text()))
+            lessons.run()
+        self.assertEqual(request.call_count, 2)
+        self.assertEqual(len(json.loads(self.path.read_text())), 2)
+
+    def test_unconfirmed_test_delivery_is_not_retried_with_same_job_id(self):
+        with patch.object(lessons, "prepare", return_value=self.entry), \
+                patch.object(lessons, "request", side_effect=lessons.LessonError("connection lost")) as request, \
+                patch.dict(os.environ, {"LESSON_RUN_ID": "test-a"}):
+            with self.assertRaises(lessons.LessonError):
+                lessons.run(allow_duplicate=True)
+            with self.assertRaisesRegex(lessons.LessonError, "unconfirmed"):
+                lessons.run(allow_duplicate=True)
+        request.assert_called_once()
+
+    def test_duplicate_mode_cli_and_environment_are_opt_in(self):
+        for argv, value, expected in ((["lessons.py"], "false", False),
+                                      (["lessons.py", "--allow-duplicate"], "false", True),
+                                      (["lessons.py"], "true", True)):
+            with self.subTest(argv=argv, value=value), patch.object(lessons.sys, "argv", argv), \
+                    patch.dict(os.environ, {"ALLOW_DUPLICATE_LESSONS": value}), \
+                    patch.object(lessons, "run") as run:
+                self.assertEqual(lessons.main(), 0)
+                run.assert_called_once_with(False, None, expected)
+
     def test_unconfirmed_response_does_not_mark_sent(self):
         with patch.object(lessons, "prepare", return_value=self.entry), patch.object(
                 lessons, "request", return_value="{}"):

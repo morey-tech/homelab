@@ -82,3 +82,17 @@ oc get jobs -n rr-lessons --sort-by=.metadata.creationTimestamp
 Confirm the lesson explains a concept supported by its linked passage, includes the takeaway and question, and that reruns do not produce a second confirmed lesson for the same local day. Live model output, projected-token authentication, Bitwarden visibility, NFS writes, and Discord delivery require post-GitOps validation; local tests mock the external APIs.
 
 `lessons.py --preview` generates a Discord payload without posting or changing history. Preview stdout remains a single JSON payload; progress is sent to stderr. It still needs model access and `LLM_TOKEN_FILE` pointing to a valid token file, plus `LLM_BASE_URL`; it uses today's saved payload if one already exists. Otherwise, it reads the cache at `TRANSCRIPT_CACHE_DIR` (default `/transcripts`). `--preview --transcript-file /tmp/rr-all.md` uses a local copy of the canonical transcript for generation, but still needs the cached `episode-headings.txt` index to build its source link. Do not create ad hoc cluster test jobs for uncommitted code.
+
+### Additional lessons for testing
+
+Use `--allow-duplicate` or `ALLOW_DUPLICATE_LESSONS=true` to generate and send another lesson on the same local day. This is disabled by default for the scheduled CronJob. Each test Job records a separate `DATE/test-JOBNAME` history entry, preserving the normal daily delivery record; test deliveries also count toward source rotation. Retrying the same Job skips a confirmed test delivery and refuses an unconfirmed one. A new test Job name deliberately permits another message.
+
+After this change is reviewed, committed, pushed, and deployed through GitOps, run one test Job at a time from the deployed CronJob template:
+
+```bash
+oc create job "rr-lessons-test-$(date -u +%Y%m%d%H%M%S)" --from=cronjob/rr-lessons -n rr-lessons --dry-run=client -o json |
+  python3 -c 'import json,sys; job=json.load(sys.stdin); container=next(c for c in job["spec"]["template"]["spec"]["containers"] if c["name"]=="lessons"); container["env"].append({"name":"ALLOW_DUPLICATE_LESSONS","value":"true"}); json.dump(job,sys.stdout)' |
+  oc create -f -
+```
+
+The container receives `LESSON_RUN_ID` from its Job-name label. Outside Kubernetes, set that variable to reuse a test identity across retries; without it, each invocation generates a fresh ID. `--preview --allow-duplicate` generates a fresh preview instead of reusing today's saved lesson, without sending or writing history. Test mode does not clear history or alter the daily schedule.
