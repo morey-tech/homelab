@@ -71,6 +71,8 @@ oc get cronjob rr-lessons -n rr-lessons -o jsonpath='{.spec.schedule}{" "}{.spec
 
 Normal runs print timestamped progress to stdout: history state, cached revision and size, passage selection, generation attempts, HTTP timing, token usage when returned, validation, and delivery confirmation. The complete lesson (title, explanation, takeaway, reflection, evidence, and source links) is printed before the Discord request, so it is visible even when delivery fails. Reruns also print the saved lesson when skipping a confirmed or unconfirmed delivery. HTTP errors identify `Inference` or `Discord`; webhook URLs, authorization tokens, request headers, and raw response bodies are not logged.
 
+The `sync-transcripts` init container also prints timestamped progress: Git version, cache initialization or reuse, previous and fetched revisions, fetch duration, unchanged-cache reuse or artifact rebuilding, transcript byte count, episode heading count, publication, garbage collection, and total elapsed time. Failures report the active stage, exit code, and elapsed time to stderr alongside Git's diagnostics. Transcript contents are not printed by the sync script.
+
 Allow the first scheduled run to exercise the deployed configuration, then inspect its log and the Discord lesson:
 
 ```bash

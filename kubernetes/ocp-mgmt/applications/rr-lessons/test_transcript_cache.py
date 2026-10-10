@@ -48,7 +48,18 @@ class TranscriptCacheTest(unittest.TestCase):
                               capture_output=True, text=True)
 
     def test_initial_fetch_unchanged_rerun_and_incremental_update(self):
-        self.sync()
+        initial = self.sync()
+        self.assertIn("Initializing bare Git cache", initial.stdout)
+        self.assertIn("Previously published revision: none", initial.stdout)
+        self.assertIn("Fetching origin/master", initial.stdout)
+        self.assertRegex(initial.stdout, r"Fetch completed in \d+s; resolved revision: [0-9a-f]{40}")
+        self.assertIn(f"Exported {self.source.stat().st_size} transcript bytes", initial.stdout)
+        self.assertIn("Indexed 1 episode headings", initial.stdout)
+        self.assertIn("Git garbage collection completed", initial.stdout)
+        self.assertIn("Transcript sync completed", initial.stdout)
+        for line in initial.stdout.splitlines():
+            self.assertRegex(line, r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00 ")
+        self.assertNotIn("An educational transcript", initial.stdout)
         snapshot = self.cache / "all.md"
         revision = self.cache / "revision"
         first_revision = revision.read_text()
@@ -58,13 +69,21 @@ class TranscriptCacheTest(unittest.TestCase):
         # Neither the snapshot nor Git object store should be replaced on an unchanged run.
         before = snapshot.stat().st_mtime_ns
         object_store_inode = (self.cache / "repository.git/objects").stat().st_ino
-        self.assertIn("unchanged", self.sync().stdout)
+        unchanged = self.sync()
+        self.assertIn("Reusing existing bare Git cache", unchanged.stdout)
+        self.assertIn("unchanged", unchanged.stdout)
+        self.assertIn("Transcript sync completed", unchanged.stdout)
+        self.assertNotIn("Exporting", unchanged.stdout)
+        self.assertNotIn("Running Git garbage collection", unchanged.stdout)
         self.assertEqual(snapshot.stat().st_mtime_ns, before)
         self.source.write_text(self.source.read_text() + "\n## Episode 2\nNew material.\n")
         (self.groups / "episodes_00001_to_00001.md").unlink()
         (self.groups / "episodes_00001_to_00002.md").write_text(self.source.read_text())
         second_revision = self.commit()
-        self.sync()
+        updated = self.sync()
+        self.assertIn(f"Previously published revision: {first_revision.strip()}", updated.stdout)
+        self.assertIn(f"Transcript cache updated to {second_revision}", updated.stdout)
+        self.assertIn("Indexed 2 episode headings", updated.stdout)
         self.assertEqual(revision.read_text().strip(), second_revision)
         self.assertNotEqual(revision.read_text(), first_revision)
         self.assertEqual(snapshot.read_text(), self.source.read_text())
@@ -78,7 +97,8 @@ class TranscriptCacheTest(unittest.TestCase):
         self.sync()
         (self.cache / "episode-headings.txt").unlink()
         revision = (self.cache / "revision").read_text()
-        self.sync()
+        result = self.sync()
+        self.assertIn("Rebuilding missing or empty cache artifacts", result.stdout)
         self.assertEqual((self.cache / "revision").read_text(), revision)
         with patch.dict(os.environ, self.env):
             self.assertTrue(lessons.transcript_url(1, revision.strip()).endswith(
@@ -90,6 +110,8 @@ class TranscriptCacheTest(unittest.TestCase):
         snapshot = (self.cache / "all.md").read_text()
         result = self.sync(check=False, TRANSCRIPT_REPO_URL=(self.root / "missing").as_uri())
         self.assertNotEqual(result.returncode, 0)
+        self.assertIn(f"Transcript sync failed during fetch (exit {result.returncode}, elapsed ", result.stderr)
+        self.assertNotIn("Transcript sync completed", result.stdout)
         self.assertEqual((self.cache / "revision").read_text(), revision)
         self.assertEqual((self.cache / "all.md").read_text(), snapshot)
 
@@ -98,7 +120,10 @@ class TranscriptCacheTest(unittest.TestCase):
         revision = (self.cache / "revision").read_text()
         self.source.unlink()
         self.commit()
-        self.assertNotEqual(self.sync(check=False).returncode, 0)
+        result = self.sync(check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(f"Transcript sync failed during transcript export (exit {result.returncode}, elapsed ", result.stderr)
+        self.assertNotIn("Transcript sync completed", result.stdout)
         self.assertEqual((self.cache / "revision").read_text(), revision)
 
     def test_resume_initialized_cache_after_interrupted_first_fetch(self):
