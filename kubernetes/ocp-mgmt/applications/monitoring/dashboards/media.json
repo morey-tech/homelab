@@ -329,7 +329,7 @@
         "x": 16,
         "y": 0,
         "w": 8,
-        "h": 5
+        "h": 7
       },
       "targets": [
         {
@@ -591,7 +591,7 @@
       "description": "Tautulli estimates of bandwidth reserved for remote (WAN) and local (LAN) Plex sessions. Not measured interface traffic. Polled every 30 seconds; kbps converted to Mbps. Missing, failed, or stale collection appears as gaps.",
       "gridPos": {
         "x": 16,
-        "y": 5,
+        "y": 7,
         "w": 8,
         "h": 7
       },
@@ -891,9 +891,9 @@
       "description": "Tautulli cached library inventory: episode count from TV Shows (section 2), including specials. Library items, not plays or files. Polled every five minutes; Tautulli cache refresh may add delay. Latest sample is retained for up to 15 minutes. Inactive libraries, failed collection, or missing/expired inventory show Unknown.",
       "gridPos": {
         "x": 16,
-        "y": 12,
+        "y": 14,
         "w": 4,
-        "h": 7
+        "h": 5
       },
       "targets": [
         {
@@ -948,9 +948,9 @@
       "description": "Tautulli cached library inventory: movie count from Movies (section 1). Library items, not plays or files. Polled every five minutes; Tautulli cache refresh may add delay. Latest sample is retained for up to 15 minutes. Inactive libraries, failed collection, or missing/expired inventory show Unknown.",
       "gridPos": {
         "x": 20,
-        "y": 12,
+        "y": 14,
         "w": 4,
-        "h": 7
+        "h": 5
       },
       "targets": [
         {

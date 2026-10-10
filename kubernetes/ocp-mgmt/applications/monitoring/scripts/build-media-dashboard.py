@@ -155,7 +155,7 @@ def build():
     p = graph('Plex stream history', [(stream_query(metric), label) for metric, label in [
         ('tautulli_streams_direct_play', 'Direct Play'),
         ('tautulli_streams_direct_stream', 'Direct Stream'), ('tautulli_streams_transcode', 'Transcoding')]],
-        16, 0, 8, 5, 'short', description, INFRA)
+        16, 0, 8, 7, 'short', description, INFRA)
     p['id'] = 34
     p['fieldConfig']['defaults']['decimals'] = 0
     p['fieldConfig']['defaults']['custom']['lineInterpolation'] = 'stepAfter'
@@ -185,7 +185,7 @@ def build():
                                        color={'mode': 'fixed', 'fixedColor': '#FF9830'})
     p = graph('Plex bandwidth estimates', [(bandwidth_query('wan'), 'WAN estimate'),
                                           (bandwidth_query('lan'), 'LAN estimate')],
-              16, 5, 8, 7, 'suffix:Mbps',
+              16, 7, 8, 7, 'suffix:Mbps',
               'Tautulli estimates of bandwidth reserved for remote (WAN) and local (LAN) Plex sessions. '
               'Not measured interface traffic. Polled every 30 seconds; kbps converted to Mbps. '
               'Missing, failed, or stale collection appears as gaps.', INFRA)
@@ -217,7 +217,7 @@ def build():
     for kind, title, panel_id, x, color in [('episodes', 'Episodes', 43, 16, '#73BF69'),
                                           ('movies', 'Movies', 44, 20, '#B877D9')]:
         p = stream_stat(title, 'tautulli_streams', x)
-        p.update(id=panel_id, gridPos={'x': x, 'y': 12, 'w': 4, 'h': 7})
+        p.update(id=panel_id, gridPos={'x': x, 'y': 14, 'w': 4, 'h': 5})
         p['description'] = (
             'Tautulli cached library inventory: ' +
             ('episode count from TV Shows (section 2), including specials.' if kind == 'episodes' else

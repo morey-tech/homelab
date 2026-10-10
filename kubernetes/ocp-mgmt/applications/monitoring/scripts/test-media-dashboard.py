@@ -50,11 +50,11 @@ def main():
     assert not any(p['title'] in ('Plex network', 'SABnzbd network') for p in panels)
 
     by_title = {p['title']: p for p in panels}
-    assert by_title['Plex bandwidth estimates']['gridPos'] == {'x': 16, 'y': 5, 'w': 8, 'h': 7}
+    assert by_title['Plex bandwidth estimates']['gridPos'] == {'x': 16, 'y': 7, 'w': 8, 'h': 7}
     for title in ('Plex CPU', 'Plex memory'):
         assert by_title[title]['gridPos']['y'] == 5 and by_title[title]['gridPos']['h'] == 7
     for title, x in [('Episodes', 16), ('Movies', 20)]:
-        assert by_title[title]['gridPos'] == {'x': x, 'y': 12, 'w': 4, 'h': 7}
+        assert by_title[title]['gridPos'] == {'x': x, 'y': 14, 'w': 4, 'h': 5}
     assert not {5, 33} & {p['id'] for p in panels}, 'Retired panel IDs must remain unused'
 
     pod = 'sonarr-abcde-12345'
