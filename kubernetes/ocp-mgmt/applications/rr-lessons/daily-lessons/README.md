@@ -16,10 +16,11 @@ The `rr-lessons` CronJob runs at **08:00 America/Toronto**, including daylight-s
 | Discord credential | Bitwarden Login item `80644688-fc2a-483a-b1d5-b4df000e7b11`, password field |
 | Kubernetes Secret | `rr-lessons-discord`, key `webhook-url` |
 | Lesson storage | One shared 1 GiB `rr-lessons` PVC on `qnap-nvme` |
+| RAG database foundation | Separate `rr-lessons-lancedb` pod and 5 GiB local NVMe PVC; [deployment details](../lancedb/README.md) |
 | History directory | PVC `history/`, mounted at `/data` |
 | Transcript cache directory | PVC `transcripts/`, mounted read-only at `/transcripts` in Python |
 
-The [parent application](../README.md) explicitly declares its own namespace. The CronJob, its ServiceAccount and PVC, and the supporting configuration all reside there and belong to the same Argo CD Application. The inference-server application owns the cross-namespace `rr-lessons-local-llm` RoleBinding, granting only `get` on `inferenceservices/local-llm`. The job reads a projected one-hour ServiceAccount token for each inference call. No GPU is requested by the job itself.
+The [parent application](../README.md) explicitly declares its own namespace. The CronJob, LanceDB Deployment, their ServiceAccounts and PVCs, and the supporting configuration all reside there and belong to the same Argo CD Application. The LanceDB wrapper currently exposes health and table inspection; the lesson job does not use it until the RAG prototype is implemented. The inference-server application owns the cross-namespace `rr-lessons-local-llm` RoleBinding, granting only `get` on `inferenceservices/local-llm`. The job reads a projected one-hour ServiceAccount token for each inference call. No GPU is requested by the job itself.
 
 The Bitwarden password must hold the full Discord webhook URL. ESO reads it through `bitwarden-login` and refreshes hourly; the job requires the resulting Secret. A newly created item must first be visible to the Bitwarden CLI backend. If it is not, inspect ESO status and follow the existing [Bitwarden procedures](../../../system/external-secrets/README.md). Do not put the webhook URL in Git or logs. New jobs pick up rotated credentials automatically.
 

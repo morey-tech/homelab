@@ -1,0 +1,146 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rr-lessons-lancedb
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rr-lessons-lancedb
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: rr-lessons-lancedb
+  template:
+    metadata:
+      annotations:
+        openshift.io/required-scc: restricted-v2
+      labels:
+        app: rr-lessons-lancedb
+    spec:
+      serviceAccountName: rr-lessons-lancedb
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - ms-02
+                      - ms-04
+      initContainers:
+        - name: install-dependencies
+          image: docker.io/library/python:3.14.8-slim-trixie@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170
+          command: [python3, -m, pip, install]
+          args:
+            - --disable-pip-version-check
+            - --no-cache-dir
+            - --no-compile
+            - --require-hashes
+            - --only-binary=:all:
+            - --target=/opt/python-deps
+            - -r
+            - /app/requirements.txt
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: app
+              mountPath: /app
+              readOnly: true
+            - name: dependencies
+              mountPath: /opt/python-deps
+            - name: tmp
+              mountPath: /tmp
+      containers:
+        - name: lancedb
+          image: docker.io/library/python:3.14.8-slim-trixie@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170
+          command: [python3, -m, uvicorn]
+          args: [server:app, --app-dir=/app, --host=0.0.0.0, --port=8080, --workers=1, --no-access-log]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: LANCEDB_DIR
+              value: /data/lancedb
+            - name: PYTHONPATH
+              value: /opt/python-deps
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          startupProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: app
+              mountPath: /app
+              readOnly: true
+            - name: dependencies
+              mountPath: /opt/python-deps
+              readOnly: true
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: app
+          configMap:
+            name: rr-lessons-lancedb
+        - name: dependencies
+          emptyDir:
+            sizeLimit: 1Gi
+        - name: data
+          persistentVolumeClaim:
+            claimName: rr-lessons-lancedb
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi

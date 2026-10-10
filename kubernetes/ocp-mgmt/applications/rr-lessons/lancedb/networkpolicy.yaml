@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rr-lessons-lancedb
+spec:
+  podSelector:
+    matchLabels:
+      app: rr-lessons-lancedb
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        # A podSelector alone restricts clients to this namespace.
+        - podSelector:
+            matchLabels:
+              app: rr-lessons
+      ports:
+        - protocol: TCP
+          port: 8080

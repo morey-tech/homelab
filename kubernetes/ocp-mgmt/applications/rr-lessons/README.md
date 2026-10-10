@@ -1,14 +1,15 @@
 # Rational Reminder lessons
 
-The `rr-lessons` Argo CD Application manages the `rr-lessons` namespace and the daily lesson workload:
+The `rr-lessons` Argo CD Application manages the `rr-lessons` namespace and two workloads:
 
 | Directory | Workload | Storage |
 |-----------|----------|---------|
 | [daily-lessons](daily-lessons/README.md) | CronJob delivering a transcript-based lesson to Discord at 08:00 America/Toronto using the local RTX 3090 model | 1 GiB `rr-lessons` PVC on `qnap-nvme` for transcript cache and delivery history |
+| [lancedb](lancedb/README.md) | LanceDB service foundation for the RAG prototype; currently health and table inspection only | Separate 5 GiB `rr-lessons-lancedb` PVC on `lvms-vg-nvme` |
 
-Each workload directory owns its manifests, application code, configuration, tests, and operations documentation. The root Kustomization includes the daily lesson workload and sets its namespace. Argo CD continues to target this application root.
+Each workload directory owns its manifests, application code, configuration, tests, and operations documentation. The root Kustomization includes both workloads and sets their namespace. Argo CD continues to target this application root.
 
-The daily lesson job currently selects passages directly from its cached transcripts.
+The daily lesson job currently selects passages directly from its cached transcripts. Ingestion, retrieval, and integration with LanceDB will be implemented in the prototype.
 
 ## Validation and deployment
 
@@ -20,4 +21,4 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s kubernetes/ocp-mgmt/ap
 git diff --check
 ```
 
-See the [daily lesson operations documentation](daily-lessons/README.md) for checks after deployment. Changes follow repository review, approved local commits, human push, and Argo CD reconciliation.
+See the [LanceDB validation instructions](lancedb/README.md#local-validation) for its dependency installation and service tests, and each workload's documentation for checks after deployment. Changes follow repository review, approved local commits, human push, and Argo CD reconciliation.

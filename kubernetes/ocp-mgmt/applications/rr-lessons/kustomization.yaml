@@ -4,3 +4,4 @@ namespace: rr-lessons
 resources:
   - namespace.yaml
   - daily-lessons
+  - lancedb
