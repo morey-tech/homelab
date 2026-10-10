@@ -69,6 +69,8 @@ oc auth can-i get inferenceservices.serving.kserve.io/local-llm -n inference-ser
 oc get cronjob rr-lessons -n rr-lessons -o jsonpath='{.spec.schedule}{" "}{.spec.timeZone}{"\n"}'
 ```
 
+Normal runs print timestamped progress to stdout: history state, cached revision and size, passage selection, generation attempts, HTTP timing, token usage when returned, validation, and delivery confirmation. The complete lesson (title, explanation, takeaway, reflection, evidence, and source links) is printed before the Discord request, so it is visible even when delivery fails. Reruns also print the saved lesson when skipping a confirmed or unconfirmed delivery. HTTP errors identify `Inference` or `Discord`; webhook URLs, authorization tokens, request headers, and raw response bodies are not logged.
+
 Allow the first scheduled run to exercise the deployed configuration, then inspect its log and the Discord lesson:
 
 ```bash
@@ -79,4 +81,4 @@ oc get jobs -n rr-lessons --sort-by=.metadata.creationTimestamp
 
 Confirm the lesson explains a concept supported by its linked passage, includes the takeaway and question, and that reruns do not produce a second confirmed lesson for the same local day. Live model output, projected-token authentication, Bitwarden visibility, NFS writes, and Discord delivery require post-GitOps validation; local tests mock the external APIs.
 
-`lessons.py --preview` generates a Discord payload without posting or changing history. It still needs model access and `LLM_TOKEN_FILE` pointing to a valid token file, plus `LLM_BASE_URL`; it uses today's saved payload if one already exists. Otherwise, it reads the cache at `TRANSCRIPT_CACHE_DIR` (default `/transcripts`). `--preview --transcript-file /tmp/rr-all.md` uses a local copy of the canonical transcript for generation, but still needs the cached `episode-headings.txt` index to build its source link. Do not create ad hoc cluster test jobs for uncommitted code.
+`lessons.py --preview` generates a Discord payload without posting or changing history. Preview stdout remains a single JSON payload; progress is sent to stderr. It still needs model access and `LLM_TOKEN_FILE` pointing to a valid token file, plus `LLM_BASE_URL`; it uses today's saved payload if one already exists. Otherwise, it reads the cache at `TRANSCRIPT_CACHE_DIR` (default `/transcripts`). `--preview --transcript-file /tmp/rr-all.md` uses a local copy of the canonical transcript for generation, but still needs the cached `episode-headings.txt` index to build its source link. Do not create ad hoc cluster test jobs for uncommitted code.

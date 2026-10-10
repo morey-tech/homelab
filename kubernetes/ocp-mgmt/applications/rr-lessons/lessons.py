@@ -2,8 +2,9 @@
 """Generate one grounded lesson and deliver it once per local calendar day."""
 
 import argparse
+from contextlib import redirect_stdout
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 import fcntl
 import hashlib
 import json
@@ -12,6 +13,7 @@ from pathlib import Path
 import random
 import re
 import sys
+from time import monotonic
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
@@ -28,7 +30,21 @@ class LessonError(Exception):
     pass
 
 
-def request(url, *, payload=None, token=None, limit=2 * 1024 * 1024):
+def log(message, *, stream=None):
+    timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    print(f"{timestamp} {message}", file=stream or sys.stdout, flush=True)
+
+
+def print_lesson(entry, day):
+    log(f"Lesson for {day}, episode {entry['episode']} (status={entry['status']})")
+    for embed in entry["payload"]["embeds"]:
+        print(f"\n{embed['title']}\n\n{embed['description']}", flush=True)
+        for field in embed.get("fields", []):
+            print(f"\n{field['name']}: {field['value']}", flush=True)
+    log("End of lesson")
+
+
+def request(url, *, payload=None, token=None, limit=2 * 1024 * 1024, service="HTTP"):
     headers = {"User-Agent": "homelab-rr-lessons", "Accept": "application/json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -36,16 +52,19 @@ def request(url, *, payload=None, token=None, limit=2 * 1024 * 1024):
         headers["Content-Type"] = "application/json"
     req = Request(url, data=None if payload is None else json.dumps(payload).encode(),
                   headers=headers)
+    started = monotonic()
+    log(f"{service} request started")
     try:
         with urlopen(req, timeout=300 if token else 60) as response:
             data = response.read(limit + 1)
     except HTTPError as exc:
         # URLs and response bodies may contain the webhook credential. Never log them.
-        raise LessonError(f"HTTP request failed (status {exc.code})") from None
+        raise LessonError(f"{service} request failed (status {exc.code}, after {monotonic() - started:.1f}s)") from None
     except (URLError, TimeoutError, OSError):
-        raise LessonError("HTTP request failed (connection or timeout)") from None
+        raise LessonError(f"{service} request failed (connection or timeout, after {monotonic() - started:.1f}s)") from None
     if len(data) > limit:
-        raise LessonError("HTTP response exceeded size limit")
+        raise LessonError(f"{service} response exceeded size limit")
+    log(f"{service} request completed in {monotonic() - started:.1f}s ({len(data)} response bytes)")
     return data.decode("utf-8")
 
 
@@ -59,6 +78,7 @@ def read_transcripts():
         data = handle.read(64 * 1024 * 1024 + 1)
     if not data or len(data) > 64 * 1024 * 1024:
         raise LessonError("Cached transcript is empty or exceeds size limit")
+    log(f"Loaded {len(data)} transcript bytes from cache at commit {commit}")
     return data.decode("utf-8"), commit
 
 
@@ -112,14 +132,20 @@ def generate(excerpt, history):
     user = json.dumps({"episode": excerpt["episode"], "recent_titles": recent,
                        "transcript_excerpt": excerpt["text"]}, ensure_ascii=False)
     token = Path(os.environ.get("LLM_TOKEN_FILE", TOKEN_PATH)).read_text().strip()
+    log(f"Generating lesson with {len(recent)} recent titles for context")
     response = json.loads(request(os.environ["LLM_BASE_URL"].rstrip("/") + "/chat/completions",
-                                  token=token, payload={
+                                  token=token, service="Inference", payload={
         "model": os.environ.get("LLM_MODEL", "local-llm"),
         "messages": [{"role": "system", "content": PROMPT}, {"role": "user", "content": user}],
         "temperature": 0.5, "max_tokens": 1000,
         "response_format": {"type": "json_object"},
     }))
     choice = response["choices"][0]
+    usage = response.get("usage") or {}
+    counts = ", ".join(f"{key}={usage[key]}" for key in ("prompt_tokens", "completion_tokens")
+                       if isinstance(usage.get(key), int))
+    if counts:
+        log(f"Inference token usage: {counts}")
     if choice.get("finish_reason") != "stop":
         raise LessonError("Model response did not finish normally")
     lesson = json.loads(choice["message"]["content"])
@@ -135,6 +161,7 @@ def generate(excerpt, history):
         raise LessonError("Lesson evidence is not a short verbatim source passage")
     if any(re.search(r"https?://", value) for value in lesson.values() if isinstance(value, str)):
         raise LessonError("Model supplied an unexpected link")
+    log("Lesson fields and source quotation validated")
     return lesson
 
 
@@ -196,17 +223,22 @@ def save(path, history):
 def prepare(history, day, transcript_file=None):
     if transcript_file:
         text, commit = Path(transcript_file).read_text(), "master"
+        log(f"Loaded local transcript fixture ({len(text)} characters)")
     else:
         text, commit = read_transcripts()
     candidates = excerpts(text)
+    log(f"Indexed {len(candidates)} passages across {len({item['episode'] for item in candidates})} episodes")
     # Try another passage if the model recognizes an intro or housekeeping segment.
     for attempt in range(3):
         excerpt = choose(candidates, history, f"{day}:{attempt}")
+        log(f"Generation attempt {attempt + 1}/3: episode {excerpt['episode']}, "
+            f"all.md lines {excerpt['start']}-{excerpt['end']}, {len(excerpt['text'])} characters")
         lesson = generate(excerpt, history)
         if lesson:
             return {"status": "prepared", "episode": excerpt["episode"], "key": excerpt["key"],
                     "title": lesson["title"], "commit": commit,
                     "payload": make_payload(lesson, excerpt, commit, day)}
+        log("Model skipped this passage; selecting another")
         candidates.remove(excerpt)
         if not candidates:
             break
@@ -218,12 +250,14 @@ def deliver(history, day, path, url):
     # Persist intent BEFORE posting. An interrupted/ambiguous delivery is never retried.
     entry["status"] = "sending"
     save(path, history)
-    response = json.loads(request(url, payload=entry["payload"]))
+    log("Saved delivery intent; posting lesson to Discord")
+    response = json.loads(request(url, payload=entry["payload"], service="Discord"))
     if not isinstance(response.get("id"), str) or not response["id"]:
         raise LessonError("Discord did not confirm a message ID")
     entry.update(status="sent", message_id=response["id"])
     save(path, history)
-    print(f"Delivered lesson for {day}, episode {entry['episode']}")
+    log(f"Delivered lesson for {day}, episode {entry['episode']}; "
+        f"Discord message ID {response['id']}; history saved")
 
 
 def run(preview=False, transcript_file=None):
@@ -232,22 +266,33 @@ def run(preview=False, transcript_file=None):
     path = directory / "history.json"
     if preview:
         history = json.loads(path.read_text()) if path.exists() else {}
-        entry = history.get(day) or prepare(history, day, transcript_file)
+        # Keep preview stdout as a single JSON payload for command-line consumers.
+        with redirect_stdout(sys.stderr):
+            log(f"Previewing lesson for {day}; loaded {len(history)} history entries")
+            entry = history.get(day) or prepare(history, day, transcript_file)
         print(json.dumps(entry["payload"], ensure_ascii=False, indent=2))
         return
+    log(f"Starting daily lesson for {day} ({os.environ.get('LESSON_TIMEZONE', 'America/Toronto')})")
     url = webhook_url(os.environ["DISCORD_WEBHOOK_URL"].strip())
     directory.mkdir(parents=True, exist_ok=True)
     with (directory / "history.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         history = json.loads(path.read_text()) if path.exists() else {}
+        log(f"Acquired history lock; loaded {len(history)} daily entries")
         if day in history and history[day]["status"] == "sent":
-            print(f"Lesson for {day} already delivered; skipping")
+            print_lesson(history[day], day)
+            log(f"Lesson for {day} already delivered; skipping")
             return
         if day in history and history[day]["status"] == "sending":
+            print_lesson(history[day], day)
             raise LessonError("Delivery unconfirmed; inspect Discord and history before any manual retry")
         if day not in history:
             history[day] = prepare(history, day)
             save(path, history)
+            log("Saved prepared lesson to history")
+        else:
+            log("Reusing prepared lesson from history")
+        print_lesson(history[day], day)
         deliver(history, day, path, url)
 
 
@@ -261,11 +306,11 @@ def main():
     try:
         run(args.preview, args.transcript_file)
     except LessonError as exc:
-        print(f"Lesson job failed: {exc}", file=sys.stderr)
+        log(f"Lesson job failed: {exc}", stream=sys.stderr)
         return 1
     except Exception as exc:
         # Avoid dumping tokens, webhook URLs, model responses, or request bodies.
-        print(f"Lesson job failed ({type(exc).__name__}); check configuration and service health", file=sys.stderr)
+        log(f"Lesson job failed ({type(exc).__name__}); check configuration and service health", stream=sys.stderr)
         return 1
     return 0
 

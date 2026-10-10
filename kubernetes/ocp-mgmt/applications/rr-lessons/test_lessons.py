@@ -40,7 +40,8 @@ class LessonsTest(unittest.TestCase):
                        "takeaway": "Write down your reasoning.", "reflection": "What might change your plan?",
                        "evidence": "A strategy should match your ability to stay invested"}
         self.entry = {"status": "prepared", "episode": 42, "key": "42:abc",
-                      "title": self.lesson["title"], "payload": {"embeds": []}}
+                      "title": self.lesson["title"], "payload": lessons.make_payload(
+                          self.lesson, self.excerpt, "a" * 40, self.day)}
 
     def model_response(self, lesson=None, reason="stop"):
         return json.dumps({"choices": [{"finish_reason": reason, "message": {
@@ -121,19 +122,29 @@ class LessonsTest(unittest.TestCase):
                 lessons.webhook_url(value)
 
     def test_success_saves_confirmation_and_rerun_does_not_post(self):
+        output = io.StringIO()
         with patch.object(lessons, "prepare", return_value=self.entry), patch.object(
-                lessons, "request", return_value='{"id":"12345"}') as request:
+                lessons, "request", return_value='{"id":"12345"}') as request, contextlib.redirect_stdout(output):
             lessons.run()
             lessons.run()
         request.assert_called_once()
         self.assertEqual(json.loads(self.path.read_text())[self.day]["message_id"], "12345")
+        for value in self.lesson.values():
+            self.assertIn(value, output.getvalue())
+        self.assertIn("Episode transcript", output.getvalue())
+        self.assertIn("Discord message ID 12345", output.getvalue())
+        self.assertIn("already delivered; skipping", output.getvalue())
+        self.assertNotIn("test-secret", output.getvalue())
+        self.assertNotIn("test-token", output.getvalue())
 
     def test_ambiguous_delivery_is_persisted_and_not_retried(self):
+        output = io.StringIO()
         def disconnect(*args, **kwargs):
             self.assertEqual(json.loads(self.path.read_text())[self.day]["status"], "sending")
+            self.assertIn(self.lesson["explanation"], output.getvalue())
             raise lessons.LessonError("connection lost")
         with patch.object(lessons, "prepare", return_value=self.entry), patch.object(
-                lessons, "request", side_effect=disconnect) as request:
+                lessons, "request", side_effect=disconnect) as request, contextlib.redirect_stdout(output):
             with self.assertRaises(lessons.LessonError):
                 lessons.run()
             with self.assertRaisesRegex(lessons.LessonError, "unconfirmed"):
@@ -154,18 +165,37 @@ class LessonsTest(unittest.TestCase):
         self.assertFalse(self.path.exists())
 
     def test_preview_never_posts_or_writes_history(self):
-        with patch.object(lessons, "prepare", return_value=self.entry), patch.object(
-                lessons, "request") as request, contextlib.redirect_stdout(io.StringIO()):
+        output, progress = io.StringIO(), io.StringIO()
+        def prepare(*args):
+            lessons.log("Preparing preview")
+            return self.entry
+        with patch.object(lessons, "prepare", side_effect=prepare), patch.object(
+                lessons, "request") as request, contextlib.redirect_stdout(output), contextlib.redirect_stderr(progress):
             lessons.run(preview=True)
         request.assert_not_called()
         self.assertFalse(self.path.exists())
+        self.assertEqual(json.loads(output.getvalue()), self.entry["payload"])
+        self.assertIn("Preparing preview", progress.getvalue())
 
     def test_http_errors_do_not_leak_webhook(self):
         url = os.environ["DISCORD_WEBHOOK_URL"]
         with patch.object(lessons, "urlopen", side_effect=HTTPError(url, 429, url, {}, None)):
             with self.assertRaises(lessons.LessonError) as error:
                 lessons.request(url, payload={})
-        self.assertEqual(str(error.exception), "HTTP request failed (status 429)")
+        self.assertRegex(str(error.exception), r"HTTP request failed \(status 429, after [\d.]+s\)")
+
+    def test_http_failure_identifies_service_without_logging_credentials(self):
+        for service in ("Inference", "Discord"):
+            with self.subTest(service=service):
+                url = os.environ["DISCORD_WEBHOOK_URL"]
+                output = io.StringIO()
+                with patch.object(lessons, "urlopen", side_effect=HTTPError(url, 403, url, {}, None)), \
+                        contextlib.redirect_stdout(output), self.assertRaises(lessons.LessonError) as error:
+                    lessons.request(url, token="test-token", payload={"secret": "test-secret"}, service=service)
+                self.assertIn(f"{service} request started", output.getvalue())
+                self.assertIn(f"{service} request failed (status 403", str(error.exception))
+                for secret in (url, "test-token", "test-secret"):
+                    self.assertNotIn(secret, output.getvalue() + str(error.exception))
 
 
 if __name__ == "__main__":
