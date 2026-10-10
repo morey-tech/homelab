@@ -9,4 +9,5 @@ resources:
   - inference-service.yaml
   - client-rbac.yaml
   - anythingllm-rbac.yaml
+  - rr-lessons-rbac.yaml
   - networkpolicy.yaml

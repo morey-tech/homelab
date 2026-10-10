@@ -1,0 +1,114 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: rr-lessons
+spec:
+  schedule: "0 8 * * *"
+  timeZone: America/Toronto
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+          labels:
+            app: rr-lessons
+        spec:
+          serviceAccountName: rr-lessons
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          initContainers:
+            - name: sync-transcripts
+              image: docker.io/alpine/git:2.54.0@sha256:a4bb51f1a3553df194ce679fc1db721d8bfba2046fa1a88fe9d4ac551ffbce25
+              command: [/bin/sh, -ec]
+              args:
+                - |
+                  mkdir -p /storage/history
+                  exec /bin/sh /app/sync-transcripts.sh
+              workingDir: /storage
+              env:
+                - name: TRANSCRIPT_CACHE_DIR
+                  value: /storage/transcripts
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: "1"
+                  memory: 512Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              volumeMounts:
+                - name: app
+                  mountPath: /app
+                  readOnly: true
+                - name: storage
+                  mountPath: /storage
+                - name: git-tmp
+                  mountPath: /tmp
+          containers:
+            - name: lessons
+              image: docker.io/library/python:3.14.8-slim-trixie@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170
+              command: [python3, /app/lessons.py]
+              envFrom:
+                - configMapRef:
+                    name: rr-lessons-config
+              env:
+                - name: DISCORD_WEBHOOK_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: rr-lessons-discord
+                      key: webhook-url
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: "1"
+                  memory: 512Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              volumeMounts:
+                - name: app
+                  mountPath: /app
+                  readOnly: true
+                - name: storage
+                  mountPath: /data
+                  subPath: history
+                - name: storage
+                  mountPath: /transcripts
+                  subPath: transcripts
+                  readOnly: true
+                - name: inference-token
+                  mountPath: /var/run/secrets/inference
+                  readOnly: true
+          volumes:
+            - name: app
+              configMap:
+                name: rr-lessons-script
+            - name: storage
+              persistentVolumeClaim:
+                claimName: rr-lessons
+            - name: git-tmp
+              emptyDir:
+                sizeLimit: 64Mi
+            - name: inference-token
+              projected:
+                sources:
+                  - serviceAccountToken:
+                      path: token
+                      expirationSeconds: 3600

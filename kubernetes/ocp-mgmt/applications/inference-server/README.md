@@ -109,6 +109,8 @@ Use the endpoint as an OpenAI-compatible base URL, the token as the API key, and
 
 The `networking.kserve.io/visibility: exposed` label enables the OpenShift AI-managed Route. KServe and the platform model controller own the Service and Route. The route allows ten-minute requests for generation and streaming. NetworkPolicy permits inference traffic through port 8443 and limits direct runtime port 8080 to monitoring namespaces.
 
+The [daily Rational Reminder lesson job](../rr-lessons/README.md) also uses this endpoint. The `rr-lessons-local-llm` RoleBinding grants its ServiceAccount only the existing model-scoped permission. It reads a projected one-hour token for each inference request, with no persistent inference credential. Sync both applications when adding or removing this client.
+
 ## Model changes and recovery
 
 Choose a model revision and compatible runtime, then update the download Job's repository, revision, expected artifacts, and target directory together with the InferenceService `storageUri`. Keep the Job name `download-model`; Argo CD recreates it with the new pod template. Keep `local-llm` as the API name so clients do not need reconfiguration. Review GPU memory, context length, and concurrency for each model.
