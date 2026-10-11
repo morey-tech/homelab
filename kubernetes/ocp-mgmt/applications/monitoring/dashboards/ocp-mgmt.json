@@ -1503,7 +1503,8 @@
               "noValue": "Unknown",
               "decimals": 1,
               "color": {
-                "mode": "palette-classic"
+                "mode": "fixed",
+                "fixedColor": "#5794F2"
               },
               "thresholds": {
                 "mode": "absolute",
@@ -1572,7 +1573,8 @@
               "noValue": "Unknown",
               "decimals": 1,
               "color": {
-                "mode": "palette-classic"
+                "mode": "fixed",
+                "fixedColor": "#B877D9"
               },
               "thresholds": {
                 "mode": "absolute",
@@ -1641,7 +1643,8 @@
               "noValue": "Unknown",
               "decimals": 1,
               "color": {
-                "mode": "palette-classic"
+                "mode": "fixed",
+                "fixedColor": "#FF9830"
               },
               "thresholds": {
                 "mode": "absolute",
@@ -1709,7 +1712,8 @@
               "noValue": "Unknown",
               "decimals": 1,
               "color": {
-                "mode": "palette-classic"
+                "mode": "fixed",
+                "fixedColor": "#73BF69"
               },
               "thresholds": {
                 "mode": "absolute",

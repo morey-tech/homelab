@@ -179,6 +179,8 @@ def build(cluster='ocp-mgmt'):
         for query in p['targets']:
             query['datasource']['uid'] = cluster
     if cluster == 'ocp-mgmt':
+        gpu_colors = {'GPU utilization': '#5794F2', 'GPU memory used': '#B877D9',
+                      'GPU temperature': '#FF9830', 'GPU power': '#73BF69'}
         row_y = max(p['gridPos']['y'] + p['gridPos']['h'] for p in panels)
         row = {'id': len(panels) + 1, 'title': 'GPU history — tr-gpu', 'type': 'row',
                'collapsed': True, 'gridPos': {'x': 0, 'y': row_y, 'w': 24, 'h': 1}, 'panels': []}
@@ -188,6 +190,7 @@ def build(cluster='ocp-mgmt'):
                       description=gpu_description + ' Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.')
             p['id'] = row['id'] + i + 1
             p['targets'][0]['legendFormat'] = 'tr-gpu · GPU 0'
+            p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': gpu_colors[title]}
             if unit != 'percent':
                 p['fieldConfig']['defaults'].pop('max')
             row['panels'].append(p)
