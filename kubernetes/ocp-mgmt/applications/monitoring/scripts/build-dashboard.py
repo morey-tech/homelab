@@ -178,23 +178,28 @@ def build(cluster='ocp-mgmt'):
         p['datasource']['uid'] = cluster
         for query in p['targets']:
             query['datasource']['uid'] = cluster
-    if cluster == 'ocp-mgmt':
-        gpu_colors = {'GPU utilization': '#5794F2', 'GPU memory used': '#B877D9',
-                      'GPU temperature': '#FF9830', 'GPU power': '#73BF69'}
-        row_y = max(p['gridPos']['y'] + p['gridPos']['h'] for p in panels)
-        row = {'id': len(panels) + 1, 'title': 'GPU history — tr-gpu', 'type': 'row',
-               'collapsed': True, 'gridPos': {'x': 0, 'y': row_y, 'w': 24, 'h': 1}, 'panels': []}
-        for i, (title, expr, unit) in enumerate(gpu_panels):
-            p = panel(title + ' history', guarded(expr, gpu_up), (i % 2) * 12,
-                      row_y + 1 + (i // 2) * 7, 12, 7, 'timeseries', unit,
-                      description=gpu_description + ' Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.')
-            p['id'] = row['id'] + i + 1
-            p['targets'][0]['legendFormat'] = 'tr-gpu · GPU 0'
-            p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': gpu_colors[title]}
-            if unit != 'percent':
-                p['fieldConfig']['defaults'].pop('max')
-            row['panels'].append(p)
-        panels.append(row)
+    gpu_colors = {'GPU utilization': '#5794F2', 'GPU memory used': '#B877D9',
+                  'GPU temperature': '#FF9830', 'GPU power': '#73BF69',
+                  'GPU render utilization': '#5794F2', 'GPU video utilization': '#B877D9',
+                  'GPU frequency': '#FF9830'}
+    gpu_node = 'tr-gpu' if config['gpu'] == 'nvidia' else nodes[0].split('.')[0]
+    gpu_name = 'GPU 0' if config['gpu'] == 'nvidia' else 'Intel iGPU'
+    row_y = max(p['gridPos']['y'] + p['gridPos']['h'] for p in panels)
+    row = {'id': len(panels) + 1, 'title': f'GPU history — {gpu_node}', 'type': 'row',
+           'collapsed': True, 'gridPos': {'x': 0, 'y': row_y, 'w': 24, 'h': 1}, 'panels': []}
+    for i, (title, expr, unit) in enumerate(gpu_panels):
+        p = panel(title + ' history', guarded(expr, gpu_up), (i % 2) * 12,
+                  row_y + 1 + (i // 2) * 7, 12, 7, 'timeseries', unit,
+                  description=gpu_description + ' Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.')
+        p['id'] = row['id'] + i + 1
+        p['datasource']['uid'] = cluster
+        p['targets'][0]['datasource']['uid'] = cluster
+        p['targets'][0]['legendFormat'] = f'{gpu_node} · {gpu_name}'
+        p['fieldConfig']['defaults']['color'] = {'mode': 'fixed', 'fixedColor': gpu_colors[title]}
+        if unit != 'percent':
+            p['fieldConfig']['defaults'].pop('max')
+        row['panels'].append(p)
+    panels.append(row)
     return {'uid': cluster + '-overview', 'title': config['title'] + ' Overview', 'tags': ['homelab', 'openshift', cluster],
             'schemaVersion': 39, 'version': 1, 'editable': False, 'timezone': 'browser', 'refresh': '30s',
             'time': {'from': 'now-6h', 'to': 'now'}, 'panels': panels, 'templating': {'list': []},

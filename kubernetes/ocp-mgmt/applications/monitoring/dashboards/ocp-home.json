@@ -1207,6 +1207,298 @@
         }
       },
       "id": 17
+    },
+    {
+      "id": 18,
+      "title": "GPU history \u2014 ocp-home-01",
+      "type": "row",
+      "collapsed": true,
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 24,
+        "h": 1
+      },
+      "panels": [
+        {
+          "title": "GPU render utilization history",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "description": "Existing Intel iGPU exporter on OCP Home; video panel covers video engine 0. Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.",
+          "gridPos": {
+            "x": 0,
+            "y": 29,
+            "w": 12,
+            "h": 7
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "((igpu_engines_render_3d_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(igpu_engines_render_3d_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) and on() ((max((up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) == 1))",
+              "instant": false,
+              "range": true,
+              "legendFormat": "ocp-home-01 \u00b7 Intel iGPU",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ocp-home"
+              },
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "noValue": "Unknown",
+              "decimals": 1,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "#5794F2"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 100,
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 19
+        },
+        {
+          "title": "GPU video utilization history",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "description": "Existing Intel iGPU exporter on OCP Home; video panel covers video engine 0. Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.",
+          "gridPos": {
+            "x": 12,
+            "y": 29,
+            "w": 12,
+            "h": 7
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "((igpu_engines_video_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(igpu_engines_video_0_busy{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) and on() ((max((up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) == 1))",
+              "instant": false,
+              "range": true,
+              "legendFormat": "ocp-home-01 \u00b7 Intel iGPU",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ocp-home"
+              },
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "noValue": "Unknown",
+              "decimals": 1,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "#B877D9"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 100,
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 20
+        },
+        {
+          "title": "GPU frequency history",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "description": "Existing Intel iGPU exporter on OCP Home; video panel covers video engine 0. Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.",
+          "gridPos": {
+            "x": 0,
+            "y": 36,
+            "w": 12,
+            "h": 7
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "((igpu_frequency_actual{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(igpu_frequency_actual{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180)) * 1000000) and on() ((max((up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) == 1))",
+              "instant": false,
+              "range": true,
+              "legendFormat": "ocp-home-01 \u00b7 Intel iGPU",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ocp-home"
+              },
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "hertz",
+              "noValue": "Unknown",
+              "decimals": 1,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "#FF9830"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 21
+        },
+        {
+          "title": "GPU power history",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ocp-home"
+          },
+          "description": "Existing Intel iGPU exporter on OCP Home; video panel covers video engine 0. Uses the dashboard time range. Missing/down/stale telemetry appears as gaps.",
+          "gridPos": {
+            "x": 12,
+            "y": 36,
+            "w": 12,
+            "h": 7
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "((igpu_power_gpu{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(igpu_power_gpu{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) and on() ((max((up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"} and (time() - timestamp(up{job=\"intel-gpu-exporter\",namespace=\"openshift-nfd\"}) < 180))) == 1))",
+              "instant": false,
+              "range": true,
+              "legendFormat": "ocp-home-01 \u00b7 Intel iGPU",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ocp-home"
+              },
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "watt",
+              "noValue": "Unknown",
+              "decimals": 1,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "#73BF69"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 22
+        }
+      ]
     }
   ],
   "templating": {

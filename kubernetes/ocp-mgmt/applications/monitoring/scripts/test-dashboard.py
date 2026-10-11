@@ -79,7 +79,7 @@ def cluster_cases(cluster):
              remove=('kube_node_status_condition',), expected_ready=0)
     for p in dashboard['panels']:
         if p['type'] == 'row':
-            assert cluster == 'ocp-mgmt' and p['collapsed'] is True
+            assert p['collapsed'] is True
             assert len(p['panels']) == 4
             for graph in p['panels']:
                 original = next(s for s in dashboard['panels'] if s['title'] == graph['title'].removesuffix(' history'))
