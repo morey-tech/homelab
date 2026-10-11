@@ -48,7 +48,7 @@ spec:
             - --no-cache-dir
             - --no-compile
             - --require-hashes
-            - --only-binary=:all:
+            - "--only-binary=:all:"
             - --target=/opt/python-deps
             - -r
             - /app/requirements.txt
