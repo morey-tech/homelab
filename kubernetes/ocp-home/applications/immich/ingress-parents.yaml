@@ -9,7 +9,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     # external-dns annotations to create DNS record
     external-dns.alpha.kubernetes.io/include: "true"
-    external-dns.alpha.kubernetes.io/target: "192.168.0.20"
+    external-dns.alpha.kubernetes.io/target: "192.168.40.2"
 spec:
   ingressClassName: openshift-default
   tls:
