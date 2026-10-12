@@ -77,6 +77,15 @@ been pushed to the source repository. Missing episodes fail explicitly.
 Candidate headings include review status and confidence, with unvalidated ratings
 marked explicitly. The question appears first beneath the heading, followed by
 confidence details or rejection reasons, then the answer outline and source context.
+Logs and report headings label passing high-confidence candidates **Ready for human
+review**; passing medium/low-confidence candidates are **Needs human review**.
+Completed episode reports display **Preparation complete**. These display labels
+retain the existing `needs_human_review` JSON status and `human_review: pending`
+for compatibility with report selection; they do not grant production approval.
+Rejection logs name the failed checks and include the reviewer's explanation.
+When the model reports medium/high confidence alongside failed checks, the message
+explicitly identifies that inconsistent rating instead of describing it as low confidence.
+
 Candidates needing human review display **Model confidence in source faithfulness**:
 
 | Rating | Meaning |

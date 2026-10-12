@@ -184,6 +184,23 @@ def validate_question(question, available, focus):
     return evidence | set(context)
 
 
+def failed_review_checks(review):
+    return [label for key, label in (
+        ("supported", "source support"), ("context_sufficient", "sufficient context"),
+        ("teachable", "teachability")) if review.get(key) is False]
+
+
+def review_status_label(entry):
+    if entry["status"] == "needs_human_review":
+        review = entry.get("review")
+        review = review if isinstance(review, dict) else {}
+        if (not entry.get("error") and review.get("confidence") == "high"
+                and all(review.get(key) is True for key in ("supported", "context_sufficient", "teachable"))):
+            return "Ready for human review"
+        return "Needs human review"
+    return entry["status"]
+
+
 def validate_review(review):
     if not isinstance(review, dict) or set(review) != {
             "supported", "context_sufficient", "teachable", "reason", "confidence", "confidence_reason"}:
@@ -197,7 +214,10 @@ def validate_review(review):
     string(review["confidence_reason"], 500)
     passed = all(review[field] for field in ("supported", "context_sufficient", "teachable"))
     if not passed and review["confidence"] != "low":
-        raise PreparationError("A failed review must have low confidence in source faithfulness")
+        raise PreparationError(
+            f"Review checks failed: {', '.join(failed_review_checks(review))}. "
+            f"Model reported {review['confidence']} confidence despite those failures. "
+            f"Reviewer explanation: {review['reason']}")
     return passed
 
 
@@ -346,7 +366,11 @@ def evaluate(report, model, output, prompts, section_limit):
                 entry["status"] = "needs_human_review" if passed else "rejected"
                 if not passed:
                     entry["rejection_reason"] = review["reason"]
-                log(f"{entry['id']}: {entry['status']} (model confidence: {review['confidence']})")
+                    log(f"{entry['id']} rejected (model confidence: {review['confidence']}): "
+                        f"Review checks failed: {', '.join(failed_review_checks(review))}. "
+                        f"Reviewer explanation: {review['reason']}")
+                else:
+                    log(f"{entry['id']}: {review_status_label(entry)} (model confidence: {review['confidence']})")
             except PreparationError as exc:
                 entry["error"] = str(exc)
                 entry["rejection_reason"] = str(exc)
@@ -361,10 +385,13 @@ def save_report(output, report):
     report["renderer_sha256"] = digest(Path(__file__).read_bytes())
     atomic_write(output / "report.json", encoded(report))
     source = report["source"]
-    lines = [f"# Episode {source['episode']} preparation", "", f"Status: **{report['status']}**",
+    status_label = "Preparation complete" if report["status"] == "needs_human_review" else report["status"]
+    lines = [f"# Episode {source['episode']} preparation", "", f"Status: **{status_label}**",
              "", f"Source commit: `{source['commit']}`", f"Transcript SHA-256: `{source['sha256']}`",
              "", f"[Original transcript]({source['transcript_url']})", "",
-             "Generated candidates require human review. This report is not an ingestion approval.", ""]
+             "High-confidence candidates that pass review are ready for human review. "
+             "Medium/low-confidence candidates that pass review need human review. "
+             "This report is not an ingestion approval.", ""]
     by_id = {p["id"]: p for p in report["passages"]}
     lines.extend([f"Passages: {len(by_id)}. Sections: {len(report['sections'])}. "
                   f"Completed sections: {report.get('completed_sections', 0)}.", "",
@@ -384,7 +411,7 @@ def save_report(output, report):
                             if confidence in ("low", "medium", "high") else "Confidence not assessed")
         if entry.get("error") and confidence in ("low", "medium", "high"):
             confidence_label += " (unvalidated)"
-        lines.extend([f"## {entry['id']} — {entry['status']} — {confidence_label}", ""])
+        lines.extend([f"## {entry['id']} — {review_status_label(entry)} — {confidence_label}", ""])
         question = entry["candidate"]
         # A bad review should not hide a well-formed question or its evidence.
         try:
@@ -399,9 +426,7 @@ def save_report(output, report):
             if not isinstance(reason, str) or not reason.strip():
                 reason = "No rejection explanation was recorded in this older report."
             lines.extend([f"**Why rejected:** {reason}", ""])
-            failed = [label for key, label in (
-                ("supported", "source support"), ("context_sufficient", "sufficient context"),
-                ("teachable", "teachability")) if review.get(key) is False]
+            failed = failed_review_checks(review)
             if failed:
                 lines.extend(["**Reviewer checks that failed:** " + ", ".join(failed), ""])
             if entry.get("error") and isinstance(review.get("reason"), str):
@@ -410,8 +435,11 @@ def save_report(output, report):
                     lines.extend([f"Reported confidence: {review['confidence']} (not validated).", ""])
         if entry["status"] == "needs_human_review":
             if "confidence" in review:
+                review_note = ("uncalibrated; not production-approved"
+                               if review_status_label(entry) == "Ready for human review"
+                               else "uncalibrated; human review required")
                 lines.extend([f"**Model confidence in source faithfulness: {review['confidence'].capitalize()}** "
-                              "(uncalibrated; human review required)", "", review["confidence_reason"], ""])
+                              f"({review_note})", "", review["confidence_reason"], ""])
             else:
                 lines.extend(["**Model confidence: Not assessed** — rerun review with the confidence prompt.", ""])
         if not valid_question:

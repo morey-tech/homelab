@@ -133,7 +133,8 @@ class PreparationTests(unittest.TestCase):
         self.assertEqual(report["questions"][0]["human_review"], "pending")
         self.assertEqual(report["questions"][0]["review"]["confidence"], "high")
         rendered = (output / "report.md").read_text()
-        self.assertIn("— needs_human_review — High confidence", rendered)
+        self.assertIn("— Ready for human review — High confidence", rendered)
+        self.assertIn("Status: **Preparation complete**", rendered)
         self.assertLess(rendered.index(q["question"]),
                         rendered.index("Model confidence in source faithfulness: High"))
         self.assertEqual(report["questions"][1]["status"], "duplicate")
@@ -163,9 +164,14 @@ class PreparationTests(unittest.TestCase):
                           "reason": "Candidate is supported", "confidence": level,
                           "confidence_reason": "A model assessment requiring human confirmation"}
                 model = FakeModel([response({"questions": [self.question(report)]}), response(review)])
-                prepare.evaluate(report, model, self.root / level, {"extract": "a", "review": "b"}, 0)
+                with patch.object(prepare, "log") as log:
+                    prepare.evaluate(report, model, self.root / level, {"extract": "a", "review": "b"}, 0)
                 self.assertEqual(report["questions"][0]["status"], "needs_human_review")
                 self.assertEqual(report["questions"][0]["human_review"], "pending")
+                label = "Ready for human review" if level == "high" else "Needs human review"
+                log.assert_any_call(f"section-001-q1: {label} (model confidence: {level})")
+                self.assertIn(f"— {label} — {level.capitalize()} confidence",
+                              (self.root / level / "report.md").read_text())
 
     def test_legacy_report_does_not_invent_confidence(self):
         report = self.report()
@@ -187,7 +193,10 @@ class PreparationTests(unittest.TestCase):
         report = self.report()
         model = FakeModel([response({"questions": [self.question(report)]}), response({
             "supported": False, "context_sufficient": True, "teachable": True, "reason": "Claim contradicts evidence", "confidence": "low", "confidence_reason": "The central claim contradicts the cited source"})])
-        prepare.evaluate(report, model, self.root / "run", {"extract": "a", "review": "b"}, 0)
+        with patch.object(prepare, "log") as log:
+            prepare.evaluate(report, model, self.root / "run", {"extract": "a", "review": "b"}, 0)
+        log.assert_any_call("section-001-q1 rejected (model confidence: low): "
+                            "Review checks failed: source support. Reviewer explanation: Claim contradicts evidence")
         self.assertEqual(report["questions"][0]["status"], "rejected")
         self.assertEqual(report["questions"][0]["rejection_reason"], "Claim contradicts evidence")
         rendered = (self.root / "run/report.md").read_text()
@@ -201,12 +210,16 @@ class PreparationTests(unittest.TestCase):
                   "reason": "The answer adds causation absent from the source", "confidence": "high",
                   "confidence_reason": "An inconsistent model assessment"}
         model = FakeModel([response({"questions": [self.question(report)]}), response(review)])
-        prepare.evaluate(report, model, self.root / "run", {"extract": "a", "review": "b"}, 0)
+        with patch.object(prepare, "log") as log:
+            prepare.evaluate(report, model, self.root / "run", {"extract": "a", "review": "b"}, 0)
+        log.assert_any_call("section-001-q1 rejected: Review checks failed: source support. "
+                            "Model reported high confidence despite those failures. "
+                            "Reviewer explanation: The answer adds causation absent from the source")
         entry = report["questions"][0]
         self.assertEqual(entry["status"], "rejected")
         self.assertEqual(entry["review"], review)
         rendered = (self.root / "run/report.md").read_text()
-        self.assertIn("**Why rejected:** A failed review must have low confidence", rendered)
+        self.assertIn("**Why rejected:** Review checks failed: source support.", rendered)
         self.assertIn("The answer adds causation absent from the source", rendered)
         self.assertIn("Reported confidence: high (not validated)", rendered)
         self.assertIn("— rejected — High confidence (unvalidated)", rendered)
