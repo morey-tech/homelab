@@ -1,0 +1,3 @@
+# Local review artifacts; source code and prompts are tracked separately.
+/rr-episode-*/
+__pycache__/

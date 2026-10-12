@@ -9,7 +9,7 @@ The `rr-lessons` Argo CD Application manages the `rr-lessons` namespace and two 
 
 Each workload directory owns its manifests, application code, configuration, tests, and operations documentation. The root Kustomization includes both workloads and sets their namespace. Argo CD continues to target this application root.
 
-The daily lesson job currently selects passages directly from its cached transcripts. Ingestion, retrieval, and integration with LanceDB will be implemented in the prototype.
+The daily lesson job currently selects passages directly from its cached transcripts. The [episode ingestion prototype](prototype/README.md) prepares individual transcripts and evidence-linked teaching questions for human review using the existing GPU model. It runs locally and is not included in the application's Kustomization. Embeddings, LanceDB ingestion, retrieval, and daily lesson integration remain future work.
 
 ## Validation and deployment
 
