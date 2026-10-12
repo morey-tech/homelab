@@ -1,0 +1,467 @@
+{
+  "episode": 428,
+  "fixtureNote": "Three curated examples from the episode 428 review conversation, not an import of the full report. Questions and outlines preserve the reviewed examples; context, qualifications, and notes are curated for the demo. Source excerpts come from the pinned transcript.",
+  "guest": "Owen Zidar",
+  "id": "episode-428-02df8fc35b1ec38b4ac7",
+  "productionApproved": false,
+  "questions": [
+    {
+      "concept": "The owners behind the wealth",
+      "estimatedMinutes": 3,
+      "id": "section-001-q1",
+      "modelConfidence": "high",
+      "outline": [
+        "The typical wealthy person in America is not like Elon Musk, Jamie Dimon, or Taylor Swift, but rather an ordinary business owner in an unglamorous private sector industry such as auto dealerships, beverage distribution, or contracting.",
+        "These 'everywhere millionaires' are often found in mundane, local businesses that serve everyday needs, and their wealth comes from private enterprise rather than celebrity, finance, or real estate."
+      ],
+      "passages": [
+        {
+          "end_char": 999,
+          "end_line": 15,
+          "id": "e428-6a9aca618909864b",
+          "isEvidence": false,
+          "next_id": "e428-c99639b39f5af631",
+          "previous_id": "e428-0dfe7e3f9949c1fb",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L15-L15",
+          "speaker_hint": "Ben Felix",
+          "speaker_label_in_passage": true,
+          "start_char": 911,
+          "start_line": 15,
+          "text": "Ben Felix: Owen, what's wrong with the common perception of what it means to be wealthy?"
+        },
+        {
+          "end_char": 1329,
+          "end_line": 17,
+          "id": "e428-c99639b39f5af631",
+          "isEvidence": true,
+          "next_id": "e428-03b8dcdcb7b43caa",
+          "previous_id": "e428-6a9aca618909864b",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L17-L17",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": true,
+          "start_char": 1001,
+          "start_line": 17,
+          "text": "Owen Zidar: Most people think that the way you get rich is to be like Elon Musk or Jamie Dimon or Taylor Swift. When you look in the data, that's just not actually at all who the typical rich person is in America. They are often ordinary business owners who've gotten extraordinarily rich running unglamorous private businesses."
+        },
+        {
+          "end_char": 1573,
+          "end_line": 19,
+          "id": "e428-03b8dcdcb7b43caa",
+          "isEvidence": true,
+          "next_id": "e428-4a4203c7876a6e2e",
+          "previous_id": "e428-c99639b39f5af631",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L19-L19",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 1331,
+          "start_line": 19,
+          "text": "So I have three young kids, and so I read a lot of kids' books. And we've half-jokingly talked about writing the ABCs of getting rich for the children's market. It's like A, for auto dealer, B, for beverage distributor, and C, for contractor."
+        },
+        {
+          "end_char": 1966,
+          "end_line": 21,
+          "id": "e428-4a4203c7876a6e2e",
+          "isEvidence": true,
+          "next_id": "e428-9430c824889bbd8e",
+          "previous_id": "e428-03b8dcdcb7b43caa",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L21-L21",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 1575,
+          "start_line": 21,
+          "text": "They're pretty mundane businesses, but when you have the opportunity like us to work with the treasury and see the full map of wealth in America, it's just very different because people don't answer surveys. Unless you have investigative journalists or a celebrity following, you're just not going to see the vast majority of private companies that don't have to file quarterly to investors."
+        },
+        {
+          "end_char": 2044,
+          "end_line": 23,
+          "id": "e428-9430c824889bbd8e",
+          "isEvidence": false,
+          "next_id": "e428-42d6dbdf289ace99",
+          "previous_id": "e428-4a4203c7876a6e2e",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L23-L23",
+          "speaker_hint": "Ben Felix",
+          "speaker_label_in_passage": true,
+          "start_char": 1968,
+          "start_line": 23,
+          "text": "Ben Felix: Can you talk about why that's important for people to understand?"
+        },
+        {
+          "end_char": 5664,
+          "end_line": 57,
+          "id": "e428-d2eba60db80fea85",
+          "isEvidence": false,
+          "next_id": "e428-8d04c2287e237772",
+          "previous_id": "e428-c22459beb6263e13",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L57-L57",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 5418,
+          "start_line": 57,
+          "text": "So some of it was just, we had this really unique opportunity to get a decade of work with the treasury where we could see every private business in America. And that's what really shined the light on this hidden world of everywhere millionaires."
+        },
+        {
+          "end_char": 5922,
+          "end_line": 59,
+          "id": "e428-8d04c2287e237772",
+          "isEvidence": true,
+          "next_id": "e428-331a81b22e263c8f",
+          "previous_id": "e428-d2eba60db80fea85",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L59-L59",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": true,
+          "start_char": 5666,
+          "start_line": 59,
+          "text": "Owen Zidar: It's definitely more Main Street. So we added up all top 0.1% income of these private business owners and only about 20% comes from finance and real estate. And the majority come from every other industry, construction, healthcare, you name it."
+        },
+        {
+          "end_char": 6143,
+          "end_line": 61,
+          "id": "e428-331a81b22e263c8f",
+          "isEvidence": false,
+          "next_id": "e428-c5130412f7d5bb5b",
+          "previous_id": "e428-8d04c2287e237772",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L61-L61",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 5924,
+          "start_line": 61,
+          "text": "We're mostly a service economy. And another interesting thing is that it's in every town. So if you plot population, it does a pretty good job of predicting where you'll have a lot of the profits throughout the country."
+        }
+      ],
+      "qualifications": [
+        "The discussion concerns the United States and the wealthy owners described by the guest."
+      ],
+      "question": "What is the real source of wealth for most people in America, and how does it differ from common perceptions of rich individuals like tech founders or celebrities?",
+      "recommendation": "revise",
+      "reviewNotes": [
+        "The question says “most people in America,” but the evidence describes wealthy Americans. Narrow the population.",
+        "Finance and real estate are a minority in the income breakdown, not absent. The second claim currently excludes them.",
+        "Keep the distinction between income and wealth, and attribute the characterization to Owen Zidar."
+      ],
+      "section": "section-001",
+      "suggestion": {
+        "outline": [
+          "Zidar highlights owners of ordinary private businesses, including auto dealers, beverage distributors, and contractors.",
+          "He explains that private companies and their owners often receive less public attention than celebrities or public companies.",
+          "His later breakdown includes finance and real estate. That statistic concerns income among the top-income private-business owners discussed, not a breakdown of all American wealth."
+        ],
+        "question": "How does Owen Zidar's description of typical wealthy Americans differ from the celebrity-and-tech-founder stereotype?"
+      }
+    },
+    {
+      "concept": "The trade-offs of private equity",
+      "estimatedMinutes": 2,
+      "id": "section-008-q1",
+      "modelConfidence": "high",
+      "outline": [
+        "Private equity firms can provide strategic support to smaller businesses, such as shared billing providers and access to customers, based on their portfolio of similar companies.",
+        "However, joining a private equity firm may lead to reduced autonomy, loss of culture, and harder decisions regarding employee retention or business direction."
+      ],
+      "passages": [
+        {
+          "end_char": 40870,
+          "end_line": 359,
+          "id": "e428-27f0c4f9e7febc8c",
+          "isEvidence": false,
+          "next_id": "e428-5d524a6e4388bf47",
+          "previous_id": "e428-3261bef07bb786a6",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L359-L359",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 40520,
+          "start_line": 359,
+          "text": "If you think about it from their perspective of a doctor who's had their practice bought by private equity, they can do some stuff at scale. If you're running a small practice, there's a bunch of stuff that might not be top of mind. It gets lost in the shuffle like really being on top of billing and getting paid right away by everybody efficiently."
+        },
+        {
+          "end_char": 41220,
+          "end_line": 361,
+          "id": "e428-5d524a6e4388bf47",
+          "isEvidence": true,
+          "next_id": "e428-96e99d681f75e2ff",
+          "previous_id": "e428-27f0c4f9e7febc8c",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L361-L361",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 40872,
+          "start_line": 361,
+          "text": "If you have a private equity firm that has a portfolio of these businesses, they might have some larger scale where they could say, look, this is what's working for our four or five other practices. We're going to put you on this billing provider, and then you can get efficiencies that way. That's the type of thing that I think works pretty well."
+        },
+        {
+          "end_char": 41507,
+          "end_line": 363,
+          "id": "e428-96e99d681f75e2ff",
+          "isEvidence": true,
+          "next_id": "e428-732764097e651f40",
+          "previous_id": "e428-5d524a6e4388bf47",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L363-L363",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 41222,
+          "start_line": 363,
+          "text": "You can also benefit from knowledge of their other portfolio companies. Say you're navigating some issue with financing or some other strategic issue, there's probably somebody else who's dealt with this, or maybe you want some more customers. They can put you in touch with customers."
+        },
+        {
+          "end_char": 41965,
+          "end_line": 365,
+          "id": "e428-732764097e651f40",
+          "isEvidence": false,
+          "next_id": "e428-e5f5d31f988c29d8",
+          "previous_id": "e428-96e99d681f75e2ff",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L365-L365",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 41509,
+          "start_line": 365,
+          "text": "There are a lot of things that they can help with, but there might also be a lot more pressure or there are material pay differences. This doctor, I remember he complained he was getting $500,000 less in annual income, which also goes to show you how much doctors make, that you could have a Delta 500k and still be making doctor salary because he became an owner rather than getting the salary. So there's some in terms of what the pay looks like as well."
+        },
+        {
+          "end_char": 42101,
+          "end_line": 367,
+          "id": "e428-e5f5d31f988c29d8",
+          "isEvidence": true,
+          "next_id": "e428-3f6f8c7304903d3c",
+          "previous_id": "e428-732764097e651f40",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L367-L367",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 41967,
+          "start_line": 367,
+          "text": "So you need to be prepared for that. You might also lose some culture. You might have to make harder decisions about losing employees."
+        },
+        {
+          "end_char": 42274,
+          "end_line": 369,
+          "id": "e428-3f6f8c7304903d3c",
+          "isEvidence": true,
+          "next_id": "e428-daff03a19305f2c5",
+          "previous_id": "e428-e5f5d31f988c29d8",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L369-L369",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 42103,
+          "start_line": 369,
+          "text": "Maybe you lose control. Maybe the business is going to go in a direction that you didn't want to take it and that's too bad. You've lost the ability to have that autonomy."
+        },
+        {
+          "end_char": 42612,
+          "end_line": 371,
+          "id": "e428-daff03a19305f2c5",
+          "isEvidence": false,
+          "next_id": "e428-9898086388ae4993",
+          "previous_id": "e428-3f6f8c7304903d3c",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L371-L371",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": true,
+          "start_char": 42276,
+          "start_line": 371,
+          "text": "Owen Zidar: I think one great use as an exit option to avoid some of those family dynamics that I was talking about before, often they're very hungry for these types of businesses. My first job, I worked at Bain Capital, which was pretty early at this. I think one of the first, if not the first investments of Bain Capital was Staples."
+        }
+      ],
+      "qualifications": [
+        "These are examples described by Zidar, not a finding that every private equity firm provides the same benefits."
+      ],
+      "question": "How can joining a private equity firm benefit a small business, and what are the potential downsides?",
+      "recommendation": "keep",
+      "reviewNotes": [
+        "The outline pairs operational benefits with culture, staffing, and autonomy trade-offs.",
+        "The conditional language fits the examples. No material correction was identified in the assistant's first pass."
+      ],
+      "section": "section-008",
+      "suggestion": null
+    },
+    {
+      "concept": "Check the topic before the lesson",
+      "estimatedMinutes": 2,
+      "id": "section-007-q3",
+      "modelConfidence": "medium",
+      "outline": [
+        "A simple, basic, and free system for business ownership—without high costs, deductibles, or complex institutions—could improve access and affordability.",
+        "Small business owners face significant challenges when costs rise, such as a 50% wage increase, especially when they cannot pass those costs on to customers.",
+        "Large firms can self-insure and manage costs more effectively, giving them an advantage over small businesses in navigating financial risks."
+      ],
+      "passages": [
+        {
+          "end_char": 33547,
+          "end_line": 293,
+          "id": "e428-9a9561ee88bfa784",
+          "isEvidence": false,
+          "next_id": "e428-399fe9881a780269",
+          "previous_id": "e428-0057b7531b81d46c",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L293-L293",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": true,
+          "start_char": 33243,
+          "start_line": 293,
+          "text": "Owen Zidar: You know, one thing that's a little off topic, but it's fine is the healthcare in the US, we're really unlike many other countries in terms of how we do it. They're just absolutely crushing healthcare costs for small businesses. It's very bad for business and it's very bad for their workers."
+        },
+        {
+          "end_char": 33752,
+          "end_line": 295,
+          "id": "e428-399fe9881a780269",
+          "isEvidence": true,
+          "next_id": "e428-58f23d3e1c3575b7",
+          "previous_id": "e428-9a9561ee88bfa784",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L295-L295",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 33549,
+          "start_line": 295,
+          "text": "So I'm on the board of a daycare. And this year we were quoted a health insurance cost increase of 50%. Literally next year, whatever you're paying for health insurance for your employees goes up by 50%."
+        },
+        {
+          "end_char": 34033,
+          "end_line": 297,
+          "id": "e428-58f23d3e1c3575b7",
+          "isEvidence": false,
+          "next_id": "e428-3c23ebcec562005b",
+          "previous_id": "e428-399fe9881a780269",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L297-L297",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 33754,
+          "start_line": 297,
+          "text": "You're saying, okay, I'm going to tell some set of workers who are devoting their life to helping kids who are basically making the minimum wage. I'm going to take your $30,000 and then $7,000 of that is no longer going to go to you. It's going to go to health insurance company."
+        },
+        {
+          "end_char": 34576,
+          "end_line": 301,
+          "id": "e428-d27cb0788560871e",
+          "isEvidence": false,
+          "next_id": "e428-f04cdcc580fb81f1",
+          "previous_id": "e428-3c23ebcec562005b",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L301-L301",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 34247,
+          "start_line": 301,
+          "text": "And one thing that it does is it makes the US a lot less competitive. It's hard to say, I'm going to go build a plant in Ohio. If I have to pay $27,000 on top of whatever I pay that person in wages to pay for a family plan, it's not going to be something that is going to be reasonable relative to other production opportunities."
+        },
+        {
+          "end_char": 34965,
+          "end_line": 303,
+          "id": "e428-f04cdcc580fb81f1",
+          "isEvidence": true,
+          "next_id": "e428-ea9137698d226066",
+          "previous_id": "e428-d27cb0788560871e",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L303-L303",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 34578,
+          "start_line": 303,
+          "text": "So I think the fact that healthcare is so expensive in the US and growing so rapidly makes it tough to compete and makes it tough for somebody making low income to survive. And so I think that this just has to change. So some economists who I really respect, Amy Finkelstein and Liran Einav, they have this book, trying to remember what it's called, something like We've Got You Covered."
+        },
+        {
+          "end_char": 35250,
+          "end_line": 305,
+          "id": "e428-ea9137698d226066",
+          "isEvidence": false,
+          "next_id": "e428-ca80ce481ee78e63",
+          "previous_id": "e428-f04cdcc580fb81f1",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L305-L305",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 34967,
+          "start_line": 305,
+          "text": "But the basic idea is if you have an old house, there are a couple of different strategies and the old house is the healthcare system. You can like try to rebuild things and tinker around. And then their basic point is like, this is not a situation where you can just tinker with it."
+        },
+        {
+          "end_char": 35349,
+          "end_line": 307,
+          "id": "e428-ca80ce481ee78e63",
+          "isEvidence": false,
+          "next_id": "e428-5a384da930fa92be",
+          "previous_id": "e428-ea9137698d226066",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L307-L307",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 35252,
+          "start_line": 307,
+          "text": "We need a tear down. And you should just completely overhaul the thing. And what should you have?"
+        },
+        {
+          "end_char": 35509,
+          "end_line": 309,
+          "id": "e428-5a384da930fa92be",
+          "isEvidence": true,
+          "next_id": "e428-8e7473010f114531",
+          "previous_id": "e428-ca80ce481ee78e63",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L309-L309",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 35351,
+          "start_line": 309,
+          "text": "Something that's simple, basic, and free. Simple meaning you don't have all these crazy institutions. Basic meaning it's kind of like the back of an airplane."
+        },
+        {
+          "end_char": 35819,
+          "end_line": 311,
+          "id": "e428-8e7473010f114531",
+          "isEvidence": false,
+          "next_id": "e428-0fc4abad161a9063",
+          "previous_id": "e428-5a384da930fa92be",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L311-L311",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 35511,
+          "start_line": 311,
+          "text": "You're going to pay to get from point A to point B, but it might not be the most comfortable thing in the world. If you want a more comfortable version, you have to pay more. And free meaning you don't have all these deductibles and things because that empirically doesn't work as well as people might think."
+        },
+        {
+          "end_char": 36144,
+          "end_line": 313,
+          "id": "e428-0fc4abad161a9063",
+          "isEvidence": true,
+          "next_id": "e428-e5ecafdde3f46ce2",
+          "previous_id": "e428-8e7473010f114531",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L313-L313",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 35821,
+          "start_line": 313,
+          "text": "That's one example of a place to do it. And for small business owners, if you're running a business and your costs go up by 50% on wages, it's really hard to deal with that. You can pass some of that on, but if you're small, you can't compete with a big firm that can self-insure and navigate some of this more effectively."
+        },
+        {
+          "end_char": 36211,
+          "end_line": 315,
+          "id": "e428-e5ecafdde3f46ce2",
+          "isEvidence": false,
+          "next_id": "e428-8e0e3c9f81711a49",
+          "previous_id": "e428-0fc4abad161a9063",
+          "source_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md?plain=1#L315-L315",
+          "speaker_hint": "Owen Zidar",
+          "speaker_label_in_passage": false,
+          "start_char": 36146,
+          "start_line": 315,
+          "text": "So I think it's also important for dynamism in the United States."
+        }
+      ],
+      "qualifications": [
+        "The original candidate treats the proposed model as hypothetical."
+      ],
+      "question": "Could a simple, free, and basic business ownership model improve access for small business owners?",
+      "recommendation": "exclude",
+      "reviewNotes": [
+        "The source is describing healthcare reform, not a business ownership model. The premise is wrong.",
+        "The daycare example concerns a 50% health-insurance cost increase. Read the preceding context before interpreting the later wording about wages.",
+        "Exclude this candidate. A separate healthcare lesson could be prepared later using the correct context."
+      ],
+      "section": "section-007",
+      "suggestion": null
+    }
+  ],
+  "schemaVersion": 1,
+  "source": {
+    "bytes": 68706,
+    "commit": "8b0c3b7570d217d5296ac6dd81f10042d120c5c9",
+    "episode": 428,
+    "episode_url": "https://rationalreminder.ca/podcast/428",
+    "path": "transcripts/individual/episode_428.md",
+    "publication_date": null,
+    "repository": "https://github.com/morey-tech/rr-scraper",
+    "sha256": "af9d5ab8a5ec6b7384e4105fc14030eab1f994601e86289aaeb2e30b04be8e88",
+    "title": null,
+    "transcript_url": "https://github.com/morey-tech/rr-scraper/blob/8b0c3b7570d217d5296ac6dd81f10042d120c5c9/transcripts/individual/episode_428.md"
+  },
+  "title": "The businesses behind everyday wealth",
+  "titleType": "editorial_demo_label"
+}

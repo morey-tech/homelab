@@ -7,6 +7,12 @@ questions, and retrieves their original evidence and context. Neither CLI sends
 Discord messages, runs the scraper, or alters the daily lesson workload. They are
 not included in Kustomize and do not write to the deployed LanceDB service.
 
+The [teaching-question review UI](review-ui/README.md) is a local, build-free MVP
+for trying the human-review workflow with three curated episode 428 examples.
+It presents one question with its original evidence, supports edits and review
+decisions, and saves progress in the browser with JSON export/restore. Its manual
+sample and approvals are separate from production ingestion.
+
 ## Prepare an episode
 
 Run from the homelab repository root with Python 3.10+ and Git. Unit tests require
