@@ -10,3 +10,6 @@ subjects:
   - kind: ServiceAccount
     name: rr-lessons
     namespace: rr-lessons
+  - kind: ServiceAccount
+    name: rr-lessons-review
+    namespace: rr-lessons

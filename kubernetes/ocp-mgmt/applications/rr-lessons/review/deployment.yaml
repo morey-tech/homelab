@@ -102,8 +102,14 @@ spec:
           value: /data/reviews.sqlite3
         - name: REVIEW_STATIC_DIR
           value: /ui
+        - name: INGESTION_ENABLED
+          value: 'true'
+        - name: REVIEW_PUBLIC_ORIGIN
+          value: https://review-rr-lessons.apps.ocp-mgmt.rh-lab.morey.tech
+        - name: MODEL_TOKEN_PATH
+          value: /var/run/model-auth/token
         - name: PYTHONPATH
-          value: /opt/python-deps
+          value: /opt/python-deps:/pipeline
         - name: PYTHONDONTWRITEBYTECODE
           value: '1'
         - name: PYTHONUNBUFFERED
@@ -111,10 +117,10 @@ spec:
         resources:
           requests:
             cpu: 50m
-            memory: 128Mi
+            memory: 256Mi
           limits:
             cpu: '1'
-            memory: 256Mi
+            memory: 1Gi
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
@@ -151,10 +157,26 @@ spec:
           mountPath: /data
         - name: tmp
           mountPath: /tmp
+        - name: pipeline
+          mountPath: /pipeline
+          readOnly: true
+        - name: model-auth
+          mountPath: /var/run/model-auth
+          readOnly: true
         - name: ui
           mountPath: /ui
           readOnly: true
       volumes:
+      - name: pipeline
+        configMap:
+          name: rr-lessons-preparation
+      - name: model-auth
+        projected:
+          defaultMode: 0440
+          sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: 3600
       - name: app
         configMap:
           name: rr-lessons-review-server

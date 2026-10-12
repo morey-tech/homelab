@@ -2011,3 +2011,20 @@ dialog p {
     scroll-behavior:auto!important
   }
 }
+
+/* Server intake controls share the evidence-first review workspace. */
+.ingestion-card { padding: 26px; margin-bottom: 32px; }
+.ingestion-card h2 { margin-top: 0; }
+.ingestion-card > p { color: var(--muted); line-height: 1.6; }
+#ingest-form { display: flex; align-items: end; gap: 16px; margin: 24px 0 12px; }
+#ingest-form .field-label { margin: 0; }
+#episode-number { display: block; margin-top: 8px; width: 170px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); color: inherit; }
+.ingestion-jobs { list-style: none; padding: 0; max-height: 320px; overflow-y: auto; }
+.ingestion-jobs li { display: flex; justify-content: space-between; gap: 16px; align-items: center; border-top: 1px solid var(--line); padding: 16px 0; }
+.ingestion-jobs .pill { margin-left: 12px; }
+.ingestion-jobs p { margin: 8px 0; line-height: 1.5; }
+.ingestion-error { color: #9f3546; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  #ingest-form, .ingestion-jobs li { align-items: stretch; flex-direction: column; }
+  #episode-number { width: 100%; }
+}

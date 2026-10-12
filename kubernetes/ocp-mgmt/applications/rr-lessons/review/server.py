@@ -1,4 +1,4 @@
-"""Read-only deployment foundation for Lesson desk; no ingestion or review writes."""
+"""Lesson desk API with a durable, single-consumer episode intake queue."""
 
 import json
 import logging
@@ -6,9 +6,11 @@ import os
 from pathlib import Path
 import sqlite3
 
+from store import APIError, MIGRATION, StoreMixin
+
 
 LOG = logging.getLogger("uvicorn.error")
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 ASSETS = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/index.html": ("index.html", "text/html; charset=utf-8"),
@@ -49,7 +51,7 @@ COMMIT;
 """
 
 
-class Database:
+class Database(StoreMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
 
@@ -67,6 +69,9 @@ class Database:
             version = connection.execute("PRAGMA user_version").fetchone()[0]
             if version == 0:
                 connection.executescript(SCHEMA)
+                version = 1
+            if version == 1:
+                connection.executescript(MIGRATION)
             elif version != SCHEMA_VERSION:
                 raise RuntimeError(f"Unsupported review database schema {version}")
         finally:
@@ -84,6 +89,7 @@ class Database:
                 raise RuntimeError("Unsupported review database schema")
             # One read transaction keeps counts consistent during future imports.
             connection.execute("BEGIN")
+            connection.execute("SELECT 1 FROM ingestion_jobs LIMIT 0")
             return {name: connection.execute(f"SELECT count(*) FROM {name}").fetchone()[0]
                     for name in ("episodes", "sections", "questions", "reviews")}
         finally:
@@ -91,7 +97,9 @@ class Database:
 
 
 class ReviewApp:
-    def __init__(self, database, static_dir):
+    def __init__(self, database, static_dir, worker=None, public_origin=None):
+        self.worker = worker
+        self.public_origin = public_origin
         self.database = database
         self.static_dir = Path(static_dir)
 
@@ -104,29 +112,54 @@ class ReviewApp:
                         self.database.initialize()
                         for filename, _ in ASSETS.values():
                             (self.static_dir / filename).read_bytes()
+                        if self.worker:
+                            self.worker.start()
                     except Exception:
                         LOG.exception("Review service initialization failed")
                         await send({"type": "lifespan.startup.failed", "message": "Review service initialization failed"})
                         return
                     await send({"type": "lifespan.startup.complete"})
                 elif event["type"] == "lifespan.shutdown":
+                    if self.worker:
+                        self.worker.stop()
                     await send({"type": "lifespan.shutdown.complete"})
                     return
         elif scope["type"] == "http":
             status, content_type, body = 200, "application/json", None
             path = scope["path"]
             if scope["method"] not in ("GET", "HEAD"):
-                status, body = 405, {"error": "This deployment has no write API yet."}
+                try:
+                    if not (scope["method"] == "POST" and path == "/api/ingestions" or
+                            scope["method"] == "PUT" and path.startswith("/api/reviews/")):
+                        raise APIError("Method not allowed.", 405)
+                    payload = await self.read_write(scope, receive)
+                    if path == "/api/ingestions":
+                        if not self.worker:
+                            raise APIError("Ingestion is not configured on this instance.", 503)
+                        if not isinstance(payload, dict) or set(payload) != {"episode"}:
+                            raise APIError("Provide an episode number.")
+                        body = self.database.enqueue(payload["episode"])
+                        status = 202
+                    else:
+                        body = self.database.save_review(path.removeprefix("/api/reviews/"), payload)
+                except APIError as exc:
+                    status, body = exc.status, {"error": str(exc)}
+                except sqlite3.Error:
+                    LOG.exception("Review write failed")
+                    status, body = 503, {"error": "Database unavailable; your changes were not saved."}
             elif path == "/healthz":
                 body = {"status": "ok"}
             elif path == "/runtime.json":
                 body = {"mode": "server", "apiVersion": 1}
-            elif path in ("/readyz", "/api/inbox"):
+            elif path in ("/readyz", "/api/inbox", "/api/ingestions"):
                 try:
-                    counts = self.database.counts()
-                    body = {"status": "ready", "schemaVersion": SCHEMA_VERSION} if path == "/readyz" else {
-                        "apiVersion": 1, "counts": counts, "reviewEnabled": False,
-                    }
+                    self.database.counts()
+                    if path == "/readyz":
+                        body = {"status": "ready", "schemaVersion": SCHEMA_VERSION}
+                    elif path == "/api/ingestions":
+                        body = {"jobs": self.database.jobs()}
+                    else:
+                        body = self.database.inbox()
                 except (sqlite3.Error, RuntimeError):
                     LOG.exception("Review database unavailable")
                     status, body = 503, {"error": "Review database unavailable"}
@@ -152,7 +185,37 @@ class ReviewApp:
             await send({"type": "http.response.body", "body": b"" if scope["method"] == "HEAD" else body})
 
 
-app = ReviewApp(
-    Database(Path(os.environ.get("REVIEW_DB_PATH", "/data/reviews.sqlite3")).resolve()),
-    os.environ.get("REVIEW_STATIC_DIR", "/ui"),
-)
+    async def read_write(self, scope, receive):
+        headers = {k.decode("latin1").lower(): v.decode("latin1") for k, v in scope.get("headers", [])}
+        # JSON + exact Origin prevent cross-site browser submissions. This is not login/auth.
+        origin = self.public_origin or f"{scope.get('scheme', 'http')}://{headers.get('host', '')}"
+        if headers.get('origin') != origin or headers.get('sec-fetch-site') == 'cross-site':
+            raise APIError('Write requests must come from this review workspace.', 403)
+        if headers.get('content-type', '').split(';')[0] != 'application/json':
+            raise APIError('Use application/json.', 415)
+        raw = bytearray()
+        while True:
+            message = await receive()
+            if message['type'] == 'http.disconnect':
+                raise APIError('Request disconnected.')
+            raw.extend(message.get('body', b''))
+            if len(raw) > 32768:
+                raise APIError('Request body is too large.', 413)
+            if not message.get('more_body'):
+                break
+        try:
+            return json.loads(raw)
+        except (ValueError, UnicodeError):
+            raise APIError('Invalid JSON.') from None
+
+
+database = Database(Path(os.environ.get("REVIEW_DB_PATH", "/data/reviews.sqlite3")).resolve())
+worker = None
+if os.environ.get('INGESTION_ENABLED') == 'true':
+    from pipeline import Pipeline, Worker
+    # Shared PVC group must be able to reopen SQLite, Git objects and checkpoints.
+    os.umask(0o007)
+    worker = Worker(database, Pipeline(database, database.path.parent / 'ingestion',
+                                      os.environ.get('MODEL_TOKEN_PATH', '/var/run/model-auth/token')))
+app = ReviewApp(database, os.environ.get("REVIEW_STATIC_DIR", "/ui"), worker,
+                os.environ.get('REVIEW_PUBLIC_ORIGIN'))

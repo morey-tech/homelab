@@ -75,7 +75,20 @@ def read_source(repo, revision, episode):
     if not 0 < size <= 2 * 1024 * 1024:
         raise PreparationError("Episode is empty or exceeds the 2 MiB prototype limit")
     raw = git(repo, "show", f"{commit}:{path}")
-    text = raw.decode("utf-8")
+    return source_from_bytes(raw, commit, episode)
+
+
+def source_from_bytes(raw, commit, episode):
+    """Validate the same immutable source for CLI and background ingestion."""
+    if type(episode) is not int or episode < 1 or not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise PreparationError("Invalid episode or Git commit")
+    if not 0 < len(raw) <= 2 * 1024 * 1024:
+        raise PreparationError("Episode is empty or exceeds the 2 MiB prototype limit")
+    path = f"transcripts/individual/episode_{episode}.md"
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeError:
+        raise PreparationError("Episode transcript must be UTF-8") from None
     headings = list(re.finditer(r"^## Episode ([0-9]+)[ \t]*$", text, re.MULTILINE))
     if len(headings) != 1 or int(headings[0][1]) != episode or text[:headings[0].start()].strip():
         raise PreparationError("Individual transcript must contain exactly its own episode heading")
@@ -324,7 +337,7 @@ def completion(cache, stage, prompt, payload, model):
     return content
 
 
-def evaluate(report, model, output, prompts, section_limit):
+def evaluate(report, model, output, prompts, section_limit, progress=None):
     items = report["passages"]
     by_id = {p["id"]: p for p in items}
     chosen = report["sections"][:section_limit] if section_limit else report["sections"]
@@ -332,6 +345,8 @@ def evaluate(report, model, output, prompts, section_limit):
     report.update(status="running", questions=[], failures=[], completed_sections=0)
     save_report(output, report)
     for section in chosen:
+        if progress:
+            progress(report["completed_sections"], len(chosen), section["id"])
         log(f"Preparing {section['id']} ({len(section['focus_ids'])} focus passages)")
         try:
             result = completion(output / "responses", "extract", prompts["extract"], {

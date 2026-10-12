@@ -18,6 +18,7 @@ const icon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const labels = {pending: 'To review', approved: 'Approved', changes_requested: 'Changes requested', excluded: 'Excluded'};
 const recommendations = {revise: ['amber', 'Needs a correction'], keep: ['green', 'Ready for human review'], exclude: ['rose', 'Check the premise']};
 let mode = 'demo', inboxData = null, inboxError = '', inboxLoading = false;
+let jobs = [], jobError = '', revisions = {}, saveChain = Promise.resolve(), writeBlocked = false, saving = 0, submitting = false, deciding = false, jobsInitialized = false, episodeInput = '';
 let bundle, state, storageKey, storageWorking = true, storageWarning = '', view = 'inbox', filter = 'pending', activeId, editing = false, showContext = false, toastTimer;
 
 function toast(message) {
@@ -29,6 +30,29 @@ function toast(message) {
 }
 
 function save() {
+  if (mode === 'server') {
+    if (!activeId || !state.records[activeId]) return Promise.resolve();
+    const id = activeId, review = structuredClone(state.records[id]);
+    saving++;
+    const status = document.querySelector('#save-status');
+    if (status) status.textContent = 'Saving to the workspace…';
+    const operation = saveChain.then(async () => {
+      if (writeBlocked) throw new Error('Saving is paused. Reload the inbox to resolve the earlier save error.');
+      const result = await api(`./api/reviews/${encodeURIComponent(id)}`, {method: 'PUT', body: {revision: revisions[id] || 0, review}});
+      revisions[id] = result.revision;
+    });
+    saveChain = operation.catch(error => {
+      writeBlocked = true; storageWorking = false; storageWarning = error.message;
+      const warning = document.querySelector('#storage-warning');
+      if (warning) { warning.hidden = false; warning.textContent = storageWarning; }
+      toast(`Not saved: ${error.message}`);
+    }).finally(() => {
+      saving--;
+      const status = document.querySelector('#save-status');
+      if (status) status.textContent = writeBlocked ? 'Not saved · reload inbox' : saving ? 'Saving to the workspace…' : 'Saved to the workspace';
+    });
+    return operation;
+  }
   try { localStorage.setItem(storageKey, JSON.stringify(state)); storageWorking = true; }
   catch { storageWorking = false; storageWarning = 'Browser storage is unavailable. Export your decisions before closing this page.'; }
   const status = document.querySelector('#save-status');
@@ -46,7 +70,7 @@ function updateRecord(changes) {
 }
 
 function shell(content) {
-  const pending = mode === 'server' ? (inboxData?.counts.questions ?? 0) : bundle.questions.filter(q => record(q).status === 'pending').length;
+  const pending = bundle.questions.filter(q => record(q).status === 'pending').length;
   return `<aside class="sidebar">
     <a href="#inbox" class="brand" data-action="inbox"><span class="brand-mark">${icon('book')}</span><span>Lesson desk<small>RATIONAL REMINDER</small></span></a>
     <div class="workspace-label">YOUR WORKSPACE</div>
@@ -56,7 +80,7 @@ function shell(content) {
     </nav>
     <div class="sidebar-note"><span class="tiny-dot"></span> A thoughtful pause<br><p>Good lessons start with a careful look at the source.</p></div>
     <div class="sidebar-bottom">
-      ${mode === 'server' ? '<span class="save-status">Lesson desk</span>' : `
+      ${mode === 'server' ? `<label class="reviewer-label" for="reviewer-name">Reviewing as</label><input id="reviewer-name" placeholder="Your name" maxlength="100" value="${esc(state.reviewer)}" autocomplete="name"><div id="save-status" class="save-status">${writeBlocked ? 'Not saved · reload inbox' : saving ? 'Saving to the workspace…' : 'Saved to the workspace'}</div>` : `
       <label class="reviewer-label" for="reviewer-name">Reviewing as</label>
       <input id="reviewer-name" placeholder="Your name" maxlength="100" value="${esc(state.reviewer)}" autocomplete="name">
       <button class="nav-item" data-action="export">${icon('export')}<span>Export decisions</span></button>
@@ -84,22 +108,83 @@ async function loadInbox() {
     const response = await fetch('./api/inbox', {cache: 'no-store'});
     if (!response.ok) throw new Error('The inbox could not be loaded. Try again shortly.');
     const value = await response.json();
-    if (value.apiVersion !== 1 || value.reviewEnabled !== false ||
+    if (value.apiVersion !== 1 || value.reviewEnabled !== true ||
         !['episodes', 'sections', 'questions', 'reviews'].every(key => Number.isSafeInteger(value.counts?.[key]) && value.counts[key] >= 0)) {
       throw new Error('The inbox response is not supported by this UI.');
     }
     inboxData = value;
+    bundle = value.bundle;
+    state = {...newState(bundle), reviewer: state.reviewer, records: value.records};
+    revisions = value.revisions;
+    writeBlocked = false; storageWorking = true; storageWarning = '';
   } catch (error) { inboxError = error.message; inboxData = null; }
   finally { inboxLoading = false; render(); }
 }
 
-function serverInbox() {
-  const counts = inboxData?.counts;
-  const empty = counts && Object.values(counts).every(n => n === 0);
-  return `<section class="page-heading"><span class="eyebrow">EVIDENCE FIRST. THOUGHTFUL REVIEW.</span><h1>${filter === 'reviewed' ? 'Reviewed questions' : 'Review inbox'}<span class="heading-dot">.</span></h1><p>Turn podcast ideas into lessons you can trust.<br>Start with the evidence, then assess the question.</p></section>
-    <div class="overview"><div><span class="metric">${counts?.episodes ?? '—'}</span><span>episodes</span></div><div><span class="metric">${counts?.questions ?? '—'}</span><span>teaching questions</span></div><div><span class="metric">${counts?.reviews ?? '—'}</span><span>review records</span></div></div>
-    <section class="paper-card empty-inbox" aria-live="polite">${icon(inboxError ? 'info' : 'inbox')}<h2>${inboxLoading ? 'Opening your inbox…' : inboxError ? 'Unable to load your inbox' : empty ? 'No episodes to review yet' : 'Review intake is not connected yet'}</h2><p>${inboxError ? esc(inboxError) : empty ? 'Prepared episodes will appear here when they are ready for review.' : inboxLoading ? 'Checking for prepared episodes.' : 'Content is stored, but the review workflow is not available in this deployment yet.'}</p><button class="button secondary" data-action="refresh-inbox" ${inboxLoading ? 'disabled' : ''}>${inboxError ? 'Try again' : 'Refresh inbox'}</button></section>`;
+async function api(url, options = {}) {
+  const response = await fetch(url, {cache: 'no-store', ...options,
+    headers: options.body ? {'Content-Type': 'application/json'} : {},
+    body: options.body ? JSON.stringify(options.body) : undefined});
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || 'The workspace request failed.');
+  return result;
 }
+
+function jobList() {
+  return `${jobError ? `<p role="alert" class="ingestion-error">${esc(jobError)}</p>` : ''}${jobs.length ? `<h3>Episode preparation</h3><ul class="ingestion-jobs">${jobs.slice(0, 10).map(job => `<li><div><strong>Episode ${job.episode}</strong><span class="pill ${job.status === 'failed' ? 'rose' : job.status === 'complete' ? 'green' : 'neutral'}">${esc(job.status)}</span><p>${esc(job.phase)}${job.total ? ` · ${job.completed}/${job.total}` : ''}</p>${job.error ? `<p class="ingestion-error">${esc(job.error)}</p>` : ''}${job.source_commit ? `<small>Source commit: ${esc(job.source_commit.slice(0, 12))}</small>` : ''}</div>${job.status === 'failed' ? `<button class="button secondary" data-retry="${job.episode}">Retry episode ${job.episode}</button>` : ''}</li>`).join('')}</ul>` : '<p class="muted">No episodes have been queued yet.</p>'}`;
+}
+
+async function loadJobs() {
+  try {
+    const previous = jobs.filter(j => j.status === 'complete').map(j => j.id).join();
+    jobs = (await api('./api/ingestions')).jobs; jobError = '';
+    if (jobsInitialized && previous !== jobs.filter(j => j.status === 'complete').map(j => j.id).join() && view === 'inbox' && !saving && !submitting && !writeBlocked) await loadInbox();
+    jobsInitialized = true;
+  } catch (error) { jobError = `Could not check preparation progress: ${error.message}`; }
+  const node = document.querySelector('#ingestion-jobs');
+  if (node) node.innerHTML = jobList();
+}
+
+async function ingest(episode) {
+  if (submitting) return;
+  submitting = true;
+  const button = document.querySelector('#ingest-submit');
+  if (button) button.disabled = true;
+  try {
+    const job = await api('./api/ingestions', {method: 'POST', body: {episode}});
+    toast(`Episode ${episode}: ${job.status}. You can leave this page while it prepares.`);
+    await loadJobs();
+  } catch (error) { jobError = error.message; toast(error.message); }
+  finally {
+    submitting = false;
+    if (button) button.disabled = false;
+    const node = document.querySelector('#ingestion-jobs');
+    if (node) node.innerHTML = jobList();
+  }
+}
+
+function serverInbox() {
+  const visible = bundle.questions.filter(q => filter === 'all' || (filter === 'reviewed' ? record(q).status !== 'pending' : record(q).status === 'pending'));
+  return `<section class="page-heading"><span class="eyebrow">EVIDENCE FIRST. THOUGHTFUL REVIEW.</span><h1>Review inbox<span class="heading-dot">.</span></h1><p>Prepare an episode, then review one question and its evidence at a time.</p></section>
+    <section class="paper-card ingestion-card"><h2>Ingest an episode</h2><p>Fetch the transcript and prepare teaching questions with their supporting evidence for your review.</p><form id="ingest-form"><label class="field-label" for="episode-number">Episode number<input id="episode-number" name="episode" type="number" min="1" max="99999" step="1" required placeholder="428" value="${esc(episodeInput)}"></label><button id="ingest-submit" class="button primary" type="submit" ${submitting ? 'disabled' : ''}>Ingest episode ${icon('arrow')}</button></form><p class="small muted">Runs in the background. Questions appear when the entire intake is ready. Nothing is sent to Discord.</p><div id="ingestion-jobs" aria-live="polite">${jobList()}</div></section>
+    <div class="section-heading"><h2>Prepared questions</h2><button class="button secondary" data-action="refresh-inbox" ${inboxLoading ? 'disabled' : ''}>Refresh inbox</button></div>
+    ${inboxError ? `<p class="ingestion-error" role="alert">${esc(inboxError)}</p>` : ''}
+    <div class="list-toolbar"><div class="tabs" role="group" aria-label="Filter questions">${['pending', 'reviewed', 'all'].map(f => `<button class="${filter === f ? 'selected' : ''}" data-filter="${f}">${f === 'pending' ? 'To review' : f === 'all' ? 'All questions' : 'Reviewed'}</button>`).join('')}</div><span class="muted">${inboxData?.counts.episodes ?? '—'} episodes · ${bundle.questions.length} questions</span></div>
+    <div class="question-list">${visible.length ? visible.map(q => {
+      const r = record(q), revealed = r.sourceChecked;
+      return `<button class="question-row" data-open="${esc(q.id)}"><span class="row-icon neutral">${icon('book')}</span><span class="row-copy"><span class="row-section">EPISODE ${q.episode} · ${esc(q.section)}</span><strong>${revealed ? esc(q.concept) : 'Read supporting evidence'}</strong><span class="row-preview">${revealed ? esc(r.question) : 'The question stays hidden until you have read the source.'}</span></span><span class="pill neutral">${esc(labels[r.status])}</span><span class="row-arrow">${icon('arrow')}</span></button>`;
+    }).join('') : `<div class="empty-state"><h3>${inboxLoading ? 'Loading questions…' : inboxError ? 'Inbox unavailable' : 'No questions in this view yet'}</h3><p>Completed episode intakes will appear here for review.</p></div>`}</div>`;
+}
+
+document.addEventListener('submit', event => {
+  if (event.target.id !== 'ingest-form') return;
+  event.preventDefault();
+  void ingest(Number(document.querySelector('#episode-number').value));
+});
+document.addEventListener('click', event => {
+  const button = event.target.closest('[data-retry]');
+  if (button) void ingest(Number(button.dataset.retry));
+});
 
 function inbox() {
   const pending = bundle.questions.filter(q => record(q).status === 'pending');
@@ -130,7 +215,7 @@ function evidenceCard(q, r) {
 function reviewPage() {
   const q = currentQuestion(), r = record(q), index = bundle.questions.indexOf(q), locked = r.status !== 'pending';
   const [tone, recommendation] = recommendations[q.recommendation];
-  const intro = `<div class="review-top"><button class="text-button" data-action="inbox">${icon('back')} Inbox</button><span>EPISODE 428 <span class="slash">/</span> ${esc(q.section.replace('section-', 'SECTION '))}</span><div class="question-nav"><span>Question ${index + 1} of ${bundle.questions.length}</span><button class="icon-button" data-action="previous" aria-label="Previous question" ${index === 0 ? 'disabled' : ''}>${icon('back')}</button><button class="icon-button" data-action="next" aria-label="Next question" ${index === bundle.questions.length - 1 ? 'disabled' : ''}>${icon('arrow')}</button></div></div>
+  const intro = `<div class="review-top"><button class="text-button" data-action="inbox">${icon('back')} Inbox</button><span>EPISODE ${q.episode ?? bundle.episode} <span class="slash">/</span> ${esc(q.section.replace('section-', 'SECTION '))}</span><div class="question-nav"><span>Question ${index + 1} of ${bundle.questions.length}</span><button class="icon-button" data-action="previous" aria-label="Previous question" ${index === 0 ? 'disabled' : ''}>${icon('back')}</button><button class="icon-button" data-action="next" aria-label="Next question" ${index === bundle.questions.length - 1 ? 'disabled' : ''}>${icon('arrow')}</button></div></div>
     <div class="review-title"><div><span class="eyebrow">EVIDENCE FIRST · QUESTION SECOND</span><h1>Read the supporting evidence</h1></div></div>
     ${locked ? `<div class="decision-banner">${icon('check')}<span><strong>${labels[r.status]}</strong> by ${esc(r.reviewedBy)} · ${esc(new Date(r.decidedAt).toLocaleString())}</span><button class="text-button" data-action="reopen">Reopen for review</button></div>` : ''}
     ${evidenceCard(q, r)}`;
@@ -145,7 +230,7 @@ function reviewPage() {
         <div class="qualifications"><strong>Keep in mind</strong>${q.qualifications.map(c => `<p>${esc(c)}</p>`).join('')}</div>
         <div class="model-meta"><span class="tiny-dot"></span>Original model confidence: <strong>${esc(q.modelConfidence)}</strong><span>· A suggestion, not a verdict</span></div>
       </section>
-      <section class="reviewer-card ${tone}"><div class="card-heading"><span class="eyebrow">ASSISTANT’S FIRST PASS</span>${icon('info')}</div><h3>${q.recommendation === 'keep' ? 'The explanation holds together.' : q.recommendation === 'exclude' ? 'The source is about something else.' : 'A small wording change matters.'}</h3><ul>${q.reviewNotes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>
+      <section class="reviewer-card ${tone}"><div class="card-heading"><span class="eyebrow">ASSISTANT’S FIRST PASS</span>${icon('info')}</div><h3>${mode === 'server' ? 'Model review' : q.recommendation === 'keep' ? 'The explanation holds together.' : q.recommendation === 'exclude' ? 'The source is about something else.' : 'A small wording change matters.'}</h3><ul>${q.reviewNotes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>
       ${q.suggestion ? `<details class="suggestion"><summary>See suggested revision</summary><p><strong>${esc(q.suggestion.question)}</strong></p><ul>${q.suggestion.outline.map(c => `<li>${esc(c)}</li>`).join('')}</ul>${!locked ? '<button class="button secondary" data-action="use-suggestion">Use this draft</button><p class="small muted">You’ll still check the revised text against the evidence.</p>' : ''}</details>` : ''}</section>
     </div>
     <section class="paper-card decision-card"><div class="decision-heading"><span class="step-number">✓</span><div><span class="eyebrow">STEP 3 · CONFIRM YOUR JUDGMENT</span><h2>Is this ready to teach?</h2></div></div><div class="judgment-grid">
@@ -158,7 +243,7 @@ function reviewPage() {
 }
 
 function render() {
-  app.innerHTML = shell(mode === 'server' ? serverInbox() : view === 'review' ? reviewPage() : inbox());
+  app.innerHTML = shell(view === 'review' ? reviewPage() : mode === 'server' ? serverInbox() : inbox());
   document.title = view === 'review' ? `${record(currentQuestion()).sourceChecked ? currentQuestion().concept : 'Read the supporting evidence'} — Lesson desk` : 'Lesson desk — review inbox';
   updateApproval();
 }
@@ -181,11 +266,12 @@ function updateApproval() {
 }
 
 function openQuestion(id) {
+  if (mode === 'server' && inboxLoading) return;
   activeId = id; view = 'review'; editing = false; showContext = true; render(); window.scrollTo(0, 0);
   document.querySelector('#main').focus({preventScroll: true});
 }
 
-function goInbox(nextFilter = 'pending') { view = 'inbox'; filter = nextFilter; render(); window.scrollTo(0, 0); }
+function goInbox(nextFilter = 'pending') { view = 'inbox'; filter = nextFilter; render(); window.scrollTo(0, 0); if (mode === 'server' && !writeBlocked) void saveChain.then(() => loadInbox()); }
 
 function nextPending() {
   const start = bundle.questions.findIndex(q => q.id === activeId);
@@ -194,10 +280,19 @@ function nextPending() {
   if (next) openQuestion(next.id); else goInbox('reviewed');
 }
 
-function commitDecision(status) {
-  const q = currentQuestion();
-  state.records[q.id] = decide(record(q), status, state.reviewer);
-  save(); nextPending(); toast(`${labels[status]}. Your decision is saved${storageWorking ? ' in this browser' : ' in memory — export to keep it'}.`);
+async function commitDecision(status) {
+  if (deciding) return;
+  deciding = true;
+  document.querySelectorAll('#main button, #main input, #main select, #main textarea').forEach(node => { node.disabled = true; });
+  const q = currentQuestion(), previous = record(q);
+  try {
+    if (mode === 'server') await saveChain;
+    if (writeBlocked) throw new Error('Reload the inbox to resolve the save error before deciding.');
+    state.records[q.id] = decide(record(q), status, state.reviewer);
+    await save(); nextPending();
+    toast(`${labels[status]}. Your decision is saved ${mode === 'server' ? 'to the workspace' : storageWorking ? 'in this browser' : 'in memory — export to keep it'}.`);
+  } catch (error) { state.records[q.id] = previous; render(); toast(error.message); }
+  finally { deciding = false; }
 }
 
 for (const eventName of ['pointerover', 'focusin']) {
@@ -211,15 +306,16 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape') document.querySelectorAll('.field-help').forEach(help => help.classList.add('dismissed'));
 });
 
-document.addEventListener('click', event => {
+document.addEventListener('click', async event => {
   const button = event.target.closest('[data-action], [data-open], [data-filter]');
   if (!button) return;
   event.preventDefault();
+  if (deciding) return;
   try {
     if (button.dataset.open) return openQuestion(button.dataset.open);
     if (button.dataset.filter) return goInbox(button.dataset.filter);
     const action = button.dataset.action;
-    if (action === 'refresh-inbox' && mode === 'server') { void loadInbox(); return; }
+    if (action === 'refresh-inbox' && mode === 'server') { await saveChain; void loadInbox(); return; }
     if (action === 'inbox') goInbox();
     if (action === 'reviewed') goInbox('reviewed');
     if (action === 'resume') {
@@ -239,9 +335,9 @@ document.addEventListener('click', event => {
       state.records[q.id] = editReview(record(q), structuredClone(q.suggestion));
       save(); editing = true; render(); toast('Suggested wording added to the draft. Check it against the source.');
     }
-    if (action === 'approve') commitDecision('approved');
-    if (action === 'request-changes') commitDecision('changes_requested');
-    if (action === 'exclude') commitDecision('excluded');
+    if (action === 'approve') await commitDecision('approved');
+    if (action === 'request-changes') await commitDecision('changes_requested');
+    if (action === 'exclude') await commitDecision('excluded');
     if (action === 'reopen') { const q = currentQuestion(); state.records[q.id] = reopen(record(q)); save(); openQuestion(q.id); toast('Reopened. Start with the evidence before comparing the draft again.'); }
     if (action === 'guide') document.querySelector('#guide').showModal();
     if (action === 'close-guide') document.querySelector('#guide').close();
@@ -258,7 +354,8 @@ document.addEventListener('click', event => {
 
 document.addEventListener('input', event => {
   const target = event.target;
-  if (target.id === 'reviewer-name') { state.reviewer = target.value; save(); updateApproval(); return; }
+  if (target.id === 'episode-number') { episodeInput = target.value; return; }
+  if (target.id === 'reviewer-name') { state.reviewer = target.value; if (mode !== 'server') save(); updateApproval(); return; }
   if (view !== 'review') return;
   if (target.id === 'review-notes') updateRecord({notes: target.value});
   if (target.id === 'draft-question' || target.hasAttribute('data-claim')) {
@@ -306,6 +403,8 @@ try {
   if (mode === 'server') {
     bundle = {id: 'server', questions: []}; state = newState(bundle);
     await loadInbox();
+    await loadJobs();
+    setInterval(() => { if (!document.hidden) void loadJobs(); }, 5000);
   } else {
     const response = await fetch('./sample.json');
     if (!response.ok) throw new Error('The example intake could not be loaded.');

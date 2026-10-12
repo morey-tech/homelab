@@ -110,11 +110,11 @@ An `approved` status is scoped to this UI experiment. Exports explicitly retain
 accepted as production approvals or ingestion commands by `prepare.py` or
 `retrieve.py`. Reopening replaces the current decision; this MVP has no audit log.
 
-The UI currently loads the bundled sample. It does not import arbitrary episode
-reports or process new transcripts. A next iteration can adapt `prepare.py` output
-to this intake structure, then persist decisions behind an API. Episode discovery,
-background generation, authentication, multi-user review, and ingestion are future
-work. The daily lessons CronJob and deployed LanceDB are unchanged.
+In local demo mode, the UI loads the bundled sample and keeps the browser workflow
+described above. In [deployed server mode](../../review/README.md), the same assets
+provide an episode-number intake button, background preparation, and SQLite-backed
+review decisions. Automatic episode discovery, authentication, and publication to
+LanceDB remain future work. The daily lessons CronJob is unchanged.
 
 ## Local validation
 

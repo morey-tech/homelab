@@ -1,11 +1,18 @@
 # Episode ingestion prototype
 
+The [deployed review workspace](../review/README.md) now reuses this preparation
+workflow from an **Ingest episode** button. It processes the full episode with the
+GPU model, then stores an intake for human review in SQLite. Embedding belongs
+after approval and is deferred to a future publishing step.
+The CLI and local retrieval/evaluation tools below remain available independently.
+
 `prepare.py` prepares one committed individual transcript for review using the
 existing `local-llm` service on the RTX 3090. `retrieve.py` selects high-confidence
 candidates for an explicitly permitted local LanceDB experiment, embeds their
 questions, and retrieves their original evidence and context. Neither CLI sends
 Discord messages, runs the scraper, or alters the daily lesson workload. They are
-not included in Kustomize and do not write to the deployed LanceDB service.
+not scheduled as CLI jobs and do not write to the deployed LanceDB service.
+Kustomize packages the shared preparation script and prompts for the review worker.
 
 The [teaching-question review UI](review-ui/README.md) is a local, build-free MVP
 for trying the human-review workflow with three curated episode 428 examples.

@@ -37,7 +37,7 @@ class ReviewServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status, 200)
         inbox = json.loads(body)
         self.assertEqual(inbox["counts"], {"episodes": 0, "sections": 0, "questions": 0, "reviews": 0})
-        self.assertFalse(inbox["reviewEnabled"])
+        self.assertTrue(inbox["reviewEnabled"])
         self.assertEqual(json.loads((await self.request("/runtime.json"))[2])["mode"], "server")
         self.assertEqual(self.database.path.stat().st_mode & 0o777, 0o660)
 
@@ -55,7 +55,7 @@ class ReviewServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(restarted.counts()["episodes"], 1)
         self.assertEqual(json.loads((await self.request("/api/inbox"))[2])["counts"]["episodes"], 1)
 
-    async def test_no_write_api_sample_or_database_download(self):
+    async def test_unregistered_write_routes_and_private_files_are_unavailable(self):
         for method in ("POST", "PUT", "PATCH", "DELETE"):
             status, headers, _ = await self.request("/api/inbox", method)
             self.assertEqual(status, 405)
