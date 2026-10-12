@@ -184,10 +184,11 @@ dependencies:
 
 ```bash
 python3.12 -m venv /tmp/rr-rag-venv
-/tmp/rr-rag-venv/bin/python -m pip install 'torch==2.8.0+cpu' \
+/tmp/rr-rag-venv/bin/python -m pip install 'torch==2.13.0+cpu' \
   --index-url https://download.pytorch.org/whl/cpu
 /tmp/rr-rag-venv/bin/python -m pip install \
   -r kubernetes/ocp-mgmt/applications/rr-lessons/prototype/retrieval-requirements.txt
+/tmp/rr-rag-venv/bin/python -m pip check
 
 HF_HOME=/tmp/rr-hf-cache HF_HUB_DISABLE_IMPLICIT_TOKEN=1 OMP_NUM_THREADS=2 \
   /tmp/rr-rag-venv/bin/python \
@@ -212,6 +213,20 @@ vectors. Its documented retrieval instruction is prepended to queries; documents
 contain the concept and question. Inputs exceeding the model's token limit fail
 instead of being silently truncated. The model cache lives in
 `/tmp/rr-embedding-models`. No transcript text is sent to an external embedding API.
+
+The retrieval environment pins PyTorch `2.13.0+cpu`, Sentence Transformers `5.6.0`,
+Transformers `5.19.0`, and setuptools `83.0.0` to address Dependabot alerts
+64–74. Transformers `5.19.0` includes the
+[custom-generation consent fix](https://github.com/huggingface/transformers/pull/48620);
+`5.10.0` still contains the vulnerable download order despite falling outside the
+advisory's listed affected range. Hugging Face Hub and tokenizers are upgraded
+with Transformers to satisfy its dependency requirements. Remote model code
+remains disabled and the model revision and safetensors requirement stay pinned.
+Reinstall the requirements in any existing local environment before using it.
+Rebuild existing prototype indexes into a new output directory after this upgrade:
+their manifests record the embedding library versions and reject version mismatches.
+These dependencies belong to the local retrieval experiment, not the deployed
+review service or LanceDB server.
 
 This first retrieval design indexes **questions**, then returns each question's
 answer outline, qualifications, prerequisites, exact supporting passages, and
