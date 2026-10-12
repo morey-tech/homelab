@@ -1,9 +1,11 @@
 # Episode ingestion prototype
 
-This local CLI prepares one committed individual transcript for review. It uses
-the existing `local-llm` service on the RTX 3090 to propose teaching questions and
-review their support. It does not write to LanceDB, send Discord messages, run the
-scraper, or alter the daily lesson workload. It is not included in Kustomize yet.
+`prepare.py` prepares one committed individual transcript for review using the
+existing `local-llm` service on the RTX 3090. `retrieve.py` selects high-confidence
+candidates for an explicitly permitted local LanceDB experiment, embeds their
+questions, and retrieves their original evidence and context. Neither CLI sends
+Discord messages, runs the scraper, or alters the daily lesson workload. They are
+not included in Kustomize and do not write to the deployed LanceDB service.
 
 ## Prepare an episode
 
@@ -85,7 +87,9 @@ Candidates needing human review display **Model confidence in source faithfulnes
 
 These are uncalibrated model assessments, not probabilities of correctness. Rate
 the weakest substantive statement, not the average. A failed review must have low
-confidence; confidence never overrides the support checks or human-review gate.
+confidence; confidence never overrides the support checks or production
+human-review gate. The local retrieval experiment below permits high-confidence
+candidates still awaiting human review without changing their original status.
 The structured report stores `review.confidence` and `review.confidence_reason`.
 Old reports without a rating display `Not assessed` when rendered and need a new
 model review to obtain one. Existing output manifests remain protected; use a new
@@ -142,6 +146,78 @@ Progress goes to stderr with timings and input-token counts. Authentication
 headers and HTTP error bodies are not logged. Reports contain public source text
 and generated output; keep them outside Git while iterating.
 
+## Local indexing and retrieval
+
+For this prototype, use candidates with `needs_human_review`, no validation error,
+all three review checks passing, and validated `high` confidence. Rejected and
+medium/low candidates are excluded even if a rejected model response claims high
+confidence. Human rejection is also respected. This is an experiment selection
+policy, not approval to publish lessons; stored records retain the pending review
+and `production_approved: false`.
+
+Create the tested Python 3.12 CPU environment (separate from the deployment's
+Python runtime). Install PyTorch from its CPU index before the remaining pinned
+dependencies:
+
+```bash
+python3.12 -m venv /tmp/rr-rag-venv
+/tmp/rr-rag-venv/bin/python -m pip install 'torch==2.8.0+cpu' \
+  --index-url https://download.pytorch.org/whl/cpu
+/tmp/rr-rag-venv/bin/python -m pip install \
+  -r kubernetes/ocp-mgmt/applications/rr-lessons/prototype/retrieval-requirements.txt
+
+HF_HOME=/tmp/rr-hf-cache HF_HUB_DISABLE_IMPLICIT_TOKEN=1 OMP_NUM_THREADS=2 \
+  /tmp/rr-rag-venv/bin/python \
+  kubernetes/ocp-mgmt/applications/rr-lessons/prototype/retrieve.py ingest \
+  --report /tmp/rr-episode-428-confidence \
+  --report /tmp/rr-episode-429-confidence \
+  --allow-prototype-high-confidence \
+  --output /tmp/rr-rag-high-confidence
+
+HF_HOME=/tmp/rr-hf-cache HF_HUB_OFFLINE=1 OMP_NUM_THREADS=2 \
+  /tmp/rr-rag-venv/bin/python \
+  kubernetes/ocp-mgmt/applications/rr-lessons/prototype/retrieve.py search \
+  --index /tmp/rr-rag-high-confidence \
+  --query 'Which jobs might give someone a path toward owning a business?' \
+  --limit 3 --output /tmp/rr-rag-career-search
+```
+
+The first ingestion downloads [BGE small English v1.5](https://huggingface.co/BAAI/bge-small-en-v1.5)
+at revision `5c38ec7c405ec4b44b94cc5a9bb96e735b38267a`. Subsequent queries can run
+offline. The model runs locally on CPU and produces normalized 384-dimensional
+vectors. Its documented retrieval instruction is prepended to queries; documents
+contain the concept and question. Inputs exceeding the model's token limit fail
+instead of being silently truncated. The model cache lives in
+`/tmp/rr-embedding-models`. No transcript text is sent to an external embedding API.
+
+This first retrieval design indexes **questions**, then returns each question's
+answer outline, qualifications, prerequisites, exact supporting passages, and
+neighboring context. Generated outlines remain labeled proposals. The source
+snapshot hash, passage offsets/IDs/citation lines, evidence references, and context
+coverage are validated before indexing. Source commits, report and generation
+manifest hashes, and embedding configuration are retained for provenance.
+
+| Index artifact | Contents |
+|---|---|
+| `selection.json` | Selected records with source context, exclusion reasons, policy, and report provenance |
+| `manifest.json` | Selection and implementation fingerprints, pinned embedding identity, runtime versions, and vector settings |
+| `db/` | Local LanceDB `teaching_questions` table with vectors and complete context payloads |
+| Query output `retrieval.json` / `retrieval.md` | Ranked questions, distances, source citations, qualifications, and original context |
+
+An identical ingestion reuses the index without adding rows. Changed reports,
+implementation, or embedding settings require a fresh output directory; this snapshot approach avoids
+mixing revisions or leaving superseded questions searchable. Failed builds are
+staged separately and do not expose a partial index. Use one writer per directory.
+Partial preparation reports are allowed for this experiment and retain their
+processed-section counts; they are not complete episode ingestions.
+
+Search uses exact cosine nearest neighbors through the [LanceDB Python API](https://lancedb.github.io/lancedb/python/python/).
+At this corpus size an approximate vector index is unnecessary. Search always
+returns the nearest candidates, including for unrelated queries; distances are
+not confidence scores. Relevance/abstention checks and token-budgeted context
+assembly are required before adding answer or lesson generation. No answer is
+generated by this command.
+
 ## Validation and next step
 
 ```bash
@@ -149,6 +225,9 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
   -s kubernetes/ocp-mgmt/applications/rr-lessons/prototype -p 'test_*.py' -v
 git diff --check
 
+# Include real database persistence/retrieval tests (no model download needed):
+PYTHONDONTWRITEBYTECODE=1 /tmp/rr-rag-venv/bin/python -m unittest discover \
+  -s kubernetes/ocp-mgmt/applications/rr-lessons/prototype -p 'test_*.py' -v
 ```
 
 Tests cover immutable Git reads, source offsets and coverage, long paragraphs,
@@ -157,6 +236,17 @@ context limits, checkpoint reuse, malformed completions, partial runs, and manif
 invalidation. They use temporary repositories and mocked inference, with no cluster
 or Discord access. Confidence tests cover invalid or absent ratings, failed-check
 consistency, legacy reports, and preservation of human review at every rating.
+Retrieval tests cover selection exclusions, source tampering, missing context,
+cross-episode IDs, persistence, idempotency, configuration mismatch, and failed
+build cleanup. Two real LanceDB tests are skipped when its dependencies are absent.
+
+Local retrieval validation on 2026-10-11 selected four questions from episode 428
+and one from 429, using only the first three prepared sections of each. Eight
+other candidates were excluded. Five hand-picked paraphrase queries each ranked
+the intended question first; this small smoke check is not a retrieval-quality
+benchmark. An unrelated gardening query still returned nearest neighbors,
+confirming the need for a relevance gate. Repeated ingestion reused the five-row
+index. All 22 tests passed with the retrieval dependencies installed.
 
 Initial validation on 2026-10-11 passed 12 tests and parsed all 424 archived
 episodes into 80,629 exact source passages and 4,766 sections, preserving paragraph
@@ -166,9 +256,8 @@ business-share denominator and an overstated restriction on non-resident clients
 Schema-constrained output addresses formatting errors, but these factual failures
 remain evidence against automatically approving the generated material.
 
-Before expanding the workflow, review several complete episodes with varied
-formats and record which candidates are supported, useful, redundant, or missing
-context. Next work is better segmentation and question selection where evidence
-shows a need, followed by embeddings and an authenticated, versioned ingestion
-API. Automatic discovery of source commits and Kubernetes scheduling come after
-the episode preparation output is validated. Daily delivery remains independent.
+Next, inspect retrieval results across more topics and refine question selection
+where evidence shows a need. An authenticated, versioned ingestion/search API and
+deployed embedding runtime can follow the local experiment through the normal
+review and GitOps workflow. Automatic source discovery and scheduling follow
+validated episode ingestion. Daily delivery remains independent.
