@@ -187,10 +187,13 @@ def build():
                                           (bandwidth_query('lan'), 'LAN estimate')],
               16, 7, 8, 7, 'suffix:Mbps',
               'Tautulli estimates of bandwidth reserved for remote (WAN) and local (LAN) Plex sessions. '
+              'WAN and LAN are stacked to show their combined estimated bandwidth. '
               'Not measured interface traffic. Polled every 30 seconds; kbps converted to Mbps. '
               'Missing, failed, or stale collection appears as gaps.', INFRA)
     p['id'] = 40
     p['fieldConfig']['defaults']['decimals'] = 2
+    p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'normal', 'group': 'A'}
+    p['fieldConfig']['defaults']['custom']['fillOpacity'] = 60
     p['fieldConfig']['overrides'] = [
         {'matcher': {'id': 'byName', 'options': label},
          'properties': [{'id': 'color', 'value': {'mode': 'fixed', 'fixedColor': color}}]}
