@@ -5,7 +5,7 @@ in the existing `rr-lessons` namespace and Argo CD Application. The initial inbo
 is empty. It never imports the prototype's episode 428 fixture or browser progress.
 
 After the approved changes have been pushed and Argo CD has reconciled, open
-[Lesson desk](https://review.rr-lessons.apps.ocp-mgmt.rh-lab.morey.tech).
+[Lesson desk](https://review-rr-lessons.apps.ocp-mgmt.rh-lab.morey.tech).
 
 | Component | Configuration |
 |-----------|---------------|
@@ -103,8 +103,8 @@ oc -n rr-lessons get deployment/rr-lessons-review pvc/rr-lessons-review route/rr
 oc -n rr-lessons rollout status deployment/rr-lessons-review --timeout=180s
 oc -n rr-lessons logs deployment/rr-lessons-review -c install-dependencies
 oc -n rr-lessons logs deployment/rr-lessons-review -c review
-curl --fail --silent --show-error https://review.rr-lessons.apps.ocp-mgmt.rh-lab.morey.tech/readyz
-curl --fail --silent --show-error https://review.rr-lessons.apps.ocp-mgmt.rh-lab.morey.tech/api/inbox
+curl --fail --silent --show-error https://review-rr-lessons.apps.ocp-mgmt.rh-lab.morey.tech/readyz
+curl --fail --silent --show-error https://review-rr-lessons.apps.ocp-mgmt.rh-lab.morey.tech/api/inbox
 ```
 
 Expect readiness, four zero counts on a fresh PVC, and `reviewEnabled: false`.

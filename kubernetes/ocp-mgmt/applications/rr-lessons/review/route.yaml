@@ -3,7 +3,7 @@ kind: Route
 metadata:
   name: rr-lessons-review
 spec:
-  host: review.rr-lessons.apps.ocp-mgmt.rh-lab.morey.tech
+  host: review-rr-lessons.apps.ocp-mgmt.rh-lab.morey.tech
   to:
     kind: Service
     name: rr-lessons-review
