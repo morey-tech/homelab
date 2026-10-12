@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "status": "draft_development_only",
+  "source_revision": "8b0c3b7570d217d5296ac6dd81f10042d120c5c9",
+  "episodes": [428, 429],
+  "groups": [
+    {
+      "id": "career-ownership",
+      "episode": 428,
+      "anchors": ["You can imagine comparing two people, somebody who goes into auto repair", "The auto repair guy, if you look at people who work in that industry"],
+      "must_preserve": ["Industry experience can affect the opportunity to become an owner later.", "Auto repair versus auto manufacturing is an example, not a guaranteed wealth strategy."],
+      "queries": [
+        {"id": "career-plain", "kind": "paraphrase", "text": "How can the industry I join early in my career affect my chances of owning a business later?"},
+        {"id": "career-lesson", "kind": "lesson_brief", "text": "Find material for a lesson about choosing work that could eventually lead to ownership, with a practical takeaway and a reflection on career choices."}
+      ]
+    },
+    {
+      "id": "top-income-denominator",
+      "episode": 428,
+      "anchors": ["So in 1960, 17% of that income", "If you go to 2022, 43% came from private business"],
+      "must_preserve": ["The figures concern sources of income for the top 0.1% of income earners.", "43% is a share of that group's income, not the percentage of people who own businesses or the share of national wealth."],
+      "queries": [
+        {"id": "income-change", "kind": "paraphrase", "text": "What changed in the balance between wages and private-business income for the very highest earners?"},
+        {"id": "income-trap", "kind": "false_premise", "text": "Does the 43 percent figure mean that 43 percent of Americans own a private business?"}
+      ]
+    },
+    {
+      "id": "ownership-risk",
+      "episode": 428,
+      "anchors": ["Owen Zidar: And that's riskier.", "including all the people who flame out and get a zero", "It could be quite stressful."],
+      "must_preserve": ["Concentrated ownership carries risk, and the discussion includes business failures.", "An average or median result in the described sample is not a promise for an individual."],
+      "queries": [
+        {"id": "ownership-lesson", "kind": "lesson_brief", "text": "Teach me about the tension between concentrated business ownership and diversification, including what the discussion says about failure."},
+        {"id": "ownership-trap", "kind": "false_premise", "text": "Does evidence that entrepreneurs earned more on average prove that starting a company is a safe way for everyone to get rich?"}
+      ]
+    },
+    {
+      "id": "static-demand",
+      "episode": 429,
+      "anchors": ["marketplace is only made up of static investors", "they have $45 of stock and $55 of cash", "If their asset allocation were 60-40 or 40-60"],
+      "must_preserve": ["This is a simplified market containing only static 50/50 investors.", "The explanation involves buybacks changing aggregate holdings and prices restoring target weights.", "Preserve the hypothetical assumptions; do not treat its approximate arithmetic as a universal market multiplier."],
+      "queries": [
+        {"id": "static-plain", "kind": "mechanism", "text": "How could investors who keep a fixed stock-bond allocation amplify the price effect of a stock buyback?"},
+        {"id": "static-lesson", "kind": "lesson_brief", "text": "Find a worked example for teaching why a constant portfolio allocation can still affect market prices when shares are removed from the market."}
+      ]
+    },
+    {
+      "id": "return-chasing",
+      "episode": 429,
+      "anchors": ["the extrapolative investor, the return chaser", "when historical returns are higher, they want to own more equities", "The extrapolators are creating momentum in the price series."],
+      "must_preserve": ["The proposed mechanism uses recent returns to form expectations and change equity demand.", "Distinguish return chasers from static-allocation and fundamental-value investors.", "Attribute this to the model discussed by the guest."],
+      "queries": [
+        {"id": "chasing-plain", "kind": "mechanism", "text": "Why might people buying more stocks after strong recent returns make market swings larger?"},
+        {"id": "chasing-distinction", "kind": "hard_distinction", "text": "What distinguishes an investor who raises their stock allocation after a rally from one who rebalances to a fixed allocation?"}
+      ]
+    },
+    {
+      "id": "human-capital-leverage",
+      "episode": 429,
+      "anchors": ["the iconic sensible case for leverage involves young people", "The problem though with it is that leverage is expensive", "The 3% is a risky expected return", "For younger people, it's more of a borderline call", "the person that's thinking about leverage is the person who has high beta human capital too"],
+      "must_preserve": ["The theoretical case depends on human capital and its relationship to stock-market risk.", "Borrowing costs are certain while expected excess returns are risky.", "Preserve the practical reservations; youth alone is not a recommendation to borrow."],
+      "queries": [
+        {"id": "leverage-lesson", "kind": "lesson_brief", "text": "Find a balanced lesson about why future earnings might support borrowing to invest in theory, and why that can still be unattractive in practice."},
+        {"id": "leverage-trap", "kind": "false_premise", "text": "Does being young automatically make leverage sensible because future salary is as safe as a bond?"}
+      ]
+    }
+  ],
+  "negative_queries": [
+    {"id": "negative-gardening", "group_id": "negative-gardening", "kind": "out_of_domain", "text": "How should I prune a tomato plant to improve its yield?", "reason": "Unrelated to the selected podcast material."},
+    {"id": "negative-server", "group_id": "negative-server", "kind": "out_of_domain", "text": "What OpenShift command fixes an embedding server's memory utilization error?", "reason": "Deployment context is not podcast evidence."},
+    {"id": "negative-personal-allocation", "group_id": "negative-personal-allocation", "kind": "near_domain_unanswerable", "text": "Exactly how many dollars should I personally borrow to invest tomorrow, given my salary and debts?", "reason": "The corpus cannot supply missing personal circumstances or an individualized dollar amount; related leverage discussion does not answer this request."},
+    {"id": "negative-current-rate", "group_id": "negative-current-rate", "kind": "near_domain_unanswerable", "text": "What exact margin interest rate will my broker charge me tomorrow?", "reason": "Historical illustrative rates do not establish a current personalized quote."}
+  ]
+}

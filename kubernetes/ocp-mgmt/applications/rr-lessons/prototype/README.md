@@ -256,8 +256,13 @@ business-share denominator and an overstated restriction on non-resident clients
 Schema-constrained output addresses formatting errors, but these factual failures
 remain evidence against automatically approving the generated material.
 
-Next, inspect retrieval results across more topics and refine question selection
-where evidence shows a need. An authenticated, versioned ingestion/search API and
-deployed embedding runtime can follow the local experiment through the normal
-review and GitOps workflow. Automatic source discovery and scheduling follow
-validated episode ingestion. Daily delivery remains independent.
+The [embedding comparison plan](evaluation/README.md) defines concrete starter
+queries, source-linked review inputs, relevance grading, controlled comparison
+settings, and acceptance criteria for the two CPU Qwen3 embedding services. Its
+input builder runs without inference. Draft source-linked queries still need a
+frozen teaching-question corpus and human relevance judgments before scoring.
+The HTTP embedding adapter and scoring runner are the next implementation step.
+
+An authenticated, versioned ingestion/search API, automatic source discovery,
+and scheduling follow validated episode ingestion. Daily delivery remains
+independent.
