@@ -1,5 +1,11 @@
 # Teaching-question review UI
 
+This directory is the interactive local demo. The [container deployment](../../review/README.md)
+reuses its UI assets with an empty SQLite-backed inbox. The cluster does not receive
+`sample.json` or this directory's demo `runtime.json`; the HTTP service selects
+server mode and hides demo review/export controls. Backend ingestion and deployed
+review writes are separate follow-up work.
+
 Serve the MVP from the homelab repository root:
 
 ```bash

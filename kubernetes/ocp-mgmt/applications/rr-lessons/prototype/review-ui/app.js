@@ -17,6 +17,7 @@ const icons = {
 const icon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || icons.info}</svg>`;
 const labels = {pending: 'To review', approved: 'Approved', changes_requested: 'Changes requested', excluded: 'Excluded'};
 const recommendations = {revise: ['amber', 'Needs a correction'], keep: ['green', 'Ready for human review'], exclude: ['rose', 'Check the premise']};
+let mode = 'demo', inboxData = null, inboxError = '', inboxLoading = false;
 let bundle, state, storageKey, storageWorking = true, storageWarning = '', view = 'inbox', filter = 'pending', activeId, editing = false, showContext = false, toastTimer;
 
 function toast(message) {
@@ -45,7 +46,7 @@ function updateRecord(changes) {
 }
 
 function shell(content) {
-  const pending = bundle.questions.filter(q => record(q).status === 'pending').length;
+  const pending = mode === 'server' ? (inboxData?.counts.questions ?? 0) : bundle.questions.filter(q => record(q).status === 'pending').length;
   return `<aside class="sidebar">
     <a href="#inbox" class="brand" data-action="inbox"><span class="brand-mark">${icon('book')}</span><span>Lesson desk<small>RATIONAL REMINDER</small></span></a>
     <div class="workspace-label">YOUR WORKSPACE</div>
@@ -55,15 +56,16 @@ function shell(content) {
     </nav>
     <div class="sidebar-note"><span class="tiny-dot"></span> A thoughtful pause<br><p>Good lessons start with a careful look at the source.</p></div>
     <div class="sidebar-bottom">
+      ${mode === 'server' ? '<span class="save-status">Lesson desk</span>' : `
       <label class="reviewer-label" for="reviewer-name">Reviewing as</label>
       <input id="reviewer-name" placeholder="Your name" maxlength="100" value="${esc(state.reviewer)}" autocomplete="name">
       <button class="nav-item" data-action="export">${icon('export')}<span>Export decisions</span></button>
       <button class="text-button small" data-action="restore">Restore an export</button>
       <button class="text-button small" data-action="guide">How this works</button>
-      <div id="save-status" class="save-status">${storageWorking ? 'Saved in this browser' : 'Not saved · export to keep'}</div>
+      <div id="save-status" class="save-status">${storageWorking ? 'Saved in this browser' : 'Not saved · export to keep'}</div>`}
     </div>
   </aside>
-  <div class="workspace"><header class="topbar"><span>Transcript → teaching question → human review</span><span class="prototype-badge">Workflow prototype</span></header>
+  <div class="workspace"><header class="topbar"><span>Transcript → teaching question → human review</span><span class="prototype-badge">${mode === 'server' ? 'Review workspace' : 'Workflow prototype'}</span></header>
   ${Object.values(state.records).some(r => r.previousReview && r.status === 'pending') ? '<div class="storage-warning">Earlier review progress has been retained, but the evidence-first workflow requires a fresh review. Your previous decisions are preserved in the export.</div>' : ''}
   <div id="storage-warning" class="storage-warning" role="alert" ${storageWarning ? '' : 'hidden'}>${esc(storageWarning)}</div>
   <main id="main" tabindex="-1">${content}</main></div>
@@ -74,6 +76,29 @@ function shell(content) {
     <button class="button primary" data-action="close-guide">Got it</button>
   </dialog>
   <dialog id="restore-dialog" aria-labelledby="restore-title"><h2 id="restore-title">Restore saved decisions?</h2><p>This replaces the progress for this example intake in this browser. Export your current decisions first if you want to keep them.</p><div class="button-row"><button class="button secondary" data-action="cancel-restore">Cancel</button><button class="button primary" data-action="confirm-restore">Choose review file</button></div></dialog>`;
+}
+
+async function loadInbox() {
+  inboxLoading = true; inboxError = ''; render();
+  try {
+    const response = await fetch('./api/inbox', {cache: 'no-store'});
+    if (!response.ok) throw new Error('The inbox could not be loaded. Try again shortly.');
+    const value = await response.json();
+    if (value.apiVersion !== 1 || value.reviewEnabled !== false ||
+        !['episodes', 'sections', 'questions', 'reviews'].every(key => Number.isSafeInteger(value.counts?.[key]) && value.counts[key] >= 0)) {
+      throw new Error('The inbox response is not supported by this UI.');
+    }
+    inboxData = value;
+  } catch (error) { inboxError = error.message; inboxData = null; }
+  finally { inboxLoading = false; render(); }
+}
+
+function serverInbox() {
+  const counts = inboxData?.counts;
+  const empty = counts && Object.values(counts).every(n => n === 0);
+  return `<section class="page-heading"><span class="eyebrow">EVIDENCE FIRST. THOUGHTFUL REVIEW.</span><h1>${filter === 'reviewed' ? 'Reviewed questions' : 'Review inbox'}<span class="heading-dot">.</span></h1><p>Turn podcast ideas into lessons you can trust.<br>Start with the evidence, then assess the question.</p></section>
+    <div class="overview"><div><span class="metric">${counts?.episodes ?? '—'}</span><span>episodes</span></div><div><span class="metric">${counts?.questions ?? '—'}</span><span>teaching questions</span></div><div><span class="metric">${counts?.reviews ?? '—'}</span><span>review records</span></div></div>
+    <section class="paper-card empty-inbox" aria-live="polite">${icon(inboxError ? 'info' : 'inbox')}<h2>${inboxLoading ? 'Opening your inbox…' : inboxError ? 'Unable to load your inbox' : empty ? 'No episodes to review yet' : 'Review intake is not connected yet'}</h2><p>${inboxError ? esc(inboxError) : empty ? 'Prepared episodes will appear here when they are ready for review.' : inboxLoading ? 'Checking for prepared episodes.' : 'Content is stored, but the review workflow is not available in this deployment yet.'}</p><button class="button secondary" data-action="refresh-inbox" ${inboxLoading ? 'disabled' : ''}>${inboxError ? 'Try again' : 'Refresh inbox'}</button></section>`;
 }
 
 function inbox() {
@@ -133,7 +158,7 @@ function reviewPage() {
 }
 
 function render() {
-  app.innerHTML = shell(view === 'review' ? reviewPage() : inbox());
+  app.innerHTML = shell(mode === 'server' ? serverInbox() : view === 'review' ? reviewPage() : inbox());
   document.title = view === 'review' ? `${record(currentQuestion()).sourceChecked ? currentQuestion().concept : 'Read the supporting evidence'} — Lesson desk` : 'Lesson desk — review inbox';
   updateApproval();
 }
@@ -194,6 +219,7 @@ document.addEventListener('click', event => {
     if (button.dataset.open) return openQuestion(button.dataset.open);
     if (button.dataset.filter) return goInbox(button.dataset.filter);
     const action = button.dataset.action;
+    if (action === 'refresh-inbox' && mode === 'server') { void loadInbox(); return; }
     if (action === 'inbox') goInbox();
     if (action === 'reviewed') goInbox('reviewed');
     if (action === 'resume') {
@@ -272,16 +298,26 @@ document.addEventListener('change', async event => {
 });
 
 try {
-  const response = await fetch('./sample.json');
-  if (!response.ok) throw new Error('The example intake could not be loaded.');
-  bundle = await response.json(); storageKey = `rr-lesson-review:${bundle.id}`; state = newState(bundle);
-  try {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) state = validateState(JSON.parse(saved), bundle);
-  } catch {
-    storageWorking = false; storageWarning = 'Saved progress could not be read. Restore a valid export, or continue with a new review and export your decisions.';
+  const runtimeResponse = await fetch('./runtime.json', {cache: 'no-store'});
+  if (!runtimeResponse.ok) throw new Error('The review workspace configuration could not be loaded.');
+  const runtime = await runtimeResponse.json();
+  if (!['demo', 'server'].includes(runtime.mode)) throw new Error('Unsupported workspace configuration.');
+  mode = runtime.mode;
+  if (mode === 'server') {
+    bundle = {id: 'server', questions: []}; state = newState(bundle);
+    await loadInbox();
+  } else {
+    const response = await fetch('./sample.json');
+    if (!response.ok) throw new Error('The example intake could not be loaded.');
+    bundle = await response.json(); storageKey = `rr-lesson-review:${bundle.id}`; state = newState(bundle);
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) state = validateState(JSON.parse(saved), bundle);
+    } catch {
+      storageWorking = false; storageWarning = 'Saved progress could not be read. Restore a valid export, or continue with a new review and export your decisions.';
+    }
+    render();
   }
-  render();
 } catch (error) {
   app.innerHTML = `<main class="loading"><h1>Couldn’t open the inbox.</h1><p>${esc(error.message)}</p><p>Reload this page to try again.</p></main>`;
 }

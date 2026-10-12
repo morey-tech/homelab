@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Only UI assets are deployed. The sample fixture and demo runtime stay local.
+configMapGenerator:
+  - name: rr-lessons-review-ui
+    files:
+      - index.html
+      - app.js
+      - state.mjs
+      - styles.css

@@ -699,6 +699,33 @@ progress::-moz-progress-bar {
   font-size:12px
 }
 
+.empty-inbox {
+  text-align:center;
+  padding:64px 28px;
+  margin-top:24px
+}
+
+.empty-inbox>svg {
+  width:38px;
+  height:38px;
+  color:#708d60;
+  margin-bottom:20px
+}
+
+.empty-inbox h2 {
+  font-family:Georgia,serif;
+  font-size:28px;
+  font-weight:400
+}
+
+.empty-inbox p {
+  margin:16px auto 24px;
+  max-width:480px;
+  color:var(--muted);
+  font-size:15px;
+  line-height:1.7
+}
+
 .text-button {
   border:0;
   background:transparent;
