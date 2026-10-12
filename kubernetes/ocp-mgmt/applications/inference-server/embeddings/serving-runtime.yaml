@@ -1,0 +1,90 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: vllm-cpu-embeddings
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    openshift.io/display-name: vLLM CPU embeddings (Technology Preview)
+    opendatahub.io/template-name: vllm-cpu-x86-runtime-template
+    opendatahub.io/runtime-version: v0.24.0
+spec:
+  annotations:
+    opendatahub.io/kserve-runtime: vllm
+    prometheus.io/port: "8080"
+    prometheus.io/path: /metrics
+  multiModel: false
+  supportedModelFormats:
+    - name: vLLM
+      autoSelect: false
+  containers:
+    - name: kserve-container
+      # Digest from the CPU x86 template installed by OpenShift AI 3.5.1.
+      image: registry.redhat.io/rhaii/vllm-cpu-rhel9@sha256:7a28b867955055a8836ea2a78e70b8bad63c1ee50e8a5f8dd95d1194f20ec489
+      command:
+        - python
+        - -m
+        - vllm.entrypoints.openai.api_server
+      args:
+        - --port=8080
+        - --model=/mnt/models
+        - --served-model-name={{.Name}}
+        - --runner=pooling
+        # Threadripper 3960X has AVX2, without AVX-512 or native BF16.
+        - --dtype=float32
+        - --max-model-len=4096
+        - --max-num-seqs=2
+        - --max-num-batched-tokens=8192
+        - --enforce-eager
+      env:
+        - name: HF_HOME
+          value: /tmp/huggingface
+        - name: HF_HUB_OFFLINE
+          value: "1"
+        - name: VLLM_CACHE_ROOT
+          value: /tmp/vllm
+        # Avoid automatic binding to all physical cores on the shared node.
+        - name: VLLM_CPU_OMP_THREADS_BIND
+          value: nobind
+        - name: OMP_NUM_THREADS
+          value: "8"
+        - name: MKL_NUM_THREADS
+          value: "8"
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      startupProbe:
+        httpGet:
+          path: /health
+          port: 8080
+        # Allow 15 minutes for cold CPU model loading; measure after rollout.
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 90
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 8080
+        periodSeconds: 10
+        timeoutSeconds: 5
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 8080
+        periodSeconds: 30
+        timeoutSeconds: 5
+      volumeMounts:
+        - name: shm
+          mountPath: /dev/shm
+  volumes:
+    - name: shm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 2Gi

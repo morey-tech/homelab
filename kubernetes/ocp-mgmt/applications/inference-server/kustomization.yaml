@@ -11,3 +11,4 @@ resources:
   - anythingllm-rbac.yaml
   - rr-lessons-rbac.yaml
   - networkpolicy.yaml
+  - embeddings

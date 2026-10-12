@@ -18,6 +18,8 @@ OpenShift AI manages `local-llm` through KServe's Standard deployment mode (form
 | Updates | `Recreate`: release the GPU before replacing the pod; downtime expected |
 | Authentication | KServe's token-authenticating proxy and resource-scoped RBAC |
 
+The same application also defines two independent [CPU embedding services](embeddings/README.md), Qwen3-Embedding-0.6B and Qwen3-Embedding-4B, for the podcast retrieval prototype. They use the Red Hat CPU runtime shipped with OpenShift AI 3.5.1 (Technology Preview), share the model PVC, and allocate CPU/RAM on `tr-gpu`. Their deployment and validation are separate from the existing GPU chat service.
+
 ## Rollout and verification
 
 Prerequisites: `lvms-vg-ai` ready on `tr-gpu`, NVIDIA validation completed, OpenShift AI ready, and hardware profile `tr-gpu-3090` installed. The application ApplicationSet explicitly includes this workload. Git owns the model configuration; edits to managed resources through the dashboard are reconciled back to Git.

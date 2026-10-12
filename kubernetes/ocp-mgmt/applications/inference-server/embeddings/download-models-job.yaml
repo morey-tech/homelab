@@ -1,0 +1,103 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-embedding-models
+  annotations:
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 7200
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: tr-gpu
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: download
+          image: ghcr.io/morey-tech/homelab/hf-cli@sha256:c502ba8270aba4672b15bfb627e8b274e75855985e2c92abd22d31e703211f4a
+          command:
+            - python
+            - -u
+            - -c
+          args:
+            - |
+              from pathlib import Path
+              from huggingface_hub import snapshot_download
+
+              models = (
+                  (
+                      "Qwen/Qwen3-Embedding-0.6B",
+                      "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                      ("model.safetensors",),
+                  ),
+                  (
+                      "Qwen/Qwen3-Embedding-4B",
+                      "5cf2132abc99cad020ac570b19d031efec650f2b",
+                      (
+                          "model.safetensors.index.json",
+                          "model-00001-of-00002.safetensors",
+                          "model-00002-of-00002.safetensors",
+                      ),
+                  ),
+              )
+              for repo, revision, weights in models:
+                  target = Path("/models") / f"{repo.split('/')[-1].lower()}-{revision}"
+                  marker = target / ".download-complete"
+                  required = (
+                      "config.json", "tokenizer.json", "tokenizer_config.json",
+                      "modules.json", "1_Pooling/config.json", *weights,
+                  )
+                  complete = all(
+                      (target / name).is_file() and (target / name).stat().st_size > 0
+                      for name in required
+                  )
+                  if marker.is_file() and marker.read_text().strip() == revision and complete:
+                      print(f"{repo}: pinned revision {revision} already cached", flush=True)
+                      continue
+                  print(f"{repo}: downloading revision {revision} into {target}", flush=True)
+                  marker.unlink(missing_ok=True)
+                  snapshot_download(
+                      repo_id=repo,
+                      revision=revision,
+                      local_dir=str(target),
+                      max_workers=1,
+                  )
+                  for name in required:
+                      artifact = target / name
+                      if not artifact.is_file() or artifact.stat().st_size == 0:
+                          raise RuntimeError(f"{repo}: missing or empty model artifact: {name}")
+                  marker.write_text(revision + "\n")
+                  print(f"{repo}: pinned revision downloaded and artifacts checked", flush=True)
+          env:
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: HF_TOKEN
+            - name: HF_HOME
+              value: /tmp/huggingface
+            - name: HF_HUB_DISABLE_XET
+              value: "1"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1Gi
+            limits:
+              memory: 4Gi
+          volumeMounts:
+            - name: models
+              mountPath: /models
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: models

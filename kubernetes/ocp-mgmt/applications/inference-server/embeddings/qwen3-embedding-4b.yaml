@@ -1,0 +1,36 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: qwen3-embedding-4b
+  labels:
+    opendatahub.io/dashboard: "true"
+    networking.kserve.io/visibility: exposed
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    serving.kserve.io/deploymentMode: Standard
+    serving.kserve.io/autoscalerClass: none
+    security.opendatahub.io/enable-auth: "true"
+    serving.kserve.io/enable-prometheus-scraping: "true"
+    haproxy.router.openshift.io/timeout: 10m
+    openshift.io/display-name: Qwen3 Embedding 4B (CPU)
+spec:
+  predictor:
+    minReplicas: 1
+    maxReplicas: 1
+    deploymentStrategy:
+      type: Recreate
+    nodeSelector:
+      kubernetes.io/hostname: tr-gpu
+      feature.node.kubernetes.io/cpu-cpuid.AVX2: "true"
+    model:
+      modelFormat:
+        name: vLLM
+      runtime: vllm-cpu-embeddings
+      storageUri: pvc://models/qwen3-embedding-4b-5cf2132abc99cad020ac570b19d031efec650f2b
+      resources:
+        requests:
+          cpu: "8"
+          memory: 20Gi
+        limits:
+          cpu: "8"
+          memory: 32Gi
