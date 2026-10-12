@@ -1,4 +1,4 @@
-"""Durable intake queue and atomic review imports; no publication side effects."""
+"""Durable intake and reviews; approvals atomically enqueue retrieval indexing."""
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
@@ -146,6 +146,8 @@ class StoreMixin:
                 review['decidedAt'] = review['updatedAt']
             db.execute('INSERT INTO reviews(question_id,state_json,revision) VALUES(?,?,?) ON CONFLICT(question_id) DO UPDATE SET state_json=excluded.state_json,revision=excluded.revision,updated_at=CURRENT_TIMESTAMP',
                        (question_id, json.dumps(review), revision + 1))
+            from publication_store import queue_revision
+            queue_revision(db, question_id, revision + 1, review)
             return {'revision': revision + 1, 'review': review}
 
 
@@ -167,7 +169,7 @@ def validate_review_state(value):
     if review.get('evidence') not in ('', 'strong', 'partial', 'unsupported') or review.get('teaching') not in ('', 'clear', 'needs_work'):
         raise APIError('Invalid review grades.')
     if review.get('productionApproved') is not False or review.get('approvalScope') != 'prototype_review':
-        raise APIError('These reviews do not grant publication approval.')
+        raise APIError('Review decisions do not authorize Discord delivery.')
     if not review['sourceChecked'] and any(review[k] for k in ('materialChecked', 'scopeChecked', 'evidence', 'teaching')):
         raise APIError('Read the supporting evidence first.')
     if review['status'] != 'pending':

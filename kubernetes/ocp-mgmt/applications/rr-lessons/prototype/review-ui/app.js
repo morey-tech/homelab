@@ -18,6 +18,7 @@ const icon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const labels = {pending: 'To review', approved: 'Approved', changes_requested: 'Changes requested', excluded: 'Excluded'};
 const recommendations = {revise: ['amber', 'Needs a correction'], keep: ['green', 'Ready for human review'], exclude: ['rose', 'Check the premise']};
 let mode = 'demo', inboxData = null, inboxError = '', inboxLoading = false;
+let publications = {}, publicationError = '';
 let jobs = [], jobError = '', revisions = {}, saveChain = Promise.resolve(), writeBlocked = false, saving = 0, submitting = false, deciding = false, jobsInitialized = false, episodeInput = '';
 let bundle, state, storageKey, storageWorking = true, storageWarning = '', view = 'inbox', filter = 'pending', activeId, editing = false, showContext = false, toastTimer;
 
@@ -40,6 +41,7 @@ function save() {
       if (writeBlocked) throw new Error('Saving is paused. Reload the inbox to resolve the earlier save error.');
       const result = await api(`./api/reviews/${encodeURIComponent(id)}`, {method: 'PUT', body: {revision: revisions[id] || 0, review}});
       revisions[id] = result.revision;
+      if (review.status === 'approved' || publications[id]) void loadPublications();
     });
     saveChain = operation.catch(error => {
       writeBlocked = true; storageWorking = false; storageWarning = error.message;
@@ -130,6 +132,34 @@ async function api(url, options = {}) {
   return result;
 }
 
+function publicationCard(q, r) {
+  if (mode !== 'server' || !r.sourceChecked) return '';
+  const p = publications[q.id];
+  if (!p && r.status !== 'approved' && !publicationError) return '';
+  const index = p?.action === 'index';
+  const label = !p ? 'Not indexed yet' : p.status === 'complete' ? (index ? 'Indexed for retrieval' : 'Removed from retrieval')
+    : p.status === 'failed' ? (index ? 'Indexing failed' : 'Index removal failed')
+    : p.status === 'processing' ? (index ? 'Indexing approved wording…' : 'Removing from index…')
+    : index ? (p.attempts ? 'Waiting to retry indexing' : 'Queued for indexing') : 'Queued for index removal';
+  return `<section class="publication-card" aria-live="polite"><strong>${esc(label)}</strong>
+    <p>${p && !index ? 'This question is ineligible for retrieval while its approval is withdrawn.' : 'Only the approved question and answer outline are made available for retrieval. No lesson is sent to Discord.'}</p>
+    ${publicationError ? `<p class="ingestion-error">${esc(publicationError)}</p>` : ''}
+    ${p?.error ? `<p class="ingestion-error">${esc(p.error)}</p>` : ''}
+    ${(!p && r.status === 'approved') || p?.status === 'failed' ? `<button class="button secondary" data-publish="${esc(q.id)}">${p ? 'Retry index update' : 'Index approved question'}</button>` : ''}</section>`;
+}
+
+async function loadPublications() {
+  try {
+    const result = await api('./api/publications');
+    publications = Object.fromEntries(result.publications.map(p => [p.question_id, p]));
+    publicationError = '';
+  } catch (error) { publicationError = `Indexing status unavailable: ${error.message}`; }
+  document.querySelectorAll('[data-publication-for]').forEach(node => {
+    const q = bundle.questions.find(q => q.id === node.dataset.publicationFor);
+    if (q) node.innerHTML = publicationCard(q, record(q));
+  });
+}
+
 function jobList() {
   return `${jobError ? `<p role="alert" class="ingestion-error">${esc(jobError)}</p>` : ''}${jobs.length ? `<h3>Episode preparation</h3><ul class="ingestion-jobs">${jobs.slice(0, 10).map(job => `<li><div><strong>Episode ${job.episode}</strong><span class="pill ${job.status === 'failed' ? 'rose' : job.status === 'complete' ? 'green' : 'neutral'}">${esc(job.status)}</span><p>${esc(job.phase)}${job.total ? ` · ${job.completed}/${job.total}` : ''}</p>${job.error ? `<p class="ingestion-error">${esc(job.error)}</p>` : ''}${job.source_commit ? `<small>Source commit: ${esc(job.source_commit.slice(0, 12))}</small>` : ''}</div>${job.status === 'failed' ? `<button class="button secondary" data-retry="${job.episode}">Retry episode ${job.episode}</button>` : ''}</li>`).join('')}</ul>` : '<p class="muted">No episodes have been queued yet.</p>'}`;
 }
@@ -143,6 +173,7 @@ async function loadJobs() {
   } catch (error) { jobError = `Could not check preparation progress: ${error.message}`; }
   const node = document.querySelector('#ingestion-jobs');
   if (node) node.innerHTML = jobList();
+  await loadPublications();
 }
 
 async function ingest(episode) {
@@ -181,7 +212,18 @@ document.addEventListener('submit', event => {
   event.preventDefault();
   void ingest(Number(document.querySelector('#episode-number').value));
 });
-document.addEventListener('click', event => {
+document.addEventListener('click', async event => {
+  const publication = event.target.closest('[data-publish]');
+  if (publication) {
+    publication.disabled = true;
+    try {
+      await saveChain;
+      await api(`./api/publications/${encodeURIComponent(publication.dataset.publish)}`, {method: 'POST', body: {}});
+      await loadPublications();
+      toast('Index update queued.');
+    } catch (error) { toast(error.message); publication.disabled = false; }
+    return;
+  }
   const button = event.target.closest('[data-retry]');
   if (button) void ingest(Number(button.dataset.retry));
 });
@@ -220,7 +262,7 @@ function reviewPage() {
     ${locked ? `<div class="decision-banner">${icon('check')}<span><strong>${labels[r.status]}</strong> by ${esc(r.reviewedBy)} · ${esc(new Date(r.decidedAt).toLocaleString())}</span><button class="text-button" data-action="reopen">Reopen for review</button></div>` : ''}
     ${evidenceCard(q, r)}`;
   if (!r.sourceChecked) return intro + '<div class="evidence-gate"><strong>Next: review the teaching question</strong><p>Confirm you’ve reviewed the evidence above to reveal the question, answer outline, and assistant’s notes.</p></div>';
-  return intro + `<div id="review-material" class="review-material" tabindex="-1"><div class="review-title"><div><span class="eyebrow">STEP 2 · COMPARE THE DRAFT WITH THE EVIDENCE</span><h1>${esc(q.concept)}</h1></div><span class="pill ${locked ? (r.status === 'approved' ? 'green' : 'neutral') : tone}">${locked ? labels[r.status] : recommendation}</span></div>
+  return intro + `<div data-publication-for="${esc(q.id)}">${publicationCard(q, r)}</div><div id="review-material" class="review-material" tabindex="-1"><div class="review-title"><div><span class="eyebrow">STEP 2 · COMPARE THE DRAFT WITH THE EVIDENCE</span><h1>${esc(q.concept)}</h1></div><span class="pill ${locked ? (r.status === 'approved' ? 'green' : 'neutral') : tone}">${locked ? labels[r.status] : recommendation}</span></div>
     <button class="text-button revisit-evidence" data-action="revisit-evidence">${icon('back')} Revisit supporting evidence</button>
     <div class="review-grid">
       <section class="paper-card draft-card"><div class="card-heading"><span class="eyebrow">THE TEACHING QUESTION</span>${!locked ? `<button class="text-button small" data-action="edit">${icon('edit')}${editing ? 'Done editing' : 'Edit draft'}</button>` : ''}</div>
@@ -239,7 +281,7 @@ function reviewPage() {
       <label class="check-row scope-check"><input id="scope-checked" type="checkbox" ${r.scopeChecked ? 'checked' : ''} ${locked ? 'disabled' : ''}><span>Scope and qualifications checked.<small>Who, when, and what the source actually claims.</small></span></label>
     </div><label class="check-row material-check"><input id="material-checked" type="checkbox" ${r.materialChecked ? 'checked' : ''} ${locked ? 'disabled' : ''}><span>The supporting evidence matches this question and answer outline.<small>I’ve compared the draft with the source and checked that its claims are supported.</small></span></label><label class="field-label" for="review-notes">Your notes <span class="muted">— what should change, or what made this useful?</span></label><textarea id="review-notes" rows="2" maxlength="5000" placeholder="Leave a clear handoff for the next pass…" ${locked ? 'disabled' : ''}>${esc(r.notes)}</textarea>
     <div class="decision-footer"><div id="approval-hint" class="approval-status" role="status" aria-live="polite" aria-atomic="true"></div>${locked ? '<button class="button primary" data-action="next-pending">Next question to review '+icon('arrow')+'</button>' : `<div class="decision-actions"><button class="text-button exclude-button" data-action="exclude">Exclude</button><button class="button secondary" data-action="request-changes">Request changes</button><button class="button primary" id="approve-button" data-action="approve" aria-describedby="approval-hint">${icon('check')} Approve & continue</button></div>`}</div>
-    <p class="small muted decision-note">Changes or exclusion need a note. Editing clears your grades and comparison checks; your source-reading acknowledgment stays saved.</p></section></div>`;
+    <p class="small muted decision-note">${mode === 'server' ? 'Approval queues the approved wording for retrieval indexing. ' : ''}Changes or exclusion need a note. Editing clears your grades and comparison checks; your source-reading acknowledgment stays saved.</p></section></div>`;
 }
 
 function render() {
@@ -257,7 +299,7 @@ function updateApproval() {
     const waiting = r.status === 'pending' && problems.length > 0;
     hint.className = `approval-status ${waiting ? 'requirements-pending' : 'requirements-complete'}`;
     const content = r.status !== 'pending'
-      ? '<strong>Decision saved</strong><p>This does not publish or ingest a lesson.</p>'
+      ? (mode === 'server' ? '<strong>Decision saved</strong><p>Indexing follows the current approval. No lesson is sent to Discord.</p>' : '<strong>Decision saved</strong><p>This does not publish or ingest a lesson.</p>')
       : waiting
         ? `<strong>Required before approval · ${problems.length} remaining</strong><p>Complete each item below to enable “Approve & continue”.</p><ul>${problems.map(problem => `<li>${esc(problem)}</li>`).join('')}</ul>`
         : '<strong>Ready to approve</strong><p>All required checks are complete. Choose “Approve & continue” to save your decision.</p>';

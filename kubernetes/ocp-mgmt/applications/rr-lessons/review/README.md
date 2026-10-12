@@ -11,7 +11,8 @@ When preparation completes, open a question from the inbox:
 2. Acknowledge reading to reveal the question, answer outline, qualifications, and
    model review. Model confidence and rejection reasons stay hidden until this point.
 3. Enter your reviewer name, grade source support and teaching value, and confirm
-   scope and agreement with the evidence. Approve, request changes, or exclude.
+   scope and agreement with the evidence. Approve, request changes, or exclude. Approval queues the current wording for
+   retrieval indexing; no Discord lesson is sent.
 
 Drafts and decisions are saved to SQLite, shared across browsers, and retained
 across pod restarts. A conflicting edit from another tab stops saving and asks you
@@ -72,14 +73,14 @@ model completion from a previous attempt. Successful repeated intakes are reused
 |-----------|---------------|
 | Runtime | Digest-pinned `python:3.14.8-slim-trixie`; hash-pinned Uvicorn, Dulwich, and dependencies |
 | Code | Versioned ConfigMaps for the server, shared UI assets, preparation script, and prompts |
-| Worker | One background thread in the review service; one ASGI worker and one replica |
-| SQLite | `/data/reviews.sqlite3`, schema version 2; version 1 migrates in place |
+| Worker | Separate intake and publication threads; one ASGI worker and one replica |
+| SQLite | `/data/reviews.sqlite3`, schema version 3; versions 1 and 2 migrate in place |
 | Git cache | `/data/ingestion/rr-scraper.git` |
 | Run artifacts | `/data/ingestion/runs/JOB_ID/`: source, manifest, report JSON/Markdown, raw completions |
 | PVC | Existing 1 GiB `rr-lessons-review`, `lvms-vg-nvme`, RWO; nodes `ms-02` or `ms-04` |
 | Resources | Review container: 256 MiB memory request, 1 GiB limit; models run in their existing services |
 | Updates | `Recreate`; brief downtime during updates; PVC retained |
-| Model access | Projected one-hour service-account token, reread before each request; GPU model-scoped RoleBinding in `inference-server` |
+| Model access | Projected one-hour service-account token, reread before each request; GPU preparation and Qwen3 4B publication roles in `inference-server` |
 | Restrictions | `restricted-v2`, non-root, read-only root filesystem, dropped capabilities |
 
 The Route retains the existing **trusted-homelab access model with no login**.
@@ -108,16 +109,66 @@ reports, the database, or browser responses.
 | `GET /healthz` | Process liveness |
 | `GET /readyz` | Database schema/table accessibility |
 
-This phase ends at human review. Intake does not call an embedding service, create
-vectors, or depend on the CPU models being available. Approval saves the reviewed
-wording and decision; it does not trigger embedding or publication yet.
+## After approval
 
-Embedding belongs in a later **post-approval publishing step**, using the approved
-question text, including human edits. Qwen3 Embedding 4B remains the selected model
-for that future step. The publisher must associate each vector with the approved
-review revision and invalidate or replace it if the material is reopened or edited.
-That publisher is not implemented in this MVP. The existing daily lesson CronJob,
-LanceDB service, CPU model deployments, and local three-question demo are unchanged.
+Intake still ends at the human inbox and never calls an embedding model. A **new
+approval** saves the reviewed wording and a publication task in the same SQLite
+transaction. A separate background worker embeds exactly that approved question
+with Qwen3 Embedding 4B and writes it to the internal LanceDB service. The approved
+answer outline, qualifications, prerequisites, original source passages/citations,
+reviewer, approval timestamp, and review revision accompany the vector. Original
+model claim references are retained as `original_claims`, separate from the edited
+answer outline. No answer text is regenerated after approval.
+
+The UI shows queued, indexing, indexed, retrying, or failed status when opening a
+reviewed question. **Retry index update** retries a failed operation. Questions
+approved **before this upgrade** stay unindexed until you choose **Index approved
+question**; migration does not publish earlier test approvals automatically.
+
+Qwen3 Embedding 4B uses revision `5cf2132abc99cad020ac570b19d031efec650f2b`,
+2,560 dimensions, and L2 normalization. The embedding input is the human-approved
+question alone, with no document instruction prefix, following the
+[model's document-embedding guidance](https://huggingface.co/Qwen/Qwen3-Embedding-4B).
+The approved outline and evidence remain retrieval payload, rather than embedding
+input. Requests are token-counted against the deployed 4,096-token budget. The
+shared contract in `contracts/publication_contract.py` pins the vector space;
+changing the model/input format requires a deliberately versioned table and reindex.
+
+The `publications` table is a durable outbox keyed by question and current review
+revision. A newer review supersedes older work. The publisher checks the revision
+before embedding and again before writing; LanceDB rejects older writes and
+conflicting writes for the same revision. Repeated identical writes are harmless.
+Vectors are cached with their model and input hash so an index retry does not repeat
+embedding. Retries use 10/20/40/80-second delays, stop after five failures, and can
+be restarted from the UI. Interrupted publication tasks resume after a restart.
+The existing ingestion queue retains its separate restart/retry behavior.
+
+**Reopening immediately makes the question ineligible for retrieval** in the same
+review transaction and queues an index withdrawal. Withdrawals take priority over
+new indexing and do not call the embedding model. LanceDB retains a revisioned
+inactive row so delayed older writes cannot resurrect the question. Search checks
+live review eligibility before the vector query and again before returning results;
+it returns 503 if current review state is unavailable. Previously returned results
+are snapshots, not permanent approval: consumers must revalidate before later use.
+Direct database reads bypass these checks and must not be used by consumers.
+
+Reapproval embeds the newly approved revision and replaces the inactive/older row.
+The published record uses `approved_for_retrieval: true` while retaining
+`productionApproved: false`: this authorizes retrieval experiments, not automatic
+Discord delivery. The daily lesson CronJob remains unchanged.
+
+| Endpoint | Post-approval behavior |
+|----------|------------------------|
+| `GET /api/publications` | Current indexing/withdrawal status and errors per question |
+| `POST /api/publications/QUESTION_ID` | Same-origin JSON `{}`; index an earlier approved question or retry a failed update using stored content |
+| `GET /api/retrieval-state` | Current approved and successfully indexed revisions; consumed by LanceDB on every search |
+
+Publication uses the existing review PVC and SQLite rollback journal. Do not mount
+it into the LanceDB pod. NetworkPolicy permits the review pod to call LanceDB and
+LanceDB to read the review service's current eligibility state. This is trusted
+in-cluster access, with no additional API bearer credential; the public review
+Route retains its existing no-login limitation. Keep both services single-worker.
+See the [LanceDB API and retrieval contract](../lancedb/README.md#approved-question-api).
 
 ## Local validation
 
@@ -136,14 +187,15 @@ git diff --check
 
 Tests use fake model responses and temporary SQLite databases. They exercise the
 real preparation code, atomic import, failures, queue recovery/deduplication,
-version-1 migration, GPU-only intake, rotating tokens, review checks, and conflicts.
+schema migrations, GPU-only intake, rotating tokens, review checks, conflicts,
+publication retries, and reopening during embedding or publication.
 They do not prove the live models' output quality or cluster authentication.
 
 ## GitOps verification
 
 Review and commit the changes, then push manually and let Argo CD reconcile both
 `rr-lessons` and `inference-server` (the latter grants the review ServiceAccount
-access to the GPU service). Do not apply local manifests or run
+access to the GPU service and the 4B embedding service). Do not apply local manifests or run
 uncommitted test Jobs on the cluster.
 
 After reconciliation, using the authenticated ocp-mgmt context:
@@ -155,7 +207,7 @@ oc -n rr-lessons logs deployment/rr-lessons-review -c review
 curl --fail --silent --show-error https://review-rr-lessons.apps.ocp-mgmt.rh-lab.morey.tech/readyz
 ```
 
-Expect schema version 2. In Lesson desk, ingest **428** and watch the phases through
+Expect schema version 3. In Lesson desk, ingest **428** and watch the phases through
 preparation, import, and ready. Verify the original source links, qualifications,
 model review, and persisted decision after reloading. Submit 428 again to verify
 reuse without overwriting the decision. Test a missing episode for an explicit
@@ -163,3 +215,17 @@ failure with a retry action. Inspect model logs for authentication/tokenization 
 context failures. Initial package installation, projected-token permissions,
 GPU inference compatibility, and actual model quality need these post-deployment
 checks; local mocks and manifest dry runs cannot establish them.
+
+For post-approval verification after GitOps reconciliation:
+
+1. Open an earlier approved question; confirm it starts unindexed and choose
+   **Index approved question**, or approve a new question normally.
+2. Verify the status reaches **Indexed for retrieval**. Check the publisher logs
+   for the question/review revision and the LanceDB table listing for
+   `approved_questions_qwen3_4b_v1`.
+3. Reopen the question. Confirm it is immediately absent from `/api/retrieval-state`
+   and that the publisher logs its withdrawal. Edit and reapprove; the index must
+   contain the new wording/revision.
+4. Validate live 4B authentication, tokenization and returned vector shape, inter-pod
+   NetworkPolicy in both directions, and persistence after a GitOps-driven restart.
+   Local tests use a fake embedding model and cannot establish these cluster checks.

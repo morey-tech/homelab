@@ -111,7 +111,7 @@ Use the endpoint as an OpenAI-compatible base URL, the token as the API key, and
 
 The `networking.kserve.io/visibility: exposed` label enables the OpenShift AI-managed Route. KServe and the platform model controller own the Service and Route. The route allows ten-minute requests for generation and streaming. NetworkPolicy permits inference traffic through port 8443 and limits direct runtime port 8080 to monitoring namespaces.
 
-The [daily Rational Reminder lesson job](../rr-lessons/README.md) also uses this endpoint. The `rr-lessons-local-llm` RoleBinding grants its ServiceAccount only the existing model-scoped permission. It reads a projected one-hour token for each inference request, with no persistent inference credential. The Lesson desk `rr-lessons-review` ServiceAccount also has this permission for background episode preparation. Intake uses only the GPU model; embedding is deferred until after human approval. Sync both applications when adding or removing these clients.
+The [daily Rational Reminder lesson job](../rr-lessons/README.md) also uses this endpoint. The `rr-lessons-local-llm` RoleBinding grants its ServiceAccount only the existing model-scoped permission. It reads a projected one-hour token for each inference request, with no persistent inference credential. The Lesson desk `rr-lessons-review` ServiceAccount also has this permission for background episode preparation. Intake uses only the GPU model. A separate publisher embeds human-approved wording using the model-scoped `rr-lessons-publisher` role, which grants access only to Qwen3 Embedding 4B. Sync both applications when adding or removing these clients.
 
 ## Model changes and recovery
 

@@ -2028,3 +2028,6 @@ dialog p {
   #ingest-form, .ingestion-jobs li { align-items: stretch; flex-direction: column; }
   #episode-number { width: 100%; }
 }
+
+.publication-card { margin: 24px 0; padding: 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+.publication-card p { line-height: 1.5; margin: 8px 0; }

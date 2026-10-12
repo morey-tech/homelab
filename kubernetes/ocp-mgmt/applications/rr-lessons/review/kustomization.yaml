@@ -13,5 +13,7 @@ configMapGenerator:
     files:
       - server.py
       - store.py
+      - publication_store.py
+      - publisher.py
       - pipeline.py
       - requirements.txt

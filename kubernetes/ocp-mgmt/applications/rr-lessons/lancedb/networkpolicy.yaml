@@ -13,7 +13,7 @@ spec:
         # A podSelector alone restricts clients to this namespace.
         - podSelector:
             matchLabels:
-              app: rr-lessons
+              app: rr-lessons-review
       ports:
         - protocol: TCP
           port: 8080

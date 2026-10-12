@@ -84,7 +84,7 @@ spec:
             - name: LANCEDB_DIR
               value: /data/lancedb
             - name: PYTHONPATH
-              value: /opt/python-deps
+              value: /opt/python-deps:/contract
             - name: PYTHONDONTWRITEBYTECODE
               value: "1"
             - name: PYTHONUNBUFFERED
@@ -127,11 +127,17 @@ spec:
             - name: dependencies
               mountPath: /opt/python-deps
               readOnly: true
+            - name: publication-contract
+              mountPath: /contract
+              readOnly: true
             - name: data
               mountPath: /data
             - name: tmp
               mountPath: /tmp
       volumes:
+        - name: publication-contract
+          configMap:
+            name: rr-lessons-publication-contract
         - name: app
           configMap:
             name: rr-lessons-lancedb

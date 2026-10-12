@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: rr-lessons
 resources:
   - namespace.yaml
+  - contracts
   - daily-lessons
   - lancedb
   - review

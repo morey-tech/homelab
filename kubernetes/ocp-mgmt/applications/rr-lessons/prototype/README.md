@@ -3,7 +3,8 @@
 The [deployed review workspace](../review/README.md) now reuses this preparation
 workflow from an **Ingest episode** button. It processes the full episode with the
 GPU model, then stores an intake for human review in SQLite. Embedding belongs
-after approval and is deferred to a future publishing step.
+after approval: the review publisher embeds the approved wording with Qwen3 4B
+and indexes it in LanceDB. Intake remains independent of embedding availability.
 The CLI and local retrieval/evaluation tools below remain available independently.
 
 `prepare.py` prepares one committed individual transcript for review using the

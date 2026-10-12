@@ -9,4 +9,5 @@ configMapGenerator:
   - name: rr-lessons-lancedb
     files:
       - server.py
+      - question_index.py
       - requirements.txt

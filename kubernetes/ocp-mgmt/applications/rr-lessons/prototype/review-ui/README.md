@@ -113,8 +113,9 @@ accepted as production approvals or ingestion commands by `prepare.py` or
 In local demo mode, the UI loads the bundled sample and keeps the browser workflow
 described above. In [deployed server mode](../../review/README.md), the same assets
 provide an episode-number intake button, background preparation, and SQLite-backed
-review decisions. Automatic episode discovery, authentication, and publication to
-LanceDB remain future work. The daily lessons CronJob is unchanged.
+review decisions. New approvals queue the approved wording for LanceDB retrieval
+indexing, with status and retry controls; reopening withdraws retrieval eligibility.
+Automatic episode discovery and authentication remain future work. The daily lessons CronJob is unchanged.
 
 ## Local validation
 

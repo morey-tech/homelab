@@ -102,6 +102,8 @@ spec:
           value: /data/reviews.sqlite3
         - name: REVIEW_STATIC_DIR
           value: /ui
+        - name: PUBLISHING_ENABLED
+          value: 'true'
         - name: INGESTION_ENABLED
           value: 'true'
         - name: REVIEW_PUBLIC_ORIGIN
@@ -109,7 +111,7 @@ spec:
         - name: MODEL_TOKEN_PATH
           value: /var/run/model-auth/token
         - name: PYTHONPATH
-          value: /opt/python-deps:/pipeline
+          value: /opt/python-deps:/pipeline:/contract
         - name: PYTHONDONTWRITEBYTECODE
           value: '1'
         - name: PYTHONUNBUFFERED
@@ -163,10 +165,16 @@ spec:
         - name: model-auth
           mountPath: /var/run/model-auth
           readOnly: true
+        - name: publication-contract
+          mountPath: /contract
+          readOnly: true
         - name: ui
           mountPath: /ui
           readOnly: true
       volumes:
+      - name: publication-contract
+        configMap:
+          name: rr-lessons-publication-contract
       - name: pipeline
         configMap:
           name: rr-lessons-preparation

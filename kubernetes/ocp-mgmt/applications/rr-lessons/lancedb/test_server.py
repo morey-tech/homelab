@@ -25,7 +25,7 @@ def running_server(directory):
         url = f"http://127.0.0.1:{listener.getsockname()[1]}"
         process = subprocess.Popen(
             [sys.executable, "-m", "uvicorn", "server:app", "--fd", str(listener.fileno()), "--no-access-log"],
-            cwd=Path(__file__).parent, env=os.environ | {"LANCEDB_DIR": str(directory)},
+            cwd=Path(__file__).parent, env=os.environ | {"LANCEDB_DIR": str(directory), "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "contracts")},
             pass_fds=(listener.fileno(),), stdout=logs, stderr=subprocess.STDOUT)
         client = build_opener(ProxyHandler({}))
         try:
@@ -51,7 +51,7 @@ def running_server(directory):
 
 
 class LanceDBServiceTest(unittest.TestCase):
-    def test_empty_storage_health_and_read_only_api(self):
+    def test_empty_storage_health_and_inspection_api(self):
         with tempfile.TemporaryDirectory() as root:
             directory = Path(root) / "database"
             with running_server(directory) as (url, client):
@@ -68,6 +68,24 @@ class LanceDBServiceTest(unittest.TestCase):
                     error.exception.close()
             self.assertTrue(directory.is_dir())
             self.assertFalse(list(directory.glob(".write-check-*")))
+
+    def test_publication_http_contract_and_request_limits(self):
+        from test_question_index import mutation
+        with tempfile.TemporaryDirectory() as directory:
+            with running_server(directory) as (url, client):
+                def put(body):
+                    return client.open(Request(url + '/v1/questions/e428:test', data=body,
+                                               method='PUT', headers={'Content-Type': 'application/json'}))
+                with put(json.dumps(mutation()).encode()) as response:
+                    self.assertEqual(json.load(response), {'revision': 2, 'active': True})
+                with put(json.dumps(mutation(3, False)).encode()) as response:
+                    self.assertEqual(json.load(response), {'revision': 3, 'active': False})
+                for body, status in ((json.dumps(mutation()).encode(), 409),
+                                     (b'invalid', 400), (b' ' * (512 * 1024 + 1), 413)):
+                    with self.assertRaises(HTTPError) as error:
+                        put(body)
+                    self.assertEqual(error.exception.code, status)
+                    error.exception.close()
 
     def test_persisted_tables_and_vectors_survive_service_restart(self):
         with tempfile.TemporaryDirectory() as directory:

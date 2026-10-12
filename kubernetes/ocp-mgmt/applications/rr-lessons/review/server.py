@@ -7,10 +7,11 @@ from pathlib import Path
 import sqlite3
 
 from store import APIError, MIGRATION, StoreMixin
+from publication_store import MIGRATION as PUBLICATION_MIGRATION, PublicationStoreMixin
 
 
 LOG = logging.getLogger("uvicorn.error")
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 ASSETS = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/index.html": ("index.html", "text/html; charset=utf-8"),
@@ -51,7 +52,7 @@ COMMIT;
 """
 
 
-class Database(StoreMixin):
+class Database(StoreMixin, PublicationStoreMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
 
@@ -72,6 +73,9 @@ class Database(StoreMixin):
                 version = 1
             if version == 1:
                 connection.executescript(MIGRATION)
+                version = 2
+            if version == 2:
+                connection.executescript(PUBLICATION_MIGRATION)
             elif version != SCHEMA_VERSION:
                 raise RuntimeError(f"Unsupported review database schema {version}")
         finally:
@@ -90,6 +94,7 @@ class Database(StoreMixin):
             # One read transaction keeps counts consistent during future imports.
             connection.execute("BEGIN")
             connection.execute("SELECT 1 FROM ingestion_jobs LIMIT 0")
+            connection.execute("SELECT 1 FROM publications LIMIT 0")
             return {name: connection.execute(f"SELECT count(*) FROM {name}").fetchone()[0]
                     for name in ("episodes", "sections", "questions", "reviews")}
         finally:
@@ -97,7 +102,8 @@ class Database(StoreMixin):
 
 
 class ReviewApp:
-    def __init__(self, database, static_dir, worker=None, public_origin=None):
+    def __init__(self, database, static_dir, worker=None, public_origin=None, publisher=None):
+        self.publisher = publisher
         self.worker = worker
         self.public_origin = public_origin
         self.database = database
@@ -114,6 +120,8 @@ class ReviewApp:
                             (self.static_dir / filename).read_bytes()
                         if self.worker:
                             self.worker.start()
+                        if self.publisher:
+                            self.publisher.start()
                     except Exception:
                         LOG.exception("Review service initialization failed")
                         await send({"type": "lifespan.startup.failed", "message": "Review service initialization failed"})
@@ -122,6 +130,8 @@ class ReviewApp:
                 elif event["type"] == "lifespan.shutdown":
                     if self.worker:
                         self.worker.stop()
+                    if self.publisher:
+                        self.publisher.stop()
                     await send({"type": "lifespan.shutdown.complete"})
                     return
         elif scope["type"] == "http":
@@ -130,7 +140,8 @@ class ReviewApp:
             if scope["method"] not in ("GET", "HEAD"):
                 try:
                     if not (scope["method"] == "POST" and path == "/api/ingestions" or
-                            scope["method"] == "PUT" and path.startswith("/api/reviews/")):
+                            scope["method"] == "PUT" and path.startswith("/api/reviews/") or
+                            scope["method"] == "POST" and path.startswith("/api/publications/")):
                         raise APIError("Method not allowed.", 405)
                     payload = await self.read_write(scope, receive)
                     if path == "/api/ingestions":
@@ -139,6 +150,13 @@ class ReviewApp:
                         if not isinstance(payload, dict) or set(payload) != {"episode"}:
                             raise APIError("Provide an episode number.")
                         body = self.database.enqueue(payload["episode"])
+                        status = 202
+                    elif path.startswith('/api/publications/'):
+                        if not self.publisher:
+                            raise APIError('Publishing is not configured on this instance.', 503)
+                        if payload != {}:
+                            raise APIError('Publication requests use the stored review; send an empty object.')
+                        body = self.database.request_publication(path.removeprefix('/api/publications/'))
                         status = 202
                     else:
                         body = self.database.save_review(path.removeprefix("/api/reviews/"), payload)
@@ -151,13 +169,17 @@ class ReviewApp:
                 body = {"status": "ok"}
             elif path == "/runtime.json":
                 body = {"mode": "server", "apiVersion": 1}
-            elif path in ("/readyz", "/api/inbox", "/api/ingestions"):
+            elif path in ("/readyz", "/api/inbox", "/api/ingestions", "/api/publications", "/api/retrieval-state"):
                 try:
                     self.database.counts()
                     if path == "/readyz":
                         body = {"status": "ready", "schemaVersion": SCHEMA_VERSION}
                     elif path == "/api/ingestions":
                         body = {"jobs": self.database.jobs()}
+                    elif path == '/api/publications':
+                        body = {'publications': self.database.publications()}
+                    elif path == '/api/retrieval-state':
+                        body = self.database.retrieval_state()
                     else:
                         body = self.database.inbox()
                 except (sqlite3.Error, RuntimeError):
@@ -217,5 +239,10 @@ if os.environ.get('INGESTION_ENABLED') == 'true':
     os.umask(0o007)
     worker = Worker(database, Pipeline(database, database.path.parent / 'ingestion',
                                       os.environ.get('MODEL_TOKEN_PATH', '/var/run/model-auth/token')))
+publisher = None
+if os.environ.get('PUBLISHING_ENABLED') == 'true':
+    from publisher import Publisher
+    os.umask(0o007)
+    publisher = Publisher(database, os.environ.get('MODEL_TOKEN_PATH', '/var/run/model-auth/token'))
 app = ReviewApp(database, os.environ.get("REVIEW_STATIC_DIR", "/ui"), worker,
-                os.environ.get('REVIEW_PUBLIC_ORIGIN'))
+                os.environ.get('REVIEW_PUBLIC_ORIGIN'), publisher)
