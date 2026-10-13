@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-app
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: example-app
+  template:
+    metadata:
+      labels:
+        app: example-app
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: docker.io/library/python:3.14.8-slim-trixie@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              if [ ! -f /data/index.html ]; then
+                cp /content/index.html /data/index.html
+              fi
+              exec python3 -m http.server 8080 --bind 0.0.0.0 --directory /data
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /index.html
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /index.html
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: content
+              mountPath: /content
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: example-app
+        - name: content
+          configMap:
+            name: example-app-content

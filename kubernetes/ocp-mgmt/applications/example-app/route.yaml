@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: example-app
+spec:
+  host: example-app.apps.ocp-mgmt.rh-lab.morey.tech
+  to:
+    kind: Service
+    name: example-app
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

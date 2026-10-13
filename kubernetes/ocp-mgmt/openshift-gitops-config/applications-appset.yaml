@@ -17,6 +17,7 @@ spec:
           - path: kubernetes/ocp-mgmt/applications/anythingllm
           - path: kubernetes/ocp-mgmt/applications/rr-lessons
           - path: kubernetes/ocp-mgmt/applications/monitoring
+          - path: kubernetes/ocp-mgmt/applications/example-app
   ignoreApplicationDifferences:
     - jsonPointers:
         - /spec/syncPolicy/automated

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: example-app
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=false
+spec:
+  accessModes:
+    - ReadWriteOnce
+  # LVM Storage dynamically creates the PersistentVolume for this claim.
+  storageClassName: lvms-vg-nvme
+  resources:
+    requests:
+      storage: 1Gi

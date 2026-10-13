@@ -191,6 +191,7 @@ The manifests were moved out of the retired `ocp-gpu` cluster. That cluster is n
 
 | Application | Namespace | URL | Purpose | Notable Features |
 |-------------|-----------|-----|---------|-----------------|
+| [Example App](applications/example-app/README.md) | example-app | [example-app.apps.ocp-mgmt.rh-lab.morey.tech](https://example-app.apps.ocp-mgmt.rh-lab.morey.tech) | Simple persistent web app example | Deployment, Service, dynamically provisioned 1 GiB PV, HTTPS Route |
 | OpenShift Dev Spaces | openshift-devspaces | [devspaces.apps.ocp-mgmt.rh-lab.morey.tech](https://devspaces.apps.ocp-mgmt.rh-lab.morey.tech) | Cloud development environments | Per-workspace local NVMe LVM storage, nested containers, Open VSX, Bitwarden-backed credentials |
 | OpenShift AI | redhat-ods-applications | [OpenShift AI dashboard](https://rhods-dashboard-redhat-ods-applications.apps.ocp-mgmt.rh-lab.morey.tech) | Model deployment and monitoring | KServe, RTX 3090 hardware profile, OpenShift authentication |
 | Inference Server | inference-server | [API access](applications/inference-server/README.md#clients) | OpenAI-compatible chat inference | KServe-managed vLLM, Qwen3-4B-Instruct-2507, dedicated NVMe model storage, token authentication |
