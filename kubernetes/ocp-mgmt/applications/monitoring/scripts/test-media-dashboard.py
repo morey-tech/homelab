@@ -57,6 +57,12 @@ def main():
         assert by_title[title]['gridPos'] == {'x': x, 'y': 14, 'w': 4, 'h': 5}
     assert not {5, 33} & {p['id'] for p in panels}, 'Retired panel IDs must remain unused'
 
+    history = by_title['Plex stream history']
+    for title, decision in [('Direct Play', 'direct play'), ('Direct Stream', 'copy'), ('Transcoding', 'transcode')]:
+        expr = media.active_session_query(decision=decision)
+        assert by_title[title]['targets'][0]['expr'] == expr
+        assert next(t for t in history['targets'] if t['legendFormat'] == title)['expr'] == expr
+
     pod = 'sonarr-abcde-12345'
     pod_labels = f'namespace="sonarr",pod="{pod}"'
     cadvisor = f'job="kubelet",instance="node:10250",metrics_path="/metrics/cadvisor",{pod_labels}'
@@ -127,24 +133,64 @@ def main():
                       'promql_expr_test': [{'expr': media.stream_query(), 'eval_time': '6m',
                           'exp_samples': [] if expected is None else [{'labels': stream_metric, 'value': expected}]}]})
 
-    wan_metric = 'tautulli_wan_bandwidth_kilobits_per_second{job="tautulli",instance="plex"}'
-    for name, values, up_values, expected in [
-        ('kbps to Mbps', '31253x6', '1x6', 31.253), ('zero WAN demand', '0x6', '1x6', 0),
-        ('failed scrape', '31253x6', '0x6', None), ('missing value', '_x7', '1x6', None),
-        ('stale value', '31253x2 _x4', '1x6', None), ('stale health', '31253x6', '1x2 _x4', None),
-        ('negative value', '-1x6', '1x6', None), ('invalid value', 'NaN NaN NaN NaN NaN NaN NaN', '1x6', None)]:
-        cases.append({'name': 'WAN '+name, 'interval': '1m',
-                      'input_series': [{'series': wan_metric, 'values': values}, {'series': stream_up, 'values': up_values}],
-                      'promql_expr_test': [{'expr': media.bandwidth_query('wan'), 'eval_time': '6m',
-                          'exp_samples': [] if expected is None else [{'labels': '{job="tautulli",instance="plex"}', 'value': expected}]}]})
+    # Two WAN direct plays (one paused), a buffering LAN direct stream, and
+    # an active WAN transcode. Paused reserved bandwidth must never be summed.
+    labels = 'job="tautulli",instance="plex"'
+    inventory = 'tautulli_session_inventory_count{'+labels+'}'
+    active_base = {stream_up: '1x6', inventory: '4x6'}
+    session_labels = []
+    for key, state, decision, location, bandwidth in [
+        ('1', 'playing', 'direct play', 'wan', 3000),
+        ('2', 'paused', 'direct play', 'wan', 6000),
+        ('3', 'buffering', 'copy', 'lan', 2000),
+        ('4', 'playing', 'transcode', 'wan', 4000),
+    ]:
+        sl = labels+f',session_key="{key}",state="{state}",decision="{decision}",location="{location}"'
+        session_labels.append(sl)
+        active_base['tautulli_session_info{'+sl+'}'] = '1x6'
+        active_base['tautulli_session_bandwidth_kilobits_per_second{'+sl+'}'] = f'{bandwidth}x6'
+    expressions = [media.active_session_query(decision=d) for d in ('direct play', 'copy', 'transcode')]
+    expressions += [media.bandwidth_query(scope) for scope in ('wan', 'lan')]
 
-    cases.append({'name': 'LAN and WAN estimates remain distinct', 'interval': '1m',
-                  'input_series': [{'series': stream_up, 'values': '1x6'},
-                      {'series': wan_metric, 'values': '1000x6'},
-                      {'series': wan_metric.replace('_wan_', '_lan_'), 'values': '2000x6'}],
-                  'promql_expr_test': [{'expr': media.bandwidth_query(scope), 'eval_time': '6m',
-                      'exp_samples': [{'labels': '{job="tautulli",instance="plex"}', 'value': value}]}
-                      for scope, value in [('wan', 1), ('lan', 2)]]})
+    def session_case(name, series, expected):
+        cases.append({'name': name, 'interval': '1m',
+                      'input_series': [{'series': k, 'values': v} for k, v in series.items()],
+                      'promql_expr_test': [{'expr': expr, 'eval_time': '6m',
+                          'exp_samples': [] if value is None else [{'labels': '{'+labels+'}', 'value': value}]}
+                          for expr, value in zip(expressions, expected)]})
+
+    session_case('Paused bandwidth excluded; active types and LAN/WAN remain distinct', active_base, (1, 1, 1, 7, 2))
+    session_case('All paused is explicit zero',
+                 {k.replace('state="playing"', 'state="paused"').replace('state="buffering"', 'state="paused"'): v
+                  for k, v in active_base.items()}, (0, 0, 0, 0, 0))
+    session_case('No sessions is explicit zero', {stream_up: '1x6', inventory: '0x6'}, (0, 0, 0, 0, 0))
+    for name, updates, remove in [
+        ('failed scrape', {stream_up: '0x6'}, ()),
+        ('stale health', {stream_up: '1x2 _x4'}, ()),
+        ('missing state-aware inventory during rollout', {}, (inventory,)),
+        ('stale inventory', {inventory: '4x2 _x4'}, ()),
+        ('invalid inventory', {inventory: 'NaN'}, ()),
+        ('incomplete session list', {}, ('tautulli_session_info{'+session_labels[0]+'}',)),
+        ('stale session list', {k: '1x2 _x4' for k in active_base if k.startswith('tautulli_session_info')}, ()),
+    ]:
+        series = {k: v for k, v in active_base.items() if k not in remove}
+        series.update(updates)
+        session_case(name, series, (None,)*5)
+    for value in ('_x7', '3000x2 _x4', '-1x6', 'NaN'):
+        series = dict(active_base)
+        series['tautulli_session_bandwidth_kilobits_per_second{'+session_labels[0]+'}'] = value
+        session_case('Missing/invalid active WAN bandwidth '+value, series, (1, 1, 1, None, 2))
+    series = dict(active_base)
+    series['tautulli_session_bandwidth_kilobits_per_second{'+session_labels[1]+'}'] = '_x7'
+    session_case('Missing paused bandwidth does not affect active estimates', series, (1, 1, 1, 7, 2))
+    series = dict(active_base)
+    for metric in ('tautulli_session_info', 'tautulli_session_bandwidth_kilobits_per_second'):
+        old = metric+'{'+session_labels[0]+'}'
+        new = old.replace('state="playing"', 'state="paused"')
+        series[old] = '1x2 stale'
+        series[new] = '_x3 1x3'
+    session_case('Playing to paused removes current stream and bandwidth', series, (0, 1, 1, 4, 2))
+
     for metric, scale, value in [('sabnzbd_download_kibibytes_per_second', 1024, 2048),
                                  ('sabnzbd_queue_remaining_mebibytes', 1048576, 2097152)]:
         labels = '{job="sabnzbd",instance="sabnzbd"}'

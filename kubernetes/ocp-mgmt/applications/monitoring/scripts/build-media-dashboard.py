@@ -66,8 +66,31 @@ def stream_query(metric='tautulli_streams'):
     return f'({fresh(selector)} >= 0) and on(job, instance) ({up} == 1)'
 
 
+def active_session_query(decision=None, scope=None):
+    labels = 'job="tautulli",instance="plex"'
+    inventory = stream_query('tautulli_session_inventory_count')
+    zero = f'(0 * ({inventory}))'
+    info = fresh(f'tautulli_session_info{{{labels},session_key!="",state!="",decision!="",location!=""}}')
+    # An explicit inventory marker prevents missing/new telemetry becoming zero.
+    complete = f'((sum by (job, instance) ({info} == 1) or {zero}) == on(job, instance) ({inventory}))'
+    selected = labels + ',state=~"playing|buffering"'
+    if decision is not None:
+        selected += f',decision="{decision}"'
+    if scope is not None:
+        selected += f',location="{scope}"'
+    sessions = fresh(f'tautulli_session_info{{{selected}}}')
+    count = f'(sum by (job, instance) ({sessions} == 1) or {zero})'
+    if scope is None:
+        return f'{count} and on(job, instance) {complete}'
+    bandwidth = fresh(f'tautulli_session_bandwidth_kilobits_per_second{{{selected}}}')
+    valid_bandwidth = f'({bandwidth} >= 0) and ({sessions} == 1)'
+    coverage = f'((count by (job, instance) ({valid_bandwidth}) or {zero}) == on(job, instance) {count})'
+    total = f'(sum by (job, instance) ({valid_bandwidth}) or {zero})'
+    return f'({total} and on(job, instance) {complete} and on(job, instance) {coverage}) / 1000'
+
+
 def bandwidth_query(scope):
-    return f'({stream_query(f"tautulli_{scope}_bandwidth_kilobits_per_second")}) / 1000'
+    return active_session_query(scope=scope)
 
 
 def library_query(kind):
@@ -137,11 +160,14 @@ def build():
     next_id = 6  # Retire shared-host panel ID 5; preserve secondary panel IDs.
     for i, (app, name) in enumerate(SECONDARY):
         service(app, name, (i % 2)*12, 19+(i//2)*5, 4, 5)
-    description = ('Current Plex sessions reported by Tautulli, including paused sessions. '
+    description = ('Playing and buffering Plex sessions reported by Tautulli; paused sessions are excluded. '
                    'Polled every 30 seconds. Failed, missing, or stale collection shows Unknown or gaps, not zero. '
                    'History begins when collection deploys. The three playback types are stacked; their combined height gives total sessions.')
     def stream_stat(title, metric, x):
         p = graph(title, [(stream_query(metric), 'Streams')], x, 0, 3, 5, 'short', description, INFRA)
+        if title in STREAM_COLORS:
+            decision = {'Direct Play': 'direct play', 'Direct Stream': 'copy', 'Transcoding': 'transcode'}[title]
+            p['targets'][0]['expr'] = active_session_query(decision=decision)
         p['type'] = 'stat'
         p['targets'][0].update(instant=True, range=False)
         p['fieldConfig']['defaults']['decimals'] = 0
@@ -152,11 +178,13 @@ def build():
                         'colorMode': 'value', 'graphMode': 'none', 'textMode': 'auto', 'justifyMode': 'auto'}
         return p
 
-    p = graph('Plex stream history', [(stream_query(metric), label) for metric, label in [
-        ('tautulli_streams_direct_play', 'Direct Play'),
-        ('tautulli_streams_direct_stream', 'Direct Stream'), ('tautulli_streams_transcode', 'Transcoding')]],
+    p = graph('Plex stream history', [(active_session_query(decision=decision), label) for decision, label in [
+        ('direct play', 'Direct Play'), ('copy', 'Direct Stream'), ('transcode', 'Transcoding')]],
         16, 0, 8, 7, 'short', description, INFRA)
     p['id'] = 34
+    p['description'] = ('Playing and buffering Plex sessions, excluding paused sessions, stacked by playback type. '
+                        'Polled every 30 seconds. Missing, stale, failed, or incomplete session telemetry shows gaps. '
+                        'State-aware history begins when the updated collector deploys; earlier history is not backfilled.')
     p['fieldConfig']['defaults']['decimals'] = 0
     p['fieldConfig']['defaults']['custom']['lineInterpolation'] = 'stepAfter'
     p['fieldConfig']['defaults']['custom']['stacking'] = {'mode': 'normal', 'group': 'A'}
@@ -186,7 +214,8 @@ def build():
     p = graph('Plex bandwidth estimates', [(bandwidth_query('wan'), 'WAN estimate'),
                                           (bandwidth_query('lan'), 'LAN estimate')],
               16, 7, 8, 7, 'suffix:Mbps',
-              'Tautulli estimates of bandwidth reserved for remote (WAN) and local (LAN) Plex sessions. '
+              'Tautulli estimates of bandwidth reserved for playing or buffering remote (WAN) and local (LAN) Plex sessions. '
+              'Paused sessions are excluded. '
               'WAN and LAN are stacked to show their combined estimated bandwidth. '
               'Not measured interface traffic. Polled every 30 seconds; kbps converted to Mbps. '
               'Missing, failed, or stale collection appears as gaps.', INFRA)
