@@ -72,17 +72,17 @@ def main():
                         text = response.read().decode()
                 except HTTPError:
                     return {}
-                return {line.split()[0]: float(line.split()[1]) for line in text.splitlines() if line.startswith('tautulli_')}
+                return {line.rsplit(' ', 1)[0]: float(line.rsplit(' ', 1)[1]) for line in text.splitlines() if line.startswith('tautulli_')}
 
             def activity(total, play, direct, transcode, wan=0, lan=0):
                 state['status'] = 200
                 state['body'] = {'response': {'result': 'success', 'data': {
                     'stream_count': total, 'stream_count_direct_play': play,
                     'stream_count_direct_stream': direct, 'stream_count_transcode': transcode,
-                    'wan_bandwidth': wan, 'lan_bandwidth': lan, 'total_bandwidth': wan+lan}}}
+                    'wan_bandwidth': wan, 'lan_bandwidth': lan, 'total_bandwidth': wan+lan, 'sessions': []}}}
 
             activity('6', 3, 2, 1, wan=31253, lan=9960)
-            assert scrape() == {'tautulli_streams': 6, 'tautulli_streams_direct_play': 3,
+            assert scrape() == {'tautulli_session_inventory_count': 6, 'tautulli_streams': 6, 'tautulli_streams_direct_play': 3,
                                 'tautulli_streams_direct_stream': 2, 'tautulli_streams_transcode': 1,
                                 'tautulli_wan_bandwidth_kilobits_per_second': 31253,
                                 'tautulli_lan_bandwidth_kilobits_per_second': 9960,
@@ -98,11 +98,33 @@ def main():
             metrics = scrape()
             assert metrics['tautulli_streams'] == 6 and 'tautulli_wan_bandwidth_kilobits_per_second' not in metrics
             activity('0', 0, 0, 0)
-            assert scrape() == dict.fromkeys(['tautulli_streams', 'tautulli_streams_direct_play',
+            assert scrape() == dict.fromkeys(['tautulli_session_inventory_count', 'tautulli_streams', 'tautulli_streams_direct_play',
                                               'tautulli_streams_direct_stream', 'tautulli_streams_transcode',
                                               'tautulli_wan_bandwidth_kilobits_per_second',
                                               'tautulli_lan_bandwidth_kilobits_per_second',
                                               'tautulli_total_bandwidth_kilobits_per_second'], 0)
+            activity('4', 2, 1, 1, wan=9000, lan=2000)
+            records = [
+                {'session_key': '11', 'state': 'playing', 'transcode_decision': 'direct play', 'location': 'wan', 'bandwidth': '3000'},
+                {'session_key': '12', 'state': 'paused', 'transcode_decision': 'direct play', 'location': 'wan', 'bandwidth': '6000'},
+                {'session_key': '13', 'state': 'buffering', 'transcode_decision': 'copy', 'location': 'lan', 'bandwidth': 2000},
+                {'session_key': '14', 'state': 'playing', 'transcode_decision': 'transcode', 'location': 'wan', 'bandwidth': 0},
+            ]
+            state['body']['response']['data']['sessions'] = records
+            metrics = scrape()
+            assert metrics['tautulli_session_inventory_count'] == 4
+            for record in records:
+                labels = (f'decision="{record["transcode_decision"]}",location="{record["location"]}",'
+                          f'session_key="{record["session_key"]}",state="{record["state"]}"')
+                assert metrics['tautulli_session_info{'+labels+'}'] == 1
+                assert metrics['tautulli_session_bandwidth_kilobits_per_second{'+labels+'}'] == float(record['bandwidth'])
+            assert len([m for m in metrics if m.startswith('tautulli_session_info{')]) == 4
+            records[0]['bandwidth'] = 'invalid'
+            metrics = scrape()
+            assert len([m for m in metrics if m.startswith('tautulli_session_info{')]) == 4
+            assert len([m for m in metrics if m.startswith('tautulli_session_bandwidth_')]) == 3
+            records[0]['state'] = 'paused'
+            assert not any('session_key="11",state="playing"' in m for m in scrape()), 'No cached playing state'
             state['body'] = {'response': {'result': 'error', 'data': {}}}
             assert scrape() == {}, 'API errors must not become zero streams'
             state['body'] = {'response': {'result': 'success', 'data': {}}}
@@ -146,7 +168,7 @@ def main():
                 assert scrape(module) == {}, f'{module} must reject HTTP failure'
                 state['status'] = 200
             print('Exporter checks passed: all modules, headers, counts/bandwidth, library hierarchy/nulls, connection states, '
-                  'version labels, API/HTTP failures, key rotation')
+                  'session states/bandwidth, version labels, API/HTTP failures, key rotation')
     finally:
         if process is not None:
             process.terminate()

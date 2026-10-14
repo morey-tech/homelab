@@ -11,6 +11,23 @@ modules:
         help: Current Plex sessions reported by Tautulli, including paused sessions.
         path: '{.response.data.stream_count}'
         valuetype: gauge
+      - name: tautulli_session_inventory_count
+        help: Expected number of session records; marks availability of state-aware collection.
+        path: '{.response.data.stream_count}'
+        valuetype: gauge
+      - name: tautulli_session
+        help: Current session presence and reserved bandwidth in kilobits per second, with playback state.
+        type: object
+        path: '{.response.data.sessions[*]}'
+        labels:
+          session_key: '{.session_key}'
+          state: '{.state}'
+          decision: '{.transcode_decision}'
+          location: '{.location}'
+        values:
+          info: '1'
+          bandwidth_kilobits_per_second: '{.bandwidth}'
+        valuetype: gauge
       - name: tautulli_streams_direct_play
         help: Current Plex sessions using Direct Play.
         path: '{.response.data.stream_count_direct_play}'

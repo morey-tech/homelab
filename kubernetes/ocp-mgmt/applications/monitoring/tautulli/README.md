@@ -11,6 +11,9 @@ The `tautulli-exporter` Deployment runs the [Prometheus JSON exporter](https://g
 
 | Metric | API field |
 |--------|-----------|
+| `tautulli_session_inventory_count` | `stream_count`; expected session records and state-aware collection marker |
+| `tautulli_session_info` | Constant 1 per session, with `session_key`, `state`, `decision`, and `location` labels |
+| `tautulli_session_bandwidth_kilobits_per_second` | Per-session `bandwidth`, with the same labels |
 | `tautulli_streams` | `stream_count` |
 | `tautulli_streams_direct_play` | `stream_count_direct_play` |
 | `tautulli_streams_direct_stream` | `stream_count_direct_stream` |
@@ -25,15 +28,15 @@ The `tautulli-exporter` Deployment runs the [Prometheus JSON exporter](https://g
 | `tautulli_library_active` | `is_active` (1/0) |
 | `tautulli_plex_pass` | `pms_plexpass` (1/0), with `version` and `platform` labels |
 
-Counts represent current sessions, including paused sessions, rather than only sessions actively playing. No user names, media titles, or session identifiers are exported. Historical metrics begin at deployment and use infrastructure Prometheus retention; existing Tautulli history is not imported.
+The original aggregate counts and bandwidth remain available and include paused sessions. The media dashboard instead uses per-session metrics to include only `playing` and `buffering` states in playback cards, stream history, and bandwidth estimates. `paused` and other states are excluded. Session keys distinguish concurrent sessions, including sessions with identical playback types; they add series as sessions change. No user names, media titles, client addresses, or API keys are exported. Playback state, `transcode_decision` (`direct play`, `copy`, `transcode`), location, and bandwidth come from the [Tautulli activity API](https://github.com/Tautulli/Tautulli/wiki/Tautulli-API-Reference). Historical metrics begin at deployment and use infrastructure Prometheus retention; existing Tautulli history is not imported.
 
-WAN bandwidth is Plex's estimated reserved bandwidth for remote sessions in **kbps**, not measured traffic. The dashboard divides by 1000 to display **Mbps**. The value is a gauge, so no rate calculation is applied. Missing data stays unknown; an explicit zero means no estimated WAN demand. [Tautulli source](https://github.com/Tautulli/Tautulli/blob/master/plexpy/common.py) documents the field units.
+WAN bandwidth is Plex's estimated reserved bandwidth for remote sessions in **kbps**, not measured traffic. The dashboard divides by 1000 to display **Mbps**. The value is a gauge, so no rate calculation is applied. The dashboard sums estimates only for playing/buffering sessions. It requires a fresh successful scrape and a complete session inventory matching `stream_count`; bandwidth also requires a valid value for every included session. Empty or all-paused inventories yield zero. Missing metrics, incomplete records, or collector failures yield gaps. The new inventory marker prevents absent session telemetry from becoming zero before rollout. [Tautulli source](https://github.com/Tautulli/Tautulli/blob/master/plexpy/common.py) documents the field units.
 
 Library gauges use only `section_id` and `type` labels; library names and last-played titles are not exported. Item/parent/child counts describe a hierarchy, not disjoint totals: movies use items; television libraries use shows/seasons/episodes; music libraries use artists/albums/tracks. Null or unavailable levels are omitted rather than exported as zero. `get_libraries` returns the whole cached inventory without pagination; it does not trigger a library scan. Counts can decrease when media is removed, so these are gauges, not counters.
 
 Plex connection status measures Tautulli's reported connection to Plex. A failed scrape is unknown, not disconnected. Plex Pass and version/platform metadata describe configuration; they do not prove Plex is reachable. Use the connection job for that.
 
-The media dashboard graphs WAN and LAN bandwidth estimates alongside playback-type counts and stacked history. Total sessions remain collected, but the graph stack replaces the total count card. Other metrics are collected for future availability, inventory-growth, and upgrade panels. Session-state counts and hardware-transcoding counts require aggregation of individual sessions beyond this JSON exporter configuration; they remain uncollected.
+The media dashboard graphs WAN and LAN bandwidth estimates alongside playback-type counts and stacked history. Total sessions remain collected, but the graph stack replaces the total count card. Other metrics are collected for future availability, inventory-growth, and upgrade panels. Per-session state enables active-only counts and bandwidth; hardware-transcoding details remain uncollected. New session metrics begin at rollout, so earlier aggregate history cannot be corrected or backfilled.
 
 ## Querying slow metrics
 
@@ -45,7 +48,7 @@ and on(job, instance)
 (last_over_time(up{job="tautulli_libraries"}[15m]) == 1)
 ```
 
-Check missing metric series as well as `up`: a successful HTTP response without the expected data produces no corresponding gauge. Seven activity series, one connection series, library-dependent inventory series, and one server-metadata series were observed during discovery (19 total for the three current libraries).
+Check missing metric series as well as `up`: a successful HTTP response without the expected data produces no corresponding gauge. Activity exports eight aggregate/marker series plus two series per session when bandwidth is available. Connection, library inventory, and server metadata remain separate jobs.
 
 ## Authentication and access
 
@@ -53,7 +56,7 @@ External Secrets reads the password of Bitwarden login item `aef8aa11-b859-457f-
 
 Only Alloy pods in `monitoring` may access the exporter Service on port 7979. There is no Route. The exporter has no Kubernetes token or persistent storage and runs under `restricted-v2`. A missing Secret blocks only this exporter. No changes to the private media GitOps repository are required.
 
-HTTP failures fail the scrape; missing or invalid JSON fields produce no corresponding gauge. A successful scrape with absent fields is therefore not proof of valid activity data. Consumers must require both fresh gauges and a successful scrape. Zero is valid only when explicitly returned by Tautulli.
+HTTP failures fail the scrape; missing or invalid JSON fields produce no corresponding gauge. A successful scrape with absent fields is therefore not proof of valid activity data. Consumers must require both fresh gauges and a successful scrape. Zero aggregates are valid when explicitly returned by Tautulli; zero active-only sums also require a complete inventory showing no matching sessions.
 
 ## Validation and rollout
 
@@ -66,7 +69,7 @@ oc kustomize kubernetes/ocp-mgmt/applications/monitoring > /tmp/monitoring.yaml
 oc --context=logged-user apply --dry-run=server -f /tmp/monitoring.yaml
 ```
 
-The fixture test covers all four modules: header authentication, numeric/string counts and bandwidth, zero sessions, invalid/missing values, boolean connection states, multiple library types and null hierarchy levels, version labels, API/HTTP failures, and credential-file rotation. It uses only fake credentials and local loopback servers.
+The fixture test covers all four modules: header authentication, numeric/string counts and bandwidth, zero sessions, multiple sessions sharing a playback type, playing/paused/buffering states, state changes, invalid/missing bandwidth values, boolean connection states, multiple library types and null hierarchy levels, version labels, API/HTTP failures, and credential-file rotation. It uses only fake credentials and local loopback servers.
 
 After review, commit, human push, and GitOps reconciliation:
 
