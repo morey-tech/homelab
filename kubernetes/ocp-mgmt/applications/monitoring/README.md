@@ -1,6 +1,6 @@
 # Monitoring
 
-Grafana, infrastructure Prometheus, Grafana Alloy, and Blackbox Exporter are hosted in the `monitoring` namespace on `ocp-mgmt`. The application ApplicationSet explicitly enables this directory.
+Grafana, infrastructure Prometheus, Grafana Alloy, Blackbox Exporter, and SmokePing Prober are hosted in the `monitoring` namespace on `ocp-mgmt`. The application ApplicationSet explicitly enables this directory.
 
 The [Homelab Overview](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/homelab-overview) has three rows of CPU, memory, and network traffic graphs for OCP Home, OCP Management, and `qnap-01`. Cluster CPU/memory graphs show one line per node. Each network graph shows receive and transmit rates in bits per second, averaged over five minutes. OCP Home uses `bond0` only; OCP Management sums the monitored physical Ethernet interfaces per node, with separate receive/transmit lines for each node. These are interface totals, not unique cluster-wide traffic: traffic between nodes appears at both endpoints. Interface details and GPU metrics are available on the dedicated cluster dashboards. QNAP uses `bond0` only. QNAP CPU shows only the overall value by default; eight logical-processor lines remain available in the legend (Ctrl/Cmd-click to add one). QNAP memory shows used, available, free, cache, and buffers as separate percentages with two decimal places; these counters overlap and are not stacked. ZFS ARC is not exposed by the supplied SNMP MIB and remains deferred. CPU and memory panels use percentage scales; network traffic scales to Kbit/s, Mbit/s, or Gbit/s. All nine panels use a shared six-hour window and a 30-second dashboard refresh (QNAP samples arrive every 60 seconds). Missing telemetry appears as gaps. The dashboard reuses the existing data sources and guarded queries; it does not copy cluster metrics into infrastructure Prometheus. Use the **Homelab dashboards** dropdown to open the detailed dashboards, or append `?kiosk` for a wall display.
 
@@ -16,7 +16,7 @@ The **OCP Home** data source queries the remote cluster's existing Thanos HTTPS 
 
 Both cluster dashboards include **Node network receive** and **Node network transmit** graphs below CPU/memory, using existing node-exporter counters. They show five-minute average bits/s with `node · interface` legends. OCP Home shows `bond0` only, excluding its member ports to avoid duplicate traffic. OCP Management shows each physical Ethernet interface (`en*`/`eth*`) separately, including idle ports, and excludes loopback, wireless, OVS, and overlay interfaces. These are interface rates, not unique cluster-wide traffic totals. Missing/stale counters or failed scrapes show gaps; idle counters remain zero. Interface selection is configured in `CLUSTERS` in [the dashboard generator](scripts/build-dashboard.py); no new metric collection is needed.
 
-Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Alloy collects QNAP, MikroTik, UniFi, and pfSense metrics over SNMPv3 and forwards them to infrastructure Prometheus through its internal remote-write receiver. The **Infrastructure** data source serves their dashboards. Prometheus has no direct scrape jobs or recording rules. Blackbox Exporter defines HTTP and TCP modules but has no callers or targets.
+Cluster metrics remain in OpenShift's monitoring stack, with its existing retention and availability. Alloy collects QNAP, MikroTik, UniFi, and pfSense metrics over SNMPv3 and forwards them to infrastructure Prometheus through its internal remote-write receiver. The **Infrastructure** data source serves their dashboards. Prometheus has no direct scrape jobs; it evaluates Internet Quality recording rules over Alloy-forwarded metrics. Alloy also collects continuous ping metrics from SmokePing Prober and calls Blackbox Exporter for internet DNS/HTTPS checks.
 
 ## OCP Management Metrics
 
@@ -61,6 +61,10 @@ The dashboard shows readiness for one node, CPU/memory, operator health, warning
 
 The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/media-services) combines Plex playback counts/history, Tautulli WAN/LAN bandwidth estimates, `qnap-01` media-share capacity, SAB download speed/remaining work, and Plex/SAB CPU and memory. Plex bandwidth sits alongside its CPU and memory graphs; episode and movie count cards use Tautulli cached library inventory. The visible layout stays within 19 grid rows; secondary media services remain collapsed below it. [Metric semantics and validation](media/README.md) explain the host-network limitation and the difference between estimates and measured traffic. [Tautulli collection](tautulli/README.md) and [SAB collection](sabnzbd/README.md) document the API credentials and exporters.
 
+## Internet Quality
+
+The [Internet Quality dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/internet-quality) compares one-second IPv4 pings to pfSense and three independent public targets, plus DNS/HTTPS checks every 15 seconds. It shows packet loss, median/p95 latency, degraded periods, measurement coverage, and existing pfSense WAN traffic. [Collection, CSV evidence reports, retention, and validation](internet/README.md) document the thresholds and distinguish outages from missing telemetry.
+
 ## Network Stack
 
 The [Network Stack dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/network-stack) follows physical rack order: **pfSense → crs317-b → crs317-a → USW Enterprise 48 PoE**. Each device has one compact row, with **Send / TX on the left** and **Receive / RX on the right**. Directions are relative to the device. Compare port aliases across link endpoints to follow traffic; the rack order alone does not imply a serial forwarding path.
@@ -101,6 +105,7 @@ The dashboard's **NAS** dropdown switches all panels between `qnap-01` and `qnap
 | Prometheus | 3.15.0 | 100 GiB | `prometheus.monitoring.svc:9090` |
 | Alloy | 1.20.1 | 5 GiB | `alloy.monitoring.svc:12345` |
 | Blackbox Exporter | 0.29.0 | None | `blackbox-exporter.monitoring.svc:9115` |
+| SmokePing Prober | 0.12.0 | None | `smokeping-prober.monitoring.svc:9374` (Alloy only) |
 | Tautulli JSON Exporter | 0.8.0 | None | `tautulli-exporter.monitoring.svc:7979` (Alloy only) |
 
 All persistent volumes use `lvms-vg-nvme`. Required node affinity limits every workload to `ms-02` or `ms-04`; `ms-03` has no configured NVMe volume group, and `tr-gpu` is reserved for other workloads. OpenShift assigns the UID and volume group through the explicitly required `restricted-v2` SCC; no fixed UID, privileged init container, host mount, or extra SCC is required.
@@ -109,7 +114,7 @@ Each Deployment has one replica and `revisionHistoryLimit: 2`, retaining up to t
 
 Prometheus retention is 30 days or 75 GiB, whichever is reached first, leaving space for the WAL and head data in the 100 GiB claim. Prometheus spells this binary unit `75GB` in its configuration. Alloy uses its volume for the remote-write WAL, buffering infrastructure samples when Prometheus is temporarily unavailable. Grafana persists its SQLite database, users, and plugins.
 
-Combined requests are 500 millicores and 1,728 MiB; limits are 2.1 CPU and 4,352 MiB. Grafana requests 512 MiB with a 1 GiB limit after the first dashboard rollout exceeded its previous 512 MiB limit; observed usage after restart was about 409 MiB. Adjust from observed usage as data sources and dashboards grow.
+Combined requests for the seven monitoring workloads are 550 millicores and 1,792 MiB; limits are 2.3 CPU and 4,608 MiB. Grafana requests 512 MiB with a 1 GiB limit after the first dashboard rollout exceeded its previous 512 MiB limit; observed usage after restart was about 409 MiB. Adjust from observed usage as data sources and dashboards grow.
 
 ## Access and Credentials
 
@@ -123,7 +128,7 @@ oc get secret grafana-admin -n monitoring -o jsonpath='{.data.password}' | base6
 
 Store the password in Bitwarden. This secret bootstraps the database only: editing or regenerating it does not rotate an existing Grafana user's password. Change that password through Grafana. A later display account should have the Viewer role.
 
-NetworkPolicy permits router access to Grafana on port 3000. Other pod ingress is denied except the declared Alloy/Grafana access to Prometheus and Alloy access to the Tautulli exporter. Backend Services are ClusterIP only and can be inspected by an authorized administrator using port forwarding. No backend is exposed through a Route. Egress is unchanged; a later collection change must add explicit ingress rules between the intended clients and backends.
+NetworkPolicy permits router access to Grafana on port 3000. Other pod ingress is denied except the declared Alloy/Grafana access to Prometheus and Alloy access to the Tautulli/SAB exporters, SmokePing Prober, and Blackbox Exporter. Backend Services are ClusterIP only and can be inspected by an authorized administrator using port forwarding. No backend is exposed through a Route. Egress is unchanged; a later collection change must add explicit ingress rules between the intended clients and backends.
 
 Configuration and dashboard ConfigMaps have Kustomize-generated hashes, so changes roll the associated Deployment through GitOps. The injected service-CA ConfigMap has a stable name and the rotation procedure above applies to it. Images use explicit release tags and are covered by the repository's Renovate configuration.
 

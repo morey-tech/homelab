@@ -1,0 +1,783 @@
+{
+  "uid": "internet-quality",
+  "title": "Internet Quality",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "homelab",
+    "infrastructure",
+    "internet"
+  ],
+  "description": "IPv4 quality from ocp-mgmt. Local baseline, independent external targets, DNS/HTTPS checks and WAN traffic. Unknown monitoring intervals remain gaps.",
+  "timezone": "utc",
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Packet loss \u2014 one minute",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Estimated ICMP round-trip loss from sent/received counter rates. One ping/s per target. Local socket errors, stopped sending, restarts and missing scrapes are unknown. Late replies can cross window boundaries; loss is clamped to 0\u2013100%.",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * internet:ping_loss:ratio1m",
+          "legendFormat": "{{target}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Packet loss \u2014 five minutes",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Mean of five complete one-minute observations; a missing minute creates a gap.",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * internet:ping_loss:ratio5m",
+          "legendFormat": "{{target}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Round-trip latency \u2014 p50",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Histogram estimate over five minutes, for replies received only. Lost packets have no latency. The local pfSense baseline includes the pod and cluster network path.",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "internet:ping_rtt_seconds:p50_5m",
+          "legendFormat": "{{target}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Round-trip latency \u2014 p95",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Histogram estimate over five minutes, for replies received only. Lost packets have no latency. The local pfSense baseline includes the pod and cluster network path.",
+      "gridPos": {
+        "x": 12,
+        "y": 7,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "internet:ping_rtt_seconds:p95_5m",
+          "legendFormat": "{{target}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "DNS / HTTPS success \u2014 one minute",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Four probes/minute. A valid failed probe is 0%; failed collection is unknown. HTTPS also depends on cluster DNS, TLS and the remote application.",
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * internet:service_success:ratio1m",
+          "legendFormat": "{{target}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "DNS / HTTPS duration",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Whole probe duration including failed-probe timeouts. This is not ICMP round-trip latency.",
+      "gridPos": {
+        "x": 12,
+        "y": 14,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "probe_duration_seconds{job=\"internet_services\"} and (up{job=\"internet_services\"} == 1) and (time() - timestamp(probe_duration_seconds{job=\"internet_services\"}) < 30)",
+          "legendFormat": "{{target}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Loss by minute",
+      "type": "state-timeline",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "0: below 5% loss; 1: at least 5%; 2: at least 99%. Gaps are unknown, not healthy.",
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          },
+          "max": 2,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "<5% loss",
+                  "color": "green"
+                },
+                "1": {
+                  "text": "Degraded \u22655%",
+                  "color": "orange"
+                },
+                "2": {
+                  "text": "Unreachable \u226599%",
+                  "color": "red"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(internet:ping_loss:ratio1m >= bool 0.05) + (internet:ping_loss:ratio1m >= bool 0.99)",
+          "legendFormat": "{{target}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.8,
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Valid measurement coverage \u2014 rolling 24 hours",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Valid one-minute observations divided by 1440 expected minutes. Starts below 100% during the first day. A missing series is unknown. Interpret every daily statistic alongside coverage.",
+      "gridPos": {
+        "x": 12,
+        "y": 21,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * count_over_time(internet:ping_loss:ratio1m[24h]) / 1440",
+          "legendFormat": "{{target}} ping",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "expr": "100 * count_over_time(internet:service_success:ratio1m[24h]) / 1440",
+          "legendFormat": "{{target}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Mean loss \u2014 rolling 24 hours",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Mean one-minute packet loss over observed minutes only; does not impute missing data.",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * avg_over_time(internet:ping_loss:ratio1m[24h])",
+          "legendFormat": "{{target}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "DNS / HTTPS success \u2014 rolling 24 hours",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Successful scheduled probes during observed minutes only; compare with measurement coverage.",
+      "gridPos": {
+        "x": 12,
+        "y": 28,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          },
+          "max": 100
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * avg_over_time(internet:service_success:ratio1m[24h])",
+          "legendFormat": "{{target}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "WAN upload",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Existing pfSense ix2 WAN counters, five-minute average. Compare with loss and latency to identify possible link saturation.",
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((8 * rate(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"}[5m])) and (ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"} and (time() - timestamp(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((8 * rate(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"}[5m])) and (ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"} and (time() - timestamp(ifHCOutOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "WAN download",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Existing pfSense ix2 WAN counters, five-minute average. Compare with loss and latency to identify possible link saturation.",
+      "gridPos": {
+        "x": 12,
+        "y": 35,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "expr": "((((8 * rate(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"}[5m])) and (ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"} and (time() - timestamp(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)) * on(job, instance, ifIndex, ifName) group_left(interface) label_join((ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"} and (time() - timestamp(ifAlias{job=\"pfsense\",instance=\"pfsense\",ifAlias!=\"\"}) < 180)), \"interface\", \" \u00b7 \", \"ifAlias\", \"ifName\")) or on(job, instance, ifIndex, ifName) label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace((((8 * rate(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"}[5m])) and (ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"} and (time() - timestamp(ifHCInOctets{job=\"pfsense\",instance=\"pfsense\",ifName=~\"ix2\"}) < 180))) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)), \"interface\", \"$1\", \"ifName\", \"(.*)\"), \"interface\", \"WAN \\u00b7 $1\", \"ifName\", \"(ix2)\"), \"interface\", \"LAN \\u00b7 $1\", \"ifName\", \"(lagg0)\"), \"interface\", \"LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.3)\"), \"interface\", \"RH_LAB \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.6)\"), \"interface\", \"NETBOOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.8)\"), \"interface\", \"IOT \\u00b7 $1\", \"ifName\", \"(lagg0\\\\.20)\"), \"interface\", \"WireGuard \\u00b7 $1\", \"ifName\", \"(tun_wg0)\"), \"interface\", \"Tailscale \\u00b7 $1\", \"ifName\", \"(tailscale0)\")",
+          "legendFormat": "{{interface}}",
+          "editorMode": "code",
+          "instant": false,
+          "range": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Homelab dashboards",
+      "type": "dashboards",
+      "tags": [
+        "homelab"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ]
+}

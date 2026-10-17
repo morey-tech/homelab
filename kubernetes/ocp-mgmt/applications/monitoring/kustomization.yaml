@@ -77,3 +77,6 @@ configMapGenerator:
   - name: grafana-network-stack-dashboard
     files:
       - dashboards/network-stack.json
+  - name: grafana-internet-dashboard
+    files:
+      - dashboards/internet.json
