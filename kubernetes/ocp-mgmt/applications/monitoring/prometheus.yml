@@ -5,7 +5,7 @@ global:
 storage:
   tsdb:
     retention:
-      time: 30d
+      time: 180d
       size: 75GB
 
 # Alloy forwards infrastructure metrics to the remote-write receiver.

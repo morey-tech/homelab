@@ -71,7 +71,7 @@ For a support case, save these CSVs plus a Grafana screenshot with an absolute t
 
 ## Retention
 
-Infrastructure Prometheus retains **30 days or 75 GiB, whichever is reached first**, on its existing 100 GiB node-local PVC. This applies to all infrastructure metrics; OpenShift's separate cluster-monitoring stores are unchanged. The size limit leaves space for the WAL/head and is not a guarantee of the full retention period. No additional PVC or replicated storage is introduced.
+Infrastructure Prometheus retains **180 days or 75 GiB, whichever is reached first**, on its existing 100 GiB node-local PVC. This applies to all infrastructure metrics; OpenShift's separate cluster-monitoring stores are unchanged. The size limit leaves space for the WAL/head and is not a guarantee of six months' history. No additional PVC or replicated storage is introduced.
 
 At implementation, a read-only inspection found about 35 MiB on the Prometheus volume and 2266 active series before these probes were added. Reassess growth after deployment. Node-local storage is not a backup: preserve important reports externally; database recovery requires a separate volume/database backup. Export evidence before retention expires.
 
