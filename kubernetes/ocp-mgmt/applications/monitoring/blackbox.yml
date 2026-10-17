@@ -18,6 +18,34 @@ modules:
       preferred_ip_protocol: ip4
       ip_protocol_fallback: false
       fail_if_not_ssl: true
+  # A registry authentication challenge proves the API is reachable. This
+  # does not test credentials, image pulls, or backing blob storage.
+  internet_registry:
+    prober: http
+    timeout: 10s
+    http:
+      preferred_ip_protocol: ip4
+      ip_protocol_fallback: false
+      fail_if_not_ssl: true
+      follow_redirects: false
+      valid_status_codes: [401]
+      fail_if_header_not_matches:
+        - header: Docker-Distribution-Api-Version
+          regexp: '^registry/2\.0$'
+          allow_missing: false
+  # Unauthenticated read-only EC2 requests return this specific error.
+  # Never follow a regional endpoint's redirect to the global AWS website.
+  internet_aws_regional:
+    prober: http
+    timeout: 10s
+    http:
+      preferred_ip_protocol: ip4
+      ip_protocol_fallback: false
+      fail_if_not_ssl: true
+      follow_redirects: false
+      valid_status_codes: [400]
+      fail_if_body_not_matches_regexp:
+        - '<Code>MissingParameter</Code>'
   internet_dns:
     prober: dns
     timeout: 5s

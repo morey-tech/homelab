@@ -86,6 +86,21 @@ def build():
                   'Compare with loss and latency to identify possible link saturation.')
         p['targets'] = copy.deepcopy(original['targets'])
 
+    p = panel('DNS / HTTPS reachability by target', [
+        (f'({service} == bool 1) + ({service} > bool 0)', '{{target}}'),
+    ], 'short', 'Compare concurrent failures across targets and with the LAN/ping baseline. '
+       '0: all probes failed; 1: some failed; 2: all succeeded. Missing collection remains a gap. '
+       'Targets sharing a provider are not independent votes: Google/YouTube, Amazon/AWS, '
+       'Quay/Red Hat, and the two Plex endpoints may share infrastructure. '
+       'Registry authentication challenges and expected AWS API errors count as reachable.',
+       kind='state-timeline', maximum=2)
+    p['gridPos'].update(w=24, h=12)
+    p['fieldConfig']['defaults']['mappings'] = [{'type': 'value', 'options': {
+        '0': {'text': 'Probe failed', 'color': 'red'}, '1': {'text': 'Intermittent', 'color': 'orange'},
+        '2': {'text': 'Reachable', 'color': 'green'}}}]
+    p['options'] = {'mergeValues': True, 'showValue': 'never', 'rowHeight': 0.8,
+                    'legend': {'displayMode': 'list', 'placement': 'bottom'}, 'tooltip': {'mode': 'single'}}
+
     return {'uid': 'internet-quality', 'title': 'Internet Quality', 'schemaVersion': 39,
             'version': 1, 'editable': False, 'tags': ['homelab', 'infrastructure', 'internet'],
             'description': 'IPv4 quality from ocp-mgmt. Local baseline, independent external targets, '

@@ -763,6 +763,83 @@
           "sort": "desc"
         }
       }
+    },
+    {
+      "id": 13,
+      "title": "DNS / HTTPS reachability by target",
+      "type": "state-timeline",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Compare concurrent failures across targets and with the LAN/ping baseline. 0: all probes failed; 1: some failed; 2: all succeeded. Missing collection remains a gap. Targets sharing a provider are not independent votes: Google/YouTube, Amazon/AWS, Quay/Red Hat, and the two Plex endpoints may share infrastructure. Registry authentication challenges and expected AWS API errors count as reachable.",
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 12
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          },
+          "max": 2,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Probe failed",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Intermittent",
+                  "color": "orange"
+                },
+                "2": {
+                  "text": "Reachable",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(internet:service_success:ratio1m == bool 1) + (internet:service_success:ratio1m > bool 0)",
+          "legendFormat": "{{target}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.8,
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
     }
   ],
   "templating": {

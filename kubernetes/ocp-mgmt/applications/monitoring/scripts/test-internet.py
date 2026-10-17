@@ -110,6 +110,22 @@ case('all dashboard expressions parse without filling gaps', [], [
     {'expr': t['expr'], 'eval_time': '5m', 'exp_samples': []}
     for panel in dashboard['panels'] for t in panel['targets']])
 
+timeline = next(p for p in dashboard['panels'] if p['title'] == 'DNS / HTTPS reachability by target')['targets'][0]['expr']
+target_series = []
+for target, outcomes, collected in [('quay-registry', '0+0x20', '1+0x20'),
+                                     ('aws-tokyo', '1+0x20', '1+0x20'),
+                                     ('plex-api', '1+0x19 0', '1+0x20'),
+                                     ('amazon-https', '0+0x20', '0+0x20')]:
+    labels = f'job="internet_services",instance="{target}",target="{target}",kind="https"'
+    target_series.extend([{'series': 'probe_success{' + labels + '}', 'values': outcomes},
+                          {'series': 'up{' + labels + '}', 'values': collected}])
+case('endpoint failures stay distinct from other providers and missing collection', target_series, [
+    {'expr': timeline, 'eval_time': '5m', 'exp_samples': [
+        {'labels': '{target="quay-registry",kind="https"}', 'value': 0},
+        {'labels': '{target="aws-tokyo",kind="https"}', 'value': 2},
+        {'labels': '{target="plex-api",kind="https"}', 'value': 1},
+    ]}])
+
 with tempfile.TemporaryDirectory(prefix='internet-tests-') as directory:
     path = Path(directory) / 'tests.yml'
     path.write_text(yaml.safe_dump({'rule_files': [str(ROOT / 'internet/rules.yml')],
@@ -148,7 +164,7 @@ with tempfile.TemporaryDirectory(prefix='internet-report-test-') as directory:
          patch.object(sys, 'argv', ['report-internet.py', '--start', '2026-10-01', '--end', '2026-10-02', '--output', str(out)]):
         report.main()
     rows = list(csv.DictReader((out / 'daily.csv').open()))
-    assert len(rows) == 8
+    assert len(rows) == len(report.PING_TARGETS) + len(report.SERVICE_TARGETS)
     assert next(r for r in rows if r['target'] == 'quad9')['unknown_minutes'] == '1440'
     assert len(list(csv.DictReader((out / 'samples.csv').open()))) == 5
     assert len(list(csv.DictReader((out / 'episodes.csv').open()))) == 3

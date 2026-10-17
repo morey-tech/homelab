@@ -63,7 +63,7 @@ The [Media Services dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d
 
 ## Internet Quality
 
-The [Internet Quality dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/internet-quality) compares one-second IPv4 pings to pfSense and three independent public targets, plus DNS/HTTPS checks every 15 seconds. It shows packet loss, median/p95 latency, degraded periods, measurement coverage, and existing pfSense WAN traffic. [Collection, CSV evidence reports, retention, and validation](internet/README.md) document the thresholds and distinguish outages from missing telemetry.
+The [Internet Quality dashboard](https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/internet-quality) compares one-second IPv4 pings to pfSense and three independent public targets, plus 12 DNS/HTTPS checks every 15 seconds spanning Cloudflare, Google/YouTube, Quay/Red Hat registries, Amazon, Plex, and regional AWS APIs in Ireland and Tokyo. A per-target reachability timeline helps distinguish individual endpoint failures from broader connectivity problems. It shows packet loss, median/p95 latency, degraded periods, measurement coverage, and existing pfSense WAN traffic. [Collection, CSV evidence reports, retention, and validation](internet/README.md) document the thresholds and distinguish outages from missing telemetry.
 
 ## Network Stack
 

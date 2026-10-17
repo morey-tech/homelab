@@ -16,7 +16,15 @@ from urllib.request import urlopen
 
 PING_TARGETS = {'pfsense': 'lan', 'cloudflare': 'internet', 'google': 'internet', 'quad9': 'internet'}
 SERVICE_TARGETS = {'cloudflare-dns': 'dns', 'google-dns': 'dns',
-                   'cloudflare-https': 'https', 'google-https': 'https'}
+                   'cloudflare-https': 'https', 'google-https': 'https',
+                   'quay-registry': 'https',
+                   'redhat-registry': 'https',
+                   'amazon-https': 'https',
+                   'youtube-https': 'https',
+                   'plex-api': 'https',
+                   'plex-web': 'https',
+                   'aws-ireland': 'https',
+                   'aws-tokyo': 'https'}
 LOSS = 'internet:ping_loss:ratio1m'
 SUCCESS = 'internet:service_success:ratio1m'
 
