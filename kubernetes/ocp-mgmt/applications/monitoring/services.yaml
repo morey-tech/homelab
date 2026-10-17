@@ -49,3 +49,16 @@ spec:
     - name: http
       port: 9115
       targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smokeping-prober
+spec:
+  type: ClusterIP
+  selector:
+    app: smokeping-prober
+  ports:
+    - name: http
+      port: 9374
+      targetPort: http

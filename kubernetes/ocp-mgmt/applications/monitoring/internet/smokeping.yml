@@ -1,0 +1,33 @@
+# On Linux, protocol: udp selects unprivileged ICMP echo sockets in pro-bing.
+# These are still ICMP pings on the wire, not UDP service probes. The existing
+# pod ping_group_range permits the OpenShift-assigned group; no NET_RAW needed.
+# Literal IPv4 targets keep DNS failures separate from reachability failures.
+targets:
+  - hosts: [192.168.6.1]
+    network: ip4
+    protocol: udp
+    interval: 1s
+    labels:
+      target: pfsense
+      scope: lan
+  - hosts: [1.1.1.1]
+    network: ip4
+    protocol: udp
+    interval: 1s
+    labels:
+      target: cloudflare
+      scope: internet
+  - hosts: [8.8.8.8]
+    network: ip4
+    protocol: udp
+    interval: 1s
+    labels:
+      target: google
+      scope: internet
+  - hosts: [9.9.9.9]
+    network: ip4
+    protocol: udp
+    interval: 1s
+    labels:
+      target: quad9
+      scope: internet

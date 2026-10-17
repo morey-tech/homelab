@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smokeping-prober
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: smokeping-prober
+  template:
+    metadata:
+      annotations:
+        openshift.io/required-scc: restricted-v2
+      labels:
+        app: smokeping-prober
+    spec:
+      serviceAccountName: smokeping-prober
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - ms-02
+                      - ms-04
+      containers:
+        - name: smokeping-prober
+          image: quay.io/superq/smokeping-prober:v0.12.0
+          env:
+            - name: GOMAXPROCS
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 9374
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          startupProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            # The HTTP health endpoint stays healthy after a pinger exits.
+            # Restart on a fatal pinger error so collection can recover.
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - wget -qO- -T 3 http://127.0.0.1:9374/metrics | grep -q '^smokeping_prober_errors_total 0$'
+            periodSeconds: 30
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: config
+              mountPath: /etc/smokeping
+              readOnly: true
+          args:
+            - --config.file=/etc/smokeping/smokeping.yml
+            - --buckets=0.001,0.0025,0.005,0.01,0.02,0.03,0.05,0.075,0.1,0.15,0.25,0.5,1,2,5,10
+      volumes:
+        - name: config
+          configMap:
+            name: smokeping-prober-config

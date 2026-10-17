@@ -19,6 +19,7 @@ resources:
   - prometheus.yaml
   - alloy.yaml
   - blackbox-exporter.yaml
+  - smokeping-prober.yaml
   - services.yaml
   - route.yaml
   - networkpolicy.yaml
@@ -35,6 +36,7 @@ configMapGenerator:
   - name: prometheus-config
     files:
       - prometheus.yml
+      - internet-rules.yml=internet/rules.yml
   - name: alloy-config
     files:
       - config.alloy
@@ -42,6 +44,9 @@ configMapGenerator:
       - mikrotik-snmp.yml=mikrotik/snmp.yml
       - unifi-snmp.yml=unifi/snmp.yml
       - pfsense-snmp.yml=pfsense/snmp.yml
+  - name: smokeping-prober-config
+    files:
+      - smokeping.yml=internet/smokeping.yml
   - name: blackbox-exporter-config
     files:
       - blackbox.yml

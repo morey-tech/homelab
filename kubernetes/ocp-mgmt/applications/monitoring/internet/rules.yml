@@ -1,0 +1,53 @@
+groups:
+  - name: internet-quality
+    interval: 1m
+    rules:
+      # A working HTTP metrics endpoint alone does not prove pings are running.
+      # Require four recent scrapes, near-one-per-second sending, no restart,
+      # no local socket errors, and a fresh successful exporter scrape.
+      - record: internet:ping_valid:1m
+        expr: |
+          max by (target, scope) (
+            (rate(smokeping_requests_total{job="internet_ping"}[1m]) >= bool 0.8)
+            and (count_over_time(smokeping_requests_total{job="internet_ping"}[1m]) >= 4)
+            and (resets(smokeping_requests_total{job="internet_ping"}[1m]) == 0)
+            and (increase(smokeping_send_errors_total{job="internet_ping"}[1m]) == 0)
+            and on (job, instance) (increase(smokeping_receive_errors_total{job="internet_ping"}[1m]) == 0)
+            and on (job, instance) (min_over_time(up{job="internet_ping"}[1m]) == 1)
+            and on (job, instance) (count_over_time(up{job="internet_ping"}[1m]) >= 4)
+            and on (job, instance) (time() - timestamp(up{job="internet_ping"}) < 30)
+          ) == 1
+      - record: internet:ping_loss:ratio1m
+        expr: |
+          clamp(clamp_min(1 -
+            sum by (target, scope) (rate(smokeping_response_duration_seconds_count{job="internet_ping"}[1m]))
+            / sum by (target, scope) (rate(smokeping_requests_total{job="internet_ping"}[1m])), 0), 0, 1)
+          and on (target, scope) internet:ping_valid:1m
+      - record: internet:ping_loss:ratio5m
+        expr: |
+          avg_over_time(internet:ping_loss:ratio1m[5m])
+          and (count_over_time(internet:ping_loss:ratio1m[5m]) == 5)
+          and on (target, scope) internet:ping_valid:1m
+      - record: internet:ping_rtt_seconds:p50_5m
+        expr: |
+          histogram_quantile(0.50, sum by (target, scope, le) (
+            rate(smokeping_response_duration_seconds_bucket{job="internet_ping"}[5m])))
+          and on (target, scope) internet:ping_valid:1m
+          and on (target, scope) (sum by (target, scope) (
+            rate(smokeping_response_duration_seconds_count{job="internet_ping"}[5m])) > 0)
+      - record: internet:ping_rtt_seconds:p95_5m
+        expr: |
+          histogram_quantile(0.95, sum by (target, scope, le) (
+            rate(smokeping_response_duration_seconds_bucket{job="internet_ping"}[5m])))
+          and on (target, scope) internet:ping_valid:1m
+          and on (target, scope) (sum by (target, scope) (
+            rate(smokeping_response_duration_seconds_count{job="internet_ping"}[5m])) > 0)
+      - record: internet:service_success:ratio1m
+        expr: |
+          avg by (target, kind) (
+            avg_over_time(probe_success{job="internet_services"}[1m])
+            and (count_over_time(probe_success{job="internet_services"}[1m]) >= 4)
+            and (min_over_time(up{job="internet_services"}[1m]) == 1)
+            and (count_over_time(up{job="internet_services"}[1m]) >= 4)
+            and (time() - timestamp(up{job="internet_services"}) < 30)
+          )

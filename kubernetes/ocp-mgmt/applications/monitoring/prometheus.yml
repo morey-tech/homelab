@@ -11,4 +11,5 @@ storage:
 # Alloy forwards infrastructure metrics to the remote-write receiver.
 # OpenShift metrics remain in each cluster's existing monitoring stack.
 scrape_configs: []
-rule_files: []
+rule_files:
+  - /etc/prometheus/internet-rules.yml

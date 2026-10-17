@@ -279,3 +279,62 @@ prometheus.scrape "sabnzbd" {
 	scrape_timeout  = "20s"
 	forward_to      = [prometheus.remote_write.infrastructure.receiver]
 }
+
+// Continuous pings run independently of scrapes. Use classic histogram buckets
+// for loss counters and portable Grafana latency distributions.
+prometheus.scrape "internet_ping" {
+	targets = [{
+		__address__ = "smokeping-prober.monitoring.svc:9374",
+		job         = "internet_ping",
+		instance    = "ocp-mgmt",
+	}]
+	scrape_interval  = "15s"
+	scrape_timeout   = "10s"
+	scrape_protocols = ["PrometheusText0.0.4"]
+	forward_to       = [prometheus.remote_write.infrastructure.receiver]
+}
+
+prometheus.scrape "internet_services" {
+	targets = [
+		{
+			__address__    = "blackbox-exporter.monitoring.svc:9115",
+			__param_target = "https://www.cloudflare.com/cdn-cgi/trace",
+			__param_module = "internet_https",
+			job            = "internet_services",
+			instance       = "https://www.cloudflare.com/cdn-cgi/trace",
+			target         = "cloudflare-https",
+			kind           = "https",
+		},
+		{
+			__address__    = "blackbox-exporter.monitoring.svc:9115",
+			__param_target = "https://www.google.com/generate_204",
+			__param_module = "internet_https",
+			job            = "internet_services",
+			instance       = "https://www.google.com/generate_204",
+			target         = "google-https",
+			kind           = "https",
+		},
+		{
+			__address__    = "blackbox-exporter.monitoring.svc:9115",
+			__param_target = "1.1.1.1:53",
+			__param_module = "internet_dns",
+			job            = "internet_services",
+			instance       = "1.1.1.1:53",
+			target         = "cloudflare-dns",
+			kind           = "dns",
+		},
+		{
+			__address__    = "blackbox-exporter.monitoring.svc:9115",
+			__param_target = "8.8.8.8:53",
+			__param_module = "internet_dns",
+			job            = "internet_services",
+			instance       = "8.8.8.8:53",
+			target         = "google-dns",
+			kind           = "dns",
+		},
+	]
+	metrics_path    = "/probe"
+	scrape_interval = "15s"
+	scrape_timeout  = "12s"
+	forward_to      = [prometheus.remote_write.infrastructure.receiver]
+}
