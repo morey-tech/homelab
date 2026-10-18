@@ -9,7 +9,7 @@
     "infrastructure",
     "internet"
   ],
-  "description": "IPv4 quality from ocp-mgmt. Local baseline, independent external targets, DNS/HTTPS checks and WAN traffic. Unknown monitoring intervals remain gaps.",
+  "description": "IPv4 quality from ocp-mgmt. Local baseline, independent external targets, DNS/HTTPS checks, pfSense WAN traffic and Hitron modem telemetry. Unknown monitoring intervals remain gaps.",
   "timezone": "utc",
   "refresh": "30s",
   "time": {
@@ -765,6 +765,538 @@
       }
     },
     {
+      "id": 14,
+      "title": "Modem WAN upload \u2014 packets",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute packet rate, aligned beneath the matching pfSense WAN bit-rate panel. Packet counts and bits/s are different units, not interchangeable throughput measurements. Bridge-mode counter coverage is not yet verified. Failed or stale collection creates gaps.",
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(rate(hitron_wan_packets_total{job=\"modem\",instance=\"hitron\",direction=\"transmit\"}[5m]) and (hitron_wan_packets_total{job=\"modem\",instance=\"hitron\",direction=\"transmit\"} and (time() - timestamp(hitron_wan_packets_total{job=\"modem\",instance=\"hitron\",direction=\"transmit\"}) < 180))) and on(job, instance) (((up{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(up{job=\"modem\",instance=\"hitron\"}) < 180)) == 1) and on(job, instance) ((hitron_collection_success{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_collection_success{job=\"modem\",instance=\"hitron\"}) < 180)) == 1) and on(job, instance) ((hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"}) < 180)) > 0) and on(job, instance) (time() - (hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"}) < 180)) < 150))",
+          "legendFormat": "Hitron transmit",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "last",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "title": "Modem WAN download \u2014 packets",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Five-minute packet rate, aligned beneath the matching pfSense WAN bit-rate panel. Packet counts and bits/s are different units, not interchangeable throughput measurements. Bridge-mode counter coverage is not yet verified. Failed or stale collection creates gaps.",
+      "gridPos": {
+        "x": 12,
+        "y": 42,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(rate(hitron_wan_packets_total{job=\"modem\",instance=\"hitron\",direction=\"receive\"}[5m]) and (hitron_wan_packets_total{job=\"modem\",instance=\"hitron\",direction=\"receive\"} and (time() - timestamp(hitron_wan_packets_total{job=\"modem\",instance=\"hitron\",direction=\"receive\"}) < 180))) and on(job, instance) (((up{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(up{job=\"modem\",instance=\"hitron\"}) < 180)) == 1) and on(job, instance) ((hitron_collection_success{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_collection_success{job=\"modem\",instance=\"hitron\"}) < 180)) == 1) and on(job, instance) ((hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"}) < 180)) > 0) and on(job, instance) (time() - (hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"}) < 180)) < 150))",
+          "legendFormat": "Hitron receive",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "last",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "title": "Modem / pfSense uptime",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Compare resets on a shared time axis. Hitron LAN/WAN uptime reset semantics are unverified. pfSense sysUpTime is SNMP agent uptime, not firewall uptime: a service restart can reset it independently.",
+      "gridPos": {
+        "x": 0,
+        "y": 49,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((hitron_interface_uptime_seconds{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_interface_uptime_seconds{job=\"modem\",instance=\"hitron\"}) < 180))) and on(job, instance) (((up{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(up{job=\"modem\",instance=\"hitron\"}) < 180)) == 1) and on(job, instance) ((hitron_collection_success{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_collection_success{job=\"modem\",instance=\"hitron\"}) < 180)) == 1) and on(job, instance) ((hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"}) < 180)) > 0) and on(job, instance) (time() - (hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"}) < 180)) < 150))",
+          "legendFormat": "Hitron {{interface}} uptime",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "expr": "(sysUpTime{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(sysUpTime{job=\"pfsense\",instance=\"pfsense\"}) < 180)) and on(job, instance) ((up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180)) == 1)",
+          "legendFormat": "pfSense SNMP agent uptime",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "last",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "title": "Modem / pfSense collection health",
+      "type": "state-timeline",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Scrape health and modem API collection are separate. An API failure can mean authentication, transport or payload failure; it does not prove an ISP outage. Missing or stale samples stay unknown.",
+      "gridPos": {
+        "x": 12,
+        "y": 49,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          },
+          "max": 1,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Failed",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Successful",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(up{job=\"pfsense\",instance=\"pfsense\"} and (time() - timestamp(up{job=\"pfsense\",instance=\"pfsense\"}) < 180))",
+          "legendFormat": "pfSense SNMP scrape",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "expr": "(up{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(up{job=\"modem\",instance=\"hitron\"}) < 180))",
+          "legendFormat": "Modem exporter scrape",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        },
+        {
+          "refId": "C",
+          "expr": "(hitron_collection_success{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_collection_success{job=\"modem\",instance=\"hitron\"}) < 180)) and on(job, instance) ((up{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(up{job=\"modem\",instance=\"hitron\"}) < 180)) == 1)",
+          "legendFormat": "Modem API collection",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.8,
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "title": "Modem API collection duration",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Duration of the most recently completed poll, including failed polls and login retries. Not ping RTT. Available while the exporter is reachable, even when modem collection fails.",
+      "gridPos": {
+        "x": 0,
+        "y": 56,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(hitron_collection_duration_seconds{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_collection_duration_seconds{job=\"modem\",instance=\"hitron\"}) < 180)) and on(job, instance) ((up{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(up{job=\"modem\",instance=\"hitron\"}) < 180)) == 1)",
+          "legendFormat": "Collection duration",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "last",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "title": "Modem last successful collection age",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Continues rising during modem API failures while exporter collection is working. Unknown before the first successful poll or when the exporter scrape is failed/stale.",
+      "gridPos": {
+        "x": 12,
+        "y": 56,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(time() - ((hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"}) < 180)) > 0)) and on(job, instance) ((up{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(up{job=\"modem\",instance=\"hitron\"}) < 180)) == 1)",
+          "legendFormat": "Age of last success",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "last",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 20,
+      "title": "Modem collection errors / logins",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Estimated increases over five minutes, handling exporter counter resets. Login spikes can identify session renewal; no credential values are exposed.",
+      "gridPos": {
+        "x": 0,
+        "y": 63,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "increase(hitron_collection_errors_total{job=\"modem\",instance=\"hitron\"}[5m]) and (hitron_collection_errors_total{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_collection_errors_total{job=\"modem\",instance=\"hitron\"}) < 180)) and on(job, instance) ((up{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(up{job=\"modem\",instance=\"hitron\"}) < 180)) == 1)",
+          "legendFormat": "Failed polls / 5m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        },
+        {
+          "refId": "B",
+          "expr": "increase(hitron_login_attempts_total{job=\"modem\",instance=\"hitron\"}[5m]) and (hitron_login_attempts_total{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_login_attempts_total{job=\"modem\",instance=\"hitron\"}) < 180)) and on(job, instance) ((up{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(up{job=\"modem\",instance=\"hitron\"}) < 180)) == 1)",
+          "legendFormat": "Login attempts / 5m",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": true,
+          "instant": false,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "last",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 21,
+      "title": "Modem model / firmware / mode",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "infrastructure"
+      },
+      "description": "Current model, firmware and operating mode. Unknown if collection is failed or stale.",
+      "gridPos": {
+        "x": 12,
+        "y": 63,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "noValue": "Unknown",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((hitron_info{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_info{job=\"modem\",instance=\"hitron\"}) < 180))) and on(job, instance) (((up{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(up{job=\"modem\",instance=\"hitron\"}) < 180)) == 1) and on(job, instance) ((hitron_collection_success{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_collection_success{job=\"modem\",instance=\"hitron\"}) < 180)) == 1) and on(job, instance) ((hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"}) < 180)) > 0) and on(job, instance) (time() - (hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"} and (time() - timestamp(hitron_last_success_timestamp_seconds{job=\"modem\",instance=\"hitron\"}) < 180)) < 150))",
+          "legendFormat": "{{model}} \u00b7 {{firmware}} \u00b7 {{mode}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "infrastructure"
+          },
+          "range": false,
+          "instant": true,
+          "interval": "1m"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none"
+      }
+    },
+    {
       "id": 13,
       "title": "DNS / HTTPS reachability by target",
       "type": "state-timeline",
@@ -775,7 +1307,7 @@
       "description": "Compare concurrent failures across targets and with the LAN/ping baseline. 0: all probes failed; 1: some failed; 2: all succeeded. Missing collection remains a gap. Targets sharing a provider are not independent votes: Google/YouTube, Amazon/AWS, Quay/Red Hat, and the two Plex endpoints may share infrastructure. Registry authentication challenges and expected AWS API errors count as reachable.",
       "gridPos": {
         "x": 0,
-        "y": 42,
+        "y": 70,
         "w": 24,
         "h": 12
       },

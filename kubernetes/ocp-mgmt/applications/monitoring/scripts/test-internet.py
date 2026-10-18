@@ -126,6 +126,63 @@ case('endpoint failures stay distinct from other providers and missing collectio
         {'labels': '{target="plex-api",kind="https"}', 'value': 1},
     ]}])
 
+# Modem panels share the WAN columns and must never treat old counters as live traffic.
+by_title = {p['title']: p for p in dashboard['panels']}
+assert len({p['id'] for p in dashboard['panels']}) == len(dashboard['panels'])
+for i, panel in enumerate(dashboard['panels']):
+    a = panel['gridPos']
+    for other in dashboard['panels'][i + 1:]:
+        b = other['gridPos']
+        assert (a['x'] + a['w'] <= b['x'] or b['x'] + b['w'] <= a['x'] or
+                a['y'] + a['h'] <= b['y'] or b['y'] + b['h'] <= a['y'])
+for direction in ['upload', 'download']:
+    wan_pos = by_title[f'WAN {direction}']['gridPos']
+    modem_pos = by_title[f'Modem WAN {direction} — packets']['gridPos']
+    assert modem_pos['x'] == wan_pos['x']
+    assert modem_pos['y'] == wan_pos['y'] + wan_pos['h']
+
+MODEM = 'job="modem",instance="hitron"'
+
+
+def modem_data(up='1+0x20', success='1+0x20', recent='1+15x20', packets='0+30x20'):
+    return [{'series': f'{metric}{{{MODEM}{labels}}}', 'values': values}
+            for metric, labels, values in [
+                ('up', '', up), ('hitron_collection_success', '', success),
+                ('hitron_last_success_timestamp_seconds', '', recent),
+                ('hitron_wan_packets_total', ',direction="transmit"', packets),
+                ('hitron_wan_packets_total', ',direction="receive"', '0+60x20')]]
+
+
+def modem_check(title, value=None, labels='', target=0):
+    return {'expr': by_title[title]['targets'][target]['expr'], 'eval_time': '5m',
+            'exp_samples': [] if value is None else [{'labels': labels, 'value': value}]}
+
+
+upload = 'Modem WAN upload — packets'
+download = 'Modem WAN download — packets'
+case('modem direction and packets per second', modem_data(), [
+    modem_check(upload, 2, '{' + MODEM + ',direction="transmit"}'),
+    modem_check(download, 4, '{' + MODEM + ',direction="receive"}')])
+for name, changes in [
+    ('failed API collection', {'success': '1+0x19 0'}),
+    ('failed exporter scrape', {'up': '1+0x19 0'}),
+    ('stale exporter scrape', {'up': '1+0x8 _x12'}),
+    ('expired cached result', {'recent': '100+0x20'}),
+    ('never collected', {'recent': '0+0x20'}),
+    ('stale packet counter', {'packets': '0+30x8 _x12'}),
+]:
+    case('modem ' + name + ' hides traffic', modem_data(**changes), [modem_check(upload)])
+case('modem counter reset does not create negative traffic',
+     modem_data(packets='0+30x10 0+30x9'), [
+         modem_check(upload, 36 / 19, '{' + MODEM + ',direction="transmit"}')])
+case('failed modem API keeps health failure and age visible',
+     modem_data(success='1+0x19 0', recent='200+0x20'), [
+         modem_check('Modem / pfSense collection health', 0,
+                     'hitron_collection_success{' + MODEM + '}', target=2),
+         modem_check('Modem last successful collection age', 100, '{' + MODEM + '}')])
+case('failed exporter hides last success age', modem_data(up='1+0x19 0'), [
+    modem_check('Modem last successful collection age')])
+
 with tempfile.TemporaryDirectory(prefix='internet-tests-') as directory:
     path = Path(directory) / 'tests.yml'
     path.write_text(yaml.safe_dump({'rule_files': [str(ROOT / 'internet/rules.yml')],

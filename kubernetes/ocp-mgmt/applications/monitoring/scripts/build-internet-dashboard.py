@@ -101,10 +101,89 @@ def build():
     p['options'] = {'mergeValues': True, 'showValue': 'never', 'rowHeight': 0.8,
                     'legend': {'displayMode': 'list', 'placement': 'bottom'}, 'tooltip': {'mode': 'single'}}
 
+    # Preserve existing panel IDs, including the full-width service timeline.
+    # Insert modem context below WAN traffic, with upload/download columns aligned.
+    service_timeline = p
+
+    def fresh(metric, job='modem', instance='hitron', extra=''):
+        selector = f'{metric}{{job="{job}",instance="{instance}"{extra}}}'
+        return f'({selector} and (time() - timestamp({selector}) < 180))'
+
+    modem_up = fresh('up')
+    modem_success = fresh('hitron_collection_success')
+    modem_recent = fresh('hitron_last_success_timestamp_seconds')
+    modem_valid = (f'({modem_up} == 1) and on(job, instance) ({modem_success} == 1) '
+                   f'and on(job, instance) ({modem_recent} > 0) '
+                   f'and on(job, instance) (time() - {modem_recent} < 150)')
+
+    def observed(expr):
+        return f'({expr}) and on(job, instance) ({modem_valid})'
+
+    def modem_panel(title, expressions, unit, description, **kwargs):
+        p = panel(title, expressions, unit, description, **kwargs)
+        index = len(panels) - 14
+        p['gridPos'].update(x=12 * (index % 2), y=42 + 7 * (index // 2))
+        # Do not display an earlier successful value as the latest reading.
+        p['options']['legend']['calcs'] = ['last', 'max']
+        return p
+
+    for direction, title in [('transmit', 'Modem WAN upload — packets'),
+                             ('receive', 'Modem WAN download — packets')]:
+        selector = f'hitron_wan_packets_total{{job="modem",instance="hitron",direction="{direction}"}}'
+        current = fresh('hitron_wan_packets_total', extra=f',direction="{direction}"')
+        modem_panel(title, [(observed(f'rate({selector}[5m]) and {current}'),
+                             f'Hitron {direction}')], 'pps',
+                    'Five-minute packet rate, aligned beneath the matching pfSense WAN bit-rate panel. '
+                    'Packet counts and bits/s are different units, not interchangeable throughput measurements. '
+                    'Bridge-mode counter coverage is not yet verified. Failed or stale collection creates gaps.')
+
+    pf_up = fresh('up', 'pfsense', 'pfsense')
+    modem_panel('Modem / pfSense uptime', [
+        (observed(fresh('hitron_interface_uptime_seconds')), 'Hitron {{interface}} uptime'),
+        (f'{fresh("sysUpTime", "pfsense", "pfsense")} and on(job, instance) ({pf_up} == 1)',
+         'pfSense SNMP agent uptime'),
+    ], 's', 'Compare resets on a shared time axis. Hitron LAN/WAN uptime reset semantics are unverified. '
+       'pfSense sysUpTime is SNMP agent uptime, not firewall uptime: a service restart can reset it independently.')
+    health = modem_panel('Modem / pfSense collection health', [
+        (pf_up, 'pfSense SNMP scrape'),
+        (modem_up, 'Modem exporter scrape'),
+        (f'{modem_success} and on(job, instance) ({modem_up} == 1)', 'Modem API collection'),
+    ], 'short', 'Scrape health and modem API collection are separate. An API failure can mean authentication, '
+       'transport or payload failure; it does not prove an ISP outage. Missing or stale samples stay unknown.',
+       kind='state-timeline', maximum=1)
+    health['fieldConfig']['defaults']['mappings'] = [{'type': 'value', 'options': {
+        '0': {'text': 'Failed', 'color': 'red'}, '1': {'text': 'Successful', 'color': 'green'}}}]
+    health['options'] = {'mergeValues': True, 'showValue': 'never', 'rowHeight': 0.8,
+                         'legend': {'displayMode': 'list', 'placement': 'bottom'},
+                         'tooltip': {'mode': 'single'}}
+    modem_panel('Modem API collection duration', [
+        (f'{fresh("hitron_collection_duration_seconds")} and on(job, instance) ({modem_up} == 1)', 'Collection duration'),
+    ], 's', 'Duration of the most recently completed poll, including failed polls and login retries. '
+       'Not ping RTT. Available while the exporter is reachable, even when modem collection fails.')
+    modem_panel('Modem last successful collection age', [
+        (f'(time() - ({modem_recent} > 0)) and on(job, instance) ({modem_up} == 1)', 'Age of last success'),
+    ], 's', 'Continues rising during modem API failures while exporter collection is working. '
+       'Unknown before the first successful poll or when the exporter scrape is failed/stale.')
+    modem_panel('Modem collection errors / logins', [
+        (f'increase({metric}{{job="modem",instance="hitron"}}[5m]) '
+         f'and {fresh(metric)} and on(job, instance) ({modem_up} == 1)', legend)
+        for metric, legend in [('hitron_collection_errors_total', 'Failed polls / 5m'),
+                               ('hitron_login_attempts_total', 'Login attempts / 5m')]
+    ], 'short', 'Estimated increases over five minutes, handling exporter counter resets. '
+       'Login spikes can identify session renewal; no credential values are exposed.')
+    info = modem_panel('Modem model / firmware / mode', [(observed(fresh('hitron_info')),
+                        '{{model}} · {{firmware}} · {{mode}}')], 'short',
+                       'Current model, firmware and operating mode. Unknown if collection is failed or stale.', kind='stat')
+    info['targets'][0].update(instant=True, range=False)
+    info['options'] = {'reduceOptions': {'calcs': ['last'], 'fields': '', 'values': False},
+                       'textMode': 'name', 'colorMode': 'none', 'graphMode': 'none'}
+    service_timeline['gridPos']['y'] = 70
+    panels.sort(key=lambda p: (p['gridPos']['y'], p['gridPos']['x']))
+
     return {'uid': 'internet-quality', 'title': 'Internet Quality', 'schemaVersion': 39,
             'version': 1, 'editable': False, 'tags': ['homelab', 'infrastructure', 'internet'],
             'description': 'IPv4 quality from ocp-mgmt. Local baseline, independent external targets, '
-                           'DNS/HTTPS checks and WAN traffic. Unknown monitoring intervals remain gaps.',
+                           'DNS/HTTPS checks, pfSense WAN traffic and Hitron modem telemetry. Unknown monitoring intervals remain gaps.',
             'timezone': 'utc', 'refresh': '30s', 'time': {'from': 'now-6h', 'to': 'now'},
             'graphTooltip': 1, 'panels': panels, 'templating': {'list': []},
             'links': [{'title': 'Homelab dashboards', 'type': 'dashboards', 'tags': ['homelab'],

@@ -1,6 +1,6 @@
 # Hitron modem exporter
 
-The `modem-exporter` Deployment collects bridge-mode telemetry from the Hitron CODA5610Q at `http://192.168.100.1`. Alloy scrapes `modem-exporter.monitoring.svc:9780/metrics` every 60 seconds with `job="modem",instance="hitron"` and forwards it to infrastructure Prometheus. Use Grafana's **Infrastructure** data source to query these metrics. This change does not add dashboard panels or alerts.
+The `modem-exporter` Deployment collects bridge-mode telemetry from the Hitron CODA5610Q at `http://192.168.100.1`. Alloy scrapes `modem-exporter.monitoring.svc:9780/metrics` every 60 seconds with `job="modem",instance="hitron"` and forwards it to infrastructure Prometheus. Use Grafana's **Infrastructure** data source to query these metrics. The [Internet Quality dashboard](../internet/README.md) places modem packet rates beneath the matching pfSense bandwidth panels and compares uptime and collection health on shared panels. Additional panels show poll duration, last-success age, errors/logins, and model/firmware/mode. No alerts are added.
 
 ## Collection and authentication
 
