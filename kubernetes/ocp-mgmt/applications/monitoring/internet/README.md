@@ -39,7 +39,15 @@ The pinned `quay.io/superq/smokeping-prober:v0.12.0` image runs with the OpenShi
 
 In this version, `protocol: udp` selects pro-bing's unprivileged ICMP socket mode on Linux; the packets on the wire remain ICMP echo. It does **not** test a remote UDP service. The existing Blackbox pod on `ms-04` reports `net.ipv4.ping_group_range = 0 2147483647`, which includes the namespace-assigned group. No `NET_RAW`, custom SCC, host networking, or node sysctl changes are introduced. Confirm actual probe operation after deployment, including after movement to `ms-02`.
 
-The HTTP startup/readiness endpoint checks process availability only. It can stay healthy after a pinger fails. Liveness therefore checks `smokeping_prober_errors_total` locally and restarts the container after persistent fatal-pinger errors. The rules separately require actual sending progress and no local send/receive errors. Check this counter and pod logs when the process is reachable but measurements are absent.
+The HTTP startup/readiness endpoint checks process availability only. It can stay healthy after a pinger fails. The [liveness check](check-health.sh) retains detection of fatal pinger errors and unavailable/incomplete local metrics, and also detects silent sessions after WAN recovery. During the [October 18 incident](../../../../../docs/incidents/2026-10-18-internet-outage/metadata.json), the original public ping sessions continued to report 100% loss after DNS/HTTPS recovered, while a fresh prober in the same pod received replies. Restarting the prober restored collection; the exact stale-state location was not established.
+
+Every 60 seconds the check compares two local counter snapshots five seconds apart. If an Internet target keeps sending but receives no replies, it starts a separate prober with the same configuration and unprivileged socket mode for ten seconds. A check fails only when that fresh process receives at least five replies from a candidate target while the original process continues sending with **no** replies to that same target throughout the observation. A single stuck target can qualify. Replies from another target or the LAN baseline cannot qualify it. A main-process restart or natural reply recovery cancels that decision; an unavailable diagnostic is inconclusive and does not by itself fail liveness.
+
+Kubernetes restarts the container after **three consecutive failed checks**, normally about two to three minutes after recovery is detectable, plus restart time. During a real outage, fresh probes also fail, so loss continues to be recorded without an outage-induced restart loop. The check targets complete session failure, not intermittent/high packet loss. Fatal pinger errors, broken metrics collection, and check timeouts still fail liveness independently.
+
+The temporary prober listens only on `127.0.0.1:19374` and is never scraped by Alloy. It adds up to roughly ten pings per configured destination per check when confirmation is needed. Its replies do not alter the original counters or historical outage record. The check kills and reaps the temporary process and removes its files on exit. An 8 MiB memory-backed `emptyDir` supplies scratch space while the container root filesystem stays read-only; no extra capabilities, service-account permissions, or public ports are required. The 40-second timeout covers the observation periods and bounded local HTTP reads.
+
+The recording rules separately require actual sending progress and no local send/receive errors. A container restart creates an unknown interval until the rules have complete samples again; it does not rewrite past 100% loss. Check pod events for `Stuck ping session` liveness failures and inspect the per-target counters when investigating a restart. See [Kubernetes probe behavior](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) for the consecutive-failure restart policy.
 
 ## Measurement semantics
 
@@ -96,6 +104,8 @@ Run with `promtool`, Alloy and Blackbox versions matching the pinned manifests:
 ```bash
 python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/build-internet-dashboard.py
 python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/test-internet.py
+python3 kubernetes/ocp-mgmt/applications/monitoring/scripts/test-internet-health.py
+shellcheck kubernetes/ocp-mgmt/applications/monitoring/internet/check-health.sh
 promtool check rules kubernetes/ocp-mgmt/applications/monitoring/internet/rules.yml
 promtool check config --syntax-only kubernetes/ocp-mgmt/applications/monitoring/prometheus.yml
 alloy validate kubernetes/ocp-mgmt/applications/monitoring/config.alloy
@@ -105,7 +115,9 @@ kustomize build kubernetes/ocp-mgmt/applications/monitoring
 
 Tests exercise normal traffic, 70% and 100% loss, late replies, missing/failed/stale scrapes, partial windows, stopped sending, local socket errors, restarts/recovery, quantiles, target isolation, WAN interface selection, service failures, and CSV gaps/coverage. The generated JSON must match its generator.
 
-Before commit, server-side dry runs accepted the rendered application and admitted the prober pod template under `restricted-v2` using the existing Blackbox service account. The new service account does not yet exist, so its real admission is deferred. A local binary test loaded the configuration, but this workspace denied even a standalone unprivileged ICMP socket bind; local successful echo exchange could not be validated.
+The health-check tests execute the actual shell/AWK scripts with controlled metrics and temporary child processes. They cover genuine outages, partial loss, one/all stuck targets, same-target confirmation, natural recovery, process resets, unavailable diagnostics, fatal errors, malformed metrics, cleanup, and rendered deployment wiring. They do not require cluster access. Following GitOps deployment, verify the scratch mount is writable under the assigned UID, checks fit within their timeout and CPU/memory budget, and no diagnostic process survives a completed check. Observe subsequent real WAN recovery to confirm automatic recovery and preserved outage history; do not intentionally interrupt the WAN or inject faults into the running collector before deployment.
+
+The initial collector rollout was checked with server-side dry runs and a local binary configuration test. For the recovery-check change, local behavioral tests, ShellCheck, Kustomize rendering, and parsing of the incident's real prober metrics passed. Cluster authentication had expired during validation, so server-side admission of the updated template remains unchecked. Actual socket operation, scratch-volume permissions, resource usage, and automatic recovery must be verified after the reviewed change reaches the cluster through GitOps.
 
 After human review, approved commits, human push, and Argo CD reconciliation:
 

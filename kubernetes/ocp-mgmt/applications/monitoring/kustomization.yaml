@@ -47,6 +47,8 @@ configMapGenerator:
   - name: smokeping-prober-config
     files:
       - smokeping.yml=internet/smokeping.yml
+      - check-health.sh=internet/check-health.sh
+      - ping-snapshot.awk=internet/ping-snapshot.awk
   - name: blackbox-exporter-config
     files:
       - blackbox.yml

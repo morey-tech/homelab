@@ -68,23 +68,29 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
           livenessProbe:
-            # The HTTP health endpoint stays healthy after a pinger exits.
-            # Restart on a fatal pinger error so collection can recover.
+            # Confirm silent long-running sessions against fresh ICMP probes.
+            # A real WAN outage alone must not cause a restart loop.
             exec:
               command:
                 - /bin/sh
-                - -ec
-                - wget -qO- -T 3 http://127.0.0.1:9374/metrics | grep -q '^smokeping_prober_errors_total 0$'
-            periodSeconds: 30
-            timeoutSeconds: 5
+                - /etc/smokeping/check-health.sh
+            periodSeconds: 60
+            timeoutSeconds: 40
+            failureThreshold: 3
           volumeMounts:
             - name: config
               mountPath: /etc/smokeping
               readOnly: true
+            - name: health-work
+              mountPath: /var/run/smokeping-health
           args:
             - --config.file=/etc/smokeping/smokeping.yml
             - --buckets=0.001,0.0025,0.005,0.01,0.02,0.03,0.05,0.075,0.1,0.15,0.25,0.5,1,2,5,10
       volumes:
+        - name: health-work
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Mi
         - name: config
           configMap:
             name: smokeping-prober-config
