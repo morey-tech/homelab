@@ -1,0 +1,392 @@
+LOSS EPISODES >=5% cloudflare
+08:11:23 08:11:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+08:13:23 08:20:23 {'mean': 10.556, 'max': 24.444, 'min': 6.667, 'n': 8}
+08:22:23 08:22:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+08:25:23 08:26:23 {'mean': 11.111, 'max': 15.556, 'min': 6.667, 'n': 2}
+08:28:23 08:28:23 {'mean': 22.222, 'max': 22.222, 'min': 22.222, 'n': 1}
+08:32:23 08:32:23 {'mean': 15.556, 'max': 15.556, 'min': 15.556, 'n': 1}
+08:35:23 08:37:23 {'mean': 7.407, 'max': 8.889, 'min': 6.667, 'n': 3}
+08:40:23 08:43:23 {'mean': 8.333, 'max': 8.889, 'min': 6.667, 'n': 4}
+08:51:23 08:51:23 {'mean': 11.111, 'max': 11.111, 'min': 11.111, 'n': 1}
+08:53:23 08:55:23 {'mean': 14.074, 'max': 17.778, 'min': 8.889, 'n': 3}
+08:58:23 08:59:23 {'mean': 15.556, 'max': 17.778, 'min': 13.333, 'n': 2}
+09:04:23 09:08:23 {'mean': 10.222, 'max': 15.556, 'min': 6.667, 'n': 5}
+09:10:23 09:10:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+09:12:23 09:12:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+09:16:23 09:17:23 {'mean': 11.111, 'max': 13.333, 'min': 8.889, 'n': 2}
+09:20:23 09:20:23 {'mean': 8.889, 'max': 8.889, 'min': 8.889, 'n': 1}
+09:22:23 09:22:23 {'mean': 15.556, 'max': 15.556, 'min': 15.556, 'n': 1}
+09:24:23 09:28:23 {'mean': 9.778, 'max': 13.333, 'min': 6.667, 'n': 5}
+09:31:23 09:31:23 {'mean': 8.889, 'max': 8.889, 'min': 8.889, 'n': 1}
+09:34:23 09:36:23 {'mean': 12.593, 'max': 17.778, 'min': 8.889, 'n': 3}
+09:40:23 09:41:23 {'mean': 8.889, 'max': 8.889, 'min': 8.889, 'n': 2}
+09:43:23 09:43:23 {'mean': 8.889, 'max': 8.889, 'min': 8.889, 'n': 1}
+09:46:23 09:51:23 {'mean': 10.741, 'max': 15.556, 'min': 6.667, 'n': 6}
+09:53:23 09:54:23 {'mean': 11.111, 'max': 13.333, 'min': 8.889, 'n': 2}
+09:56:23 09:56:23 {'mean': 8.889, 'max': 8.889, 'min': 8.889, 'n': 1}
+10:00:23 10:02:23 {'mean': 10.37, 'max': 15.556, 'min': 6.667, 'n': 3}
+10:04:23 10:04:23 {'mean': 11.111, 'max': 11.111, 'min': 11.111, 'n': 1}
+10:06:23 10:06:23 {'mean': 11.111, 'max': 11.111, 'min': 11.111, 'n': 1}
+10:08:23 10:09:23 {'mean': 8.889, 'max': 8.889, 'min': 8.889, 'n': 2}
+10:11:23 10:16:23 {'mean': 37.037, 'max': 100.0, 'min': 6.667, 'n': 6}
+10:48:23 11:44:23 {'mean': 99.805, 'max': 100.0, 'min': 88.889, 'n': 57}
+LOSS EPISODES >=5% google
+08:13:23 08:15:23 {'mean': 15.556, 'max': 17.778, 'min': 13.333, 'n': 3}
+08:17:23 08:18:23 {'mean': 8.889, 'max': 11.111, 'min': 6.667, 'n': 2}
+08:22:23 08:22:23 {'mean': 13.333, 'max': 13.333, 'min': 13.333, 'n': 1}
+08:24:23 08:26:23 {'mean': 7.407, 'max': 8.889, 'min': 6.667, 'n': 3}
+08:32:23 08:33:23 {'mean': 7.778, 'max': 8.889, 'min': 6.667, 'n': 2}
+08:35:23 08:36:23 {'mean': 14.444, 'max': 17.778, 'min': 11.111, 'n': 2}
+08:38:23 08:38:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+08:40:23 08:41:23 {'mean': 17.778, 'max': 24.444, 'min': 11.111, 'n': 2}
+08:43:23 08:43:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+08:48:23 08:48:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+08:52:23 08:55:23 {'mean': 13.333, 'max': 24.444, 'min': 6.667, 'n': 4}
+08:58:23 09:01:23 {'mean': 8.333, 'max': 8.889, 'min': 6.667, 'n': 4}
+09:04:23 09:04:23 {'mean': 8.889, 'max': 8.889, 'min': 8.889, 'n': 1}
+09:06:23 09:06:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+09:08:23 09:08:23 {'mean': 8.889, 'max': 8.889, 'min': 8.889, 'n': 1}
+09:10:23 09:10:23 {'mean': 11.111, 'max': 11.111, 'min': 11.111, 'n': 1}
+09:12:23 09:12:23 {'mean': 11.111, 'max': 11.111, 'min': 11.111, 'n': 1}
+09:14:23 09:22:23 {'mean': 10.617, 'max': 15.556, 'min': 6.667, 'n': 9}
+09:24:23 09:25:23 {'mean': 12.222, 'max': 15.556, 'min': 8.889, 'n': 2}
+09:28:23 09:28:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+09:30:23 09:31:23 {'mean': 7.778, 'max': 8.889, 'min': 6.667, 'n': 2}
+09:33:23 09:36:23 {'mean': 7.778, 'max': 8.889, 'min': 6.667, 'n': 4}
+09:39:23 09:39:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+09:41:23 09:42:23 {'mean': 7.778, 'max': 8.889, 'min': 6.667, 'n': 2}
+09:45:23 09:46:23 {'mean': 13.333, 'max': 13.333, 'min': 13.333, 'n': 2}
+09:48:23 09:48:23 {'mean': 13.333, 'max': 13.333, 'min': 13.333, 'n': 1}
+09:54:23 09:54:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+09:56:23 09:57:23 {'mean': 7.778, 'max': 8.889, 'min': 6.667, 'n': 2}
+09:59:23 09:59:23 {'mean': 8.889, 'max': 8.889, 'min': 8.889, 'n': 1}
+10:01:23 10:08:23 {'mean': 10.0, 'max': 13.333, 'min': 6.667, 'n': 8}
+10:12:23 10:16:23 {'mean': 42.222, 'max': 100.0, 'min': 6.667, 'n': 5}
+10:48:23 11:44:23 {'mean': 99.805, 'max': 100.0, 'min': 88.889, 'n': 57}
+LOSS EPISODES >=5% quad9
+08:11:23 08:11:23 {'mean': 17.778, 'max': 17.778, 'min': 17.778, 'n': 1}
+08:13:23 08:18:23 {'mean': 10.37, 'max': 13.333, 'min': 6.667, 'n': 6}
+08:20:23 08:20:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+08:25:23 08:26:23 {'mean': 10.0, 'max': 13.333, 'min': 6.667, 'n': 2}
+08:28:23 08:28:23 {'mean': 15.556, 'max': 15.556, 'min': 15.556, 'n': 1}
+08:31:23 08:31:23 {'mean': 8.889, 'max': 8.889, 'min': 8.889, 'n': 1}
+08:33:23 08:38:23 {'mean': 10.37, 'max': 15.556, 'min': 6.667, 'n': 6}
+08:40:23 08:40:23 {'mean': 13.333, 'max': 13.333, 'min': 13.333, 'n': 1}
+08:42:23 08:42:23 {'mean': 17.778, 'max': 17.778, 'min': 17.778, 'n': 1}
+08:44:23 08:44:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+08:49:23 08:49:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+08:53:23 08:55:23 {'mean': 11.111, 'max': 13.333, 'min': 8.889, 'n': 3}
+08:58:23 09:05:23 {'mean': 9.167, 'max': 15.556, 'min': 6.667, 'n': 8}
+09:07:23 09:07:23 {'mean': 8.889, 'max': 8.889, 'min': 8.889, 'n': 1}
+09:10:23 09:10:23 {'mean': 11.111, 'max': 11.111, 'min': 11.111, 'n': 1}
+09:13:23 09:20:23 {'mean': 9.444, 'max': 15.556, 'min': 6.667, 'n': 8}
+09:22:23 09:22:23 {'mean': 15.556, 'max': 15.556, 'min': 15.556, 'n': 1}
+09:24:23 09:24:23 {'mean': 13.333, 'max': 13.333, 'min': 13.333, 'n': 1}
+09:27:23 09:28:23 {'mean': 12.222, 'max': 13.333, 'min': 11.111, 'n': 2}
+09:30:23 09:31:23 {'mean': 11.111, 'max': 13.333, 'min': 8.889, 'n': 2}
+09:33:23 09:36:23 {'mean': 11.111, 'max': 15.556, 'min': 6.667, 'n': 4}
+09:39:23 09:40:23 {'mean': 13.333, 'max': 20.0, 'min': 6.667, 'n': 2}
+09:42:23 09:43:23 {'mean': 10.0, 'max': 11.111, 'min': 8.889, 'n': 2}
+09:45:23 09:50:23 {'mean': 11.111, 'max': 15.556, 'min': 6.667, 'n': 6}
+09:52:23 09:53:23 {'mean': 8.889, 'max': 11.111, 'min': 6.667, 'n': 2}
+09:55:23 09:57:23 {'mean': 10.37, 'max': 13.333, 'min': 8.889, 'n': 3}
+09:59:23 10:05:23 {'mean': 8.889, 'max': 11.111, 'min': 6.667, 'n': 7}
+10:09:23 10:09:23 {'mean': 6.667, 'max': 6.667, 'min': 6.667, 'n': 1}
+10:12:23 10:16:23 {'mean': 42.222, 'max': 100.0, 'min': 8.889, 'n': 5}
+10:48:23 11:44:23 {'mean': 99.766, 'max': 100.0, 'min': 86.667, 'n': 57}
+LOSS EPISODES >=5% pfsense
+WAN PEAKS ifHCInOctets [('08:07:56', 756.09), ('08:06:56', 749.22), ('08:08:56', 402.41), ('08:05:56', 378.07), ('08:20:56', 111.17), ('07:00:56', 84.73), ('09:21:56', 57.12), ('11:33:56', 56.37), ('11:35:56', 55.05), ('09:31:56', 54.99)]
+WAN PEAKS ifHCOutOctets [('10:28:56', 26.21), ('10:27:56', 20.42), ('10:29:56', 17.91), ('08:49:56', 13.67), ('08:47:56', 9.59), ('08:50:56', 8.8), ('08:46:56', 8.78), ('08:48:56', 7.53), ('08:38:56', 7.25), ('08:45:56', 5.64)]
+
+WINDOW 07:30 08:10
+internet:ping_loss:ratio1m cloudflare {'mean': 0.222, 'max': 4.444, 'min': 0.0, 'n': 40}
+internet:ping_loss:ratio1m google {'mean': 0.5, 'max': 4.444, 'min': 0.0, 'n': 40}
+internet:ping_loss:ratio1m quad9 {'mean': 0.333, 'max': 4.444, 'min': 0.0, 'n': 40}
+internet:ping_loss:ratio1m pfsense {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 40}
+internet:ping_rtt_seconds:p95_5m cloudflare {'mean': 41.386, 'max': 93.158, 'min': 29.688, 'n': 40}
+internet:ping_rtt_seconds:p95_5m google {'mean': 41.128, 'max': 98.687, 'min': 29.841, 'n': 40}
+internet:ping_rtt_seconds:p95_5m quad9 {'mean': 40.991, 'max': 96.653, 'min': 29.702, 'n': 40}
+internet:ping_rtt_seconds:p95_5m pfsense {'mean': 0.953, 'max': 0.96, 'min': 0.95, 'n': 40}
+hrProcessorLoad 196608 {'mean': 3.15, 'max': 18.0, 'min': 1.0, 'n': 40}
+hrProcessorLoad 196609 {'mean': 3.825, 'max': 32.0, 'min': 1.0, 'n': 40}
+hrProcessorLoad 196610 {'mean': 4.075, 'max': 34.0, 'min': 1.0, 'n': 40}
+hrProcessorLoad 196611 {'mean': 3.175, 'max': 21.0, 'min': 1.0, 'n': 40}
+ifHCInOctets {'mean': 59.875, 'max': 756.088, 'min': 0.101, 'n': 40}
+ifHCOutOctets {'mean': 0.336, 'max': 3.561, 'min': 0.065, 'n': 40}
+
+WINDOW 08:10 08:30
+internet:ping_loss:ratio1m cloudflare {'mean': 7.778, 'max': 24.444, 'min': 0.0, 'n': 20}
+internet:ping_loss:ratio1m google {'mean': 6.0, 'max': 17.778, 'min': 0.0, 'n': 20}
+internet:ping_loss:ratio1m quad9 {'mean': 7.111, 'max': 17.778, 'min': 0.0, 'n': 20}
+internet:ping_loss:ratio1m pfsense {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 20}
+internet:ping_rtt_seconds:p95_5m cloudflare {'mean': 98.625, 'max': 145.833, 'min': 66.562, 'n': 20}
+internet:ping_rtt_seconds:p95_5m google {'mean': 118.559, 'max': 205.5, 'min': 69.239, 'n': 20}
+internet:ping_rtt_seconds:p95_5m quad9 {'mean': 125.686, 'max': 176.667, 'min': 85.208, 'n': 20}
+internet:ping_rtt_seconds:p95_5m pfsense {'mean': 0.954, 'max': 0.964, 'min': 0.95, 'n': 20}
+hrProcessorLoad 196608 {'mean': 1.8, 'max': 8.0, 'min': 1.0, 'n': 20}
+hrProcessorLoad 196609 {'mean': 1.75, 'max': 4.0, 'min': 1.0, 'n': 20}
+hrProcessorLoad 196610 {'mean': 1.7, 'max': 7.0, 'min': 1.0, 'n': 20}
+hrProcessorLoad 196611 {'mean': 1.75, 'max': 5.0, 'min': 1.0, 'n': 20}
+ifHCInOctets {'mean': 7.597, 'max': 111.168, 'min': 0.096, 'n': 20}
+ifHCOutOctets {'mean': 0.191, 'max': 1.536, 'min': 0.058, 'n': 20}
+
+WINDOW 08:30 10:10
+internet:ping_loss:ratio1m cloudflare {'mean': 6.867, 'max': 17.778, 'min': 0.0, 'n': 100}
+internet:ping_loss:ratio1m google {'mean': 7.022, 'max': 24.444, 'min': 0.0, 'n': 100}
+internet:ping_loss:ratio1m quad9 {'mean': 7.6, 'max': 20.0, 'min': 0.0, 'n': 100}
+internet:ping_loss:ratio1m pfsense {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 100}
+internet:ping_rtt_seconds:p95_5m cloudflare {'mean': 109.634, 'max': 249.231, 'min': 47.095, 'n': 100}
+internet:ping_rtt_seconds:p95_5m google {'mean': 119.029, 'max': 244.231, 'min': 56.25, 'n': 100}
+internet:ping_rtt_seconds:p95_5m quad9 {'mean': 105.543, 'max': 172.353, 'min': 47.4, 'n': 100}
+internet:ping_rtt_seconds:p95_5m pfsense {'mean': 0.951, 'max': 0.957, 'min': 0.95, 'n': 100}
+hrProcessorLoad 196608 {'mean': 1.5, 'max': 4.0, 'min': 1.0, 'n': 100}
+hrProcessorLoad 196609 {'mean': 1.75, 'max': 5.0, 'min': 1.0, 'n': 100}
+hrProcessorLoad 196610 {'mean': 1.51, 'max': 3.0, 'min': 1.0, 'n': 100}
+hrProcessorLoad 196611 {'mean': 1.67, 'max': 8.0, 'min': 1.0, 'n': 100}
+ifHCInOctets {'mean': 1.623, 'max': 57.124, 'min': 0.089, 'n': 100}
+ifHCOutOctets {'mean': 0.808, 'max': 13.669, 'min': 0.051, 'n': 100}
+
+WINDOW 10:10 10:20
+internet:ping_loss:ratio1m cloudflare {'mean': 22.444, 'max': 100.0, 'min': 0.0, 'n': 10}
+internet:ping_loss:ratio1m google {'mean': 21.778, 'max': 100.0, 'min': 0.0, 'n': 10}
+internet:ping_loss:ratio1m quad9 {'mean': 21.333, 'max': 100.0, 'min': 0.0, 'n': 10}
+internet:ping_loss:ratio1m pfsense {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 10}
+internet:ping_rtt_seconds:p95_5m cloudflare {'mean': 116.912, 'max': 170.455, 'min': 43.789, 'n': 10}
+internet:ping_rtt_seconds:p95_5m google {'mean': 104.899, 'max': 187.5, 'min': 40.579, 'n': 10}
+internet:ping_rtt_seconds:p95_5m quad9 {'mean': 79.037, 'max': 109.792, 'min': 42.583, 'n': 10}
+internet:ping_rtt_seconds:p95_5m pfsense {'mean': 0.95, 'max': 0.95, 'min': 0.95, 'n': 10}
+hrProcessorLoad 196608 {'mean': 1.7, 'max': 3.0, 'min': 1.0, 'n': 10}
+hrProcessorLoad 196609 {'mean': 1.8, 'max': 3.0, 'min': 1.0, 'n': 10}
+hrProcessorLoad 196610 {'mean': 2.0, 'max': 4.0, 'min': 1.0, 'n': 10}
+hrProcessorLoad 196611 {'mean': 2.0, 'max': 3.0, 'min': 1.0, 'n': 10}
+ifHCInOctets {'mean': 0.32, 'max': 1.203, 'min': 0.0, 'n': 10}
+ifHCOutOctets {'mean': 0.131, 'max': 0.455, 'min': 0.054, 'n': 10}
+
+WINDOW 10:20 10:45
+internet:ping_loss:ratio1m cloudflare {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 25}
+internet:ping_loss:ratio1m google {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 25}
+internet:ping_loss:ratio1m quad9 {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 25}
+internet:ping_loss:ratio1m pfsense {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 25}
+internet:ping_rtt_seconds:p95_5m cloudflare {'mean': 37.109, 'max': 43.923, 'min': 29.953, 'n': 25}
+internet:ping_rtt_seconds:p95_5m google {'mean': 40.421, 'max': 45.256, 'min': 36.389, 'n': 25}
+internet:ping_rtt_seconds:p95_5m quad9 {'mean': 37.444, 'max': 43.875, 'min': 29.914, 'n': 25}
+internet:ping_rtt_seconds:p95_5m pfsense {'mean': 0.951, 'max': 0.953, 'min': 0.95, 'n': 25}
+hrProcessorLoad 196608 {'mean': 1.76, 'max': 6.0, 'min': 1.0, 'n': 25}
+hrProcessorLoad 196609 {'mean': 1.68, 'max': 3.0, 'min': 1.0, 'n': 25}
+hrProcessorLoad 196610 {'mean': 2.16, 'max': 8.0, 'min': 1.0, 'n': 25}
+hrProcessorLoad 196611 {'mean': 1.6, 'max': 2.0, 'min': 1.0, 'n': 25}
+ifHCInOctets {'mean': 0.816, 'max': 7.783, 'min': 0.098, 'n': 25}
+ifHCOutOctets {'mean': 2.675, 'max': 26.206, 'min': 0.054, 'n': 25}
+
+WINDOW 10:45 10:55
+internet:ping_loss:ratio1m cloudflare {'mean': 68.889, 'max': 100.0, 'min': 0.0, 'n': 10}
+internet:ping_loss:ratio1m google {'mean': 68.889, 'max': 100.0, 'min': 0.0, 'n': 10}
+internet:ping_loss:ratio1m quad9 {'mean': 68.667, 'max': 100.0, 'min': 0.0, 'n': 10}
+internet:ping_loss:ratio1m pfsense {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 10}
+internet:ping_rtt_seconds:p95_5m cloudflare {'mean': 67.436, 'max': 225.0, 'min': 43.553, 'n': 8}
+internet:ping_rtt_seconds:p95_5m google {'mean': 96.929, 'max': 437.5, 'min': 44.167, 'n': 8}
+internet:ping_rtt_seconds:p95_5m quad9 {'mean': 91.139, 'max': 425.0, 'min': 40.577, 'n': 8}
+internet:ping_rtt_seconds:p95_5m pfsense {'mean': 0.953, 'max': 0.957, 'min': 0.95, 'n': 10}
+hrProcessorLoad 196608 {'mean': 2.5, 'max': 3.0, 'min': 1.0, 'n': 10}
+hrProcessorLoad 196609 {'mean': 2.3, 'max': 3.0, 'min': 1.0, 'n': 10}
+hrProcessorLoad 196610 {'mean': 2.1, 'max': 3.0, 'min': 1.0, 'n': 10}
+hrProcessorLoad 196611 {'mean': 2.7, 'max': 3.0, 'min': 2.0, 'n': 10}
+ifHCInOctets {'mean': 0.055, 'max': 0.191, 'min': 0.001, 'n': 10}
+ifHCOutOctets {'mean': 0.153, 'max': 0.249, 'min': 0.078, 'n': 10}
+
+WINDOW 10:55 11:20
+internet:ping_loss:ratio1m cloudflare {'mean': 100.0, 'max': 100.0, 'min': 100.0, 'n': 25}
+internet:ping_loss:ratio1m google {'mean': 100.0, 'max': 100.0, 'min': 100.0, 'n': 25}
+internet:ping_loss:ratio1m quad9 {'mean': 100.0, 'max': 100.0, 'min': 100.0, 'n': 25}
+internet:ping_loss:ratio1m pfsense {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 25}
+internet:ping_rtt_seconds:p95_5m cloudflare {}
+internet:ping_rtt_seconds:p95_5m google {}
+internet:ping_rtt_seconds:p95_5m quad9 {}
+internet:ping_rtt_seconds:p95_5m pfsense {'mean': 0.952, 'max': 0.953, 'min': 0.95, 'n': 25}
+hrProcessorLoad 196608 {'mean': 2.36, 'max': 3.0, 'min': 2.0, 'n': 25}
+hrProcessorLoad 196609 {'mean': 2.16, 'max': 3.0, 'min': 2.0, 'n': 25}
+hrProcessorLoad 196610 {'mean': 2.28, 'max': 3.0, 'min': 2.0, 'n': 25}
+hrProcessorLoad 196611 {'mean': 2.12, 'max': 3.0, 'min': 2.0, 'n': 25}
+ifHCInOctets {'mean': 0.001, 'max': 0.002, 'min': 0.001, 'n': 25}
+ifHCOutOctets {'mean': 0.036, 'max': 0.169, 'min': 0.001, 'n': 25}
+
+WINDOW 11:20 11:27
+internet:ping_loss:ratio1m cloudflare {'mean': 100.0, 'max': 100.0, 'min': 100.0, 'n': 7}
+internet:ping_loss:ratio1m google {'mean': 100.0, 'max': 100.0, 'min': 100.0, 'n': 7}
+internet:ping_loss:ratio1m quad9 {'mean': 100.0, 'max': 100.0, 'min': 100.0, 'n': 7}
+internet:ping_loss:ratio1m pfsense {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 7}
+internet:ping_rtt_seconds:p95_5m cloudflare {}
+internet:ping_rtt_seconds:p95_5m google {}
+internet:ping_rtt_seconds:p95_5m quad9 {}
+internet:ping_rtt_seconds:p95_5m pfsense {'mean': 0.952, 'max': 0.953, 'min': 0.95, 'n': 7}
+hrProcessorLoad 196608 {'mean': 3.0, 'max': 5.0, 'min': 2.0, 'n': 6}
+hrProcessorLoad 196609 {'mean': 3.0, 'max': 5.0, 'min': 2.0, 'n': 6}
+hrProcessorLoad 196610 {'mean': 3.167, 'max': 5.0, 'min': 2.0, 'n': 6}
+hrProcessorLoad 196611 {'mean': 3.333, 'max': 6.0, 'min': 2.0, 'n': 6}
+ifHCInOctets {'mean': 0.152, 'max': 1.061, 'min': 0.0, 'n': 7}
+ifHCOutOctets {'mean': 0.104, 'max': 0.718, 'min': 0.001, 'n': 7}
+
+WINDOW 11:27 11:45
+internet:ping_loss:ratio1m cloudflare {'mean': 100.0, 'max': 100.0, 'min': 100.0, 'n': 18}
+internet:ping_loss:ratio1m google {'mean': 100.0, 'max': 100.0, 'min': 100.0, 'n': 18}
+internet:ping_loss:ratio1m quad9 {'mean': 100.0, 'max': 100.0, 'min': 100.0, 'n': 18}
+internet:ping_loss:ratio1m pfsense {'mean': 0.0, 'max': 0.0, 'min': 0.0, 'n': 18}
+internet:ping_rtt_seconds:p95_5m cloudflare {}
+internet:ping_rtt_seconds:p95_5m google {}
+internet:ping_rtt_seconds:p95_5m quad9 {}
+internet:ping_rtt_seconds:p95_5m pfsense {'mean': 0.953, 'max': 0.96, 'min': 0.95, 'n': 18}
+hrProcessorLoad 196608 {'mean': 2.278, 'max': 7.0, 'min': 1.0, 'n': 18}
+hrProcessorLoad 196609 {'mean': 1.833, 'max': 3.0, 'min': 1.0, 'n': 18}
+hrProcessorLoad 196610 {'mean': 1.722, 'max': 4.0, 'min': 1.0, 'n': 18}
+hrProcessorLoad 196611 {'mean': 1.833, 'max': 4.0, 'min': 1.0, 'n': 18}
+ifHCInOctets {'mean': 7.449, 'max': 56.374, 'min': 0.111, 'n': 18}
+ifHCOutOctets {'mean': 0.282, 'max': 1.038, 'min': 0.077, 'n': 18}
+HEALTH {'__name__': 'ifInErrors', 'ifIndex': '13', 'ifName': 'tun_wg0', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 1903.0, 'max': 1903.0, 'min': 1903.0, 'n': 300} firstlast (1792320356.925, 1903.0) (1792338296.925, 1903.0) changes []
+HEALTH {'__name__': 'ifInErrors', 'ifIndex': '19', 'ifName': 'lagg0', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 4483.0, 'max': 4483.0, 'min': 4483.0, 'n': 300} firstlast (1792320356.925, 4483.0) (1792338296.925, 4483.0) changes []
+HEALTH {'__name__': 'ifInErrors', 'ifIndex': '5', 'ifName': 'ix0', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 31.0, 'max': 31.0, 'min': 31.0, 'n': 300} firstlast (1792320356.925, 31.0) (1792338296.925, 31.0) changes []
+HEALTH {'__name__': 'ifInErrors', 'ifIndex': '6', 'ifName': 'ix1', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 5461951.0, 'max': 5461951.0, 'min': 5461951.0, 'n': 300} firstlast (1792320356.925, 5461951.0) (1792338296.925, 5461951.0) changes []
+HEALTH {'__name__': 'ifOutErrors', 'ifIndex': '13', 'ifName': 'tun_wg0', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 11275.0, 'max': 11275.0, 'min': 11275.0, 'n': 300} firstlast (1792320356.925, 11275.0) (1792338296.925, 11275.0) changes []
+HEALTH {'__name__': 'ifOutErrors', 'ifIndex': '19', 'ifName': 'lagg0', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 24.0, 'max': 24.0, 'min': 24.0, 'n': 300} firstlast (1792320356.925, 24.0) (1792338296.925, 24.0) changes []
+HEALTH {'__name__': 'ifInDiscards', 'ifIndex': '13', 'ifName': 'tun_wg0', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 568.0, 'max': 568.0, 'min': 568.0, 'n': 300} firstlast (1792320356.925, 568.0) (1792338296.925, 568.0) changes []
+HEALTH {'__name__': 'ifOperStatus', 'ifIndex': '1', 'ifName': 'igc0', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 2.0, 'max': 2.0, 'min': 2.0, 'n': 300} firstlast (1792320356.925, 2.0) (1792338296.925, 2.0) changes []
+HEALTH {'__name__': 'ifOperStatus', 'ifIndex': '11', 'ifName': 'pflog0', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 2.0, 'max': 2.0, 'min': 2.0, 'n': 300} firstlast (1792320356.925, 2.0) (1792338296.925, 2.0) changes []
+HEALTH {'__name__': 'ifOperStatus', 'ifIndex': '12', 'ifName': 'pfsync0', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 2.0, 'max': 2.0, 'min': 2.0, 'n': 300} firstlast (1792320356.925, 2.0) (1792338296.925, 2.0) changes []
+HEALTH {'__name__': 'ifOperStatus', 'ifIndex': '18', 'ifName': 'pppoe1', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 2.0, 'max': 2.0, 'min': 2.0, 'n': 300} firstlast (1792320356.925, 2.0) (1792338296.925, 2.0) changes []
+HEALTH {'__name__': 'ifOperStatus', 'ifIndex': '2', 'ifName': 'igc1', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 2.0, 'max': 2.0, 'min': 2.0, 'n': 300} firstlast (1792320356.925, 2.0) (1792338296.925, 2.0) changes []
+HEALTH {'__name__': 'ifOperStatus', 'ifIndex': '3', 'ifName': 'igc2', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 2.0, 'max': 2.0, 'min': 2.0, 'n': 300} firstlast (1792320356.925, 2.0) (1792338296.925, 2.0) changes []
+HEALTH {'__name__': 'ifOperStatus', 'ifIndex': '4', 'ifName': 'igc3', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 2.0, 'max': 2.0, 'min': 2.0, 'n': 300} firstlast (1792320356.925, 2.0) (1792338296.925, 2.0) changes []
+HEALTH {'__name__': 'ifOperStatus', 'ifIndex': '8', 'ifName': 'ix3', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 2.0, 'max': 2.0, 'min': 2.0, 'n': 300} firstlast (1792320356.925, 2.0) (1792338296.925, 2.0) changes []
+HEALTH {'__name__': 'ifOperStatus', 'ifIndex': '9', 'ifName': 'enc0', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 2.0, 'max': 2.0, 'min': 2.0, 'n': 300} firstlast (1792320356.925, 2.0) (1792338296.925, 2.0) changes []
+HEALTH {'__name__': 'sysUpTime', 'instance': 'pfsense', 'job': 'pfsense'} {'mean': 167465.804, 'max': 187151.28, 'min': 19.56, 'n': 300} firstlast (1792320356.925, 170351.28) (1792338296.925, 1099.56) changes [('06:46:56', 170411.28), ('06:47:56', 170471.28), ('06:48:56', 170531.28), ('06:49:56', 170591.28), ('06:50:56', 170651.28), ('06:51:56', 170711.28), ('06:52:56', 170771.28), ('06:53:56', 170831.28), ('06:54:56', 170891.28), ('06:55:56', 170951.28), ('06:56:56', 171011.28), ('06:57:56', 171071.28), ('06:58:56', 171131.28), ('06:59:56', 171191.28), ('07:00:56', 171251.28), ('07:01:56', 171311.28), ('07:02:56', 171371.28), ('07:03:56', 171431.28), ('07:04:56', 171491.28), ('07:05:56', 171551.28), ('07:06:56', 171611.28), ('07:07:56', 171671.28), ('07:08:56', 171731.28), ('07:09:56', 171791.28), ('07:10:56', 171851.28), ('07:11:56', 171911.28), ('07:12:56', 171971.28), ('07:13:56', 172031.28), ('07:14:56', 172091.28), ('07:15:56', 172151.28)]
+HEALTH {'__name__': 'process_start_time_seconds', 'instance': 'ocp-mgmt', 'job': 'internet_ping'} {'mean': 1792257769.68, 'max': 1792257769.68, 'min': 1792257769.68, 'n': 1200} firstlast (1792320313.121, 1792257769.68) (1792338298.121, 1792257769.68) changes []
+
+SERVICES
+cloudflare-dns 186 / 1200 firstlast 07:55:15 11:25:45
+google-dns 212 / 1200 firstlast 08:03:50 11:26:05
+plex-web 163 / 1200 firstlast 10:14:04 11:26:19
+aws-tokyo 162 / 1200 firstlast 10:14:05 11:26:05
+aws-ireland 162 / 1200 firstlast 10:13:59 11:25:59
+plex-api 163 / 1200 firstlast 10:14:02 11:26:17
+quay-registry 162 / 1200 firstlast 10:14:04 11:26:04
+redhat-registry 163 / 1200 firstlast 10:14:08 11:26:23
+amazon-https 162 / 1200 firstlast 10:14:11 11:26:11
+cloudflare-https 162 / 1200 firstlast 10:14:03 11:26:03
+google-https 161 / 1200 firstlast 10:14:11 11:25:56
+youtube-https 162 / 1200 firstlast 10:14:03 11:25:48
+
+MINUTE DETAIL: time, cf/google/quad9/lan loss%, down/up Mbps, cpu max, WAN status
+{'timestamp_utc': '2026-10-18T12:05:23.335000+00:00', 'time_edt': '08:05:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 4.44, 'quad9_loss_pct': 2.22, 'pfsense_loss_pct': 0.0, 'download_mbps': 37.808, 'upload_mbps': 0.205, 'cpu_max_pct': 7.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:06:23.335000+00:00', 'time_edt': '08:06:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 378.072, 'upload_mbps': 1.494, 'cpu_max_pct': 18.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:07:23.335000+00:00', 'time_edt': '08:07:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 749.217, 'upload_mbps': 1.198, 'cpu_max_pct': 34.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:08:23.335000+00:00', 'time_edt': '08:08:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 756.088, 'upload_mbps': 1.486, 'cpu_max_pct': 34.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:09:23.335000+00:00', 'time_edt': '08:09:23', 'cloudflare_loss_pct': 2.22, 'google_loss_pct': 2.22, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 402.408, 'upload_mbps': 3.561, 'cpu_max_pct': 18.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:10:23.335000+00:00', 'time_edt': '08:10:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 2.22, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.351, 'upload_mbps': 0.077, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:11:23.335000+00:00', 'time_edt': '08:11:23', 'cloudflare_loss_pct': 6.67, 'google_loss_pct': 2.22, 'quad9_loss_pct': 17.78, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.121, 'upload_mbps': 0.088, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:12:23.335000+00:00', 'time_edt': '08:12:23', 'cloudflare_loss_pct': 2.22, 'google_loss_pct': 0.0, 'quad9_loss_pct': 4.44, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.122, 'upload_mbps': 0.078, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:13:23.335000+00:00', 'time_edt': '08:13:23', 'cloudflare_loss_pct': 24.44, 'google_loss_pct': 15.56, 'quad9_loss_pct': 13.33, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.287, 'upload_mbps': 0.071, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:14:23.335000+00:00', 'time_edt': '08:14:23', 'cloudflare_loss_pct': 6.67, 'google_loss_pct': 17.78, 'quad9_loss_pct': 6.67, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.1, 'upload_mbps': 0.06, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:15:23.335000+00:00', 'time_edt': '08:15:23', 'cloudflare_loss_pct': 11.11, 'google_loss_pct': 13.33, 'quad9_loss_pct': 13.33, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.096, 'upload_mbps': 0.073, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:16:23.335000+00:00', 'time_edt': '08:16:23', 'cloudflare_loss_pct': 8.89, 'google_loss_pct': 0.0, 'quad9_loss_pct': 13.33, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.151, 'upload_mbps': 0.058, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:17:23.335000+00:00', 'time_edt': '08:17:23', 'cloudflare_loss_pct': 8.89, 'google_loss_pct': 11.11, 'quad9_loss_pct': 6.67, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.151, 'upload_mbps': 0.086, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:18:23.335000+00:00', 'time_edt': '08:18:23', 'cloudflare_loss_pct': 11.11, 'google_loss_pct': 6.67, 'quad9_loss_pct': 8.89, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.097, 'upload_mbps': 0.061, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:19:23.335000+00:00', 'time_edt': '08:19:23', 'cloudflare_loss_pct': 6.67, 'google_loss_pct': 2.22, 'quad9_loss_pct': 2.22, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.155, 'upload_mbps': 0.061, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:20:23.335000+00:00', 'time_edt': '08:20:23', 'cloudflare_loss_pct': 6.67, 'google_loss_pct': 0.0, 'quad9_loss_pct': 6.67, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.196, 'upload_mbps': 0.085, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:21:23.335000+00:00', 'time_edt': '08:21:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 2.22, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 111.168, 'upload_mbps': 1.536, 'cpu_max_pct': 8.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:22:23.335000+00:00', 'time_edt': '08:22:23', 'cloudflare_loss_pct': 6.67, 'google_loss_pct': 13.33, 'quad9_loss_pct': 4.44, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.167, 'upload_mbps': 0.075, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:23:23.335000+00:00', 'time_edt': '08:23:23', 'cloudflare_loss_pct': 2.22, 'google_loss_pct': 2.22, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.123, 'upload_mbps': 0.079, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T12:24:23.335000+00:00', 'time_edt': '08:24:23', 'cloudflare_loss_pct': 2.22, 'google_loss_pct': 8.89, 'quad9_loss_pct': 4.44, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.129, 'upload_mbps': 0.091, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:10:23.335000+00:00', 'time_edt': '10:10:23', 'cloudflare_loss_pct': 2.22, 'google_loss_pct': 4.44, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.209, 'upload_mbps': 0.104, 'cpu_max_pct': 1.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:11:23.335000+00:00', 'time_edt': '10:11:23', 'cloudflare_loss_pct': 8.89, 'google_loss_pct': 2.22, 'quad9_loss_pct': 2.22, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.275, 'upload_mbps': 0.069, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:12:23.335000+00:00', 'time_edt': '10:12:23', 'cloudflare_loss_pct': 6.67, 'google_loss_pct': 11.11, 'quad9_loss_pct': 11.11, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.097, 'upload_mbps': 0.062, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:13:23.335000+00:00', 'time_edt': '10:13:23', 'cloudflare_loss_pct': 8.89, 'google_loss_pct': 6.67, 'quad9_loss_pct': 8.89, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.119, 'upload_mbps': 0.073, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:14:23.335000+00:00', 'time_edt': '10:14:23', 'cloudflare_loss_pct': 37.78, 'google_loss_pct': 35.56, 'quad9_loss_pct': 31.11, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.115, 'upload_mbps': 0.062, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:15:23.335000+00:00', 'time_edt': '10:15:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.008, 'upload_mbps': 0.126, 'cpu_max_pct': 4.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:16:23.335000+00:00', 'time_edt': '10:16:23', 'cloudflare_loss_pct': 60.0, 'google_loss_pct': 57.78, 'quad9_loss_pct': 60.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.0, 'upload_mbps': 0.054, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:17:23.335000+00:00', 'time_edt': '10:17:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 1.203, 'upload_mbps': 0.224, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:18:23.335000+00:00', 'time_edt': '10:18:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.124, 'upload_mbps': 0.06, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:19:23.335000+00:00', 'time_edt': '10:19:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 1.101, 'upload_mbps': 0.455, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:20:23.335000+00:00', 'time_edt': '10:20:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.156, 'upload_mbps': 0.122, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:21:23.335000+00:00', 'time_edt': '10:21:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.152, 'upload_mbps': 0.073, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:22:23.335000+00:00', 'time_edt': '10:22:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.136, 'upload_mbps': 0.077, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:23:23.335000+00:00', 'time_edt': '10:23:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.123, 'upload_mbps': 0.069, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:24:23.335000+00:00', 'time_edt': '10:24:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.126, 'upload_mbps': 0.071, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:25:23.335000+00:00', 'time_edt': '10:25:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.163, 'upload_mbps': 0.082, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:26:23.335000+00:00', 'time_edt': '10:26:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.487, 'upload_mbps': 0.257, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:27:23.335000+00:00', 'time_edt': '10:27:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.19, 'upload_mbps': 0.079, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:28:23.335000+00:00', 'time_edt': '10:28:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.789, 'upload_mbps': 20.419, 'cpu_max_pct': 6.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:29:23.335000+00:00', 'time_edt': '10:29:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.362, 'upload_mbps': 26.206, 'cpu_max_pct': 8.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:30:23.335000+00:00', 'time_edt': '10:30:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.283, 'upload_mbps': 17.907, 'cpu_max_pct': 6.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:31:23.335000+00:00', 'time_edt': '10:31:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.143, 'upload_mbps': 0.093, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:32:23.335000+00:00', 'time_edt': '10:32:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.1, 'upload_mbps': 0.058, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:33:23.335000+00:00', 'time_edt': '10:33:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.109, 'upload_mbps': 0.063, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:34:23.335000+00:00', 'time_edt': '10:34:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.186, 'upload_mbps': 0.079, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:35:23.335000+00:00', 'time_edt': '10:35:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 4.619, 'upload_mbps': 0.204, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:36:23.335000+00:00', 'time_edt': '10:36:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 7.783, 'upload_mbps': 0.15, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:37:23.335000+00:00', 'time_edt': '10:37:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 2.63, 'upload_mbps': 0.113, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:38:23.335000+00:00', 'time_edt': '10:38:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.104, 'upload_mbps': 0.065, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:39:23.335000+00:00', 'time_edt': '10:39:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.647, 'upload_mbps': 0.16, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:40:23.335000+00:00', 'time_edt': '10:40:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.205, 'upload_mbps': 0.11, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:41:23.335000+00:00', 'time_edt': '10:41:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.141, 'upload_mbps': 0.057, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:42:23.335000+00:00', 'time_edt': '10:42:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.098, 'upload_mbps': 0.054, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:43:23.335000+00:00', 'time_edt': '10:43:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.13, 'upload_mbps': 0.07, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:44:23.335000+00:00', 'time_edt': '10:44:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.586, 'upload_mbps': 0.294, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:45:23.335000+00:00', 'time_edt': '10:45:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.114, 'upload_mbps': 0.071, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:46:23.335000+00:00', 'time_edt': '10:46:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.168, 'upload_mbps': 0.085, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:47:23.335000+00:00', 'time_edt': '10:47:23', 'cloudflare_loss_pct': 0.0, 'google_loss_pct': 0.0, 'quad9_loss_pct': 0.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.191, 'upload_mbps': 0.106, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:48:23.335000+00:00', 'time_edt': '10:48:23', 'cloudflare_loss_pct': 88.89, 'google_loss_pct': 88.89, 'quad9_loss_pct': 86.67, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.174, 'upload_mbps': 0.078, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:49:23.335000+00:00', 'time_edt': '10:49:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.005, 'upload_mbps': 0.168, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:50:23.335000+00:00', 'time_edt': '10:50:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.002, 'upload_mbps': 0.104, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:51:23.335000+00:00', 'time_edt': '10:51:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.006, 'upload_mbps': 0.218, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:52:23.335000+00:00', 'time_edt': '10:52:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.002, 'upload_mbps': 0.249, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:53:23.335000+00:00', 'time_edt': '10:53:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.002, 'upload_mbps': 0.189, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:54:23.335000+00:00', 'time_edt': '10:54:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.206, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:55:23.335000+00:00', 'time_edt': '10:55:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.128, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:56:23.335000+00:00', 'time_edt': '10:56:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.002, 'upload_mbps': 0.137, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:57:23.335000+00:00', 'time_edt': '10:57:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.169, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:58:23.335000+00:00', 'time_edt': '10:58:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.168, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T14:59:23.335000+00:00', 'time_edt': '10:59:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.118, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:00:23.335000+00:00', 'time_edt': '11:00:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.118, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:01:23.335000+00:00', 'time_edt': '11:01:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.132, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:02:23.335000+00:00', 'time_edt': '11:02:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.01, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:03:23.335000+00:00', 'time_edt': '11:03:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:04:23.335000+00:00', 'time_edt': '11:04:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:05:23.335000+00:00', 'time_edt': '11:05:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.007, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:06:23.335000+00:00', 'time_edt': '11:06:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:07:23.335000+00:00', 'time_edt': '11:07:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:08:23.335000+00:00', 'time_edt': '11:08:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:09:23.335000+00:00', 'time_edt': '11:09:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:10:23.335000+00:00', 'time_edt': '11:10:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:11:23.335000+00:00', 'time_edt': '11:11:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:12:23.335000+00:00', 'time_edt': '11:12:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.006, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:13:23.335000+00:00', 'time_edt': '11:13:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:14:23.335000+00:00', 'time_edt': '11:14:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:15:23.335000+00:00', 'time_edt': '11:15:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:16:23.335000+00:00', 'time_edt': '11:16:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:17:23.335000+00:00', 'time_edt': '11:17:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:18:23.335000+00:00', 'time_edt': '11:18:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:19:23.335000+00:00', 'time_edt': '11:19:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.008, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:20:23.335000+00:00', 'time_edt': '11:20:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:21:23.335000+00:00', 'time_edt': '11:21:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:22:23.335000+00:00', 'time_edt': '11:22:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.001, 'upload_mbps': 0.001, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:23:23.335000+00:00', 'time_edt': '11:23:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.0, 'upload_mbps': 0.001, 'cpu_max_pct': 6.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:24:23.335000+00:00', 'time_edt': '11:24:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.0, 'upload_mbps': 0.001, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:25:23.335000+00:00', 'time_edt': '11:25:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.0, 'upload_mbps': 0.001, 'cpu_max_pct': 5.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:26:23.335000+00:00', 'time_edt': '11:26:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.002, 'upload_mbps': 0.006, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:27:23.335000+00:00', 'time_edt': '11:27:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 1.061, 'upload_mbps': 0.718, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:28:23.335000+00:00', 'time_edt': '11:28:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.469, 'upload_mbps': 0.321, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:29:23.335000+00:00', 'time_edt': '11:29:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.187, 'upload_mbps': 0.168, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:30:23.335000+00:00', 'time_edt': '11:30:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.221, 'upload_mbps': 0.14, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:31:23.335000+00:00', 'time_edt': '11:31:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.196, 'upload_mbps': 0.14, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:32:23.335000+00:00', 'time_edt': '11:32:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.215, 'upload_mbps': 0.127, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:33:23.335000+00:00', 'time_edt': '11:33:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.137, 'upload_mbps': 0.101, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:34:23.335000+00:00', 'time_edt': '11:34:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 56.374, 'upload_mbps': 1.032, 'cpu_max_pct': 5.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:35:23.335000+00:00', 'time_edt': '11:35:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 12.676, 'upload_mbps': 0.306, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:36:23.335000+00:00', 'time_edt': '11:36:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 55.053, 'upload_mbps': 1.038, 'cpu_max_pct': 7.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:37:23.335000+00:00', 'time_edt': '11:37:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.195, 'upload_mbps': 0.126, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:38:23.335000+00:00', 'time_edt': '11:38:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.253, 'upload_mbps': 0.104, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:39:23.335000+00:00', 'time_edt': '11:39:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.111, 'upload_mbps': 0.077, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:40:23.335000+00:00', 'time_edt': '11:40:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.208, 'upload_mbps': 0.11, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:41:23.335000+00:00', 'time_edt': '11:41:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.171, 'upload_mbps': 0.137, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:42:23.335000+00:00', 'time_edt': '11:42:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.735, 'upload_mbps': 0.192, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:43:23.335000+00:00', 'time_edt': '11:43:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 5.76, 'upload_mbps': 0.405, 'cpu_max_pct': 3.0, 'wan_link_status': 1.0}
+{'timestamp_utc': '2026-10-18T15:44:23.335000+00:00', 'time_edt': '11:44:23', 'cloudflare_loss_pct': 100.0, 'google_loss_pct': 100.0, 'quad9_loss_pct': 100.0, 'pfsense_loss_pct': 0.0, 'download_mbps': 0.924, 'upload_mbps': 0.399, 'cpu_max_pct': 2.0, 'wan_link_status': 1.0}
