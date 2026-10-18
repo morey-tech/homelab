@@ -185,9 +185,54 @@ case('failed exporter hides last success age', modem_data(up='1+0x19 0'), [
 
 with tempfile.TemporaryDirectory(prefix='internet-tests-') as directory:
     path = Path(directory) / 'tests.yml'
-    path.write_text(yaml.safe_dump({'rule_files': [str(ROOT / 'internet/rules.yml')],
+    # Keep the existing expression fixtures at their original sample timestamps.
+    # Test production scheduling separately below, including unavailable recent data.
+    rules = yaml.safe_load((ROOT / 'internet/rules.yml').read_text())
+    assert rules['groups'][0]['query_offset'] == '30s'
+    rules['groups'][0]['query_offset'] = '0s'
+    expression_rules = Path(directory) / 'expression-rules.yml'
+    expression_rules.write_text(yaml.safe_dump(rules))
+    path.write_text(yaml.safe_dump({'rule_files': [str(expression_rules)],
                                   'evaluation_interval': '1m', 'fuzzy_compare': True, 'tests': tests}))
     subprocess.run([os.environ.get('PROMTOOL', 'promtool'), 'test', 'rules', str(path)], check=True)
+
+    delayed = [sample(metric, values, metric not in ['up', 'smokeping_receive_errors_total'])
+               for metric, values in {
+                   'smokeping_requests_total': '0+15x22 _ _',
+                   'smokeping_response_duration_seconds_count': '0+15x22 _ _',
+                   'smokeping_send_errors_total': '0+0x22 _ _',
+                   'smokeping_receive_errors_total': '0+0x22 _ _',
+                   'up': '1+0x22 _ _',
+               }.items()]
+    labels = '{target="cloudflare",scope="internet"}'
+    offset_checks = [
+        {'expr': LOSS, 'eval_time': '6m',
+         'exp_samples': [{'labels': LOSS + labels, 'value': 0}]},
+        {'expr': f'timestamp({LOSS})', 'eval_time': '6m',
+         'exp_samples': [{'labels': labels, 'value': 330}]},
+        {'expr': 'internet:ping_loss:ratio5m', 'eval_time': '6m',
+         'exp_samples': [{'labels': 'internet:ping_loss:ratio5m' + labels, 'value': 0}]},
+    ]
+    missing = [{**item, 'values': item['values'].replace('x22 _ _', 'x18 _ _ _ _ _ _')}
+               for item in delayed]
+    # Control: the same delayed samples reproduce the original empty result.
+    path.write_text(yaml.safe_dump({'rule_files': [str(expression_rules)],
+                                  'evaluation_interval': '1m', 'tests': [{
+                                      'name': 'no offset reproduces ingestion race', 'interval': '15s',
+                                      'input_series': delayed, 'promql_expr_test': [
+                                          {'expr': LOSS, 'eval_time': '6m', 'exp_samples': []}]}]}))
+    subprocess.run([os.environ.get('PROMTOOL', 'promtool'), 'test', 'rules', str(path)], check=True)
+    scheduling_tests = [
+        {'name': 'offset tolerates latest 30 seconds still in transit', 'interval': '15s',
+         'input_series': delayed, 'promql_expr_test': offset_checks},
+        {'name': 'offset does not hide genuinely missing coverage', 'interval': '15s',
+         'input_series': missing, 'promql_expr_test': [
+             {'expr': LOSS, 'eval_time': '6m', 'exp_samples': []}]},
+    ]
+    path.write_text(yaml.safe_dump({'rule_files': [str(ROOT / 'internet/rules.yml')],
+                                  'evaluation_interval': '1m', 'tests': scheduling_tests}))
+    subprocess.run([os.environ.get('PROMTOOL', 'promtool'), 'test', 'rules', str(path)], check=True)
+
 
 # Check generated wiring and that no new privilege is introduced.
 deployment = yaml.safe_load((ROOT / 'smokeping-prober.yaml').read_text())['spec']['template']
@@ -226,4 +271,4 @@ with tempfile.TemporaryDirectory(prefix='internet-report-test-') as directory:
     assert len(list(csv.DictReader((out / 'samples.csv').open()))) == 5
     assert len(list(csv.DictReader((out / 'episodes.csv').open()))) == 3
     assert json.loads((out / 'metadata.json').read_text())['complete'] is True
-print(f'Internet Quality: {len(tests)} PromQL scenarios, deployment wiring and CSV report checks passed.')
+print(f'Internet Quality: {len(tests) + len(scheduling_tests) + 1} PromQL scenarios, deployment wiring and CSV report checks passed.')

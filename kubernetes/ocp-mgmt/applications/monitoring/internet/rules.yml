@@ -1,6 +1,9 @@
 groups:
   - name: internet-quality
     interval: 1m
+    # Allow Alloy remote-write samples to arrive before checking complete windows.
+    # Preserve sample-time alignment and strict coverage/freshness requirements.
+    query_offset: 30s
     rules:
       # A working HTTP metrics endpoint alone does not prove pings are running.
       # Require four recent scrapes, near-one-per-second sending, no restart,
