@@ -201,6 +201,18 @@ prometheus.scrape "pfsense" {
 	forward_to      = [prometheus.remote_write.infrastructure.receiver]
 }
 
+// The exporter polls the modem once per minute and keeps login state private.
+prometheus.scrape "modem" {
+	targets = [{
+		__address__ = "modem-exporter.monitoring.svc:9780",
+		job         = "modem",
+		instance    = "hitron",
+	}]
+	scrape_interval = "60s"
+	scrape_timeout  = "10s"
+	forward_to      = [prometheus.remote_write.infrastructure.receiver]
+}
+
 // Only aggregate counts are exported; API credentials stay in the exporter.
 prometheus.scrape "tautulli" {
 	targets = [{

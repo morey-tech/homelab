@@ -14,6 +14,8 @@ resources:
   - tautulli-exporter.yaml
   - sabnzbd-credentials.yaml
   - sabnzbd-exporter.yaml
+  - modem-credentials.yaml
+  - modem-exporter.yaml
   - storage.yaml
   - grafana.yaml
   - prometheus.yaml
@@ -24,6 +26,9 @@ resources:
   - route.yaml
   - networkpolicy.yaml
 configMapGenerator:
+  - name: modem-exporter-config
+    files:
+      - exporter.py=modem/exporter.py
   - name: sabnzbd-exporter-config
     files:
       - config.yml=sabnzbd/config.yml
