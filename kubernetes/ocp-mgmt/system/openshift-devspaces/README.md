@@ -45,6 +45,25 @@ opencode
 
 Ask for a short greeting without tools to verify API access (billed to the existing Anthropic account). Do not print the key or dump resolved provider configuration. Select models with `/models`. The devfile persists OpenCode's data directory at `~/.local/share/opencode`, including sessions, on the workspace PVC; deleting that PVC deletes this data. Verify a session survives a workspace stop/start. Caches and UI state outside the data directory are ephemeral. Secret rotation requires a workspace restart to refresh the injected environment.
 
+## MaaS model selection
+
+The same ConfigMap also mounts `/etc/devspaces/opencode/opencode-maas.json`. This optional profile connects to [OpenShift AI Models-as-a-Service](../redhat-ods-operator/maas/README.md), allowing `/models` to choose local Qwen or Claude Sonnet through one gateway. The existing direct Anthropic profile remains the default while the gateway is deployed and validated.
+
+After the MaaS GitOps rollout, sign in to the [OpenShift AI dashboard](https://rhods-dashboard-redhat-ods-applications.apps.ocp-mgmt.rh-lab.morey.tech) as `admin` (a member of `cluster-admins`). Under **Gen AI studio → API keys**, generate a key for the `devspaces-models` subscription and choose an appropriate expiration. The gateway reuses the existing Anthropic provider credential; this new key authenticates you to MaaS and must not be the Anthropic key.
+
+Restart the workspace after the profile ConfigMap reconciles, then enter the MaaS key without putting it in shell history:
+
+```bash
+read -rsp 'MaaS API key: ' MAAS_API_KEY; printf '\n'
+export MAAS_API_KEY
+OPENCODE_CONFIG=/etc/devspaces/opencode/opencode-maas.json opencode
+unset MAAS_API_KEY
+```
+
+In `/models`, select **Qwen3 4B Instruct (local, MaaS)** or **Claude Sonnet 4.6 (MaaS)**. Claude is the profile's initial model. Qwen uses OpenAI Chat Completions; Claude uses native Anthropic Messages to preserve streaming. The Claude provider explicitly sends `Authorization: Bearer` because MaaS does not accept the Anthropic SDK's `x-api-key` header for client authentication. Both use `https://maas.apps.ocp-mgmt.rh-lab.morey.tech/v1` and the same MaaS key. This selects the requested model explicitly; it does not provide automatic fallback. The local model's context window is 32,768 tokens, so start a fresh session if a Claude conversation is too large.
+
+The key is scoped to this terminal environment and is not saved by the configuration. Repeat key entry in a new terminal and renew expired keys in the dashboard. Native Anthropic passthrough is not subject to MaaS token metering in this preview; retain spending limits at Anthropic. See the platform guide for post-deployment streaming, tool-call, authentication, and large-request checks.
+
 ## Default workspace components
 
 The [CheCluster](checluster.yaml) defines `spec.devEnvironments.defaultComponents`: the homelab tools container and its persistent OpenCode data volume. This is the platform fallback for repositories without devfile components, including repositories without a devfile. It is not a complete default devfile with commands and events, and does not override repositories that define their own components. See the [CheCluster reference](https://docs.redhat.com/en/documentation/red_hat_openshift_dev_spaces/3.26/pdf/administration_guide/Red_Hat_OpenShift_Dev_Spaces-3.26-Administration_guide-en-US.pdf).

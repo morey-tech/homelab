@@ -27,6 +27,50 @@ data:
       "share": "disabled",
       "permission": "ask"
     }
+  opencode-maas.json: |
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "model": "maas-anthropic/claude-sonnet-4-6",
+      "enabled_providers": ["maas-anthropic", "maas-local"],
+      "provider": {
+        "maas-anthropic": {
+          "npm": "@ai-sdk/anthropic",
+          "name": "MaaS — Claude",
+          "options": {
+            "baseURL": "https://maas.apps.ocp-mgmt.rh-lab.morey.tech/v1",
+            "apiKey": "{env:MAAS_API_KEY}",
+            "headers": {
+              "Authorization": "Bearer {env:MAAS_API_KEY}"
+            }
+          },
+          "models": {
+            "claude-sonnet-4-6": {
+              "name": "Claude Sonnet 4.6 (MaaS)",
+              "tool_call": true,
+              "limit": { "context": 200000, "output": 64000 }
+            }
+          }
+        },
+        "maas-local": {
+          "npm": "@ai-sdk/openai-compatible",
+          "name": "MaaS — Local vLLM",
+          "options": {
+            "baseURL": "https://maas.apps.ocp-mgmt.rh-lab.morey.tech/v1",
+            "apiKey": "{env:MAAS_API_KEY}"
+          },
+          "models": {
+            "local-llm": {
+              "name": "Qwen3 4B Instruct (local, MaaS)",
+              "tool_call": true,
+              "limit": { "context": 32768, "output": 8192 }
+            }
+          }
+        }
+      },
+      "autoupdate": false,
+      "share": "disabled",
+      "permission": "ask"
+    }
 ---
 apiVersion: v1
 kind: ConfigMap
