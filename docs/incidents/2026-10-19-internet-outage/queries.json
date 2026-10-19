@@ -1,0 +1,12 @@
+{
+  "start_exclusive": "2026-10-19T13:28:54.858Z",
+  "end_inclusive": "2026-10-19T14:40:38.520Z",
+  "selectors": {
+    "ping": "{__name__=~\"internet:ping_.*|smokeping_requests_total|smokeping_response_duration_seconds_count|smokeping_send_errors_total|smokeping_receive_errors_total\",job=~\"internet_ping|\"}",
+    "services": "{__name__=~\"probe_success|probe_duration_seconds|probe_dns_lookup_time_seconds|probe_http_status_code\",job=\"internet_services\"}",
+    "pfsense": "{__name__=~\"ifHCInOctets|ifHCOutOctets|ifInErrors|ifOutErrors|ifInDiscards|ifOutDiscards|ifOperStatus|ifHighSpeed|sysUpTime|hrProcessorLoad\",job=\"pfsense\"}",
+    "modem": "{__name__=~\"hitron_.*\",job=\"modem\"}",
+    "health": "{__name__=~\"up|process_start_time_seconds\",job=~\"internet_ping|internet_services|pfsense|modem\"}"
+  },
+  "collected_at": "2026-10-19T16:32:47.488343+00:00"
+}

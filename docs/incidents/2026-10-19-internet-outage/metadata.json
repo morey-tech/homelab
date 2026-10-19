@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-19",
+  "display_timezone": "America/New_York (EDT, UTC-04:00)",
+  "source": "ocp-mgmt monitoring/prometheus; stored samples queried read-only via local port forward",
+  "grafana_url": "https://grafana.apps.ocp-mgmt.rh-lab.morey.tech/d/internet-quality/internet-quality?from=2026-10-19T13:33:54.858Z&to=2026-10-19T14:40:38.520Z&timezone=browser&refresh=30s",
+  "dashboard_window_utc": {
+    "from": "2026-10-19T13:33:54.858Z",
+    "to": "2026-10-19T14:40:38.520Z"
+  },
+  "raw_window_utc": {
+    "start_exclusive": "2026-10-19T13:28:54.858Z",
+    "end_inclusive": "2026-10-19T14:40:38.520Z"
+  },
+  "collected_at": "2026-10-19T16:32:47.488343+00:00",
+  "operator_observations": [
+    "Outage approximately 09:42\u201309:54 Eastern.",
+    "No modem power cycle.",
+    "Unrelated pfSense Unbound issue prolonged some metric failures; use ping recovery for Internet recovery."
+  ],
+  "measured_boundaries_utc": {
+    "first_degraded_reply_interval": [
+      "2026-10-19T13:41:04.554Z",
+      "2026-10-19T13:41:19.554Z"
+    ],
+    "first_recovered_reply_interval": [
+      "2026-10-19T13:53:34.554Z",
+      "2026-10-19T13:53:49.554Z"
+    ],
+    "first_full_reply_interval_end": "2026-10-19T13:54:04.554Z"
+  },
+  "method": [
+    "Raw JSON contains original instant-query range-vector responses, not query_range lookback-filled samples. queries.json contains selectors; query time is end_inclusive, with a 4303662ms range.",
+    "Charts use the exact requested dashboard window. Raw evidence includes five extra minutes of lead-in.",
+    "Ping loss is the stored guarded one-minute rule, evaluated with a 30-second publication offset; the stored timestamp denotes the measurement window. Fifteen-second counter deltas refine boundaries but are not packet-capture timestamps.",
+    "WAN Mbps = nonnegative delta(ix2 octet counter)*8/actual interval/1e6. Modem packets/s = nonnegative delta(packet counter)/actual scrape interval; cached modem polling and scrape times differ. Gaps over 90 seconds or counter resets produce unknown rates.",
+    "CSV rows use each recorded loss timestamp. Other metrics use latest preceding sample within 60 seconds, with source timestamp columns. Failed modem collection suppresses cached modem values; missing/nonfinite values are blank.",
+    "Service chart uses latest sample within 20 seconds per target on a 15-second grid; count shown only if all targets in that category have samples. DNS has two targets; HTTPS has ten.",
+    "Uptime is firmware-reported interface uptime and SNMP agent uptime, not proven device reboot telemetry. No DOCSIS RF or cable event logs were available.",
+    "Unbound explanation and no manual power cycle are operator observations. No resolver logs were retrieved. No cluster or modem resource mutations or active connectivity tests were performed.",
+    "PDF and PNG generated with matplotlib 3.11.2 and reportlab 5.0.1; build-report.py regenerates derived artifacts offline."
+  ]
+}
