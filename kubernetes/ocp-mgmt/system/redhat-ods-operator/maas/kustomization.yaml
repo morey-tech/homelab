@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - namespaces.yaml
   - kuadrant.yaml
+  - authorino-trust.yaml
   - database.yaml
   - gateway.yaml
   - dashboard.yaml

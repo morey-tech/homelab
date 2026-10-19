@@ -52,11 +52,11 @@ spec:
   oidcServer:
     tls:
       enabled: false
-  # Go's system trust loader reads /etc/ssl/certs. Configure the operand
-  # through its CR instead of patching the generated Deployment's env vars.
+  # Keep this directory separate from the operator's /etc/ssl/certs/tls.crt
+  # mount. authorino-trust.yaml adds it to Go's trusted certificate directories.
   volumes:
     items:
       - name: service-ca
-        mountPath: /etc/ssl/certs
+        mountPath: /etc/ssl/certs/openshift-service-ca
         configMaps:
           - authorino-service-ca
