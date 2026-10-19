@@ -9,10 +9,21 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    # All inference clients enter through KServe's token-authenticating proxy.
+    # Existing clients enter through KServe's token-authenticating proxy.
     - ports:
         - protocol: TCP
           port: 8443
+    # MaaS authenticates clients at its gateway before reaching vLLM.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+          podSelector:
+            matchLabels:
+              gateway.networking.k8s.io/gateway-name: maas-default-gateway
+      ports:
+        - protocol: TCP
+          port: 8080
     - from:
         - namespaceSelector:
             matchExpressions:

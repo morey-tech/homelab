@@ -1,0 +1,155 @@
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: maas-db-password
+  namespace: redhat-ai-gateway-infra
+spec:
+  length: 48
+  digits: 12
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: maas-db-config
+  namespace: redhat-ai-gateway-infra
+spec:
+  refreshPolicy: CreatedOnce
+  target:
+    name: maas-db-config
+    creationPolicy: Orphan
+    deletionPolicy: Retain
+    immutable: true
+    template:
+      data:
+        POSTGRESQL_USER: maas
+        POSTGRESQL_DATABASE: maas
+        POSTGRESQL_PASSWORD: "{{ .password }}"
+        DB_CONNECTION_URL: "postgresql://maas:{{ .password }}@maas-postgres.redhat-ai-gateway-infra.svc.cluster.local:5432/maas?sslmode=disable"
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: Password
+          name: maas-db-password
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: maas-postgres
+  namespace: redhat-ai-gateway-infra
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: lvms-vg-nvme
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: maas-postgres
+  namespace: redhat-ai-gateway-infra
+spec:
+  selector:
+    app: maas-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maas-postgres
+  namespace: redhat-ai-gateway-infra
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: maas-postgres
+  template:
+    metadata:
+      labels:
+        app: maas-postgres
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgres
+          # Red Hat companion guide's PostgreSQL 16 image, pinned for review.
+          image: registry.redhat.io/rhel9/postgresql-16@sha256:3943bfa5de044d8f033df148c0409ed826171b779f3cf3ddf537a1914960ab57
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: maas-db-config
+                  key: POSTGRESQL_USER
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: maas-db-config
+                  key: POSTGRESQL_PASSWORD
+            - name: POSTGRESQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: maas-db-config
+                  key: POSTGRESQL_DATABASE
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: [/usr/libexec/check-container]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: [pg_isready, -U, maas, -d, maas]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/pgsql/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: maas-postgres
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: maas-postgres
+  namespace: redhat-ai-gateway-infra
+spec:
+  podSelector:
+    matchLabels:
+      app: maas-postgres
+  policyTypes: [Ingress]
+  ingress:
+    # The operator's API and key-cleanup workloads run in this namespace.
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 5432

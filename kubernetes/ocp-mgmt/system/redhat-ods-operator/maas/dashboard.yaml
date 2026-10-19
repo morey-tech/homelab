@@ -1,0 +1,12 @@
+apiVersion: opendatahub.io/v1alpha
+kind: OdhDashboardConfig
+metadata:
+  name: odh-dashboard-config
+  namespace: redhat-ods-applications
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+spec:
+  dashboardConfig:
+    genAiStudio: true
+    modelAsService: true
+    externalModels: true

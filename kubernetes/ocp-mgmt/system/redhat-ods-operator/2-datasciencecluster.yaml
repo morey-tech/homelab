@@ -18,7 +18,9 @@ spec:
       wva:
         managementState: Removed
     aigateway:
-      managementState: Removed
+      managementState: Managed
+      modelsAsAService:
+        managementState: Managed
       batchGateway:
         managementState: Removed
     aipipelines:

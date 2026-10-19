@@ -12,3 +12,4 @@ resources:
   - rr-lessons-rbac.yaml
   - networkpolicy.yaml
   - embeddings
+  - maas.yaml

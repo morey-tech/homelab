@@ -1,6 +1,8 @@
 # OpenShift AI on ocp-mgmt
 
-OpenShift AI 3.5 provides the dashboard and KServe for single-GPU inference on `tr-gpu`. The operator uses `stable-3.5` with manual InstallPlan approval; the initial version is `3.5.1`. The `v2` DataScienceCluster explicitly enables only dashboard and KServe. Training, pipelines, workbenches, model registry, NIM, and distributed inference features remain disabled.
+OpenShift AI 3.5 provides the dashboard and KServe for single-GPU inference on `tr-gpu`. The operator uses `stable-3.5` with manual InstallPlan approval; the initial version is `3.5.1`. The `v2` DataScienceCluster enables dashboard, KServe, and AI Gateway with Models-as-a-Service. Training, pipelines, workbenches, model registry, and NIM remain disabled. The local model continues to use its single-replica KServe InferenceService.
+
+[Models-as-a-Service routing](maas/README.md) exposes local Qwen and remote Claude through one authenticated gateway. This uses the external-model Technology Preview, including native Anthropic API passthrough, rather than migrating the existing GPU workload to an llm-d LLMInferenceService. Follow the staged rollout in that guide before enabling gateway clients.
 
 The operator lives in `redhat-ods-operator`; it manages platform components in `redhat-ods-applications`. cert-manager, NFD, and the NVIDIA GPU Operator are installed separately. Model workloads belong in their own namespace.
 

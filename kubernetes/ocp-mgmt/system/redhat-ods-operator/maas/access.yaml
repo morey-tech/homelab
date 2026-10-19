@@ -1,0 +1,41 @@
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata:
+  name: devspaces-models
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  modelRefs:
+    - name: local-llm
+      namespace: inference-server
+    - name: claude-sonnet-4-6
+      namespace: inference-server
+  subjects:
+    groups:
+      - name: cluster-admins
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata:
+  name: devspaces-models
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  owner:
+    groups:
+      - name: cluster-admins
+  modelRefs:
+    - name: local-llm
+      namespace: inference-server
+      tokenRateLimits:
+        - limit: 100000
+          window: 1m
+    - name: claude-sonnet-4-6
+      namespace: inference-server
+      # Native Anthropic passthrough is NOT metered by MaaS in this preview.
+      # Enforce Claude spending/rate limits at the provider.
+      tokenRateLimits:
+        - limit: 100000
+          window: 1m

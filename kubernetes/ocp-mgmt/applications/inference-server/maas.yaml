@@ -1,0 +1,123 @@
+# Keep the existing authenticated KServe endpoint for other clients. This
+# ClusterIP reaches vLLM directly; NetworkPolicy admits only the MaaS gateway
+# and the existing monitoring namespaces to port 8080.
+apiVersion: v1
+kind: Service
+metadata:
+  name: local-llm-maas
+spec:
+  selector:
+    serving.kserve.io/inferenceservice: local-llm
+    component: predictor
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+# ExternalProvider requires a credential reference even for a private vLLM
+# endpoint without backend API-key validation. This is a non-secret sentinel;
+# the gateway's MaaS authentication and NetworkPolicy enforce access.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: local-llm-maas-sentinel
+  labels:
+    inference.llm-d.ai/ipp-managed: "true"
+type: Opaque
+stringData:
+  api-key: unused-internal-vllm
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: maas-anthropic-api-key
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: bitwarden-login
+    kind: ClusterSecretStore
+  target:
+    name: maas-anthropic-api-key
+    template:
+      metadata:
+        labels:
+          inference.llm-d.ai/ipp-managed: "true"
+      data:
+        api-key: "{{ .apikey }}"
+  data:
+    - secretKey: apikey
+      remoteRef:
+        # Same Bitwarden item as the existing Dev Spaces Claude credential.
+        key: 4d42580d-6663-4dd2-b7b7-b3c700295b2f
+        property: password
+---
+apiVersion: inference.opendatahub.io/v1alpha1
+kind: ExternalProvider
+metadata:
+  name: local-vllm
+spec:
+  provider: openai
+  endpoint: local-llm-maas.inference-server.svc.cluster.local
+  auth:
+    type: apikey
+    secretRef:
+      name: local-llm-maas-sentinel
+---
+apiVersion: inference.opendatahub.io/v1alpha1
+kind: ExternalModel
+metadata:
+  name: local-llm
+  annotations:
+    maas.opendatahub.io/tls: "false"
+    maas.opendatahub.io/port: "8080"
+spec:
+  externalProviderRefs:
+    - ref:
+        name: local-vllm
+      targetModel: local-llm
+      apiFormat: openai-chat
+      path: /v1/chat/completions
+      weight: 100
+---
+apiVersion: inference.opendatahub.io/v1alpha1
+kind: ExternalProvider
+metadata:
+  name: anthropic
+spec:
+  provider: anthropic
+  endpoint: api.anthropic.com
+  auth:
+    type: apikey
+    secretRef:
+      name: maas-anthropic-api-key
+---
+apiVersion: inference.opendatahub.io/v1alpha1
+kind: ExternalModel
+metadata:
+  name: claude-sonnet-4-6
+spec:
+  externalProviderRefs:
+    - ref:
+        name: anthropic
+      targetModel: claude-sonnet-4-6
+      apiFormat: messages
+      path: /v1/messages
+      weight: 100
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSModelRef
+metadata:
+  name: local-llm
+spec:
+  modelRef:
+    kind: ExternalModel
+    name: local-llm
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSModelRef
+metadata:
+  name: claude-sonnet-4-6
+spec:
+  modelRef:
+    kind: ExternalModel
+    name: claude-sonnet-4-6

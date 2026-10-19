@@ -1,0 +1,62 @@
+apiVersion: kuadrant.io/v1beta1
+kind: Kuadrant
+metadata:
+  name: kuadrant
+  namespace: kuadrant-system
+spec:
+  observability:
+    enable: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authorino-service-ca
+  namespace: kuadrant-system
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authorino-authorino-authorization
+  namespace: kuadrant-system
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: authorino-server-cert
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+spec:
+  selector:
+    authorino-resource: authorino
+  ports:
+    - name: grpc
+      port: 50051
+      targetPort: 50051
+    - name: http
+      port: 5001
+      targetPort: 5001
+---
+apiVersion: operator.authorino.kuadrant.io/v1beta1
+kind: Authorino
+metadata:
+  name: authorino
+  namespace: kuadrant-system
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+spec:
+  clusterWide: true
+  replicas: 1
+  listener:
+    tls:
+      enabled: true
+      certSecretRef:
+        name: authorino-server-cert
+  oidcServer:
+    tls:
+      enabled: false
+  # Go's system trust loader reads /etc/ssl/certs. Configure the operand
+  # through its CR instead of patching the generated Deployment's env vars.
+  volumes:
+    items:
+      - name: service-ca
+        mountPath: /etc/ssl/certs
+        configMaps:
+          - authorino-service-ca

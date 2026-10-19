@@ -53,3 +53,14 @@ spec:
             pod-security.kubernetes.io/enforce: restricted
             pod-security.kubernetes.io/audit: restricted
             pod-security.kubernetes.io/warn: restricted
+  templatePatch: |
+    {{- if eq .path.basename "inference-server" }}
+    spec:
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+          - SkipDryRunOnMissingResource=true
+        managedNamespaceMetadata:
+          labels:
+            maas.opendatahub.io/gateway-access: "true"
+    {{- end }}
