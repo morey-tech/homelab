@@ -12,6 +12,8 @@ spec:
     - name: claude-sonnet-4-6
       namespace: inference-server
   subjects:
+    users:
+      - system:serviceaccount:devspaces-maas:maas-key-rotator
     groups:
       - name: cluster-admins
 ---
@@ -36,6 +38,31 @@ spec:
       namespace: inference-server
       # Native Anthropic passthrough is NOT metered by MaaS in this preview.
       # Enforce Claude spending/rate limits at the provider.
+      tokenRateLimits:
+        - limit: 100000
+          window: 1m
+---
+# Shared workspace access has its own identity and quota, separate from admin keys.
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata:
+  name: devspaces-workspaces
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  owner:
+    users:
+      - system:serviceaccount:devspaces-maas:maas-key-rotator
+  modelRefs:
+    - name: local-llm
+      namespace: inference-server
+      tokenRateLimits:
+        - limit: 100000
+          window: 1m
+    - name: claude-sonnet-4-6
+      namespace: inference-server
+      # Native Anthropic passthrough is not metered by MaaS in this preview.
       tokenRateLimits:
         - limit: 100000
           window: 1m

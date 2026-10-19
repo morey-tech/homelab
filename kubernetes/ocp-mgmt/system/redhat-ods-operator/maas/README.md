@@ -18,8 +18,8 @@ The gateway is OpenShift AI 3.5 Models-as-a-Service (MaaS), with Red Hat Connect
 - Authorino's CR mounts the injected OpenShift service CA at `/etc/ssl/certs/openshift-service-ca`. Mounting over `/etc/ssl/certs` conflicts with the operator's serving-certificate mount at `/etc/ssl/certs/tls.crt` and prevents container creation. Because the Authorino CR has no environment-variable field, `authorino-trust.yaml` uses partial server-side apply to manage only `SSL_CERT_DIR` on the generated Deployment, adding the service CA directory while retaining Go's default Linux CA directories. The operator owns the remaining Deployment fields; pruning/deleting this partial resource is disabled. Wave 1 applies the override after the wave 0 Authorino CR; on a fresh installation Argo may retry until the operator creates the Deployment. The gateway annotation enables the operator's Authorino TLS bootstrap.
 - [Inference resources](../../../applications/inference-server/maas.yaml) register both backends as `ExternalProvider`/`ExternalModel` resources. The external-model API also supports internal endpoints. A dedicated ClusterIP exposes vLLM port 8080 only to the MaaS gateway and existing monitoring namespaces through NetworkPolicy. The sentinel credential satisfies the ExternalProvider schema; vLLM does not validate it. Client authentication occurs at MaaS.
 - RHOAI 3.5.1's payload processor (`a98a2650e74f8b832ff75206f795cbb62b9cd688`) hard-codes port 443 and TLS in its provider resources. The legacy `maas.opendatahub.io/port` and `/tls` annotations do not configure `inference.opendatahub.io` models. The dedicated local Service therefore maps port 443 to vLLM pod port 8080, while `local-vllm-transport.yaml` disables upstream TLS only for this destination/port from the MaaS gateway. Its client-namespace DestinationRule takes precedence over the generated backend-namespace rule; it does not modify operator-owned resources. Client-facing HTTPS and the existing pod NetworkPolicy remain in effect. Recheck this compatibility configuration when upgrading the payload processor.
-- Anthropic's provider credential comes from the same Bitwarden item as Dev Spaces' existing Claude key. MaaS clients use separate per-user MaaS API keys. Provider credentials are never included in the OpenCode gateway profile.
-- `devspaces-models` grants the existing `cluster-admins` group access to exactly these two model references. The currently observed member is `admin`. Broader workspace access requires an explicit group change in Git. The subscription declares 100,000 tokens/minute per model; **native Anthropic passthrough is not metered by MaaS in this preview**. Configure Claude spending and rate limits at Anthropic.
+- Anthropic's provider credential comes from the same Bitwarden item as Dev Spaces' existing Claude key. Dev Spaces uses an automatically rotated shared MaaS key; administrators can still create personal keys. Provider credentials are never included in the OpenCode gateway profile.
+- `devspaces-models` grants the existing `cluster-admins` group access to exactly these two model references. The policy also grants the dedicated `system:serviceaccount:devspaces-maas:maas-key-rotator` identity access; its separate `devspaces-workspaces` subscription supplies shared workspace credentials. The subscription declares 100,000 tokens/minute per model; **native Anthropic passthrough is not metered by MaaS in this preview**. Configure Claude spending and rate limits at Anthropic.
 
 `payload-processing.yaml` places `model-provider-resolver` before `stream-usage-enforcer`. The resolver populates the input API format, allowing the enforcer to skip native Anthropic Messages while retaining OpenAI streaming usage for Qwen. The shipped reverse order injects `stream_options` into Claude requests, which Anthropic rejects. Response translation remains disabled to preserve native SSE streaming. MaaS clients must send a Bearer key on both APIs; the provider's Anthropic credential is injected downstream.
 
@@ -27,13 +27,17 @@ The profile ConfigMap opts out of MaaS default reconciliation with `opendatahub.
 
 Claude uses the native Anthropic SDK and `messages` format to retain incremental streaming and provider features. Cross-format OpenAI-to-Anthropic translation can buffer the entire response. Qwen uses OpenAI Chat Completions, with vLLM's Hermes tool parser enabled for OpenCode tool calls. Its served context is 32,768 tokens; start a new session when switching from a longer Claude conversation if necessary.
 
+## Automatic workspace keys
+
+[Key rotation](key-rotation/README.md) runs in the dedicated `devspaces-maas` namespace. The CronJob uses a projected service-account token to issue 90-day keys, checks every 15 minutes, and renews with 30 days remaining. Keys and metadata are generated at runtime, never committed. The rotator validates both model registrations before publishing; old keys retain their original expiration. A Prometheus alert detects stalled checks.
+
 ## GitOps rollout
 
 All changes require review and approved local commits before the human pushes. Do not apply these files manually or create test Jobs. Deploy the prerequisite commit first; ApplicationSet sync waves do not order separate Applications.
 
 1. Push the reviewed Connectivity Link and monitoring prerequisites. Inspect the `rhcl-operator` InstallPlan in the OpenShift console, including its dependent operators, and approve it there. Confirm the installed version is at least 1.4.2 and User Workload Monitoring is running.
 2. Push the reviewed MaaS platform and inference changes. Let Argo CD reconcile `redhat-ods-operator-system`, `inference-server`, and the ApplicationSet namespace label. Within the platform Application, wave 0 creates the database and gateway prerequisites, wave 1 enables MaaS, and wave 2 registers access policies. Missing MaaS APIs are skipped during pre-sync dry runs and retried after the operator installs them.
-3. Confirm platform readiness and both model registrations, then push the reviewed OpenCode profile. Restart the workspace to receive the additional mounted configuration file. Generate a MaaS API key and launch the profile as described in the [Dev Spaces instructions](../../openshift-devspaces/README.md#maas-model-selection).
+3. Confirm platform readiness and both model registrations. Deploy [automatic key rotation](key-rotation/README.md) and wait for the generated source Secret before pushing the Dev Spaces defaults. Wait for `maas-api-key` ExternalSecret readiness, then start/restart workspaces as described in the [Dev Spaces instructions](../../openshift-devspaces/README.md#maas-model-selection).
 
 ```bash
 oc get subscription rhcl-operator -n openshift-operators
@@ -57,7 +61,7 @@ Require a ready database, `AIGatewayReady` and `ModelsAsAServiceReady`, gateway 
 
 ## Validation after deployment
 
-After obtaining `MAAS_API_KEY` through the dashboard as described in the Dev Spaces guide, discover the models:
+From a new workspace with the automatically injected `MAAS_API_KEY`, discover the models:
 
 ```bash
 curl --fail-with-body --silent --show-error \
@@ -84,7 +88,7 @@ curl --fail-with-body --no-buffer \
 
 Also verify requests without a MaaS key or with an invalid key are rejected, unrelated workspace pods cannot reach `local-llm-maas:443`, and `/models` in OpenCode switches between both backends. Exercise a harmless approved file-read tool with each model, then a multi-turn request larger than 16 KiB. Red Hat documents truncation in older gateway/wasm builds; require an OpenShift gateway proxy incorporating the Service Mesh 3.3.1 fix. Do not infer success from short greetings alone. Verify existing AnythingLLM and other KServe clients still authenticate and receive responses.
 
-These runtime checks require the GitOps-deployed resources and are deferred until after the human push. If they fail, diagnose read-only and prepare a reviewed Git fix; do not patch generated cluster workloads. The original `opencode` command continues using its existing direct Anthropic profile while the MaaS profile is validated.
+These runtime checks require the GitOps-deployed resources and are deferred until after the human push. If they fail, diagnose read-only and prepare a reviewed Git fix; do not patch generated cluster workloads. OpenCode defaults to MaaS after the credential-injection rollout; the direct Anthropic profile remains available through an explicit `OPENCODE_CONFIG` override.
 
 ## References
 

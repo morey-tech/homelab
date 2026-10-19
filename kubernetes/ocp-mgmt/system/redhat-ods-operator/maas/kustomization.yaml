@@ -10,3 +10,4 @@ resources:
   - payload-processing.yaml
   - dashboard.yaml
   - access.yaml
+  - key-rotation
