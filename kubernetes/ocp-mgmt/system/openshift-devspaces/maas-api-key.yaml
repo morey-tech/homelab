@@ -1,0 +1,55 @@
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: devspaces-maas
+spec:
+  conditions:
+    - namespaces:
+        - openshift-devspaces
+  provider:
+    kubernetes:
+      remoteNamespace: devspaces-maas
+      server:
+        url: https://kubernetes.default.svc
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          namespace: devspaces-maas
+          key: ca.crt
+      auth:
+        serviceAccount:
+          name: maas-key-reader
+          namespace: devspaces-maas
+---
+# Dev Spaces synchronizes this Secret as part of its user-namespace provisioning,
+# instead of waiting for a ClusterExternalSecret to discover new namespaces.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: maas-api-key
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: devspaces-maas
+    kind: ClusterSecretStore
+  target:
+    name: maas-api-key
+    deletionPolicy: Retain
+    template:
+      type: Opaque
+      metadata:
+        labels:
+          app.kubernetes.io/part-of: che.eclipse.org
+          app.kubernetes.io/component: workspaces-config
+          controller.devfile.io/mount-to-devworkspace: 'true'
+          controller.devfile.io/watch-secret: 'true'
+        annotations:
+          controller.devfile.io/mount-as: env
+          controller.devfile.io/mount-on-start: 'true'
+      data:
+        MAAS_API_KEY: '{{ .apikey }}'
+  data:
+    - secretKey: apikey
+      remoteRef:
+        key: maas-workspace-key
+        property: MAAS_API_KEY

@@ -10,7 +10,8 @@ This configuration copies the former [ocp-gpu Dev Spaces setup](../../../ocp-gpu
 | CheCluster | Open VSX, unlimited workspaces, nested container capabilities enabled with local XFS storage, 2 CPU / 2G memory requests and 4G memory limit |
 | Storage | One 5Gi `lvms-vg-nvme` ReadWriteOnce PVC per workspace; persistent user home disabled |
 | GitHub OAuth | `github-oauth-config` ExternalSecret from Bitwarden item `4afc34a2-53be-4b9b-b46c-b3a70008d238` via `bitwarden-login` |
-| Claude Code / OpenCode | `claude-code-api-key` ClusterExternalSecret injects the shared `ANTHROPIC_API_KEY` into namespaces labelled `app.kubernetes.io/component: workspaces-namespace` |
+| Claude Code / direct Anthropic | `claude-code-api-key` ClusterExternalSecret injects the shared `ANTHROPIC_API_KEY` into namespaces labelled `app.kubernetes.io/component: workspaces-namespace` |
+| OpenCode MaaS | `maas-api-key` ExternalSecret reads the automatically rotated in-cluster key; Dev Spaces synchronizes `MAAS_API_KEY` to user namespaces |
 | Global VS Code extensions | `openai.chatgpt` and `sst-dev.opencode` via `vscode-editor-configurations` ConfigMap |
 | Getting started | `morey-tech/homelab` repository sample |
 
@@ -24,11 +25,11 @@ The [editor ConfigMap](vscode-editor-configurations.yaml) recommends `openai.cha
 
 ## OpenCode
 
-The `devspace-base` image provides the OpenCode terminal CLI, inherited by `devspace-homelab`, following the [Red Hat Dev Spaces integration](https://developers.redhat.com/articles/2026/04/22/opencode-model-neutral-ai-coding-assistant-openshift-dev-spaces). Neither image contains provider settings. The platform's [OpenCode ConfigMaps](opencode-config.yaml) use the `workspaces-config` labels to synchronize into every user namespace. They mount configuration at `/etc/devspaces/opencode/opencode.json` and inject `OPENCODE_CONFIG` pointing to it, independent of repository and container home directory. They follow the existing mount-on-start pattern; restart workspaces after reconciliation to receive updates.
+The `devspace-base` image provides the OpenCode terminal CLI, inherited by `devspace-homelab`, following the [Red Hat Dev Spaces integration](https://developers.redhat.com/articles/2026/04/22/opencode-model-neutral-ai-coding-assistant-openshift-dev-spaces). Neither image contains provider settings. The platform's [OpenCode ConfigMaps](opencode-config.yaml) use the `workspaces-config` labels to synchronize into every user namespace. They mount configuration at `/etc/devspaces/opencode` and inject `OPENCODE_CONFIG=/etc/devspaces/opencode/opencode-maas.json`, independent of repository and container home directory. They follow the existing mount-on-start pattern; restart workspaces after reconciliation to receive updates.
 
-The existing `claude-code-api-key` Secret supplies `ANTHROPIC_API_KEY` as an environment variable, not a file. The configuration resolves it at runtime; no `/connect`, copied token, or additional Secret is required. Custom workspace images receive configuration but must provide their own OpenCode binary.
+The managed `maas-api-key` Secret supplies `MAAS_API_KEY` as an environment variable. The configuration resolves it at runtime; users do not need `/connect`, key creation, or terminal exports. The existing `claude-code-api-key` Secret still supplies `ANTHROPIC_API_KEY` for Claude Code and the optional direct profile. Custom workspace images receive configuration but must provide their own OpenCode binary.
 
-The default model is `anthropic/claude-sonnet-4-6`. Only Anthropic is enabled, session sharing and self-updates are disabled, and tools require approval. These are [OpenCode configuration](https://opencode.ai/docs/config/) defaults, not an enforced security boundary: project/user settings can override them. Repository `AGENTS.md` instructions still apply, including commit review and GitOps deployment rules.
+The default model is `maas-anthropic/claude-sonnet-4-6`. Claude and local Qwen are enabled through MaaS, session sharing and self-updates are disabled, and tools require approval. These are [OpenCode configuration](https://opencode.ai/docs/config/) defaults, not an enforced security boundary: project/user settings can override them. Repository `AGENTS.md` instructions still apply, including commit review and GitOps deployment rules.
 
 Roll out the image changes first: after review and push, wait for `Container Build` to publish both `devspace-base` and its rebuilt `devspace-homelab` consumer. Then commit/push the reviewed platform defaults and let Argo CD reconcile them. This prevents new fallback workspaces from starting with the older image before OpenCode is available. The workflow publishes `latest` and immutable `sha-...` tags. Create a new workspace, or update an existing workspace's devfile through the dashboard to include the `opencode-data` volume and select the published image SHA tag. A Git pull alone does not update an existing workspace's pod template. Do not delete an existing workspace PVC to upgrade it.
 
@@ -36,10 +37,11 @@ In the new workspace terminal:
 
 ```bash
 opencode --version
-test -n "${ANTHROPIC_API_KEY:-}" && printf 'Anthropic key is present\n'
+test -n "${MAAS_API_KEY:-}" && printf 'MaaS key is present\n'
 test -r "$OPENCODE_CONFIG" && printf 'Platform configuration is mounted\n'
 cd /projects/homelab
-opencode models anthropic
+opencode models maas-anthropic
+opencode models maas-local
 opencode
 ```
 
@@ -47,22 +49,32 @@ Ask for a short greeting without tools to verify API access (billed to the exist
 
 ## MaaS model selection
 
-The same ConfigMap also mounts `/etc/devspaces/opencode/opencode-maas.json`. This optional profile connects to [OpenShift AI Models-as-a-Service](../redhat-ods-operator/maas/README.md), allowing `/models` to choose local Qwen or Claude Sonnet through one gateway. The existing direct Anthropic profile remains the default while the gateway is deployed and validated.
+The default profile `/etc/devspaces/opencode/opencode-maas.json` connects to [OpenShift AI Models-as-a-Service](../redhat-ods-operator/maas/README.md). After platform bootstrap and Secret synchronization, a new workspace can run `opencode` immediately.
 
-After the MaaS GitOps rollout, sign in to the [OpenShift AI dashboard](https://rhods-dashboard-redhat-ods-applications.apps.ocp-mgmt.rh-lab.morey.tech) as `admin` (a member of `cluster-admins`). Under **Gen AI studio → API keys**, generate a key for the `devspaces-models` subscription and choose an appropriate expiration. The gateway reuses the existing Anthropic provider credential; this new key authenticates you to MaaS and must not be the Anthropic key.
+The [key rotator](../redhat-ods-operator/maas/key-rotation/README.md) requests 90-day keys for the shared `devspaces-workspaces` subscription and renews when 30 days remain. An ExternalSecret reads the current key from `devspaces-maas/maas-workspace-key` into `openshift-devspaces/maas-api-key`. Dev Spaces' native `workspaces-config` synchronization copies it to user namespaces during provisioning and on updates. Only the key is injected; rotation metadata stays in the source namespace. No Bitwarden item or manually maintained bootstrap token is needed.
 
-Restart the workspace after the profile ConfigMap reconciles, then enter the MaaS key without putting it in shell history:
+The Secret uses `mount-on-start: true`: rotation updates stored credentials without restarting active workspaces. Existing processes retain their previous key until the workspace is stopped and started. Old keys keep their original expiry, so sessions may eventually receive 401; restart the workspace to load the current key. A workspace started late in a key's lifetime does not get a fresh 90 days of validity. All workspaces share the service account identity and subscription quota, rather than individual user attribution.
+
+For initial rollout, deploy the rotator first and wait for the source Secret, then deploy these defaults. Before opening workspaces, check:
 
 ```bash
-read -rsp 'MaaS API key: ' MAAS_API_KEY; printf '\n'
-export MAAS_API_KEY
-OPENCODE_CONFIG=/etc/devspaces/opencode/opencode-maas.json opencode
-unset MAAS_API_KEY
+oc get cronjob,jobs -n devspaces-maas
+oc get clustersecretstore devspaces-maas
+oc get externalsecret maas-api-key -n openshift-devspaces
+oc get secret maas-api-key -n openshift-devspaces
 ```
+
+Wait for the ExternalSecret's `Ready=True` condition. Existing workspaces need one stop/start to adopt the new default profile and environment. Custom images still need the OpenCode CLI.
 
 In `/models`, select **Qwen3 4B Instruct (local, MaaS)** or **Claude Sonnet 4.6 (MaaS)**. Claude is the profile's initial model. Qwen uses OpenAI Chat Completions; Claude uses native Anthropic Messages to preserve streaming. The Claude provider explicitly sends `Authorization: Bearer` because MaaS does not accept the Anthropic SDK's `x-api-key` header for client authentication. Both use `https://maas.apps.ocp-mgmt.rh-lab.morey.tech/v1` and the same MaaS key. This selects the requested model explicitly; it does not provide automatic fallback. The local model's context window is 32,768 tokens, so start a fresh session if a Claude conversation is too large.
 
-The key is scoped to this terminal environment and is not saved by the configuration. Repeat key entry in a new terminal and renew expired keys in the dashboard. Native Anthropic passthrough is not subject to MaaS token metering in this preview; retain spending limits at Anthropic. See the platform guide for post-deployment streaming, tool-call, authentication, and large-request checks.
+Native Anthropic passthrough is not subject to MaaS token metering in this preview; retain spending limits at Anthropic. See the platform guide for post-deployment streaming, tool-call, authentication, and large-request checks.
+
+The direct Anthropic profile is still available explicitly:
+
+```bash
+OPENCODE_CONFIG=/etc/devspaces/opencode/opencode.json opencode
+```
 
 ## Default workspace components
 

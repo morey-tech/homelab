@@ -5,6 +5,7 @@ resources:
   - checluster.yaml
   - github-oauth.yaml
   - claude-code-api-key.yaml
+  - maas-api-key.yaml
   - getting-started-samples.yaml
   - vscode-editor-configurations.yaml
   - ocp-home-kubeconfig.yaml

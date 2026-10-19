@@ -84,4 +84,4 @@ metadata:
     controller.devfile.io/mount-as: env
     controller.devfile.io/mount-on-start: 'true'
 data:
-  OPENCODE_CONFIG: /etc/devspaces/opencode/opencode.json
+  OPENCODE_CONFIG: /etc/devspaces/opencode/opencode-maas.json
