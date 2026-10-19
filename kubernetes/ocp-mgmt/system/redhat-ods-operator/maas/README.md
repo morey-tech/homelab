@@ -21,6 +21,10 @@ The gateway is OpenShift AI 3.5 Models-as-a-Service (MaaS), with Red Hat Connect
 - Anthropic's provider credential comes from the same Bitwarden item as Dev Spaces' existing Claude key. MaaS clients use separate per-user MaaS API keys. Provider credentials are never included in the OpenCode gateway profile.
 - `devspaces-models` grants the existing `cluster-admins` group access to exactly these two model references. The currently observed member is `admin`. Broader workspace access requires an explicit group change in Git. The subscription declares 100,000 tokens/minute per model; **native Anthropic passthrough is not metered by MaaS in this preview**. Configure Claude spending and rate limits at Anthropic.
 
+`payload-processing.yaml` places `model-provider-resolver` before `stream-usage-enforcer`. The resolver populates the input API format, allowing the enforcer to skip native Anthropic Messages while retaining OpenAI streaming usage for Qwen. The shipped reverse order injects `stream_options` into Claude requests, which Anthropic rejects. Response translation remains disabled to preserve native SSE streaming. MaaS clients must send a Bearer key on both APIs; the provider's Anthropic credential is injected downstream.
+
+The profile ConfigMap opts out of MaaS default reconciliation with `opendatahub.io/managed: "false"`. Partial server-side apply owns only `custom-ipp-config.yaml`, preserving the preprocessor profile. A wave 2 partial Deployment applies only the profile checksum annotation to roll the processor after the wave 1 ConfigMap update. Recompute that SHA-256 when editing the profile. Both partial resources disable pruning/deletion because the operator owns their lifecycle. After GitOps deployment, test Claude streaming and Qwen usage reporting again; API acceptance alone does not prove the running processor loaded the new order.
+
 Claude uses the native Anthropic SDK and `messages` format to retain incremental streaming and provider features. Cross-format OpenAI-to-Anthropic translation can buffer the entire response. Qwen uses OpenAI Chat Completions, with vLLM's Hermes tool parser enabled for OpenCode tool calls. Its served context is 32,768 tokens; start a new session when switching from a longer Claude conversation if necessary.
 
 ## GitOps rollout
@@ -72,7 +76,7 @@ curl --fail-with-body --no-buffer \
 
 curl --fail-with-body --no-buffer \
   https://maas.apps.ocp-mgmt.rh-lab.morey.tech/v1/messages \
-  -H "x-api-key: $MAAS_API_KEY" \
+  -H "Authorization: Bearer $MAAS_API_KEY" \
   -H 'anthropic-version: 2023-06-01' \
   -H 'Content-Type: application/json' \
   -d '{"model":"claude-sonnet-4-6","messages":[{"role":"user","content":"Say hello briefly."}],"max_tokens":32,"stream":true}'

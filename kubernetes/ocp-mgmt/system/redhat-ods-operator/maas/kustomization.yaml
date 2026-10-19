@@ -7,5 +7,6 @@ resources:
   - database.yaml
   - gateway.yaml
   - local-vllm-transport.yaml
+  - payload-processing.yaml
   - dashboard.yaml
   - access.yaml

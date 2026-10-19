@@ -1,0 +1,50 @@
+# Own only the customized processing profile; retain the operator's preprocessor.
+# managed=false is the MaaS-supported opt-out from default-profile reconciliation.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payload-processing-plugins
+  namespace: openshift-ingress
+  annotations:
+    opendatahub.io/managed: "false"
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: ServerSideApply=true,DisableClientSideApplyMigration=true,Prune=false,Delete=false
+data:
+  custom-ipp-config.yaml: |
+    apiVersion: llm-d.ai/v1alpha1
+    kind: PayloadProcessorConfig
+    plugins:
+    - type: maas-headers-guard
+      name: maas-headers-guard
+    - type: stream-usage-enforcer
+    - type: model-provider-resolver
+    - type: api-translation
+    - type: apikey-injection
+    profiles:
+    - name: default
+      plugins:
+        request:
+        - pluginRef: maas-headers-guard
+        - pluginRef: model-provider-resolver
+        - pluginRef: stream-usage-enforcer
+        - pluginRef: api-translation
+        - pluginRef: apikey-injection
+        # Native Anthropic Messages and OpenAI Chat Completions already use
+        # their backend's format; keep responses streaming without translation.
+        response: []
+---
+# Roll the processor after its profile changes without owning operator spec fields.
+# Update this checksum whenever custom-ipp-config.yaml above changes.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payload-processing
+  namespace: openshift-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: ServerSideApply=true,Validate=false,DisableClientSideApplyMigration=true,Prune=false,Delete=false
+spec:
+  template:
+    metadata:
+      annotations:
+        homelab.morey.tech/ipp-profile-sha256: "99ca32173ae603ba9961c4698dcbada0bffe9d29172b1720e21aa1e5dfca2fb7"
