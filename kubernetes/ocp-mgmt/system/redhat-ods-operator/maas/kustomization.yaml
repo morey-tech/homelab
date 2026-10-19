@@ -6,5 +6,6 @@ resources:
   - authorino-trust.yaml
   - database.yaml
   - gateway.yaml
+  - local-vllm-transport.yaml
   - dashboard.yaml
   - access.yaml

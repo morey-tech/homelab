@@ -98,7 +98,7 @@ oc get events -n inference-server --field-selector reason=Unhealthy --sort-by=.l
 
 ## MaaS gateway
 
-[OpenShift AI Models-as-a-Service](../../system/redhat-ods-operator/maas/README.md) registers this existing vLLM endpoint and Claude Sonnet behind a shared gateway for OpenCode. The additional `local-llm-maas` ClusterIP reaches port 8080, with NetworkPolicy limited to the MaaS gateway and existing monitoring namespaces. Existing clients continue using the authenticated KServe endpoint. The runtime enables `--enable-auto-tool-choice` with `--tool-call-parser=hermes` for Qwen tool calls; validate these through OpenCode after GitOps deployment.
+[OpenShift AI Models-as-a-Service](../../system/redhat-ods-operator/maas/README.md) registers this existing vLLM endpoint and Claude Sonnet behind a shared gateway for OpenCode. The additional `local-llm-maas` ClusterIP maps service port 443 to plaintext vLLM pod port 8080, with a gateway-scoped DestinationRule overriding the RHOAI 3.5.1 provider controller's TLS default, with NetworkPolicy limited to the MaaS gateway and existing monitoring namespaces. Existing clients continue using the authenticated KServe endpoint. The runtime enables `--enable-auto-tool-choice` with `--tool-call-parser=hermes` for Qwen tool calls; validate these through OpenCode after GitOps deployment.
 
 ## Clients
 

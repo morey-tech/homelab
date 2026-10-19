@@ -1,6 +1,8 @@
 # Keep the existing authenticated KServe endpoint for other clients. This
-# ClusterIP reaches vLLM directly; NetworkPolicy admits only the MaaS gateway
-# and the existing monitoring namespaces to port 8080.
+# ClusterIP exposes port 443 for the RHOAI 3.5.1 provider controller, which
+# hard-codes that port. It forwards HTTP to vLLM port 8080; the gateway-scoped
+# local-vllm-transport DestinationRule disables upstream TLS. NetworkPolicy
+# admits only the MaaS gateway and existing monitoring namespaces to pod 8080.
 apiVersion: v1
 kind: Service
 metadata:
@@ -11,7 +13,7 @@ spec:
     component: predictor
   ports:
     - name: http
-      port: 8080
+      port: 443
       targetPort: 8080
 ---
 # ExternalProvider requires a credential reference even for a private vLLM
@@ -67,9 +69,6 @@ apiVersion: inference.opendatahub.io/v1alpha1
 kind: ExternalModel
 metadata:
   name: local-llm
-  annotations:
-    maas.opendatahub.io/tls: "false"
-    maas.opendatahub.io/port: "8080"
 spec:
   externalProviderRefs:
     - ref:

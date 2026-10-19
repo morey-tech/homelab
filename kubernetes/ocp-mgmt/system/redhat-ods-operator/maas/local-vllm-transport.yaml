@@ -1,0 +1,22 @@
+# RHOAI 3.5.1's provider controller always generates HTTPS/443 backends.
+# The dedicated local-llm-maas Service maps 443 to plaintext vLLM port 8080.
+# A client-namespace rule takes precedence over the provider-generated rule
+# in inference-server. Limit this exception to this gateway and backend.
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: local-vllm-transport
+  namespace: openshift-ingress
+spec:
+  host: local-llm-maas.inference-server.svc.cluster.local
+  exportTo:
+    - "."
+  workloadSelector:
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: maas-default-gateway
+  trafficPolicy:
+    portLevelSettings:
+      - port:
+          number: 443
+        tls:
+          mode: DISABLE
