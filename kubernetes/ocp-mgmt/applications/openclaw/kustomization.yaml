@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: openclaw
+resources:
+- credentials.yaml
+- storage.yaml
+- deployment.yaml
+- network.yaml
+configMapGenerator:
+- name: openclaw-config
+  files:
+  - openclaw.json
+  - launch.mjs
+  - AGENTS.md
+  - oauth-start.sh

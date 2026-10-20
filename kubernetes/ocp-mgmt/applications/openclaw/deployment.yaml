@@ -1,0 +1,217 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openclaw
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: openclaw
+  template:
+    metadata:
+      labels:
+        app: openclaw
+      annotations:
+        openshift.io/required-scc: restricted-v2
+    spec:
+      serviceAccountName: openclaw
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - ms-02
+                - ms-04
+      containers:
+      - name: gateway
+        image: ghcr.io/openclaw/openclaw:2026.10.5@sha256:f40d1e66fd14d8c5b49c832f4100f83b53fdc01f5108f7db11de38fd0ee6dbe5
+        command:
+        - node
+        - /config/launch.mjs
+        env:
+        - name: HOME
+          value: /home/node
+        - name: OPENCLAW_CONFIG_PATH
+          value: /config/openclaw.json
+        - name: OPENCLAW_STATE_DIR
+          value: /home/node/.openclaw
+        - name: XDG_CACHE_HOME
+          value: /home/node/.openclaw/.cache
+        - name: XDG_CONFIG_HOME
+          value: /home/node/.openclaw/.config
+        - name: NODE_ENV
+          value: production
+        resources:
+          requests:
+            cpu: 250m
+            memory: 1Gi
+          limits:
+            cpu: '2'
+            memory: 4Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: state
+          mountPath: /home/node/.openclaw
+          readOnly: false
+        - name: config
+          mountPath: /config
+          readOnly: true
+        - name: maas
+          mountPath: /maas
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        startupProbe:
+          exec:
+            command:
+            - node
+            - -e
+            - fetch('http://127.0.0.1:18789/startupz').then(async r=>{const b=await
+              r.json();process.exit(r.ok && b.ok===true ? 0:1)}).catch(()=>process.exit(1))
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 60
+        readinessProbe:
+          exec:
+            command:
+            - node
+            - -e
+            - fetch('http://127.0.0.1:18789/startupz').then(async r=>{const b=await
+              r.json();process.exit(r.ok && b.ok===true ? 0:1)}).catch(()=>process.exit(1))
+          timeoutSeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command:
+            - node
+            - -e
+            - fetch('http://127.0.0.1:18789/healthz').then(async r=>{const b=await
+              r.json();process.exit(r.ok && b.ok===true ? 0:1)}).catch(()=>process.exit(1))
+          timeoutSeconds: 5
+          periodSeconds: 30
+      - name: oauth-proxy
+        image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:c2157a771f0d04641ab2079b3fd7dd43341897833bbe5b78233ca112be575a7a
+        args:
+        - --provider=openshift
+        - --https-address=:8443
+        - --http-address=
+        - --upstream=http://127.0.0.1:18789
+        - --client-id=system:serviceaccount:openclaw:openclaw
+        - --client-secret-file=/oauth-state/client-token
+        - --cookie-secret-file=/etc/oauth/cookie_secret
+        - --cookie-secure=true
+        - --cookie-expire=12h
+        - --scope=user:info
+        - --pass-access-token=false
+        - --pass-basic-auth=false
+        - --pass-user-headers=true
+        - --tls-cert=/etc/tls/tls.crt
+        - --tls-key=/etc/tls/tls.key
+        - --upstream-timeout=5m
+        - --skip-provider-button=true
+        ports:
+        - name: oauth
+          containerPort: 8443
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: oauth-cookie
+          mountPath: /etc/oauth
+          readOnly: true
+        - name: tls
+          mountPath: /etc/tls
+          readOnly: true
+        - name: oauth-identity
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
+        - name: config
+          mountPath: /config
+          readOnly: true
+        - name: oauth-state
+          mountPath: /oauth-state
+        readinessProbe:
+          httpGet:
+            path: /oauth/healthz
+            port: oauth
+            scheme: HTTPS
+        command:
+        - /bin/sh
+        - /config/oauth-start.sh
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - test "$(cat /oauth-state/client-token)" = "$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 1
+      volumes:
+      - name: state
+        persistentVolumeClaim:
+          claimName: openclaw-state
+      - name: config
+        configMap:
+          name: openclaw-config
+      - name: maas
+        secret:
+          secretName: maas-api-key
+      - name: oauth-cookie
+        secret:
+          secretName: oauth-cookie
+      - name: tls
+        secret:
+          secretName: openclaw-tls
+      - name: tmp
+        emptyDir:
+          sizeLimit: 256Mi
+      - name: oauth-identity
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: 86400
+          - configMap:
+              name: kube-root-ca.crt
+              items:
+              - key: ca.crt
+                path: ca.crt
+          - downwardAPI:
+              items:
+              - path: namespace
+                fieldRef:
+                  fieldPath: metadata.namespace
+      - name: oauth-state
+        emptyDir:
+          medium: Memory
+          sizeLimit: 1Mi

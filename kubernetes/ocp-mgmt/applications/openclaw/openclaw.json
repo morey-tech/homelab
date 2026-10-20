@@ -1,0 +1,85 @@
+{
+  "gateway": {
+    "mode": "local",
+    "bind": "loopback",
+    "port": 18789,
+    "trustedProxies": [
+      "127.0.0.1",
+      "::1"
+    ],
+    "auth": {
+      "mode": "trusted-proxy",
+      "trustedProxy": {
+        "userHeader": "x-forwarded-user",
+        "allowLoopback": true,
+        "allowUsers": [
+          "admin"
+        ],
+        "deviceAutoApprove": {
+          "enabled": true,
+          "scopes": [
+            "operator.read",
+            "operator.write",
+            "operator.approvals",
+            "operator.questions"
+          ]
+        }
+      }
+    },
+    "controlUi": {
+      "allowedOrigins": [
+        "https://openclaw.apps.ocp-mgmt.rh-lab.morey.tech"
+      ]
+    }
+  },
+  "models": {
+    "mode": "replace",
+    "providers": {
+      "maas": {
+        "baseUrl": "https://maas.apps.ocp-mgmt.rh-lab.morey.tech/v1",
+        "apiKey": "${MAAS_API_KEY}",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "local-llm",
+            "name": "Qwen on RTX 3090",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "workspace": "/home/node/.openclaw/workspace",
+      "model": {
+        "primary": "maas/local-llm"
+      },
+      "maxConcurrent": 1,
+      "memorySearch": {
+        "enabled": false
+      }
+    }
+  },
+  "tools": {
+    "allow": [
+      "read",
+      "write",
+      "edit",
+      "session_status"
+    ],
+    "fs": {
+      "workspaceOnly": true
+    }
+  },
+  "discovery": {
+    "mdns": {
+      "mode": "off"
+    }
+  }
+}

@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: openclaw
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: openclaw-tls
+spec:
+  selector:
+    app: openclaw
+  ports:
+  - name: https
+    port: 8443
+    targetPort: oauth
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: openclaw
+  annotations:
+    haproxy.router.openshift.io/timeout: 5m
+spec:
+  host: openclaw.apps.ocp-mgmt.rh-lab.morey.tech
+  to:
+    kind: Service
+    name: openclaw
+  port:
+    targetPort: https
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: openclaw
+spec:
+  podSelector:
+    matchLabels:
+      app: openclaw
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          network.openshift.io/policy-group: ingress
+    ports:
+    - protocol: TCP
+      port: 8443
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: openshift-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: UDP
+      port: 5353
+    - protocol: TCP
+      port: 53
+    - protocol: TCP
+      port: 5353
+  - to:
+    - ipBlock:
+        cidr: 192.168.6.98/32
+    ports:
+    - protocol: TCP
+      port: 443
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          network.openshift.io/policy-group: ingress
+    ports:
+    - protocol: TCP
+      port: 443
+  - to:
+    - ipBlock:
+        cidr: 172.30.0.1/32
+    - ipBlock:
+        cidr: 192.168.6.90/32
+    - ipBlock:
+        cidr: 192.168.6.91/32
+    - ipBlock:
+        cidr: 192.168.6.92/32
+    - ipBlock:
+        cidr: 192.168.6.93/32
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 6443
