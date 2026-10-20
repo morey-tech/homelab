@@ -6,7 +6,4 @@ resources:
   - rbac.yaml
   - cronjob.yaml
   - alerts.yaml
-configMapGenerator:
-  - name: maas-key-rotator
-    files:
-      - rotate.py
+  - runtime

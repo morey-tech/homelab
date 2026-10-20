@@ -66,3 +66,36 @@ spec:
       tokenRateLimits:
         - limit: 100000
           window: 1m
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata:
+  name: openclaw
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  modelRefs:
+    - name: local-llm
+      namespace: inference-server
+  subjects:
+    users:
+      - system:serviceaccount:openclaw-maas:maas-key-rotator
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata:
+  name: openclaw
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  owner:
+    users:
+      - system:serviceaccount:openclaw-maas:maas-key-rotator
+  modelRefs:
+    - name: local-llm
+      namespace: inference-server
+      tokenRateLimits:
+        - limit: 30000
+          window: 1m

@@ -1,0 +1,64 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: maas-key-rotator
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  schedule: "*/15 * * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 300
+      template:
+        metadata:
+          labels:
+            app: maas-key-rotator
+        spec:
+          serviceAccountName: maas-key-rotator
+          automountServiceAccountToken: true
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: rotate
+              image: docker.io/library/python:3.14.8-slim-trixie@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170
+              command: [python3, -B, /app/rotate.py]
+              env:
+                - name: POD_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: MAAS_URL
+                  value: https://maas.apps.ocp-mgmt.rh-lab.morey.tech
+                - name: MAAS_SUBSCRIPTION
+                  value: openclaw
+                - name: MAAS_REQUIRED_MODELS
+                  value: local-llm
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              volumeMounts:
+                - name: script
+                  mountPath: /app
+                  readOnly: true
+          volumes:
+            - name: script
+              configMap:
+                name: maas-key-rotator

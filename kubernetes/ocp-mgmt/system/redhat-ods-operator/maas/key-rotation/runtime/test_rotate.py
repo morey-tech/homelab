@@ -147,5 +147,30 @@ class RotationTests(unittest.TestCase):
         self.assertEqual(rotate.stored(old, "MAAS_API_KEY"), "old-key")
 
 
+
+
+class ClientConfigurationTests(unittest.TestCase):
+    def client(self, extra):
+        import ssl
+        context = ssl.create_default_context()
+        env = {"POD_NAMESPACE": "test", "MAAS_URL": "https://maas.example"} | extra
+        with patch.dict("os.environ", env, clear=True), patch.object(rotate.ssl, "create_default_context", return_value=context):
+            return rotate.Client()
+
+    def test_devspaces_defaults_preserved(self):
+        client = self.client({})
+        self.assertEqual(client.subscription, "devspaces-workspaces")
+        self.assertEqual(client.models, {"local-llm", "claude-sonnet-4-6"})
+
+    def test_openclaw_needs_only_local_model(self):
+        client = self.client({"MAAS_SUBSCRIPTION": "openclaw", "MAAS_REQUIRED_MODELS": "local-llm"})
+        self.assertEqual(client.subscription, "openclaw")
+        with patch.object(client, "request", return_value={"data": [{"id": "local-llm"}]}):
+            client.validate("fake-key")
+        with patch.object(client, "request", return_value={"data": [{"id": "claude-sonnet-4-6"}]}):
+            with self.assertRaises(ValueError):
+                client.validate("fake-key")
+
+
 if __name__ == "__main__":
     unittest.main()

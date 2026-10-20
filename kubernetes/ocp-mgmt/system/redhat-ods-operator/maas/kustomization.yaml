@@ -11,3 +11,4 @@ resources:
   - dashboard.yaml
   - access.yaml
   - key-rotation
+  - openclaw-key-rotation

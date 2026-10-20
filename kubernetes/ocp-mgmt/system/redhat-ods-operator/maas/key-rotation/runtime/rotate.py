@@ -1,4 +1,4 @@
-"""Renew the shared Dev Spaces MaaS key without logging credentials."""
+"""Renew a scoped MaaS key without logging credentials."""
 import base64
 import copy
 import datetime as dt
@@ -35,7 +35,8 @@ class Client:
         self.maas = os.environ["MAAS_URL"].rstrip("/")
         self.namespace = os.environ["POD_NAMESPACE"]
         self.name = "maas-workspace-key"
-        self.subscription = "devspaces-workspaces"
+        self.subscription = os.environ.get("MAAS_SUBSCRIPTION", "devspaces-workspaces")
+        self.models = set(os.environ.get("MAAS_REQUIRED_MODELS", ",".join(sorted(MODELS))).split(","))
         self.secret_path = f"/api/v1/namespaces/{self.namespace}/secrets"
         kube_tls = ssl.create_default_context(cafile="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
         self.openers = {
@@ -66,15 +67,15 @@ class Client:
 
     def mint(self):
         return self.request(self.maas, "/maas-api/v1/api-keys", "POST", {
-            "name": "devspaces-" + uuid.uuid4().hex,
-            "description": "Automatically rotated shared Dev Spaces credential",
+            "name": self.subscription + "-" + uuid.uuid4().hex,
+            "description": "Automatically rotated credential for " + self.subscription,
             "expiresIn": "90d", "subscription": self.subscription,
         })
 
     def validate(self, key):
         result = self.request(self.maas, "/v1/models", key=key)
-        if not MODELS.issubset({m["id"] for m in result.get("data", [])}):
-            raise ValueError("MaaS key cannot discover both required models")
+        if not self.models.issubset({m["id"] for m in result.get("data", [])}):
+            raise ValueError("MaaS key cannot discover required models")
 
     def revoke(self, key_id):
         self.request(self.maas, "/maas-api/v1/api-keys/" + key_id, "DELETE")

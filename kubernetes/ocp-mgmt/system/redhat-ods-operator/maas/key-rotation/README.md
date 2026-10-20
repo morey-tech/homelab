@@ -40,7 +40,11 @@ opencode
 Unit tests exercise bootstrap, renewal timing, rejection recovery, invalid candidates, API outages, and ambiguous writes without network access:
 
 ```bash
-python -B -m unittest discover -s kubernetes/ocp-mgmt/system/redhat-ods-operator/maas/key-rotation -p 'test_*.py'
+python -B -m unittest discover -s kubernetes/ocp-mgmt/system/redhat-ods-operator/maas/key-rotation/runtime -p 'test_*.py'
 ```
 
 [Dev Spaces Secret synchronization](https://docs.redhat.com/en/documentation/red_hat_openshift_dev_spaces/3.26/html/administration_guide/configuring-devspaces), [ESO Kubernetes provider](https://external-secrets.io/latest/provider/kubernetes/), and [MaaS API key lifecycle](https://github.com/opendatahub-io/models-as-a-service/blob/main/maas-api/README.md) describe the underlying interfaces.
+
+## Shared runtime
+
+The `runtime/` Kustomization packages the tested rotation script for both Dev Spaces and [OpenClaw](../../../../applications/openclaw/README.md). `MAAS_SUBSCRIPTION` and `MAAS_REQUIRED_MODELS` select the consumer; defaults preserve Dev Spaces behavior. OpenClaw uses an isolated `openclaw-maas` namespace, its own subscription, and only `local-llm`.

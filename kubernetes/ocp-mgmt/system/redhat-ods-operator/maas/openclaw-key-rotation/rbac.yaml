@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: maas-key-rotator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: maas-key-rotator
+rules:
+  - apiGroups: [""]
+    resources: [secrets]
+    resourceNames: [maas-workspace-key]
+    verbs: [get, update]
+  # Kubernetes cannot restrict create by resourceNames. This namespace is
+  # dedicated to the generated credential; no workspace or provider keys live here.
+  - apiGroups: [""]
+    resources: [secrets]
+    verbs: [create]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: maas-key-rotator
+subjects:
+  - kind: ServiceAccount
+    name: maas-key-rotator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: maas-key-rotator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: maas-key-reader
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: maas-key-reader
+rules:
+  # ESO's Kubernetes provider validates read/list/watch access to this isolated namespace.
+  - apiGroups: [""]
+    resources: [secrets]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: maas-key-reader
+subjects:
+  - kind: ServiceAccount
+    name: maas-key-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: maas-key-reader
+---
+# ESO requests a short-lived token for the reader; no static token Secret.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: maas-key-reader-token
+rules:
+  - apiGroups: [""]
+    resources: [serviceaccounts/token]
+    resourceNames: [maas-key-reader]
+    verbs: [create]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: maas-key-reader-token
+subjects:
+  - kind: ServiceAccount
+    name: external-secrets
+    namespace: external-secrets-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: maas-key-reader-token

@@ -102,3 +102,7 @@ These runtime checks require the GitOps-deployed resources and are deferred unti
 After both Argo applications reconcile, repeat the authenticated streaming request above. In the MaaS gateway's Envoy configuration, require `outbound|443||local-llm-maas.inference-server.svc.cluster.local` with endpoint port 8080 and no upstream TLS transport socket. The previous failure was `500 NC cluster_not_found`: the route requested port 443 but the Service exposed only 8080. Merely adding port 443 without the DestinationRule would leave TLS enabled against a plaintext runtime.
 
 The scoped DestinationRule relies on [Istio's client-namespace lookup precedence](https://istio.io/latest/docs/ops/best-practices/traffic-management/#cross-namespace-configuration). Both applications may reconcile in either order; wait for both before testing. Verify Claude's TLS configuration and the existing authenticated KServe endpoint remain unchanged.
+
+## OpenClaw access
+
+[Standalone OpenClaw](../../../applications/openclaw/README.md) has its own `openclaw` auth policy and subscription for `local-llm` only (30000 tokens/minute). `openclaw-key-rotation/` runs the shared rotator in the isolated `openclaw-maas` namespace and validates only Qwen. It issues 90-day credentials with renewal at 30 days remaining, independently of Dev Spaces. ESO distributes the key only to the `openclaw` application. Deploy these prerequisites before the application.
