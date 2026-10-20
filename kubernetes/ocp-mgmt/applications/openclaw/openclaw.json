@@ -60,10 +60,7 @@
       "model": {
         "primary": "maas/local-llm"
       },
-      "maxConcurrent": 1,
-      "memorySearch": {
-        "enabled": false
-      }
+      "maxConcurrent": 1
     }
   },
   "tools": {
@@ -80,6 +77,11 @@
   "discovery": {
     "mdns": {
       "mode": "off"
+    }
+  },
+  "memory": {
+    "search": {
+      "enabled": false
     }
   }
 }
