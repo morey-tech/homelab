@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
@@ -51,4 +51,20 @@ test('missing projection retains gateway', {timeout:5000}, async t => {
   assert.equal(f.child.exitCode, null);
   f.child.kill('SIGTERM');
   assert.equal((await f.done)[0], 0);
+});
+
+// ConfigMap files are symlinks into a timestamped directory. Node resolves the
+// module URL but retains the symlink path in argv[1].
+test('entrypoint recognizes a ConfigMap-style symlink', async t => {
+  const { isEntrypoint } = await import('./launch.mjs');
+  const { pathToFileURL } = await import('node:url');
+  const dir = mkdtempSync(join(tmpdir(), 'openclaw-entry-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const target = join(dir, 'mounted-launch.mjs');
+  const link = join(dir, 'launch.mjs');
+  writeFileSync(target, '');
+  symlinkSync(target, link);
+  assert.equal(isEntrypoint(pathToFileURL(target).href, link), true);
+  assert.equal(isEntrypoint(pathToFileURL(target).href, ''), false);
+  assert.equal(isEntrypoint(import.meta.url, link), false);
 });

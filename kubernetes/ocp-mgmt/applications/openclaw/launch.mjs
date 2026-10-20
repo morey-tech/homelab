@@ -1,8 +1,12 @@
 // Restart the gateway when Kubernetes projects a replacement MaaS credential.
 // No Kubernetes API access is needed by the agent workload.
-import { readFileSync, mkdirSync, copyFileSync, constants } from 'node:fs';
+import { readFileSync, mkdirSync, copyFileSync, realpathSync, constants } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+
+export function isEntrypoint(moduleUrl, entryPath = process.argv[1]) {
+  return Boolean(entryPath) && moduleUrl === pathToFileURL(realpathSync(entryPath)).href;
+}
 
 export function launch({ keyPath = '/maas/MAAS_API_KEY', command = process.execPath,
   args = ['/app/openclaw.mjs', 'gateway', 'run'], intervalMs = 30000,
@@ -45,7 +49,7 @@ export function launch({ keyPath = '/maas/MAAS_API_KEY', command = process.execP
   });
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isEntrypoint(import.meta.url)) {
   mkdirSync('/home/node/.openclaw/workspace', { recursive: true });
   try {
     copyFileSync('/config/AGENTS.md', '/home/node/.openclaw/workspace/AGENTS.md', constants.COPYFILE_EXCL);
