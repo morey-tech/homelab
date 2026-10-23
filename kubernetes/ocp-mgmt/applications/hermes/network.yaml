@@ -1,0 +1,104 @@
+# Public HTTPS requires the DNS allowlist in egress-firewall.yaml.
+apiVersion: v1
+kind: Service
+metadata:
+  name: hermes
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: hermes-tls
+spec:
+  selector:
+    app: hermes
+  ports:
+  - name: https
+    port: 8443
+    targetPort: oauth
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hermes
+  annotations:
+    haproxy.router.openshift.io/timeout: 5m
+spec:
+  host: hermes.apps.ocp-mgmt.rh-lab.morey.tech
+  to:
+    kind: Service
+    name: hermes
+  port:
+    targetPort: https
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes
+spec:
+  podSelector:
+    matchLabels:
+      app: hermes
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          network.openshift.io/policy-group: ingress
+    ports:
+    - protocol: TCP
+      port: 8443
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+    ports:
+    - protocol: TCP
+      port: 443
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: openshift-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: UDP
+      port: 5353
+    - protocol: TCP
+      port: 53
+    - protocol: TCP
+      port: 5353
+  - to:
+    - ipBlock:
+        cidr: 192.168.6.98/32
+    ports:
+    - protocol: TCP
+      port: 443
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          network.openshift.io/policy-group: ingress
+    ports:
+    - protocol: TCP
+      port: 443
+  - to:
+    - ipBlock:
+        cidr: 172.30.0.1/32
+    - ipBlock:
+        cidr: 192.168.6.90/32
+    - ipBlock:
+        cidr: 192.168.6.91/32
+    - ipBlock:
+        cidr: 192.168.6.92/32
+    - ipBlock:
+        cidr: 192.168.6.93/32
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 6443

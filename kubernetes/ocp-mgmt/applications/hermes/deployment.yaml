@@ -1,0 +1,239 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hermes
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: hermes
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        openshift.io/required-scc: restricted-v2
+      labels:
+        app: hermes
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - ms-02
+                - ms-04
+      automountServiceAccountToken: false
+      containers:
+      - command:
+        - /opt/hermes/.venv/bin/python
+        - -B
+        - /config/launch.py
+        env:
+        - name: HOME
+          value: /opt/data
+        - name: HERMES_HOME
+          value: /opt/data
+        - name: HERMES_MANAGED_DIR
+          value: /config
+        - name: HERMES_WRITE_SAFE_ROOT
+          value: /opt/data/workspace
+        - name: OPENAI_BASE_URL
+          value: https://maas.apps.ocp-mgmt.rh-lab.morey.tech/v1
+        - name: HERMES_DASHBOARD_BASIC_AUTH_USERNAME
+          value: admin
+        - name: XDG_CACHE_HOME
+          value: /opt/data/.cache
+        - name: XDG_CONFIG_HOME
+          value: /opt/data/.config
+        - name: XDG_RUNTIME_DIR
+          value: /tmp/hermes-runtime
+        - name: PYTHONDONTWRITEBYTECODE
+          value: '1'
+        - name: PYTHONUNBUFFERED
+          value: '1'
+        image: docker.io/nousresearch/hermes-agent:v0.22.5@sha256:9c5561579f3ffdf333401797094ac3a743738d6c25d40f4331c7bf77b694238d
+        livenessProbe:
+          exec:
+            command:
+            - /opt/hermes/.venv/bin/python
+            - -c
+            - import urllib.request; urllib.request.urlopen("http://127.0.0.1:9119/api/status",timeout=4)
+          timeoutSeconds: 5
+          periodSeconds: 30
+        name: dashboard
+        readinessProbe:
+          exec:
+            command:
+            - /opt/hermes/.venv/bin/python
+            - -c
+            - import json,urllib.request; r=urllib.request.urlopen("http://127.0.0.1:9119/api/status",timeout=4);
+              s=json.load(r); assert s.get("auth_required") is True and "basic" in s.get("auth_providers", [])
+          timeoutSeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: '2'
+            memory: 4Gi
+          requests:
+            cpu: 250m
+            memory: 1Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        startupProbe:
+          exec:
+            command:
+            - /opt/hermes/.venv/bin/python
+            - -c
+            - import json,urllib.request; r=urllib.request.urlopen("http://127.0.0.1:9119/api/status",timeout=4);
+              s=json.load(r); assert s.get("auth_required") is True and "basic" in s.get("auth_providers", [])
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 60
+        volumeMounts:
+        - name: state
+          mountPath: /opt/data
+          readOnly: false
+        - name: config
+          mountPath: /config
+          readOnly: true
+        - name: maas
+          mountPath: /maas
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: dashboard-password
+          mountPath: /dashboard-password
+          readOnly: true
+        - name: dashboard-signing-key
+          mountPath: /dashboard-signing-key
+          readOnly: true
+      - args:
+        - --provider=openshift
+        - --https-address=:8443
+        - --http-address=
+        - --upstream=http://127.0.0.1:9119
+        - --client-id=system:serviceaccount:hermes:hermes
+        - --client-secret-file=/oauth-state/client-token
+        - --cookie-secret-file=/etc/oauth/cookie_secret
+        - --cookie-secure=true
+        - --cookie-expire=12h
+        - --scope=user:info
+        - --pass-access-token=false
+        - --pass-basic-auth=false
+        - --pass-user-headers=true
+        - --tls-cert=/etc/tls/tls.crt
+        - --tls-key=/etc/tls/tls.key
+        - --upstream-timeout=5m
+        - --skip-provider-button=false
+        command:
+        - /bin/sh
+        - /config/oauth-start.sh
+        image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:c2157a771f0d04641ab2079b3fd7dd43341897833bbe5b78233ca112be575a7a
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - test "$(cat /oauth-state/client-token)" = "$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+          failureThreshold: 1
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+        name: oauth-proxy
+        ports:
+        - containerPort: 8443
+          name: oauth
+        readinessProbe:
+          httpGet:
+            path: /oauth/healthz
+            port: oauth
+            scheme: HTTPS
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /etc/oauth
+          name: oauth-cookie
+          readOnly: true
+        - mountPath: /etc/tls
+          name: tls
+          readOnly: true
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: oauth-identity
+          readOnly: true
+        - mountPath: /config
+          name: config
+          readOnly: true
+        - mountPath: /oauth-state
+          name: oauth-state
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: hermes
+      terminationGracePeriodSeconds: 45
+      volumes:
+      - name: state
+        persistentVolumeClaim:
+          claimName: hermes-state
+      - configMap:
+          name: hermes-config
+        name: config
+      - name: maas
+        secret:
+          secretName: maas-api-key
+      - name: oauth-cookie
+        secret:
+          secretName: oauth-cookie
+      - name: tls
+        secret:
+          secretName: hermes-tls
+      - emptyDir:
+          sizeLimit: 256Mi
+        name: tmp
+      - name: oauth-identity
+        projected:
+          sources:
+          - serviceAccountToken:
+              expirationSeconds: 86400
+              path: token
+          - configMap:
+              items:
+              - key: ca.crt
+                path: ca.crt
+              name: kube-root-ca.crt
+          - downwardAPI:
+              items:
+              - fieldRef:
+                  fieldPath: metadata.namespace
+                path: namespace
+      - emptyDir:
+          medium: Memory
+          sizeLimit: 1Mi
+        name: oauth-state
+      - name: dashboard-password
+        secret:
+          secretName: dashboard-password
+      - name: dashboard-signing-key
+        secret:
+          secretName: dashboard-signing-key

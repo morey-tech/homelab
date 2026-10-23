@@ -1,0 +1,38 @@
+# Managed baseline: mounted at HERMES_MANAGED_DIR, separate from writable state.
+model:
+  provider: custom
+  default: local-llm
+  base_url: https://maas.apps.ocp-mgmt.rh-lab.morey.tech/v1
+  context_length: 65536
+max_concurrent_sessions: 1
+dashboard:
+  public_url: https://hermes.apps.ocp-mgmt.rh-lab.morey.tech
+  # Only the OAuth sidecar reaches the dashboard; preserve the exact public origin.
+  trusted_proxies:
+  - 127.0.0.1
+  - ::1
+platform_toolsets:
+  cli: [file, memory, skills, session_search, todo]
+terminal:
+  backend: local
+  cwd: /opt/data/workspace
+security:
+  allow_lazy_installs: false
+auxiliary:
+  compression:
+    provider: main
+    max_concurrency: 1
+  title_generation:
+    provider: main
+    max_concurrency: 1
+  session_search:
+    provider: main
+    max_concurrency: 1
+  background_review:
+    provider: main
+memory:
+  memory_enabled: true
+  user_profile_enabled: true
+approvals:
+  mode: manual
+  unattended_mode: deny

@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: hermes
+resources:
+- credentials.yaml
+- storage.yaml
+- deployment.yaml
+- network.yaml
+- egress-firewall.yaml
+configMapGenerator:
+- name: hermes-config
+  files:
+  - config.yaml
+  - launch.py
+  - SOUL.md
+  - oauth-start.sh
