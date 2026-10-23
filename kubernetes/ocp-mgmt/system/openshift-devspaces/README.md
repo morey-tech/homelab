@@ -8,6 +8,7 @@ This configuration copies the former [ocp-gpu Dev Spaces setup](../../../ocp-gpu
 |-----------|---------------|
 | Operator | `devspaces` Subscription, `stable` channel, automatic install plans in `openshift-operators`; uses the existing global OperatorGroup |
 | CheCluster | Open VSX, unlimited workspaces, nested container capabilities enabled with local XFS storage, 2 CPU / 2G memory requests and 4G memory limit |
+| Image cache | Kubernetes Image Puller operator from `community-operators`, `stable` channel; CheCluster-managed DaemonSet caches both homelab images and workspace supporting images |
 | Storage | One 5Gi `lvms-vg-nvme` ReadWriteOnce PVC per workspace; persistent user home disabled |
 | GitHub OAuth | `github-oauth-config` ExternalSecret from Bitwarden item `4afc34a2-53be-4b9b-b46c-b3a70008d238` via `bitwarden-login` |
 | Claude Code / direct Anthropic | `claude-code-api-key` ClusterExternalSecret injects the shared `ANTHROPIC_API_KEY` into namespaces labelled `app.kubernetes.io/component: workspaces-namespace` |
@@ -18,6 +19,37 @@ This configuration copies the former [ocp-gpu Dev Spaces setup](../../../ocp-gpu
 The [LVM configuration](../openshift-lvm-storage/README.md) provisions XFS volumes from one selected 2 TB Samsung NVMe per eligible node. `disableContainerRunCapabilities: false` enables nested container capabilities and workspace user namespaces. XFS supports the ID-mapped mounts that failed on NFS with `mount_setattr /projects: Invalid argument`; see [Kubernetes user namespace limitations](https://kubernetes.io/docs/concepts/workloads/pods/user-namespaces/).
 
 The class is explicitly selected and is not the cluster default. Volumes are node-local, use `WaitForFirstConsumer`, and cannot fail over to another node. The operator-generated class uses reclaim policy `Delete`, so deleting a workspace PVC deletes its local data.
+
+## Workspace image cache
+
+The [CheCluster](checluster.yaml) enables the [Dev Spaces Image Puller](https://docs.redhat.com/en/documentation/red_hat_openshift_dev_spaces/3.26/html/administration_guide/configuring-devspaces#caching-images-for-faster-workspace-start). Its explicit image list includes `devspace-base:latest`, `devspace-homelab:latest`, project-clone, the VS Code injector, and the Traefik gateway. The three supporting image digests were read from the running `admin-devspaces` workspace on 2026-10-23. This list replaces automatic image discovery: review it after Dev Spaces upgrades or when using other workspace images/editors.
+
+The puller has no node selector, matching the workspace configuration, and uses normal node taint filtering. This covers the local-LVM workspace nodes (`ms-02`, `ms-04`, and `tr-gpu`) when they are schedulable, as well as other eligible nodes. If workspace selectors or tolerations change, update the puller's scheduling settings too. Verify actual coverage after reconciliation; the manifest alone does not prove images are cached.
+
+Workspace pull policies remain unchanged: the observed homelab and init containers use `Always`, while the digest-pinned gateway uses `IfNotPresent`. `Always` resolves the registry digest and reuses cached layers; it does not download the whole image on every start. Keeping it for mutable `latest` tags lets workspaces receive new builds. Switch to `IfNotPresent` only with immutable references and an explicit update process. See [Kubernetes image pull policies](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy).
+
+Pre-caching does not guarantee every later build of `latest` is warm: the puller's hourly interval checks DaemonSet health, rather than continuously tracking tag changes. A newly published build may still require missing layers on its first workspace start. Pinned supporting images remain in use by cache containers; old digests must be removed from the list after upgrades to release them for garbage collection.
+
+After review, commit, and the human push, let Argo CD deploy the [Image Puller Subscription](../openshift-operators/3-image-puller.yaml) through `openshift-operators-system` first. Wait for its CSV to succeed and its CRD to become established before reconciling the CheCluster through `openshift-devspaces-system`. Separate Applications are not readiness-ordered; if they reconcile together, Dev Spaces can report the missing Image Puller API until OLM completes installation. The Dev Spaces operator owns `devspaces-image-puller`; do not also manage that generated custom resource or DaemonSet in Git.
+
+Run these read-only checks with an administrator's ocp-mgmt session after deployment:
+
+```bash
+oc get subscription kubernetes-imagepuller-operator -n openshift-operators
+oc get csv -n openshift-operators
+oc get crd kubernetesimagepullers.che.eclipse.org
+oc get kubernetesimagepuller devspaces-image-puller -n openshift-devspaces -o yaml
+oc get daemonset devspaces-image-puller -n openshift-devspaces -o wide
+oc get pods -n openshift-devspaces -o wide
+oc get nodes -o wide
+oc get events -n openshift-devspaces --sort-by=.lastTimestamp
+oc get pods -n admin-devspaces -l controller.devfile.io/devworkspace_id -o json \
+  | jq '.items[] | {pod: .metadata.name, node: .spec.nodeName,
+      images: [((.spec.initContainers // []) + .spec.containers)[] |
+        {name, image, imagePullPolicy}]}'
+```
+
+Confirm DaemonSet desired/current/ready counts agree and a ready cache pod runs on every workspace-eligible node, including all three LVM nodes. Inspect events for pull/authentication failures. Red Hat images require working cluster pull credentials; if GHCR packages become private, configure `imagePullSecrets` for the puller using a Secret in `openshift-devspaces` through GitOps. Credentials available only in a user's workspace namespace do not cover the puller. After the cache is ready, stop/start a workspace through Dev Spaces and inspect its image events and startup time. Operator availability, registry credentials, node coverage, and runtime timing remain deployment checks.
 
 ## Global VS Code extensions
 

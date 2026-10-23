@@ -4,3 +4,4 @@ namespace: openshift-operators
 resources:
   - 1-devspaces.yaml
   - 2-connectivity-link.yaml
+  - 3-image-puller.yaml

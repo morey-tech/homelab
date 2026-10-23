@@ -6,6 +6,16 @@ metadata:
   namespace: openshift-devspaces
 spec:
   components:
+    imagePuller:
+      enable: true
+      spec:
+        daemonsetName: devspaces-image-puller
+        # Workspaces have no node selector; cache on all schedulable nodes.
+        nodeSelector: '{}'
+        # Complete list, not additions to the operator defaults. Supporting
+        # digests come from the running workspace; refresh after Dev Spaces upgrades.
+        images: >-
+          devspace-base=ghcr.io/morey-tech/homelab/devspace-base:latest;devspace-homelab=ghcr.io/morey-tech/homelab/devspace-homelab:latest;project-clone=registry.redhat.io/devworkspace/devworkspace-project-clone-rhel9@sha256:0957c40283342a7c421ccc8c1817f2dc4ccd5b4397a336fd12da70b1a580445f;che-code=registry.redhat.io/devspaces/code-rhel9@sha256:26e0335bcd90b3aa5c9bf9b2642ba7e49e1d99fa6e82fbd0657abdb720892063;che-gateway=registry.redhat.io/devspaces/traefik-rhel9@sha256:e61ca8ea57795df262cb3247f763c3538815cc94444af84ade4bdeefa1c10e2b
     pluginRegistry:
       openVSXURL: https://open-vsx.org
   containerRegistry: {}
