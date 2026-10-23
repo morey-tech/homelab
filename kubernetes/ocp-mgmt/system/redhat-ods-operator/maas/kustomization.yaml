@@ -12,3 +12,4 @@ resources:
   - access.yaml
   - key-rotation
   - openclaw-key-rotation
+  - hermes-key-rotation

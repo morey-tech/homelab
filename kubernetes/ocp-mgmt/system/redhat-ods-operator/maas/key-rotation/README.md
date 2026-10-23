@@ -47,4 +47,4 @@ python -B -m unittest discover -s kubernetes/ocp-mgmt/system/redhat-ods-operator
 
 ## Shared runtime
 
-The `runtime/` Kustomization packages the tested rotation script for both Dev Spaces and [OpenClaw](../../../../applications/openclaw/README.md). `MAAS_SUBSCRIPTION` and `MAAS_REQUIRED_MODELS` select the consumer; defaults preserve Dev Spaces behavior. OpenClaw uses an isolated `openclaw-maas` namespace, its own subscription, and only `local-llm`.
+The `runtime/` Kustomization packages the tested rotation script for Dev Spaces, [OpenClaw](../../../../applications/openclaw/README.md), and the Hermes comparison pilot. `MAAS_SUBSCRIPTION` and `MAAS_REQUIRED_MODELS` select the consumer; defaults preserve Dev Spaces behavior. OpenClaw and Hermes each use only `local-llm`, with independent subscriptions, credentials, readers, and alerts in `openclaw-maas` and `hermes-maas` respectively.

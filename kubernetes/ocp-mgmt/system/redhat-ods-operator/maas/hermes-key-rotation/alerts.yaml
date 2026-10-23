@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: maas-key-rotation
+spec:
+  groups:
+    - name: maas-key-rotation
+      rules:
+        - alert: MaaSHermesKeyRotationStalled
+          expr: |
+            (time() - kube_cronjob_status_last_successful_time{namespace="hermes-maas",cronjob="maas-key-rotator"} > 3600)
+            or
+            ((time() - kube_cronjob_created{namespace="hermes-maas",cronjob="maas-key-rotator"} > 3600)
+              unless on(namespace,cronjob)
+                kube_cronjob_status_last_successful_time{namespace="hermes-maas",cronjob="maas-key-rotator"})
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Hermes MaaS key checks have not succeeded for over an hour
+            description: Inspect maas-key-rotator Jobs in hermes-maas. The job checks every 15 minutes and renews 90-day keys when 30 days remain. Do not print the source Secret.

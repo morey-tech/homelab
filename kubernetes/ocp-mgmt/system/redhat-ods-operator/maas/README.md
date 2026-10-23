@@ -106,3 +106,9 @@ The scoped DestinationRule relies on [Istio's client-namespace lookup precedence
 ## OpenClaw access
 
 [Standalone OpenClaw](../../../applications/openclaw/README.md) has its own `openclaw` auth policy and subscription for `local-llm` only (30000 tokens/minute). `openclaw-key-rotation/` runs the shared rotator in the isolated `openclaw-maas` namespace and validates only Qwen. It issues 90-day credentials with renewal at 30 days remaining, independently of Dev Spaces. ESO distributes the key only to the `openclaw` application. Deploy these prerequisites before the application.
+
+## Hermes access
+
+The Hermes comparison pilot has a separate `hermes` auth policy and subscription for `local-llm` only (100000 tokens/minute, allowing a full 64K-context request). `hermes-key-rotation/` runs the same tested rotator in `hermes-maas`, with a dedicated service account, source Secret, ESO reader, and `MaaSHermesKeyRotationStalled` alert. It checks every 15 minutes and issues 90-day credentials with renewal at 30 days remaining. ESO restricts distribution to the `hermes` namespace; no OpenClaw state or keys are reused. Both subscriptions share the existing Qwen backend and GPU capacity.
+
+Deploy these prerequisites before enabling the Hermes application. Verify the first scheduled Job succeeds and `maas-workspace-key` exists in `hermes-maas` without printing its data. Do not create an ad hoc Job to accelerate bootstrap. Application readiness, key adoption, and model inference must be verified after the approved manifests are pushed and reconciled through GitOps.
