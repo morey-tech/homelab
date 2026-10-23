@@ -6,6 +6,7 @@ resources:
 - storage.yaml
 - deployment.yaml
 - network.yaml
+- egress-firewall.yaml
 configMapGenerator:
 - name: openclaw-config
   files:

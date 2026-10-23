@@ -42,6 +42,35 @@ After the fix deploys through GitOps, close stale login tabs and reopen the
 login. Do not refresh or reuse an old `/oauth/callback` URL. Complete one login at
 a time; explicitly starting a second login can still replace the first flow's cookie.
 
+### ClawHub connectivity
+
+`Plugin categories are unavailable` with `UND_ERR_CONNECT_TIMEOUT` can indicate
+blocked gateway egress. Catalog requests originate in the gateway pod. Public
+HTTPS requires both the NetworkPolicy rule and `egress-firewall.yaml`, which permits
+TCP 443 to addresses resolved for `clawhub.ai` and denies other external destinations.
+Argo CD creates the firewall in sync wave `-1`, before the NetworkPolicy permits
+public HTTPS. Keep these resources together; removing the firewall would leave
+public HTTPS unrestricted by destination.
+
+The firewall preserves the pod (`10.128.0.0/14`), service (`172.30.0.0/16`), and node
+(`192.168.6.0/24`) networks; NetworkPolicy still restricts access within them. Update
+these ranges if cluster addressing changes. OVN DNS rules filter resolved IPs, not
+TLS hostnames: shared-IP destinations can also be reachable, and DNS changes can
+briefly interrupt access until OVN refreshes its records. See [OpenShift egress
+firewall behavior](https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html-single/network_security/network_security).
+
+After GitOps deployment, confirm the firewall reports `EgressFirewall Rules applied`
+and retry the plugin catalog in the browser:
+
+```bash
+oc get egressfirewall default -n openclaw -o yaml
+oc exec -n openclaw deployment/openclaw -c gateway -- node -e \
+  'fetch("https://clawhub.ai/api/v1/plugins/categories", {signal: AbortSignal.timeout(15000)}).then(r => { console.log(r.status); process.exit(r.ok ? 0 : 1); }).catch(e => { console.error(e.message, e.cause?.code); process.exit(1); })'
+```
+
+This permits catalog access. Plugin installation may require additional package
+hosts and writable configuration; enable those separately when adding a plugin.
+
 ## Architecture
 
 - Pinned upstream OpenClaw 2026.10.5 image; one pod with an OAuth proxy sidecar.
@@ -60,8 +89,10 @@ a time; explicitly starting a second login can still replace the first flow's co
   not NFS, and the claim becomes tied to its selected node. Node loss does not provide
   automatic storage failover. Back up the PVC before upgrades; Git does not contain state.
   Argo requires confirmation to prune it and retains it on application deletion.
-- NetworkPolicy limits ingress to OpenShift routers and egress to cluster DNS,
-  the ingress VIP/router (MaaS and OAuth), and API destinations needed by OAuth.
+- NetworkPolicy limits ingress to OpenShift routers and internal egress to cluster
+  DNS, the ingress VIP/router (MaaS and OAuth), and API destinations needed by OAuth.
+  Public HTTPS is additionally restricted to ClawHub's resolved addresses by the
+  namespace EgressFirewall.
   The current VIP is `192.168.6.98`; update `network.yaml` if cluster addressing changes.
   This is IP/port filtering, not per-domain or per-process authorization. It allows
   other services sharing those destinations and is not an OpenShell sandbox.
@@ -122,6 +153,10 @@ After GitOps deployment, verify:
 4. Confirm session/workspace persistence after the next reviewed rollout. During a
    scheduled key rotation, verify gateway restart and a new successful model turn.
 5. Verify OAuth login again after its projected token rotates and the sidecar restarts.
+6. Verify ClawHub categories load using the connectivity check above, while an
+   unrelated public endpoint such as `https://example.com` still times out from
+   the gateway pod. Recheck OAuth login and a MaaS chat turn with both egress
+   policies deployed.
 
 ## References
 
