@@ -28,6 +28,32 @@ spec:
                 - ms-02
                 - ms-04
       automountServiceAccountToken: false
+      initContainers:
+      - name: prepare-state
+        image: docker.io/nousresearch/hermes-agent:v0.22.5@sha256:9c5561579f3ffdf333401797094ac3a743738d6c25d40f4331c7bf77b694238d
+        command:
+        - /opt/hermes/.venv/bin/python
+        - -B
+        - /config/prepare_state.py
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - name: state
+          mountPath: /state
+        - name: config
+          mountPath: /config
+          readOnly: true
       containers:
       - command:
         - /opt/hermes/.venv/bin/python
@@ -101,6 +127,7 @@ spec:
         volumeMounts:
         - name: state
           mountPath: /opt/data
+          subPath: hermes-home
           readOnly: false
         - name: config
           mountPath: /config
@@ -187,6 +214,8 @@ spec:
         - mountPath: /oauth-state
           name: oauth-state
       securityContext:
+        # Avoid re-opening private gateway files on each volume mount.
+        fsGroupChangePolicy: OnRootMismatch
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault

@@ -29,11 +29,13 @@ The pilot enables Hermes file, memory, skills, session-search, and todo tools. T
 
 - The official `nousresearch/hermes-agent:v0.22.5` image is pinned by digest. `launch.py` starts the prebuilt dashboard directly, bypassing the image's root/s6 bootstrap so OpenShift can assign an arbitrary UID under `restricted-v2`.
 - The root filesystem is read-only; the PVC and `/tmp` are writable. The application has no Kubernetes service-account token. The OAuth sidecar alone mounts its projected token.
+- An unprivileged init container creates `hermes-home` inside the PVC and mounts that subdirectory at `/opt/data`. Hermes's gateway requires its home to be owned by the application UID with private permissions; the root-owned PVC mount point fails that check even when its group permissions allow writes. `fsGroupChangePolicy: OnRootMismatch` avoids widening private gateway-file permissions on subsequent mounts.
+- On upgrade from the original layout, the init container moves existing state into `hermes-home` on the same filesystem, preserving the `/opt/data` paths seen by Hermes. `Recreate` stops the old processes first. SQLite databases, WAL files, skills, configuration, and workspace files move together. Interrupted migrations resume, and conflicting source/destination entries stop startup without overwriting either copy. A rollback must retain the subdirectory mount; reverting to a root mount would hide the migrated state.
 - The dashboard listens on `127.0.0.1:9119`. Only the OAuth proxy's TLS port is exposed through a reencrypt Route. `dashboard.public_url` enables Hermes's native authentication gate even on loopback and supplies the exact browser origin.
 - Kustomize generates the read-only managed configuration. Model, toolset, public origin, and dependency-install policy changes belong in Git. The initial `SOUL.md` and current-schema user configuration are seeded only when absent. The image's bundled-skills sync preserves user edits while adding/updating packaged skills; existing state is preserved on restart.
 - The launcher reads projected MaaS and dashboard credentials without logging them. A changed credential restarts the dashboard container within roughly 30 seconds of volume projection, refreshing child processes as well. Active browser sessions may need to reconnect; MaaS rotation normally has about 30 days of key overlap.
 - Local NVMe storage schedules on `ms-02` or `ms-04`; the bound volume pins subsequent runs to its node. PVC pruning requires confirmation and Argo deletion is disabled; the volume has no replication or backup in this deployment.
-- This pilot runs the browser dashboard and its chat sessions. The messaging gateway is not started, so a stopped/degraded gateway indicator is expected. Telegram, Discord, cron delivery, and other gateway integrations are outside this deployment.
+- The launcher starts the browser dashboard. A browser chat selecting the default profile can also start its profile gateway on demand, which requires the private home above. No Telegram, Discord, or other messaging credentials are configured in this pilot.
 
 NetworkPolicy admits the OpenShift router and limits internal access to DNS, ingress/MaaS/OAuth, and the API endpoints required by the proxy. Public HTTPS additionally requires the namespace EgressFirewall: ClawHub and the GitHub API, raw-content, archive, and web hosts are allowed. OVN DNS rules operate on resolved IPs, not individual URLs. Package registries and arbitrary websites are not generally permitted. Automatic dependency installation is disabled; use Git-reviewed image/configuration changes for additional dependencies. Manage `network.yaml` and `egress-firewall.yaml` together.
 
@@ -67,7 +69,7 @@ python -B -m unittest discover -s kubernetes/ocp-mgmt/system/redhat-ods-operator
 git diff --check
 ```
 
-The launcher tests cover credential rotation, transient projection failures, exit propagation, and preservation of existing state. The pinned image can also be exercised locally with fake credentials, an arbitrary UID, no capabilities, a read-only root filesystem, and networking disabled. Cluster OAuth, actual model responses, storage placement, and egress policy behavior require the GitOps rollout.
+The tests cover credential rotation, transient projection failures, exit propagation, and state migration/preservation, including interrupted moves and conflict rejection. Local image tests must include `profile=default` on the browser PTY request and a volume root owned by a different UID: an unscoped chat on a user-owned volume does not exercise the gateway bootstrap ownership checks. Cluster OAuth, actual model responses, storage placement, and egress policy behavior require the GitOps rollout.
 
 ## References
 

@@ -12,5 +12,6 @@ configMapGenerator:
   files:
   - config.yaml
   - launch.py
+  - prepare_state.py
   - SOUL.md
   - oauth-start.sh
