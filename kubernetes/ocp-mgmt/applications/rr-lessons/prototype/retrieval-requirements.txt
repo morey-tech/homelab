@@ -28,7 +28,7 @@ narwhals==2.27.1
 networkx==3.6.1
 numpy==2.5.4
 packaging==26.3
-pillow==12.3.0
+pillow==13.0.0
 pyarrow==26.0.0
 pydantic==2.14.0
 pydantic_core==2.50.0
