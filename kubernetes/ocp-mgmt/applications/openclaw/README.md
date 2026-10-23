@@ -19,12 +19,28 @@ oc get externalsecret,pods,pvc,route -n openclaw
 oc rollout status deployment/openclaw -n openclaw --timeout=300s
 ```
 
-Open the URL and log in with the OpenShift `admin` account. The proxy supplies the
-verified username to OpenClaw; no MaaS key or gateway token needs to be copied into
-the browser. `gateway.auth.trustedProxy.allowUsers` in `openclaw.json` is the access
+Open the URL, click the proxy's login button, and log in with the OpenShift `admin`
+account. The proxy supplies the verified username to OpenClaw; no MaaS key or gateway
+token needs to be copied into the browser. `gateway.auth.trustedProxy.allowUsers`
+in `openclaw.json` is the access
 allowlist. Other authenticated users are denied by OpenClaw. Approved browser devices
 receive chat/read/write/approval/question scopes, not automatic administrator scope.
 This is one personal workspace, not isolated multi-user hosting.
+
+### Login troubleshooting
+
+A callback returning `403 Permission Denied` with `csrf failed` means the proxy's
+CSRF cookie does not match the OAuth login state. With `--skip-provider-button=true`,
+unauthenticated requests to protected paths start a new login flow; a request such as
+`/favicon.ico` can overwrite the cookie while a login is in progress. The proxy
+therefore uses `--skip-provider-button=false`, so background requests receive the
+sign-in page without starting another flow. Authentication remains required for
+all gateway paths. See the upstream [OAuth start and callback handling](https://github.com/openshift/oauth-proxy/blob/master/oauthproxy.go).
+
+After the fix deploys through GitOps, close stale login tabs and reopen the
+[OpenClaw root URL](https://openclaw.apps.ocp-mgmt.rh-lab.morey.tech) to start a fresh
+login. Do not refresh or reuse an old `/oauth/callback` URL. Complete one login at
+a time; explicitly starting a second login can still replace the first flow's cookie.
 
 ## Architecture
 
@@ -96,8 +112,10 @@ node --test kubernetes/ocp-mgmt/applications/openclaw/test-launch.mjs
 After GitOps deployment, verify:
 
 1. The key Job succeeds, ESO is Ready, PVC is Bound, and the pod uses `restricted-v2`.
-2. An unauthenticated browser is redirected to OpenShift OAuth; `admin` can chat and
-   another user is denied. Verify WebSocket connections and no direct gateway Service.
+2. An unauthenticated browser sees the proxy sign-in page; clicking its login button
+   redirects to OpenShift OAuth. During login, a request to `/favicon.ico` must not
+   redirect to OAuth or replace the CSRF cookie. Confirm `admin` can chat and another
+   user is denied. Verify WebSocket connections and no direct gateway Service.
 3. Ask Qwen to write a unique sentence into `smoke-test.txt`, read it back, then edit
    it. Verify actual tool events and results. Successful model discovery alone does
    not prove vLLM tool-call compatibility.

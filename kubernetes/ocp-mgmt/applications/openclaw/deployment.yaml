@@ -126,7 +126,9 @@ spec:
         - --tls-cert=/etc/tls/tls.crt
         - --tls-key=/etc/tls/tls.key
         - --upstream-timeout=5m
-        - --skip-provider-button=true
+        # Background requests (including favicon.ico) must not start another
+        # OAuth flow and overwrite the CSRF cookie for an in-progress login.
+        - --skip-provider-button=false
         ports:
         - name: oauth
           containerPort: 8443
