@@ -25,7 +25,7 @@ The gateway is OpenShift AI 3.5 Models-as-a-Service (MaaS), with Red Hat Connect
 
 The profile ConfigMap opts out of MaaS default reconciliation with `opendatahub.io/managed: "false"`. Partial server-side apply owns only `custom-ipp-config.yaml`, preserving the preprocessor profile. A wave 2 partial Deployment applies only the profile checksum annotation to roll the processor after the wave 1 ConfigMap update. Recompute that SHA-256 when editing the profile. Both partial resources disable pruning/deletion because the operator owns their lifecycle. After GitOps deployment, test Claude streaming and Qwen usage reporting again; API acceptance alone does not prove the running processor loaded the new order.
 
-Claude uses the native Anthropic SDK and `messages` format to retain incremental streaming and provider features. Cross-format OpenAI-to-Anthropic translation can buffer the entire response. Qwen uses OpenAI Chat Completions, with vLLM's Hermes tool parser enabled for OpenCode tool calls. Its served context is 32,768 tokens; start a new session when switching from a longer Claude conversation if necessary.
+Claude uses the native Anthropic SDK and `messages` format to retain incremental streaming and provider features. Cross-format OpenAI-to-Anthropic translation can buffer the entire response. Qwen uses OpenAI Chat Completions, with vLLM's Hermes tool parser enabled for OpenCode tool calls. Its served context is 65,536 tokens after the [Hermes prerequisite rollout](../../../applications/inference-server/README.md#32k-baseline-and-64k-pilot-validation); start a new session when switching from a longer Claude conversation if necessary.
 
 ## Automatic workspace keys
 

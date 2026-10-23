@@ -23,16 +23,18 @@ def post_json(base_url, headers, path, payload):
         return json.load(response)
 
 
-def long_context_test(base_url, headers, models):
+def long_context_test(base_url, headers, models, context_length=32768):
     model = next(model for model in models["data"] if model["id"] == "local-llm")
-    if model.get("max_model_len", 0) < 32768:
-        raise RuntimeError("Long-context test requires the 32K server rollout first")
+    if model.get("max_model_len", 0) < context_length:
+        raise RuntimeError(f"Long-context test requires a {context_length}-token server rollout first")
 
     prepared = []
-    for word in ("red", "blue", "green"):
+    # Trial sizes fit the measured cache: one 64K request, or two 32K requests.
+    words = ("red",) if context_length == 65536 else ("red", "blue", "green")
+    for word in words:
         # Distinct prefixes avoid sharing most KV blocks across test requests.
         content = f"Test {uuid.uuid4().hex}. Read the following filler:\n"
-        content += (word + " ") * 31000
+        content += (word + " ") * (context_length - 1768)
         content += "\nNow reply with a short greeting."
         payload = {
             "model": "local-llm",
@@ -44,7 +46,7 @@ def long_context_test(base_url, headers, models):
             "model": payload["model"], "messages": payload["messages"],
             "add_generation_prompt": True,
         })["count"]
-        if not 30000 <= tokens <= 32768 - payload["max_tokens"]:
+        if not context_length - 2768 <= tokens <= context_length - payload["max_tokens"]:
             raise RuntimeError(f"Unexpected long-prompt token count: {tokens}")
         prepared.append((payload, tokens))
 
@@ -59,6 +61,8 @@ def long_context_test(base_url, headers, models):
         return f"{expected_tokens} prompt tokens in {time.monotonic() - start:.1f}s"
 
     print("PASS: single long-context request:", complete(prepared[0]))
+    if len(prepared) == 1:
+        return
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(complete, prepared[1:]))
     print("PASS: two concurrent long-context client requests:", "; ".join(results))
@@ -69,6 +73,10 @@ def main():
     parser.add_argument(
         "--long-context", action="store_true",
         help="After the 32K rollout, also test one then two concurrent ~31K-token prompts.",
+    )
+    parser.add_argument(
+        "--long-context-64k", action="store_true",
+        help="After the 64K rollout, also test one ~63K-token prompt (no full-window concurrency test).",
     )
     args = parser.parse_args()
     service = json.loads(oc("get", "inferenceservice", "local-llm", "-n", "inference-server", "-o", "json"))
@@ -84,7 +92,7 @@ def main():
             raise
     print("PASS: unauthenticated access denied")
 
-    duration = "30m" if args.long_context else "10m"
+    duration = "30m" if args.long_context or args.long_context_64k else "10m"
     token = oc("create", "token", "inference-client", "-n", "inference-server", "--duration=" + duration)
     headers = {"Authorization": "Bearer " + token, "Content-Type": "application/json"}
     request = urllib.request.Request(base_url + "/v1/models", headers=headers)
@@ -131,6 +139,8 @@ def main():
     print("PASS: streaming chat completion")
     if args.long_context:
         long_context_test(base_url, headers, models)
+    if args.long_context_64k:
+        long_context_test(base_url, headers, models, context_length=65536)
     print("Endpoint:", base_url + "/v1")
 
 

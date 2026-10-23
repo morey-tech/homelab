@@ -1,6 +1,6 @@
 # KServe inference on ocp-mgmt
 
-OpenShift AI manages `local-llm` through KServe's Standard deployment mode (formerly RawDeployment). A NVIDIA vLLM ServingRuntime runs one replica on `tr-gpu`'s 24 GiB RTX 3090. Qwen3-4B-Instruct-2507 uses a configured 32,768-token context, increased from the initial 4,096-token baseline after measuring KV-cache headroom. Long-context load validation remains a post-rollout check.
+OpenShift AI manages `local-llm` through KServe's Standard deployment mode (formerly RawDeployment). A NVIDIA vLLM ServingRuntime runs one replica on `tr-gpu`'s 24 GiB RTX 3090. Qwen3-4B-Instruct-2507 uses a configured 65,536-token context to support the Hermes comparison pilot, whose agent requires at least 64K. Long-context load validation remains a post-rollout check.
 
 | Setting | Value |
 |---------|-------|
@@ -11,7 +11,7 @@ OpenShift AI manages `local-llm` through KServe's Standard deployment mode (form
 | Runtime | OpenShift AI 3.5.1 NVIDIA vLLM image, pinned by digest |
 | Hardware | `tr-gpu-3090` profile, one `nvidia.com/gpu` |
 | CPU / system RAM | Requests 2 CPU / 8 GiB RAM; limits 2 CPU / 16 GiB RAM |
-| Context / concurrency | 32,768 tokens (input + output) / 2 sequences |
+| Context / concurrency | 65,536 tokens (input + output) / up to 2 sequences sharing KV capacity |
 | Scaling | Fixed one replica; KServe autoscaler class `none` |
 | GPU memory target | 80% |
 | Storage | 50 GiB expandable `models` PVC on `lvms-vg-ai` |
@@ -64,9 +64,11 @@ python kubernetes/ocp-mgmt/applications/anythingllm/scripts/smoke-test.py
 
 FP16, 80% GPU memory allocation, two concurrent sequences, and AnythingLLM's 1,024-token response limit remain unchanged. vLLM preallocates its KV cache, so GPU free-memory readings alone do not show the available context capacity. The cache token count is shared across concurrent requests, not a per-request context guarantee. The three weight shards total approximately 7.5 GiB; the old model directory remains on the 50 GiB PVC for rollback.
 
-### 32K context validation
+### 32K baseline and 64K pilot validation
 
 On 2026-10-04, the 4K baseline pod `local-llm-predictor-794b7ffbfc-b9kvq` reported 7.64 GiB of model weights, 10.39 GiB of KV cache, and capacity for 75,632 cached tokens. Two full 32,768-token sequences need 65,536 tokens of cache, leaving approximately 10,096 tokens of capacity in that measured configuration. The pod was healthy with no restarts but had processed no requests; this supports a 32K trial, not a proven load limit. Recheck cache allocation after the context change.
+
+On 2026-10-23, read-only inspection of the running 32K pod `local-llm-predictor-64575884d8-msj6t` confirmed the same 75,632-token capacity and 10.39 GiB KV allocation. This supports trying one 65,536-token sequence with about 10,096 tokens of measured headroom. Two full 64K sequences do not fit that cache; keep comparison prompts sequential and check queueing/preemption under mixed traffic. The change retains FP16, 80% GPU allocation, and `--max-num-seqs=2` for shorter requests. Recheck actual cache capacity after rollout; the current measurement is not proof of 64K runtime behavior.
 
 AnythingLLM's total context budget is also 32,768, including the prompt, history, retrieved documents, and up to 1,024 output tokens. Separate Argo CD Applications may reconcile in either order; avoid long chats until both rollouts finish. The predictor uses `Recreate`, so expect brief inference downtime. After GitOps deployment:
 
@@ -74,13 +76,16 @@ AnythingLLM's total context budget is also 32,768, including the prompt, history
 oc rollout status deployment/local-llm-predictor -n inference-server --timeout=10m
 oc rollout status deployment/anythingllm -n anythingllm --timeout=10m
 python kubernetes/ocp-mgmt/applications/inference-server/scripts/smoke-test.py --long-context
+python kubernetes/ocp-mgmt/applications/inference-server/scripts/smoke-test.py --long-context-64k
 python kubernetes/ocp-mgmt/applications/anythingllm/scripts/smoke-test.py
 oc logs deployment/local-llm-predictor -n inference-server -c kserve-container | rg -i 'max_seq_len|GPU KV cache size|Maximum concurrency|preempt|out of memory|error'
 ```
 
 The opt-in long-context test requires an advertised server limit of at least 32K, counts each synthetic chat prompt with the server tokenizer, and checks actual completion usage against that count. It sends one roughly 31K-token prompt, then two concurrent requests with distinct prefixes, and prints elapsed times. It does not benchmark retrieval quality, force full-length output, or prove both requests were scheduled simultaneously; inspect metrics for KV pressure and preemptions as well. The normal smoke test remains short. Validate a real long conversation in AnythingLLM and check any saved workspace-specific model/context overrides separately.
 
-If memory pressure or latency is unacceptable, lower both `--max-model-len` and `GENERIC_OPEN_AI_MODEL_TOKEN_LIMIT` to 16,384 through Git, retaining the other settings, and repeat the checks. Do not increase GPU allocation or concurrency in the same trial.
+The separate `--long-context-64k` check requires a 65,536-token advertised limit and sends one roughly 63K-token prompt. It intentionally does not issue two full-window requests. It tests the direct authenticated KServe endpoint; also verify Hermes through MaaS after its prerequisites deploy. AnythingLLM and OpenClaw retain their existing 32K client budgets. The single predictor uses `Recreate`, so this prerequisite rollout interrupts all local-model clients briefly.
+
+If the 64K trial causes unacceptable memory pressure or latency, revert `--max-model-len` to 32,768 through a reviewed Git change and stop the Hermes pilot or select another compatible model; Hermes cannot use the 32K endpoint. Existing 32K clients require no budget change for that rollback. Do not increase GPU allocation or concurrency in the same trial.
 
 ## Startup probe
 

@@ -6,7 +6,7 @@
 oc get secret anythingllm-auth -n anythingllm -o jsonpath='{.data.AUTH_TOKEN}' | base64 -d
 ```
 
-Create a workspace and use the preconfigured system model. No external LLM account is required. `local-llm` serves Qwen3-4B-Instruct-2507, a non-thinking model; no `/no_think` suffix is needed. The configured context is 32,768 tokens, including prompt/history, retrieved documents, and generated output. The response limit remains 1,024 tokens. See the [32K rollout checks](../inference-server/README.md#32k-context-validation); verify both applications have reconciled before sending long prompts.
+Create a workspace and use the preconfigured system model. No external LLM account is required. `local-llm` serves Qwen3-4B-Instruct-2507, a non-thinking model; no `/no_think` suffix is needed. The configured context is 32,768 tokens, including prompt/history, retrieved documents, and generated output. The response limit remains 1,024 tokens. See the [context rollout checks](../inference-server/README.md#32k-baseline-and-64k-pilot-validation); verify both applications have reconciled before sending long prompts.
 
 | Setting | Value |
 |---------|-------|
