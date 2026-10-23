@@ -52,7 +52,7 @@ RUN dnf install -y \
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
 # Provide the binary only; Dev Spaces supplies provider configuration and secrets.
-ARG OPENCODE_VERSION=1.18.34
+ARG OPENCODE_VERSION=1.19.4
 RUN npm install --global --prefix /opt/opencode --no-audit --no-fund opencode-ai@${OPENCODE_VERSION} \
     && ln -s /opt/opencode/bin/opencode /usr/local/bin/opencode \
     && opencode --version
