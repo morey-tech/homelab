@@ -1,6 +1,6 @@
 # ACS secured cluster: ocp-home
 
-Sensor and the eBPF Collector report to [Central on ocp-mgmt](../../../ocp-mgmt/system/acs/README.md). Admission enforcement is disabled.
+Sensor and the eBPF Collector report to [Central on ocp-mgmt](../../../ocp-mgmt/system/acs/README.md). Admission enforcement is disabled. `collector-config` enables external egress IP collection as well as normal workload connection collection.
 
 ## Registration handoff
 

@@ -38,7 +38,7 @@ oc -n stackrox get secret central-htpasswd -o jsonpath='{.data.password}' | base
 
 Open **Network Graph**, select `ocp-home`, choose the namespaces and observation window, and display **Active** flows. Select a workload and inspect its flows for peers, direction, protocol and ports. Exercise ordinary application workflows, scheduled tasks and integrations to build a representative connection history. The **Allowed** view reflects policy permissions rather than proof of traffic.
 
-Collector uses `CORE_BPF` on all nodes, including tainted nodes. ACS primarily attributes traffic to workloads; it is not a packet capture or HTTP URL log, and cannot recover traffic from before collection started. IPs covered by configured CIDR blocks can appear aggregated. Admission enforcement is disabled on `ocp-home`; review any future enforcement or generated NetworkPolicies as a separate GitOps change.
+Collector uses `CORE_BPF` on all nodes, including tainted nodes. External egress IP collection is explicitly enabled, so off-cluster destinations can be inspected. ACS primarily attributes traffic to workloads; it is not a packet capture or HTTP URL log, and cannot recover traffic from before collection started. IPs covered by configured CIDR blocks can appear aggregated. Admission enforcement is disabled on `ocp-home`; review any future enforcement or generated NetworkPolicies as a separate GitOps change.
 
 ## Validation
 
