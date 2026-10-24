@@ -5,7 +5,7 @@ import json
 import os
 from pathlib import Path
 
-from .store import Store, digest, TORONTO
+from .store import CaptureError, Store, digest, TORONTO
 
 BASE_URL = 'https://maas.apps.ocp-mgmt.rh-lab.morey.tech/inference-server/local-llm/v1'
 
@@ -66,13 +66,18 @@ async def capture_input(event, gateway, **_):
         local = datetime.fromisoformat(metadata['captured_at']).astimezone(TORONTO)
         context = (f'Original input saved as capture {capture_id}. Source time: {local.isoformat()}; '
                    'timezone America/Toronto. Use the personal_notes tool for all durable notes/tasks. '
-                   'Hermes memory is not a notes destination. For a request to save a note, call '
-                   'personal_notes with action=apply_capture, this capture_id, and operations '
-                   'containing action=note and content equal to the requested note. '
+                   'Hermes memory is not a notes destination. Call personal_notes with action=apply_capture '
+                   'and copy this exact capture_id. Choose operations from the original intent: '
+                   'create_task with title for work to do; note with content for information to keep; '
+                   'journal for a journal entry; project for project facts. '
+                   'A task needs no due date, reminder, or project unless the user supplies one. '
+                   'If a capture ID is rejected, correct only the ID and retry the same operations. '
+                   'Never replace create_task with a note saying "Task created" or downgrade another action '
+                   'to a note to work around an error. '
                    'Inspect Inbox/Plans/' + capture_id + '.md before retrying an existing plan. '
                    'The original capture alone does not complete the requested action. '
                    'Do not claim a write or reminder succeeded unless its tool result says ok; '
-                   'include the returned SilverBullet page link when confirming a saved note. '
+                   'include the returned SilverBullet page link when confirming a saved note or task. '
                    'Keep task due dates separate from reminder times. Ask about material ambiguity. ')
         if uncertain:
             context += 'Transcription confidence is low: ask before acting on ambiguous measurements or dates. '
@@ -108,6 +113,12 @@ def handle(args, **_):
         else:
             raise ValueError('Unsupported tool action')
         return json.dumps(result, ensure_ascii=False)
+    except CaptureError as error:
+        return json.dumps({'ok': False, 'error': 'capture_reference_error',
+                           'detail': str(error), 'actions_applied': False,
+                           'retry_instruction': 'Copy the exact capture_id from the current input and retry '
+                               'the SAME operations unchanged. Do not replace a task with a note. If the '
+                               'reference still fails, report the failure without claiming success.'})
     except Exception as error:
         return json.dumps({'ok': False, 'error': type(error).__name__,
                            'detail': str(error) if isinstance(error, ValueError) else 'Operation failed; do not claim success'})
@@ -122,6 +133,20 @@ def register(ctx):
         schema={'name': 'personal_notes', 'description': '''Read and safely update SilverBullet. Every write requires the capture_id provided with the input. Read Inbox/Plans/CAPTURE_ID.md before retrying and reuse its operations exactly. apply_capture freezes the operation list then applies it idempotently; inspect each result for partial failure. Operations: note(content); journal(date YYYY-MM-DD,content); project(project name,content); create_task(title,content?,project?,due? YYYY-MM-DD,remind_at? ISO date/time WITH America/Toronto offset); complete_task(task_id); reschedule_task(task_id,due); schedule_reminder/snooze_reminder(task_id,remind_at); cancel_reminder(task_id). Use list_tasks to resolve stable task IDs and ask if multiple tasks match. Reminders are durable task metadata, delivered deterministically by the worker. For a standalone reminder create a task with no due date. Never invent content or dates. A low-confidence transcript is not a reliable measurement. Ask for clarification before freezing a plan with ambiguous actions. Use find_pages and read_page for project lookup and journal summaries. SilverBullet is authoritative; Hermes todo/memory is not the task store.''',
                 'parameters': {'type': 'object', 'required': ['action'], 'properties': {
                     'action': {'type': 'string', 'enum': ['apply_capture','list_tasks','read_page','find_pages']},
-                    'capture_id': {'type': 'string'}, 'operations': {'type': 'array', 'items': {'type': 'object'}},
+                    'capture_id': {'type': 'string',
+                                   'description': 'Copy the exact 32-character lowercase hex ID from the current input. '
+                                       'On an ID error, correct only this field and retry the same operations.'},
+                    'operations': {'type': 'array', 'minItems': 1, 'maxItems': 20,
+                                   'description': 'Preserve the user intent across retries. Work to do is create_task, '
+                                       'not a note describing a task. Dates and project are optional; do not invent them.',
+                                   'items': {'type': 'object', 'required': ['action'], 'properties': {
+                                       'action': {'type': 'string', 'enum': ['note','journal','project','create_task',
+                                           'complete_task','reschedule_task','schedule_reminder','snooze_reminder','cancel_reminder']},
+                                       'title': {'type': 'string', 'description': 'Required for create_task; concise work to do.'},
+                                       'content': {'type': 'string'}, 'project': {'type': 'string'},
+                                       'date': {'type': 'string', 'description': 'Journal date, YYYY-MM-DD.'},
+                                       'due': {'type': 'string', 'description': 'Optional due date, YYYY-MM-DD.'},
+                                       'remind_at': {'type': 'string', 'description': 'Reminder time with America/Toronto UTC offset.'},
+                                       'task_id': {'type': 'string', 'description': 'Existing task ID for updates.'}}}},
                     'project': {'type': 'string'}, 'include_done': {'type': 'boolean'},
                     'path': {'type': 'string'}, 'prefix': {'type': 'string'}}}})

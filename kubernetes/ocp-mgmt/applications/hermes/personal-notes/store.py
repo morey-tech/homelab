@@ -14,6 +14,10 @@ from zoneinfo import ZoneInfo
 TORONTO = ZoneInfo('America/Toronto')
 
 
+class CaptureError(ValueError):
+    """A capture reference failed before any plan or action was written."""
+
+
 def digest(value):
     return hashlib.sha256(value.encode()).hexdigest()[:32]
 
@@ -141,11 +145,11 @@ class Store:
         return key
 
     def get_capture(self, key):
-        if not re.fullmatch('[a-f0-9]{32}', key):
-            raise ValueError('Invalid capture ID')
+        if not isinstance(key, str) or not re.fullmatch('[a-f0-9]{32}', key):
+            raise CaptureError('Invalid capture ID: copy the exact 32-character capture_id from the current input')
         text, _ = self.read(f'Inbox/Captures/{key}.md')
         if text is None:
-            raise ValueError('Capture has not been saved; no action applied')
+            raise CaptureError('Capture not found: check the capture_id against the current input; do not invent one')
         return split_page(text)
 
     def tasks(self, project=None, include_done=False):

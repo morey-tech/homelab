@@ -1,5 +1,6 @@
 from enum import Enum
 import importlib.util
+import json
 from pathlib import Path
 import sys
 from types import SimpleNamespace
@@ -59,3 +60,41 @@ class CaptureTests(unittest.IsolatedAsyncioTestCase):
             stt.assert_not_called()
         self.sender.send.assert_not_awaited()
         self.assertFalse(self.store.files)
+
+
+class CaptureRetryTests(unittest.TestCase):
+    def test_bad_reference_then_corrected_retry_creates_task_not_note(self):
+        # Keep the plugin's package-local Store/CaptureError classes together;
+        # replace only HTTP storage with the shared in-memory transport.
+        class PluginMemoryStore(plugin.Store):
+            __init__ = MemoryStore.__init__
+            request = MemoryStore.request
+
+        store = PluginMemoryStore()
+        capture = store.capture('signal:owner:retry', '2026-10-24T18:32:32+00:00',
+                                'I want to map the basement outlets to their circuits')
+        operations = [{'action': 'create_task', 'title': 'Map basement outlets to circuits'}]
+        before = dict(store.files)
+        invalid_ids = [capture[:15] + '9' + capture[15:], 'a' * 32, None]
+        with patch.object(plugin, 'Store', return_value=store):
+            for invalid in invalid_ids:
+                with self.subTest(capture_id=invalid):
+                    result = json.loads(plugin.handle({'action': 'apply_capture',
+                        'capture_id': invalid, 'operations': operations}))
+                    self.assertFalse(result['ok'])
+                    self.assertEqual(result['error'], 'capture_reference_error')
+                    self.assertFalse(result['actions_applied'])
+                    self.assertIn('SAME operations unchanged', result['retry_instruction'])
+                    self.assertEqual(store.files, before)
+            args = {'action': 'apply_capture', 'capture_id': capture, 'operations': operations}
+            self.assertTrue(json.loads(plugin.handle(args))['ok'])
+            written = dict(store.files)
+            self.assertTrue(json.loads(plugin.handle(args))['ok'])
+            self.assertEqual(store.files, written)
+        tasks = store.tasks()
+        self.assertEqual(len(tasks), 1)
+        self.assertEqual(tasks[0]['title'], operations[0]['title'])
+        self.assertEqual(tasks[0]['due'], '')
+        self.assertEqual(tasks[0]['remind_at'], '')
+        self.assertEqual(tasks[0]['project'], '')
+        self.assertFalse(store.list_pages('Inbox/Notes/'))

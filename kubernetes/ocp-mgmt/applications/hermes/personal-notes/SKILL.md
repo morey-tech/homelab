@@ -9,6 +9,16 @@ Use `personal_notes` for durable notes and tasks. SilverBullet is authoritative;
 Hermes memory and todo are not substitutes. Every write needs a saved capture ID.
 Signal inputs already have one. Never invent an ID or claim an unsaved action.
 
+Work the user wants to do belongs in `create_task`, even without a due date,
+reminder, or project. Use `note` for information to keep. Do not invent a project
+name or require a deadline to create a task.
+
+If a capture reference is rejected, no plan or action has been written. Copy the
+exact 32-character capture ID from the current input and retry the same operations
+unchanged. Never turn a failed task into a note saying "Task created". If the
+reference still fails, report the failure and retain the requested intent. Once a
+plan exists, use that frozen plan on retry; do not replace it to bypass an error.
+
 1. Read the immutable capture and its source time in America/Toronto. Separate
    independent intents: project facts, tasks, reminders, journal observations.
 2. Use `find_pages`, `read_page`, and `list_tasks` to resolve existing projects and
