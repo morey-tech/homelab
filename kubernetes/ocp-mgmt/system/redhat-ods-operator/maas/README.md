@@ -61,6 +61,26 @@ Require a ready database, `AIGatewayReady` and `ModelsAsAServiceReady`, gateway 
 
 ## Validation after deployment
 
+### Istio gateway metrics
+
+`istio-pod-monitor.yaml` adopts Kuadrant's existing `openshift-ingress/istio-pod-monitor` through server-side apply. Its generated address regexes are double-escaped ([upstream issue and fix](https://github.com/Kuadrant/kuadrant-operator/pull/2147)), leaving all declared container ports as scrape targets. Port 15021 returns HTTP 404 for `/stats/prometheus`, producing a 33.33% `TargetDown` alert despite healthy gateways. The override selects the named `metrics` port (15020), keeps only opted-in `istio-proxy` containers, and preserves the monitor/job name and `pod_name` label. All four current gateway pods expose this named port.
+
+Kuadrant v1.4.4 uses `CreateOnlyMutator` for existing monitors, so it preserves this override. Pruning/deletion is disabled to retain the shared monitor when retiring the workaround. Recheck reconciliation behavior and gateway port names on operator upgrades; removing the file alone will not restore the generated configuration.
+
+After the reviewed commit is pushed and Argo CD reconciles, inspect targets on both Prometheus replicas:
+
+```bash
+for pod in prometheus-k8s-0 prometheus-k8s-1; do
+  oc -n openshift-monitoring exec "$pod" -c prometheus -- \
+    wget -qO- 'http://localhost:9090/api/v1/targets?state=active' |
+    jq --arg pod "$pod" '{prometheus: $pod, targets: [.data.activeTargets[] | select(.labels.job == "openshift-ingress/istio-pod-monitor") | {scrapeUrl, health, lastError}]}'
+done
+```
+
+Expect four healthy targets per replica, all on `:15020/stats/prometheus`, with no targets on 15021 or 15090. Confirm the `TargetDown` alert resolves and the monitor stays synced after Kuadrant reconciliation. These runtime checks require GitOps deployment; a server-side dry run only validates API acceptance.
+
+### Model API checks
+
 From a new workspace with the automatically injected `MAAS_API_KEY`, discover the models:
 
 ```bash

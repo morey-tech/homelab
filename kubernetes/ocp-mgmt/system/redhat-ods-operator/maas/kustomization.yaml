@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - namespaces.yaml
   - kuadrant.yaml
+  - istio-pod-monitor.yaml
   - authorino-trust.yaml
   - database.yaml
   - gateway.yaml

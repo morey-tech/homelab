@@ -1,0 +1,36 @@
+# Kuadrant creates this monitor with broken address-rewrite regexes and uses
+# CreateOnlyMutator for existing monitors. Adopt it without changing its name.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: istio-pod-monitor
+  namespace: openshift-ingress
+  labels:
+    kuadrant.io/observability: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    # Retain the shared monitor if this workaround is removed from GitOps.
+    argocd.argoproj.io/sync-options: ServerSideApply=true,DisableClientSideApplyMigration=true,Prune=false,Delete=false
+spec:
+  namespaceSelector: {}
+  selector:
+    matchExpressions:
+      - key: istio-prometheus-ignore
+        operator: DoesNotExist
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 30s
+      path: /stats/prometheus
+      relabelings:
+        - action: keep
+          sourceLabels:
+            - __meta_kubernetes_pod_container_name
+          regex: istio-proxy
+        - action: keep
+          sourceLabels:
+            - __meta_kubernetes_pod_annotation_prometheus_io_scrape
+          regex: "true"
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_name
+          targetLabel: pod_name
