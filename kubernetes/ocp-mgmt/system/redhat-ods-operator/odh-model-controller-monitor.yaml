@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: odh-model-controller-metrics-monitor
+  namespace: redhat-ods-applications
+  labels:
+    control-plane: odh-model-controller
+    platform.opendatahub.io/part-of: kserve
+  annotations:
+    # Opt out of KServe module reconciliation for this monitor only.
+    opendatahub.io/managed: "false"
+    argocd.argoproj.io/sync-wave: "1"
+    # Adopt the existing monitor; keep it when retiring the override.
+    argocd.argoproj.io/sync-options: ServerSideApply=true,DisableClientSideApplyMigration=true,Prune=false,Delete=false
+spec:
+  selector:
+    matchLabels:
+      control-plane: odh-model-controller
+  endpoints:
+    # The Service exposes unauthenticated HTTP metrics on port 8080.
+    # User-workload monitoring rejects the generated bearerTokenFile.
+    - port: http
+      scheme: http
+      path: /metrics
