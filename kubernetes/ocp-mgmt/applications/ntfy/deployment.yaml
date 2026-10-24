@@ -1,0 +1,136 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ntfy-state
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=false
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: lvms-vg-nvme
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ntfy
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ntfy
+  template:
+    metadata:
+      labels:
+        app: ntfy
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - ms-02
+                - ms-04
+      initContainers:
+      - name: account
+        image: docker.io/binwiederhier/ntfy:v2.33.1@sha256:29bc952294d58957f6ca6638eca9a653a33555989224edbdf4bb9433ee606497
+        command:
+        - /bin/sh
+        - -ec
+        - |
+          umask 077
+          # ntfy 2.33 requires the server to create/migrate auth.db before its user CLI.
+          ntfy serve &
+          server_pid=$!
+          trap 'kill "$server_pid"; wait "$server_pid" || true' EXIT
+          for attempt in $(seq 1 30); do
+            if wget -q -O /dev/null http://127.0.0.1:8080/v1/health; then break; fi
+            sleep 1
+          done
+          wget -q -O /dev/null http://127.0.0.1:8080/v1/health
+          export NTFY_PASSWORD="$(cat /auth/value)"
+          ntfy user add hermes || ntfy user change-pass hermes
+          ntfy access hermes personal-reminders read-write
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - name: state
+          mountPath: /state
+        - name: config
+          mountPath: /etc/ntfy
+          readOnly: true
+        - name: auth
+          mountPath: /auth
+          readOnly: true
+      containers:
+      - name: ntfy
+        image: docker.io/binwiederhier/ntfy:v2.33.1@sha256:29bc952294d58957f6ca6638eca9a653a33555989224edbdf4bb9433ee606497
+        args:
+        - serve
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /v1/health
+            port: http
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /v1/health
+            port: http
+          periodSeconds: 30
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: state
+          mountPath: /state
+        - name: config
+          mountPath: /etc/ntfy
+          readOnly: true
+      volumes:
+      - name: state
+        persistentVolumeClaim:
+          claimName: ntfy-state
+      - name: config
+        configMap:
+          name: ntfy-config
+      - name: auth
+        secret:
+          secretName: hermes-password

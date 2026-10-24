@@ -1,0 +1,10 @@
+base-url: https://ntfy.apps.ocp-mgmt.rh-lab.morey.tech
+listen-http: :8080
+auth-file: /state/auth.db
+auth-default-access: deny-all
+cache-file: /state/cache.db
+cache-duration: 72h
+behind-proxy: true
+enable-login: true
+enable-signup: false
+upstream-base-url: https://ntfy.sh
