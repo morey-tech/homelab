@@ -1,0 +1,17 @@
+apiVersion: platform.stackrox.io/v1alpha1
+kind: SecuredCluster
+metadata:
+  name: stackrox-secured-cluster-services
+  namespace: stackrox
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=confirm
+spec:
+  clusterName: ocp-home
+  centralEndpoint: acs-grpc.apps.ocp-mgmt.rh-lab.morey.tech:443
+  admissionControl:
+    enforcement: Disabled
+  perNode:
+    collector:
+      collection: CORE_BPF
+    taintToleration: TolerateTaints

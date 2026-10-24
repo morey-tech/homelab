@@ -45,6 +45,21 @@ spec:
             pod-security.kubernetes.io/audit: privileged
             pod-security.kubernetes.io/warn: privileged
   templatePatch: |
+    {{- if eq .path.basename "acs" }}
+    spec:
+      destination:
+        namespace: stackrox
+      syncPolicy:
+        retry:
+          limit: 10
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+        - CreateNamespace=true
+        - SkipDryRunOnMissingResource=true
+    {{ end }}
     {{- if eq .path.basename "openshift-monitoring" }}
     spec:
       destination:

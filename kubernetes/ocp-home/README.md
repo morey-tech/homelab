@@ -19,6 +19,7 @@ oc login -u admin --server=https://api.ocp-home.rh-lab.morey.tech:6443
 
 | Application | Namespace | URL | Purpose | Notable Features |
 |-------------|-----------|-----|---------|-----------------|
+| Advanced Cluster Security | stackrox | [ACS](https://acs.apps.ocp-mgmt.rh-lab.morey.tech) | Workload network visibility | [Setup and operations](system/acs/README.md), eBPF Collector, manual registration |
 | Immich | immich | [immich.apps.ocp-home](https://immich.apps.ocp-home.rh-lab.morey.tech) | Photo/video management | Intel GPU, CloudNativePG |
 | Immich (External) | immich | [immich.parents.morey.tech](https://immich.parents.morey.tech) | External access | Let's Encrypt cert, external-dns |
 | Home Assistant | home-assistant | [hass.apps.ocp-home](https://hass.apps.ocp-home.rh-lab.morey.tech) | Home automation | MetalLB LoadBalancer |

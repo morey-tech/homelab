@@ -6,3 +6,5 @@ kubeconfig.yml
 kubernetes/helm/*/charts
 kubernetes/**/**/bitwarden-secret.yaml
 **/*.htpasswd
+# Local ACS bootstrap credential; never commit registration tokens.
+/ocp-home-cluster-registration-secret.yaml
