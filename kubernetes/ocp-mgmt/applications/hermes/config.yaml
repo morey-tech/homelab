@@ -13,7 +13,12 @@ dashboard:
   - ::1
 platform_toolsets:
   cli: [file, memory, skills, session_search, todo]
-  signal: [memory, skills, session_search, personal_notes]
+  signal: [skills, session_search, personal_notes]
+# This pilot has few tools. Expose their full schemas so Qwen can call the
+# notes plugin directly instead of substituting memory for a deferred tool.
+tools:
+  tool_search:
+    enabled: 'off'
 terminal:
   backend: local
   cwd: /opt/data/workspace

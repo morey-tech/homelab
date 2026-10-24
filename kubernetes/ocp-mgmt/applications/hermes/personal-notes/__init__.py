@@ -66,8 +66,13 @@ async def capture_input(event, gateway, **_):
         local = datetime.fromisoformat(metadata['captured_at']).astimezone(TORONTO)
         context = (f'Original input saved as capture {capture_id}. Source time: {local.isoformat()}; '
                    'timezone America/Toronto. Use the personal_notes tool for all durable notes/tasks. '
+                   'Hermes memory is not a notes destination. For a request to save a note, call '
+                   'personal_notes with action=apply_capture, this capture_id, and operations '
+                   'containing action=note and content equal to the requested note. '
                    'Inspect Inbox/Plans/' + capture_id + '.md before retrying an existing plan. '
-                   'Do not claim a write or reminder succeeded unless its tool result says ok. '
+                   'The original capture alone does not complete the requested action. '
+                   'Do not claim a write or reminder succeeded unless its tool result says ok; '
+                   'include the returned SilverBullet page link when confirming a saved note. '
                    'Keep task due dates separate from reminder times. Ask about material ambiguity. ')
         if uncertain:
             context += 'Transcription confidence is low: ask before acting on ambiguous measurements or dates. '

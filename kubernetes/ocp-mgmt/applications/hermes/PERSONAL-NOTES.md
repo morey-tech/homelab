@@ -77,7 +77,7 @@ The first top-level `- [ ]` / `- [x]` checkbox on a task page determines whether
 
 Task IDs and operation markers derive from the source capture and operation position. Duplicate input processing preserves the first transcript and reuses the frozen plan. A partially applied plan is retried exactly; corrections use a new follow-up capture. Writes use ETags and bounded conflict retries, so a phone edit is reread before the agent appends or updates.
 
-The bundled [Hermes skill](personal-notes/SKILL.md) explains multi-intent extraction, source citations, ambiguous dates and measurements, and truthful partial-failure reporting. Signal's toolset includes the notes tool and excludes workspace file and todo tools. Browser CLI tools remain as configured for the comparison pilot. Preferences may live in Hermes memory; authoritative tasks and journals live in SilverBullet.
+The bundled [Hermes skill](personal-notes/SKILL.md) explains multi-intent extraction, source citations, ambiguous dates and measurements, and truthful partial-failure reporting. Signal's toolset includes the notes tool and excludes memory, workspace file and todo tools. Browser CLI tools remain as configured for the comparison pilot, including memory for preferences. Authoritative notes, tasks and journals live in SilverBullet. Tool-search deferral is disabled for this small pilot toolset so the model sees the full personal-notes schema directly. During the first live text test, Signal capture and reply worked, but Qwen selected the directly exposed memory tool instead of discovering the deferred notes tool; no SilverBullet note or plan was created. Capturing an input alone is not a successful note-save test: verify the resulting note and source link as well as the reply.
 
 Examples:
 
