@@ -7,8 +7,9 @@ spec:
   - name: maas-default-gateway
     namespace: openshift-ingress
     sectionName: https
-  hostnames:
-  - maas.apps.ocp-mgmt.rh-lab.morey.tech
+  # Inherit the HTTPS listener hostname, matching the generated model routes.
+  # An explicit hostname forms a separate Istio route group whose exact speech
+  # match can be appended after the broad /inference-server/local-llm prefix.
   rules:
   - matches:
     - path:
