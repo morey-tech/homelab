@@ -1,5 +1,7 @@
 # Hermes comparison pilot
 
+The prepared [Signal personal-notes extension](PERSONAL-NOTES.md) adds Note to Self capture, CPU transcription through MaaS, independent SilverBullet notes, and ntfy reminder alerts. Follow its staged rollout; these additions are not yet deployed.
+
 After GitOps deployment, open [Hermes](https://hermes.apps.ocp-mgmt.rh-lab.morey.tech), sign in through OpenShift OAuth, then use the Hermes username `admin` and its generated password:
 
 ```bash

@@ -11,3 +11,18 @@ spec:
   resources:
     requests:
       storage: 10Gi
+---
+# Account keys are separate from the agent's filesystem and never stored in Git.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: signal-state
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=false
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: lvms-vg-nvme
+  resources:
+    requests:
+      storage: 2Gi

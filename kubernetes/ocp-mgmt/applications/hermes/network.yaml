@@ -102,3 +102,23 @@ spec:
       port: 443
     - protocol: TCP
       port: 6443
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: silverbullet
+      podSelector:
+        matchLabels:
+          app: silverbullet
+    ports:
+    - protocol: TCP
+      port: 3000
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ntfy
+      podSelector:
+        matchLabels:
+          app: ntfy
+    ports:
+    - protocol: TCP
+      port: 8080

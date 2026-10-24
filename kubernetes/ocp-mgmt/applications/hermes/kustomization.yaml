@@ -7,11 +7,21 @@ resources:
 - deployment.yaml
 - network.yaml
 - egress-firewall.yaml
+- notes-credentials.yaml
 configMapGenerator:
 - name: hermes-config
   files:
   - config.yaml
   - launch.py
+  - signal_account.py
   - prepare_state.py
   - SOUL.md
   - oauth-start.sh
+- name: personal-notes
+  files:
+  - personal-notes/plugin.yaml
+  - personal-notes/__init__.py
+  - personal-notes/store.py
+  - personal-notes/reminders.py
+  - personal-notes/signal_guard.py
+  - personal-notes/SKILL.md

@@ -36,9 +36,19 @@ def seed_state(state, config_dir):
             pass
 
 
-def supervise(command=COMMAND, paths=SECRET_PATHS, poll_seconds=30, grace_seconds=30):
+def supervise(command=COMMAND, paths=SECRET_PATHS, poll_seconds=30, grace_seconds=30,
+              account_reader=None, gateway_command=None):
     credentials = read_credentials(paths)
-    child = subprocess.Popen(command, env={**os.environ, **credentials}, start_new_session=True)
+    account = {}
+    if account_reader:
+        try:
+            account = account_reader()
+        except OSError:
+            # The sidecar may still be starting. A later successful poll restarts
+            # this container to enable the gateway; browser login stays usable.
+            pass
+    environment = {**os.environ, **credentials, **account}
+    children = []
     stopping = False
 
     def stop(signum=None, frame=None):
@@ -48,28 +58,34 @@ def supervise(command=COMMAND, paths=SECRET_PATHS, poll_seconds=30, grace_second
     previous = {sig: signal.signal(sig, stop) for sig in (signal.SIGTERM, signal.SIGINT)}
     next_poll = time.monotonic() + poll_seconds
     try:
-        while child.poll() is None and not stopping:
+        if account and gateway_command:
+            children.append(subprocess.Popen(gateway_command, env=environment, start_new_session=True))
+        children.append(subprocess.Popen(command, env=environment, start_new_session=True))
+        while all(child.poll() is None for child in children) and not stopping:
             if time.monotonic() >= next_poll:
                 try:
-                    if read_credentials(paths) != credentials:
-                        print("Credential projection changed; restarting Hermes", flush=True)
+                    current_account = account_reader() if account_reader else {}
+                    if read_credentials(paths) != credentials or current_account != account:
+                        print("Credential projection or linked account changed; restarting Hermes", flush=True)
                         stopping = True
                 except (OSError, ValueError):
                     print("Credential projection unavailable; retaining running Hermes", flush=True)
                 next_poll = time.monotonic() + poll_seconds
             time.sleep(0.1)
-        return child.returncode if not stopping else 0
+        return next((child.returncode for child in children if child.returncode is not None), 0) if not stopping else 0
     finally:
-        # Stop the dashboard process group; container exit also reaps detached PTYs.
-        try:
-            os.killpg(child.pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-        try:
-            child.wait(timeout=grace_seconds)
-        except subprocess.TimeoutExpired:
-            os.killpg(child.pid, signal.SIGKILL)
-            child.wait()
+        # Stop both process groups before waiting on either one.
+        for child in children:
+            try:
+                os.killpg(child.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+        for child in children:
+            try:
+                child.wait(timeout=grace_seconds)
+            except subprocess.TimeoutExpired:
+                os.killpg(child.pid, signal.SIGKILL)
+                child.wait()
         for sig, handler in previous.items():
             signal.signal(sig, handler)
 
@@ -83,7 +99,11 @@ if __name__ == "__main__":
         subprocess.run(["/opt/hermes/.venv/bin/python", "-B", "/opt/hermes/tools/skills_sync.py"],
                        check=True, cwd="/opt/hermes")
         os.chdir(state / "workspace")
-        raise SystemExit(supervise())
+        from signal_account import read_account_environment
+        raise SystemExit(supervise(
+            account_reader=read_account_environment,
+            gateway_command=["/opt/hermes/.venv/bin/hermes", "gateway", "run", "--external-supervisor"],
+        ))
     except (OSError, ValueError, subprocess.CalledProcessError):
         # Do not log credential contents or environment variables.
         raise SystemExit("Cannot start Hermes; check mounted files and writable state")

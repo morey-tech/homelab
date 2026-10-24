@@ -40,14 +40,17 @@ class LauncherTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             launch.read_credentials({"KEY": path})
 
-    def start_supervisor(self, child_code):
+    def start_supervisor(self, child_code, gateway_code=None):
         key = self.root / "key"
         key.write_text("first-test-key")
         ready = self.root / "ready"
+        gateway = (f",account_reader=lambda:{{'SIGNAL_ACCOUNT':'+15555550123'}},"
+                   f"gateway_command=[{sys.executable!r},'-c',{gateway_code!r}]"
+                   if gateway_code else '')
         code = (f"import sys;sys.path.insert(0,{str(MODULE.parent)!r});"
                 "from launch import supervise;from pathlib import Path;"
                 f"raise SystemExit(supervise([{sys.executable!r},'-c',{child_code!r}],"
-                f"{{'TEST_KEY':Path({str(key)!r})}},poll_seconds=0.1,grace_seconds=1))")
+                f"{{'TEST_KEY':Path({str(key)!r})}},poll_seconds=0.1,grace_seconds=1{gateway}))")
         process = subprocess.Popen([sys.executable, "-B", "-c", code],
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         def cleanup():
@@ -97,6 +100,21 @@ class LauncherTests(unittest.TestCase):
         process, _, _ = self.start_supervisor("raise SystemExit(7)")
         process.communicate(timeout=5)
         self.assertEqual(process.returncode, 7)
+
+    def test_gateway_failure_stops_dashboard_process_group(self):
+        ready = self.root / 'ready'
+        dashboard = ("import os,time;from pathlib import Path;"
+                     f"Path({str(ready)!r}).write_text(str(os.getpid()));time.sleep(30)")
+        gateway = ("import time;from pathlib import Path\n"
+                   f"while not Path({str(ready)!r}).exists(): time.sleep(0.01)\n"
+                   "raise SystemExit(9)")
+        process, _, _ = self.start_supervisor(dashboard, gateway)
+        self.wait_for_file(ready, process)
+        pid = int(ready.read_text())
+        process.communicate(timeout=5)
+        self.assertEqual(process.returncode, 9)
+        with self.assertRaises(ProcessLookupError):
+            os.kill(pid, 0)
 
 
 if __name__ == "__main__":

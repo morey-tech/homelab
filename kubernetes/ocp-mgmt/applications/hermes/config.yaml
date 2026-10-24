@@ -13,6 +13,7 @@ dashboard:
   - ::1
 platform_toolsets:
   cli: [file, memory, skills, session_search, todo]
+  signal: [memory, skills, session_search, personal_notes]
 terminal:
   backend: local
   cwd: /opt/data/workspace
@@ -36,3 +37,10 @@ memory:
 approvals:
   mode: manual
   unattended_mode: deny
+
+plugins:
+  enabled: [personal-notes]
+# The capture plugin sends audio only to MaaS. Disable built-in STT paths and
+# their optional local/provider fallback to avoid bypassing capture persistence.
+stt:
+  enabled: false

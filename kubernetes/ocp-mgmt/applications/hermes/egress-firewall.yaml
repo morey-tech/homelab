@@ -9,6 +9,42 @@ spec:
   egress:
   - type: Allow
     to:
+      dnsName: chat.signal.org
+    ports:
+    - protocol: TCP
+      port: 443
+  - type: Allow
+    to:
+      dnsName: storage.signal.org
+    ports:
+    - protocol: TCP
+      port: 443
+  - type: Allow
+    to:
+      dnsName: cdn.signal.org
+    ports:
+    - protocol: TCP
+      port: 443
+  - type: Allow
+    to:
+      dnsName: cdn2.signal.org
+    ports:
+    - protocol: TCP
+      port: 443
+  - type: Allow
+    to:
+      dnsName: cdn3.signal.org
+    ports:
+    - protocol: TCP
+      port: 443
+  - type: Allow
+    to:
+      dnsName: cdsi.signal.org
+    ports:
+    - protocol: TCP
+      port: 443
+  - type: Allow
+    to:
       dnsName: clawhub.ai
     ports:
     - protocol: TCP
