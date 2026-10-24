@@ -1,0 +1,9 @@
+# Both amd64 and arm64 are supplied by the pinned upstream CPU image.
+FROM ghcr.io/speaches-ai/speaches:0.8.3-cpu@sha256:21e3df06d842fb7802ab470dd77c25f0e8c0d22950e8d8c6ae886e851af53ef8
+USER 0
+# OpenShift assigns its own UID. The parent directory otherwise blocks access
+# to the prebuilt venv and its Python interpreter, despite readable children.
+RUN chmod a+rx /home/ubuntu
+USER 1000
+LABEL org.opencontainers.image.title="Homelab CPU Whisper runtime" \
+      org.opencontainers.image.description="Pinned CPU speech dependencies accessible to OpenShift arbitrary UIDs"
