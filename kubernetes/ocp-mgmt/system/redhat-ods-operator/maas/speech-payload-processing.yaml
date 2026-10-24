@@ -1,0 +1,31 @@
+# Multipart audio cannot pass through the JSON chat payload processors.
+# Match only the dedicated exact audio route. Kuadrant authentication,
+# subscription checks, identity-header rejection and rate limiting stay enabled.
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: whisper-multipart
+  namespace: openshift-ingress
+spec:
+  priority: 20
+  workloadSelector:
+    labels:
+      gateway.networking.k8s.io/gateway-name: maas-default-gateway
+  configPatches:
+  - applyTo: HTTP_ROUTE
+    match:
+      context: GATEWAY
+      routeConfiguration:
+        vhost:
+          route:
+            name: inference-server.whisper-cpu.0
+    patch:
+      operation: MERGE
+      value:
+        typed_per_filter_config:
+          envoy.filters.http.ext_proc.ipp:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExtProcPerRoute
+            disabled: true
+          envoy.filters.http.ext_proc.ipp-pre:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExtProcPerRoute
+            disabled: true

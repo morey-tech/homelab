@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: inference-server
+resources:
+- deployment.yaml
+- network.yaml
+- maas-route.yaml
+configMapGenerator:
+- name: whisper-cpu-config
+  files:
+  - server.py

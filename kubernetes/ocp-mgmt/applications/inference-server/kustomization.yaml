@@ -13,3 +13,4 @@ resources:
   - networkpolicy.yaml
   - embeddings
   - maas.yaml
+  - ../whisper-cpu

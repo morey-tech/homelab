@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: whisper-cache
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=false
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: lvms-vg-nvme
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whisper-cpu
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: whisper-cpu
+  template:
+    metadata:
+      labels:
+        app: whisper-cpu
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - ms-02
+                - ms-04
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: whisper
+        image: ghcr.io/morey-tech/homelab/whisper-cpu:sha-85189c5@sha256:371dc00985a6d9bb312313c6dafae4087f52741126f5860fdea032174bc1d0e3
+        command:
+        - /home/ubuntu/speaches/.venv/bin/python
+        - -B
+        - /config/server.py
+        env:
+        - name: HOME
+          value: /cache
+        - name: HF_HOME
+          value: /cache/huggingface
+        - name: HF_HUB_DISABLE_XET
+          value: '1'
+        - name: WHISPER_MODEL
+          value: Systran/faster-whisper-base.en
+        - name: OMP_NUM_THREADS
+          value: '2'
+        - name: PYTHONDONTWRITEBYTECODE
+          value: '1'
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: '1'
+            memory: 1Gi
+          limits:
+            cpu: '2'
+            memory: 3Gi
+        ports:
+        - name: http
+          containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          periodSeconds: 30
+          timeoutSeconds: 5
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          periodSeconds: 5
+          failureThreshold: 60
+        volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
+        - name: cache
+          mountPath: /cache
+        - name: tmp
+          mountPath: /tmp
+        - name: shm
+          mountPath: /dev/shm
+      volumes:
+      - name: config
+        configMap:
+          name: whisper-cpu-config
+      - name: cache
+        persistentVolumeClaim:
+          claimName: whisper-cache
+      - name: tmp
+        emptyDir:
+          sizeLimit: 256Mi
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Mi
