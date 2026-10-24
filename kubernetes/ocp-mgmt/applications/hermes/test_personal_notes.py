@@ -9,7 +9,7 @@ from urllib.error import HTTPError
 
 sys.path.insert(0, str(Path(__file__).parent / 'personal-notes'))
 from store import Store, digest, reminder_time, split_page, page
-from reminders import Reminders
+from reminders import Reminders, update_section
 
 
 class MemoryStore(Store):
@@ -105,6 +105,37 @@ class NotesTests(unittest.TestCase):
         self.assertNotIn('Projects/../config.md',self.store.files)
 
 
+class ManagedSectionTests(unittest.TestCase):
+    def test_migrates_legacy_markers_and_preserves_surrounding_notes(self):
+        for escape in ['', '\\']:
+            with self.subTest(escape=escape):
+                old = ('# Tasks\n\nIntro from the phone\n\n' + escape +
+                       '<!-- managed-tasks:start -->\n## Open tasks\n\nOld table\n' + escape +
+                       '<!-- managed-tasks:end -->\n\nKeep this footer\n')
+                updated = update_section(old, 'Tasks', 'Open tasks', 'New table', 'managed-tasks')
+                self.assertNotIn('managed-tasks', updated)
+                self.assertNotIn('Old table', updated)
+                self.assertEqual(updated.count('## Open tasks'), 1)
+                self.assertIn('Intro from the phone', updated)
+                self.assertIn('## Notes\n\nKeep this footer', updated)
+                self.assertEqual(update_section(updated, 'Tasks', 'Open tasks',
+                                                'New table', 'managed-tasks'), updated)
+
+    def test_refresh_keeps_following_sections(self):
+        old = '# Tasks\n\n## Open tasks\n\nOld table\n\n## My notes\n\nKeep this\n### Detail\nAlso keep\n'
+        updated = update_section(old, 'Tasks', 'Open tasks', 'New table', 'managed-tasks')
+        self.assertTrue(updated.endswith('## My notes\n\nKeep this\n### Detail\nAlso keep\n'))
+        self.assertNotIn('Old table', updated)
+        self.assertNotIn('## Notes', updated)
+
+    def test_ambiguous_boundaries_fail_without_replacing_text(self):
+        for old in ['<!-- managed-tasks:start -->\nPersonal text',
+                    '<!-- managed-tasks:end -->\n<!-- managed-tasks:start -->',
+                    '## Open tasks\nOne\n## Open tasks\nTwo']:
+            with self.subTest(old=old), self.assertRaises(ValueError):
+                update_section(old, 'Tasks', 'Open tasks', 'New table', 'managed-tasks')
+
+
 class ReminderTests(unittest.TestCase):
     def setUp(self):
         NotesTests.setUp(self)
@@ -116,6 +147,24 @@ class ReminderTests(unittest.TestCase):
         self.engine = Reminders(self.database,self.store,self.sent.append)
         self.addCleanup(lambda:self.engine.db.close())
         self.now = datetime.fromisoformat('2026-10-25T10:00:00-04:00').timestamp()
+
+    def test_worker_migrates_dashboard_and_indexes_without_duplicates(self):
+        for title, marker in [('Tasks', 'managed-tasks'), ('Inbox', 'managed-index'),
+                              ('Journal', 'managed-index'), ('Projects', 'managed-index')]:
+            self.store.edit(title + '.md', lambda _, title=title, marker=marker:
+                '# ' + title + '\n\n<!-- ' + marker + ':start -->\nOld list\n<!-- ' +
+                marker + ':end -->\n\nMy handwritten notes\n')
+        self.engine.tick(self.now)
+        pages = {title: self.store.read(title + '.md')[0] for title in ['Tasks','Inbox','Journal','Projects']}
+        for text in pages.values():
+            self.assertNotIn('<!-- managed-', text)
+            self.assertNotIn('Old list', text)
+            self.assertIn('## Notes\n\nMy handwritten notes', text)
+        self.assertIn('Check fitting size', pages['Tasks'])
+        self.assertIn('[[Projects/Garage]]', pages['Projects'])
+        self.engine.tick(self.now + 30)
+        for title, text in pages.items():
+            self.assertEqual(self.store.read(title + '.md')[0], text)
 
     def test_restart_does_not_resend(self):
         self.engine.tick(self.now)

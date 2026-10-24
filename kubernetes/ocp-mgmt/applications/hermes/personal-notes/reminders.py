@@ -5,11 +5,39 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import sqlite3
 import time
 from urllib.request import Request, urlopen
 
 from store import Store, reminder_time, split_page, task_checkbox
+
+
+def update_section(old, title, heading, content, legacy_name):
+    """Refresh one generated level-two section, retaining surrounding user text."""
+    old = old or '# ' + title + '\n\n[[index|Home]]\n'
+    start = list(re.finditer(r'(?m)^\\?<!-- ' + legacy_name + r':start -->[ \t]*$', old))
+    end = list(re.finditer(r'(?m)^\\?<!-- ' + legacy_name + r':end -->[ \t]*$', old))
+    if start or end:
+        if len(start) != 1 or len(end) != 1 or start[0].start() >= end[0].start():
+            raise ValueError('Ambiguous legacy section; refusing to replace page text')
+        prefix, suffix = old[:start[0].start()], old[end[0].end():]
+        # Legacy suffixes could be free text. Give them their own section so
+        # the next heading-based refresh cannot absorb them into generated text.
+        if not re.match(r'\s*#{1,2} ', suffix):
+            suffix = '## Notes\n\n' + suffix.lstrip('\n')
+    else:
+        headings = list(re.finditer(r'(?m)^## ' + re.escape(heading) + r'[ \t]*$', old))
+        if len(headings) > 1:
+            raise ValueError('Duplicate generated heading; refusing to replace page text')
+        if headings:
+            start_at = headings[0]
+            boundary = re.search(r'(?m)^#{1,2} ', old[start_at.end():])
+            prefix = old[:start_at.start()]
+            suffix = old[start_at.end() + boundary.start():] if boundary else '## Notes\n'
+        else:
+            prefix, suffix = old, '## Notes\n'
+    return prefix.rstrip() + '\n\n## ' + heading + '\n\n' + content.rstrip() + '\n\n' + suffix.lstrip('\n')
 
 
 class Reminders:
@@ -121,19 +149,16 @@ class Reminders:
         self.indexes()
 
     def indexes(self):
-        for title, prefix in [('Inbox', 'Inbox/'), ('Journal', 'Journal/'), ('Projects', 'Projects/')]:
+        for title, prefix, heading in [('Inbox', 'Inbox/', 'Captures and notes'),
+                                       ('Journal', 'Journal/', 'Journal entries'),
+                                       ('Projects', 'Projects/', 'Project pages')]:
             paths = self.store.list_pages(prefix)
-            begin, end = '<!-- managed-index:start -->', '<!-- managed-index:end -->'
-            block = begin + '\n' + '\n'.join('- [[' + p[:-3] + ']]' for p in paths) + '\n' + end
-            def update(old):
-                old = old or '# ' + title + '\n'
-                if begin in old and end in old:
-                    return old.split(begin, 1)[0] + block + old.split(end, 1)[1]
-                return old.rstrip() + '\n\n' + block + '\n'
-            self.store.edit(title + '.md', update)
+            content = '\n'.join('- [[' + p[:-3] + ']]' for p in paths)
+            self.store.edit(title + '.md', lambda old: update_section(
+                old, title, heading, content, 'managed-index'))
 
     def dashboard(self, tasks):
-        lines = ['## Open tasks', '', '| Task | Due | Reminder (Toronto) | Delivery |', '|---|---|---|---|']
+        lines = ['| Task | Due | Reminder (Toronto) | Delivery |', '|---|---|---|---|']
         for task in sorted((t for t in tasks if not t['done']), key=lambda t: str(t.get('due') or '9999')):
             rows = self.db.execute('SELECT state, detail FROM deliveries WHERE task_id=? ORDER BY rowid DESC LIMIT 1', (task['task_id'],)).fetchone()
             status = (rows[0] + (': ' + rows[1] if rows[1] else '')) if rows else 'not scheduled'
@@ -147,14 +172,8 @@ class Reminders:
                 status = 'not scheduled'
             title = task['title'].replace('|', '/').replace('[', '(').replace(']', ')')
             lines.append(f"| [[{task['path'][:-3]}|{title}]] | {task.get('due', '')} | {at} | {status} |")
-        begin, end = '<!-- managed-tasks:start -->', '<!-- managed-tasks:end -->'
-        block = begin + '\n' + '\n'.join(lines) + '\n' + end
-        def update(old):
-            old = old or '# Tasks\n\n[[index|Home]]\n'
-            if begin in old and end in old:
-                return old.split(begin, 1)[0] + block + old.split(end, 1)[1]
-            return old.rstrip() + '\n\n' + block + '\n'
-        self.store.edit('Tasks.md', update)
+        self.store.edit('Tasks.md', lambda old: update_section(
+            old, 'Tasks', 'Open tasks', '\n'.join(lines), 'managed-tasks'))
 
 
 def deliver_ntfy(task):
