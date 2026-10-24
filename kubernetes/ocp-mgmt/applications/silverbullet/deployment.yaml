@@ -1,0 +1,145 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: silverbullet
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: silverbullet
+  template:
+    metadata:
+      labels:
+        app: silverbullet
+      annotations:
+        openshift.io/required-scc: restricted-v2
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - ms-02
+                - ms-04
+      initContainers:
+      - name: seed
+        image: ghcr.io/silverbulletmd/silverbullet:2.12.1@sha256:370a3bf2daa37b7dbba62183085c57d5d43862189ea127e0765646d230561d9d
+        command:
+        - /bin/sh
+        - -ec
+        - |
+          umask 077
+          mkdir -p /space/Inbox/Captures /space/Journal /space/Projects /space/Tasks /space/Templates
+          for name in index Inbox Journal Projects Tasks; do
+            if [ ! -e "/space/$name.md" ]; then (set -C; cat "/seed/$name.md" > "/space/$name.md"); fi
+          done
+          for name in Task Journal; do
+            if [ ! -e "/space/Templates/$name.md" ]; then (set -C; cat "/seed/$name-template.md" > "/space/Templates/$name.md"); fi
+          done
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+        volumeMounts:
+        - name: space
+          mountPath: /space
+        - name: seed
+          mountPath: /seed
+          readOnly: true
+      containers:
+      - name: silverbullet
+        image: ghcr.io/silverbulletmd/silverbullet:2.12.1@sha256:370a3bf2daa37b7dbba62183085c57d5d43862189ea127e0765646d230561d9d
+        command:
+        - /silverbullet
+        - /space
+        - --single
+        env:
+        - name: HOME
+          value: /tmp
+        - name: SB_HOSTNAME
+          value: 0.0.0.0
+        - name: SB_PORT
+          value: '3000'
+        - name: SB_NAME
+          value: Personal notes
+        - name: SB_USER
+          valueFrom:
+            secretKeyRef:
+              name: browser-password
+              key: value
+        - name: SB_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: api-token
+              key: value
+        ports:
+        - name: http
+          containerPort: 3000
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        volumeMounts:
+        - name: space
+          mountPath: /space
+        - name: tmp
+          mountPath: /tmp
+        readinessProbe:
+          httpGet:
+            path: /.ping
+            port: http
+          timeoutSeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /.ping
+            port: http
+          timeoutSeconds: 5
+          periodSeconds: 30
+        startupProbe:
+          httpGet:
+            path: /.ping
+            port: http
+          timeoutSeconds: 5
+          periodSeconds: 5
+          failureThreshold: 60
+      volumes:
+      - name: space
+        persistentVolumeClaim:
+          claimName: space
+      - name: seed
+        configMap:
+          name: silverbullet-seed
+      - name: tmp
+        emptyDir:
+          sizeLimit: 256Mi

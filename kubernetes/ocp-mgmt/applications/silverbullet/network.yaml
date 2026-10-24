@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: silverbullet
+spec:
+  selector:
+    app: silverbullet
+  ports:
+  - name: http
+    port: 3000
+    targetPort: http
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: silverbullet
+spec:
+  host: silverbullet.apps.ocp-mgmt.rh-lab.morey.tech
+  to:
+    kind: Service
+    name: silverbullet
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: silverbullet
+spec:
+  podSelector:
+    matchLabels:
+      app: silverbullet
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          network.openshift.io/policy-group: ingress
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: hermes
+    - podSelector:
+        matchLabels:
+          app: silverbullet-backup
+    ports:
+    - protocol: TCP
+      port: 3000
+  egress: []

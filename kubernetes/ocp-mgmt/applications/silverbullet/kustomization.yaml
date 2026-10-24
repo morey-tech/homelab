@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: silverbullet
+resources:
+- credentials.yaml
+- storage.yaml
+- deployment.yaml
+- network.yaml
+- backup.yaml
+- alerts.yaml
+- hermes-access.yaml
+configMapGenerator:
+- name: silverbullet-seed
+  files:
+  - seed/index.md
+  - seed/Inbox.md
+  - seed/Journal.md
+  - seed/Projects.md
+  - seed/Tasks.md
+  - seed/Task-template.md
+  - seed/Journal-template.md
+- name: silverbullet-backup
+  files:
+  - backup.py

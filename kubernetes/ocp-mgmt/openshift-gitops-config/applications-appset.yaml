@@ -16,6 +16,7 @@ spec:
           - path: kubernetes/ocp-mgmt/applications/inference-server
           - path: kubernetes/ocp-mgmt/applications/openclaw
           - path: kubernetes/ocp-mgmt/applications/hermes
+          - path: kubernetes/ocp-mgmt/applications/silverbullet
           - path: kubernetes/ocp-mgmt/applications/anythingllm
           - path: kubernetes/ocp-mgmt/applications/rr-lessons
           - path: kubernetes/ocp-mgmt/applications/monitoring

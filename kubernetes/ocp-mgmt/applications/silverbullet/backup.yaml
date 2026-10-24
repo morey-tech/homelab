@@ -1,0 +1,99 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: notes-backup
+spec:
+  schedule: 15 3 * * *
+  timeZone: America/Toronto
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+          labels:
+            app: silverbullet-backup
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: backup
+            image: docker.io/nousresearch/hermes-agent:v0.22.5@sha256:9c5561579f3ffdf333401797094ac3a743738d6c25d40f4331c7bf77b694238d
+            command:
+            - /opt/hermes/.venv/bin/python
+            - -B
+            - /config/backup.py
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: true
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 256Mi
+            volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: auth
+              mountPath: /auth
+              readOnly: true
+            - name: backups
+              mountPath: /backups
+          volumes:
+          - name: config
+            configMap:
+              name: silverbullet-backup
+          - name: auth
+            secret:
+              secretName: api-token
+          - name: backups
+            persistentVolumeClaim:
+              claimName: backups
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: notes-backup
+spec:
+  podSelector:
+    matchLabels:
+      app: silverbullet-backup
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: silverbullet
+    ports:
+    - protocol: TCP
+      port: 3000
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: openshift-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: UDP
+      port: 5353
+    - protocol: TCP
+      port: 53
+    - protocol: TCP
+      port: 5353

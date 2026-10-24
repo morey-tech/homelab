@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: notes-backup
+spec:
+  groups:
+  - name: personal-notes-backups
+    rules:
+    - alert: PersonalNotesBackupStalled
+      expr: |
+        (time() - kube_cronjob_status_last_successful_time{namespace="silverbullet",cronjob="notes-backup"} > 172800)
+        or
+        ((time() - kube_cronjob_created{namespace="silverbullet",cronjob="notes-backup"} > 172800)
+          unless on(namespace,cronjob)
+            kube_cronjob_status_last_successful_time{namespace="silverbullet",cronjob="notes-backup"})
+      for: 30m
+      labels:
+        severity: warning
+      annotations:
+        summary: Personal notes have no successful backup for two days
+        description: Inspect notes-backup Jobs and backup PVC capacity in silverbullet. A changing space or unavailable notes API aborts the backup.
