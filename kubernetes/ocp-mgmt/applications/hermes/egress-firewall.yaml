@@ -15,6 +15,12 @@ spec:
       port: 443
   - type: Allow
     to:
+      dnsName: grpc.chat.signal.org
+    ports:
+    - protocol: TCP
+      port: 443
+  - type: Allow
+    to:
       dnsName: storage.signal.org
     ports:
     - protocol: TCP

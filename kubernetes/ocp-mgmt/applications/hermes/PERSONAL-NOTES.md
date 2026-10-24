@@ -56,6 +56,8 @@ In Signal on the iPhone, open **Settings → Linked Devices → Link New Device*
 
 Hermes discovers the single linked account and derives an own-account allowlist. Within roughly 30 seconds the supervisor restarts the dashboard process container and starts the persistent gateway alongside it. Open **Note to Self** and send a short text note first. Both your inputs and marked Hermes replies appear in that conversation. Read [Signal's linked-device guidance](https://support.signal.org/hc/en-us/articles/360007320551-Linked-Devices) for ongoing device requirements. If account discovery reports multiple accounts, startup fails rather than choosing one.
 
+This uses Hermes's native Signal channel with the local `signal-cli` sidecar as its transport (`SIGNAL_HTTP_URL=http://127.0.0.1:8080`). The sidecar needs outbound TCP 443 to both `chat.signal.org` and `grpc.chat.signal.org`; Signal lists both in its [official proxy configuration](https://github.com/signalapp/Signal-TLS-Proxy/blob/main/data/nginx-relay/nginx.conf). During initial linking, the account registered successfully but key refresh and receive connections failed with `Closed unexpectedly`: `chat.signal.org` connected while both IPv4 addresses for `grpc.chat.signal.org` timed out. Keep both names in the egress allowlist. A successful QR scan alone does not verify message delivery; test a Note to Self message after deployment.
+
 Configure [ntfy](../ntfy/README.md) on the phone separately. A Signal Note to Self reply is not the reminder notification mechanism. Alerts use only your authenticated `personal-reminders` topic.
 
 ## Notes and task conventions
