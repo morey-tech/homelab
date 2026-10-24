@@ -11,6 +11,7 @@ spec:
       repoURL: https://github.com/morey-tech/homelab.git
       revision: HEAD
       directories:
+      - path: kubernetes/ocp-mgmt/system/acs
       - path: kubernetes/ocp-mgmt/system/external-secrets
       - path: kubernetes/ocp-mgmt/system/htpass-admin
       - path: kubernetes/ocp-mgmt/system/cert-manager-operator
@@ -59,6 +60,21 @@ spec:
             pod-security.kubernetes.io/audit: privileged
             pod-security.kubernetes.io/warn: privileged
   templatePatch: |
+    {{- if eq .path.basename "acs" }}
+    spec:
+      destination:
+        namespace: stackrox
+      syncPolicy:
+        retry:
+          limit: 10
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+        - CreateNamespace=true
+        - SkipDryRunOnMissingResource=true
+    {{ end }}
     {{- if eq .path.basename "external-secrets" }}
     spec:
       syncPolicy:

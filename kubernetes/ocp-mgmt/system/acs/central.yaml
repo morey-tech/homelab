@@ -1,0 +1,32 @@
+apiVersion: platform.stackrox.io/v1alpha1
+kind: Central
+metadata:
+  name: stackrox-central-services
+  namespace: stackrox
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=confirm
+spec:
+  central:
+    exposure:
+      route:
+        # Sensor requires passthrough TLS to Central.
+        enabled: true
+        host: acs-grpc.apps.ocp-mgmt.rh-lab.morey.tech
+        reencrypt:
+          enabled: true
+          host: acs.apps.ocp-mgmt.rh-lab.morey.tech
+    db:
+      persistence:
+        persistentVolumeClaim:
+          claimName: central-db
+          size: 100Gi
+          storageClassName: lvms-vg-nvme
+  scannerV4:
+    scannerComponent: Enabled
+    db:
+      persistence:
+        persistentVolumeClaim:
+          claimName: scanner-v4-db
+          size: 50Gi
+          storageClassName: lvms-vg-nvme
